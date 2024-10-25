@@ -5,6 +5,7 @@
         "ms-python.vscode-pylance",
         "ms-python.python",
         "ms-python.debugpy",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "streetsidesoftware.code-spell-checker"
     ]
 }

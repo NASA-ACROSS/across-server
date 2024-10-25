@@ -20,11 +20,6 @@ router = APIRouter(
 )
 
 
-# replace with security stuff
-async def get_current_user():
-    return db.models.User(id="173e35fa-9544-49e8-b5b9-d04ea884defb")
-
-
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,

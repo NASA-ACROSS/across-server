@@ -4,7 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status, Response
 from pydantic import EmailStr
 
+
 from ..util.decorators import local_only_route
+from ..util.email.service import EmailService
 
 from . import schemas, magic_link, tokens, strategies
 from .security import extract_creds
@@ -60,14 +62,19 @@ async def local_token(
 
 
 @router.post("/login", dependencies=[Depends(strategies.webserver_access)])
-async def login(email: EmailStr, service: Annotated[AuthService, Depends(AuthService)]):
-    await service.get_authenticated_user(email=email)
+async def login(
+    email: EmailStr,
+    email_service: Annotated[EmailService, Depends(EmailService)],
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+):
+    user = await auth_service.get_authenticated_user(email=email)
 
     link = magic_link.generate(email)
 
     # Send magic_link to user's email (implement email sending logic)
+    await email_service.send(email, {"link": link}, "login-link")
 
-    return {"message": "Magic link sent", "magic_link": link}
+    return {"message": "Magic link sent", "magic_link": link, "user": user}
 
 
 @router.get("/verify")
