@@ -1,0 +1,41 @@
+name: across-server
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: local
+    volumes:
+      - ./across_server/main.py:/app/across_server/main.py
+      - ./across_server:/app/across_server
+    environment:
+      APP_ENV: local
+    command: fastapi dev across_server/main.py --host 0.0.0.0 --port 8000
+    ports:
+      - 8000:8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis
+    ports:
+      - 5432:5432
+    volumes:
+      - across-pg-data:/var/lib/postgresql/data
+    environment:
+      APP_ENV: local
+      POSTGRES_USER: ${ACROSS_DB_USER}
+      POSTGRES_PASSWORD: ${ACROSS_DB_PWD}
+      POSTGRES_DB: ${ACROSS_DB_NAME}
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${ACROSS_DB_USER} -d ${ACROSS_DB_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+volumes:
+  across-pg-data:

@@ -1,0 +1,25 @@
+{
+    "cSpell.words": [
+        "asyncpg",
+        "autouse",
+        "cargs",
+        "cparams",
+        "creds",
+        "drivername",
+        "fastapi",
+        "geoalchemy",
+        "itsdangerous",
+        "joinedload",
+        "onupdate",
+        "pixi",
+        "pydantic",
+        "pyproject",
+        "sessionmaker",
+        "sqlalchemy",
+        "Treedome",
+        "Uvicorn",
+        "WEBSERVER"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+}
