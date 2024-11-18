@@ -1,0 +1,35 @@
+{
+    "cSpell.words": [
+        "ASGI",
+        "asyncpg",
+        "autouse",
+        "cargs",
+        "cparams",
+        "creds",
+        "drivername",
+        "fastapi",
+        "geoalchemy",
+        "httpx",
+        "itsdangerous",
+        "joinedload",
+        "onupdate",
+        "overrider",
+        "pixi",
+        "pydantic",
+        "pyproject",
+        "sessionmaker",
+        "SPACETRACK",
+        "sqlalchemy",
+        "Treedome",
+        "Uvicorn",
+        "WEBSERVER"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.defaultInterpreterPath": ".pixi/envs/local/bin/python3.12",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

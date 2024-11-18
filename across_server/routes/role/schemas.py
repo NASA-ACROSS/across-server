@@ -1,0 +1,36 @@
+from typing import List
+import uuid
+from pydantic import BaseModel, ConfigDict
+
+
+class RoleBase(BaseModel):
+    name: str
+
+
+# This is explicitly defined due to
+#   A) parent data should define what data from the child it needs
+#   B) pydantic does not handle circular imports, so even if we
+#      wanted to import the User schema, we can't use it.
+class Group(BaseModel):
+    id: uuid.UUID
+    name: str
+    short_name: str
+
+
+class User(BaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+    username: str
+    email: str
+
+
+class Role(RoleBase):
+    id: uuid.UUID
+    users: List[User]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoleCreate(RoleBase):
+    permissions: List[str]

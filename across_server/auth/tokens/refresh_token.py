@@ -1,0 +1,41 @@
+from datetime import timedelta
+from typing import Type
+from uuid import UUID
+
+from .base_token import TokenData, Token
+from ..config import auth_config
+
+
+class RefreshTokenData(TokenData[str]):
+    """
+    Payload of the decoded JWT as a refresh token. This only holds the `sub` and `exp` to verify identity.
+    Its only purpose is to obtain new access tokens once they have expired.
+
+    Params:
+        sub: string UUID of the user.
+        exp: expiration of the token.
+    """
+
+    pass
+
+
+# Refresh Token class
+class RefreshToken(Token[RefreshTokenData, UUID]):
+    key: str = auth_config.JWT_REFRESH_SECRET_KEY
+
+    @property
+    def data_model(self) -> Type[RefreshTokenData]:
+        return RefreshTokenData
+
+    def encode(
+        self,
+        data: RefreshTokenData,
+        expires_delta=timedelta(days=auth_config.REFRESH_EXPIRES_IN_DAYS),
+    ) -> str:
+        return super().encode(
+            data,
+            expires_delta=expires_delta,
+        )
+
+    def to_encode(self, user_id: UUID):
+        return RefreshTokenData(sub=str(user_id))
