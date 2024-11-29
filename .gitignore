@@ -4,9 +4,6 @@
 # linting stuff
 .ruff_cache
 
-# pixi stuff
-.pixi
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

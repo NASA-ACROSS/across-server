@@ -1,4 +1,4 @@
-FROM ghcr.io/python:3.14-rc-slim-bookworm AS build
+FROM ghcr.io/prefix-dev/pixi:0.29.0 AS build
 
 ARG APP_ENV=local
 
@@ -13,13 +13,13 @@ RUN echo ${APP_ENV}
 WORKDIR /app
 
 # Copy only the necessary files for dependency installation first
-COPY Makefile ./
-COPY requirements/${APP_ENV}.txt ./requirements/
+COPY pyproject.toml ./
+COPY pixi.lock ./
 
 # Copy over the file holding the version for hatch build
 COPY across_server/__about__.py ./across_server/
 
-RUN make install -env ${APP_ENV} --locked
+RUN pixi install -e ${APP_ENV} --locked
 
 RUN pixi shell-hook -s bash -e ${APP_ENV} > /shell-hook
 RUN echo "#!/bin/bash" > /app/entrypoint.sh

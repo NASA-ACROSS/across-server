@@ -14,7 +14,7 @@ maintainers = [
   { name = "Kirill G. Vorobyev", email = "kirill.g.vorobyev@nasa.gov" },
   { name = "Samuel D. Wyatt", email = "samuel.d.wyatt@nasa.gov" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 dependencies = ["python-multipart"]
 
 [project.optional-dependencies]
@@ -29,104 +29,104 @@ packages = ["src"]
 [tool.hatch.version]
 path = "across_server/__about__.py"
 
-[tool.pixi.project]
-channels = ["conda-forge"]
-platforms = ["linux-64", "osx-64", "osx-arm64"]
+# [tool.pixi.project]
+# channels = ["conda-forge"]
+# platforms = ["linux-64", "osx-64", "osx-arm64"]
 
 
-[tool.pixi.dependencies]
-python = ">=3.9"
-alembic = ">=1.13.2,<2"
-asyncer = ">=0.0.8,<0.0.9"
-astropy = ">=6.1.3,<7"
-boto3 = ">=1.35.17,<2"
-cachetools = ">=5.5.0,<6"
-email-validator = ">=2.2.0,<3"
-fastapi = ">=0.114.1,<0.115"
-healpy = ">=1.17.3,<2"
-httpx = ">=0.27.2,<0.28"
-asyncpg = ">=0.29.0,<0.30"
-shapely = ">=2.0.6,<3"
-sgp4 = ">=2.23,<3"
-sqlalchemy = ">=2.0.34,<3"
-geoalchemy2 = ">=0.15.2,<0.16"
-pyjwt = ">=2.9.0,<3"
-skyfield = ">=1.49,<2"
-pydantic-settings = ">=2.5.2,<3"
-uvicorn = ">=0.30.6,<0.31"
+# [tool.pixi.dependencies]
+# python = ">=3.9"
+# alembic = ">=1.13.2,<2"
+# asyncer = ">=0.0.8,<0.0.9"
+# astropy = ">=6.1.3,<7"
+# boto3 = ">=1.35.17,<2"
+# cachetools = ">=5.5.0,<6"
+# email-validator = ">=2.2.0,<3"
+# fastapi = ">=0.114.1,<0.115"
+# healpy = ">=1.17.3,<2"
+# httpx = ">=0.27.2,<0.28"
+# asyncpg = ">=0.29.0,<0.30"
+# shapely = ">=2.0.6,<3"
+# sgp4 = ">=2.23,<3"
+# sqlalchemy = ">=2.0.34,<3"
+# geoalchemy2 = ">=0.15.2,<0.16"
+# pyjwt = ">=2.9.0,<3"
+# skyfield = ">=1.49,<2"
+# pydantic-settings = ">=2.5.2,<3"
+# uvicorn = ">=0.30.6,<0.31"
 
-# Editable installs
-[tool.pixi.pypi-dependencies]
-across-server = { path = ".", editable = true }
-astropy-healpix = ">=1.0.3, <2"
-spacetrack = ">=1.3.1, <2"
+# # Editable installs
+# [tool.pixi.pypi-dependencies]
+# across-server = { path = ".", editable = true }
+# astropy-healpix = ">=1.0.3, <2"
+# spacetrack = ">=1.3.1, <2"
 
-[tool.pixi.feature.build.dependencies]
-hatch = ">=1.12.0,<2"
+# [tool.pixi.feature.build.dependencies]
+# hatch = ">=1.12.0,<2"
 
-[tool.pixi.feature.types.pypi-dependencies]
-mypy = "*"
-types-requests = "*"
-types-cachetools = "*"
-types-shapely = "*"
-types-python-jose = "*"
+# [tool.pixi.feature.types.pypi-dependencies]
+# mypy = "*"
+# types-requests = "*"
+# types-cachetools = "*"
+# types-shapely = "*"
+# types-python-jose = "*"
 
-[tool.pixi.feature.test.dependencies]
-pytest = "*"
-pytest-asyncio = "*"
-pytest-cov = "*"
+# [tool.pixi.feature.test.dependencies]
+# pytest = "*"
+# pytest-asyncio = "*"
+# pytest-cov = "*"
 
-[tool.pixi.feature.lint.dependencies]
-pre-commit = "*"
-ruff = ">=0.6.7,<0.7"
-
-
-[tool.pixi.environments]
-default = { solve-group = "default" }
-production = { solve-group = "default" }
-local = { features = [
-  "lint",
-  "build",
-  "test",
-  "types",
-  "dev",
-], solve-group = "default" }
-test = { features = ["test"], solve-group = "default" }
-lint = ["lint", "types", "test"]
+# [tool.pixi.feature.lint.dependencies]
+# pre-commit = "*"
+# ruff = ">=0.6.7,<0.7"
 
 
-[tool.pixi.tasks]
-install = "pixi install --locked"
-migrate = "alembic upgrade head"
-
-[tool.pixi.feature.build.tasks]
-# Create a wheel for installation
-build-wheel = "hatch build"
-version = "hatch version"
-
-[tool.pixi.feature.dev.tasks]
-# initialize the project
-init = { depends-on = ["install", "configure", "build", "migrate", "seed"] }
-# start the entire app, use after init
-start = { depends-on = ["build", "migrate", "seed"] }
-# delete all the data and reset the database
-reset = { depends-on = ["down", "rm_db_volume", "build", "migrate", "seed"] }
-dev = "fastapi dev src/across_api/main.py"
-configure = "python scripts/create_env_file.py"
-build = "docker compose -f docker-compose.debug.yml up --build -d"
-rev = "alembic revision --autogenerate -m "
-seed = "python -m migrations.seed"
-down = "docker compose down"
-run = "docker compose -f docker-compose.debug.yml up -d"
-rm_db_vol = { cmd = "docker volume rm across-server_across-pg-data" }
-tail_log = "docker-compose logs -f across-server-app-1"
-
-[tool.pixi.feature.lint.tasks]
-lint = "pre-commit run"
-
-[tool.pixi.feature.test.tasks]
-test = "pytest --cov **/*/*.py"
+# [tool.pixi.environments]
+# default = { solve-group = "default" }
+# production = { solve-group = "default" }
+# local = { features = [
+#   "lint",
+#   "build",
+#   "test",
+#   "types",
+#   "dev",
+# ], solve-group = "default" }
+# test = { features = ["test"], solve-group = "default" }
+# lint = ["lint", "types", "test"]
 
 
-[tool.pytest.ini_options]
-pythonpath = ["."]
+# [tool.pixi.tasks]
+# install = "pixi install --locked"
+# migrate = "alembic upgrade head"
+
+# [tool.pixi.feature.build.tasks]
+# # Create a wheel for installation
+# build-wheel = "hatch build"
+# version = "hatch version"
+
+# [tool.pixi.feature.dev.tasks]
+# # initialize the project
+# init = { depends-on = ["install", "configure", "build", "migrate", "seed"] }
+# # start the entire app, use after init
+# start = { depends-on = ["build", "migrate", "seed"] }
+# # delete all the data and reset the database
+# reset = { depends-on = ["down", "rm_db_volume", "build", "migrate", "seed"] }
+# dev = "fastapi dev src/across_api/main.py"
+# configure = "python scripts/create_env_file.py"
+# build = "docker compose -f docker-compose.debug.yml up --build -d"
+# rev = "alembic revision --autogenerate -m "
+# seed = "python -m migrations.seed"
+# down = "docker compose down"
+# run = "docker compose -f docker-compose.debug.yml up -d"
+# rm_db_vol = { cmd = "docker volume rm across-server_across-pg-data" }
+# tail_log = "docker-compose logs -f across-server-app-1"
+
+# [tool.pixi.feature.lint.tasks]
+# lint = "pre-commit run"
+
+# [tool.pixi.feature.test.tasks]
+# test = "pytest --cov **/*/*.py"
+
+
+# [tool.pytest.ini_options]
+# pythonpath = ["."]

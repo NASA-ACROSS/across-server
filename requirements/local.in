@@ -1,0 +1,5 @@
+# Include other requirements
+-r base.in
+-r test.in
+-r types.in
+-r lint.in

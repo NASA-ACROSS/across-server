@@ -1,0 +1,4 @@
+# Lint dependencies
+
+pre-commit
+ruff

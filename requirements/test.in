@@ -1,0 +1,5 @@
+# Test dependencies
+
+pytest
+pytest-asyncio
+pytest-cov

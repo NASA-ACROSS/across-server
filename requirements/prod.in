@@ -1,0 +1,2 @@
+# Prod dependencies only require base deps
+-r base.in

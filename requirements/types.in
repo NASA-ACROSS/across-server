@@ -1,0 +1,7 @@
+# type dependencies
+
+mypy
+types-requests
+types-cachetools
+types-shapely
+types-python-jose
