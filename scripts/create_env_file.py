@@ -27,7 +27,7 @@ def create_env_file():
         with open(env_file_path, "w") as env_file:
             for key, value in env_vars.items():
                 env_file.write(f"{key}={value}\n")
-        print(f"Created {env_file_path} with default values.")
+        print(f"Created '{env_file_path}'.")
     else:
         print(f"{env_file_path} already exists.")
 

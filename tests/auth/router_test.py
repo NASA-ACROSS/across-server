@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 
 class TestLoginRoute:
-    @pytest_asyncio.fixture(autouse=True)
+    @pytest_asyncio.fixture(scope="function", autouse=True)
     async def setup(self, async_client: AsyncClient):
         self.client = async_client
         self.email = "user@example.com"
