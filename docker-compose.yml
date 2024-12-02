@@ -12,16 +12,26 @@ services:
       APP_ENV: production
     depends_on:
       - db
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    command: uvicorn across_server.main:app --host 0.0.0.0 --port 8000
 
   db:
     image: postgis/postgis
+    ports:
+      - 5432:5432
     volumes:
       - across-pg-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: local
-      POSTGRES_DB: across
+      APP_ENV: local
+      POSTGRES_USER: ${ACROSS_DB_USER}
+      POSTGRES_PASSWORD: ${ACROSS_DB_PWD}
+      POSTGRES_DB: ${ACROSS_DB_NAME}
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${ACROSS_DB_USER} -d ${ACROSS_DB_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
 volumes:
   across-pg-data:

@@ -22,6 +22,7 @@
         "sqlalchemy",
         "Treedome",
         "Uvicorn",
+        "venv",
         "WEBSERVER"
     ],
     "python.analysis.typeCheckingMode": "basic",

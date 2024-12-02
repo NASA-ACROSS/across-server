@@ -1,59 +1,60 @@
 # Define variables
 ENV ?= local
 ENVS = local test types prod
-VENV_DIR = .venv/$(ENV)
+VENV_DIR = .venv
 VENV_BIN = $(VENV_DIR)/bin
-# this will only work when running make from the CWD
-# https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile
-PWD := $(shell pwd;)
-IS_PIP_COMPILE_INSTALLED := $(shell which $(VENV_BIN)/pip-compile || echo "")
+REQ_DIR = requirements
+REQ_IN = $(REQ_DIR)/$(ENV).in
+REQ_TXT = $(REQ_DIR)/$(ENV).txt
+UV_INSTALL_SCRIPT = https://astral.sh/uv/install.sh
+
+# Detect installed tools
 IS_UV_INSTALLED := $(shell which uv || echo "")
+IS_PIP_COMPILE_INSTALLED := $(shell which $(VENV_BIN)/pip-compile || echo "")
 
 # Tasks
 .PHONY:
-	uv pip_compile_check venv install clean venv_dir
+	install_uv pip_tools venv_dir venv install clean dev
 
-# create venv dir
+# Create directories
 venv_dir:
-	@if [ ! -d $(VENV_DIR) ]; then \
-		mkdir -p $(VENV_DIR); \
-	else \
-		echo "'$(ENV)' virtual environment directory exists."; \
-	fi; \
+	@mkdir -p $(VENV_DIR)
 
 # install uv if needed
-uv:
+install_uv:
 	@if [ -z $(IS_UV_INSTALLED) ]; then \
 		echo "Installing uv..."; \
-		curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=$(VENV_DIR) env INSTALLER_NO_MODIFY_PATH=1 sh \
-	else \
-		echo "uv is already installed."; \
+		curl -LsSf $(UV_INSTALL_SCRIPT) | sh; \
 	fi;
 
 # create venv within specified env
-venv: uv
+venv: venv_dir
 	@if [ ! -d $(VENV_DIR)/bin ]; then \
-		echo "Creating '$(ENV)' virtual env..."; \
+		echo "Creating virtual environment."; \
 		uv venv $(VENV_DIR); \
-	else \
-		echo "'$(ENV)' virtual environment exists."; \
 	fi;
 
-pip_compile_check:
-	@source $(VENV_DIR)/bin/activate;
-	@if [ -z $(IS_PIP_COMPILE_INSTALLED) ]; then \
-		echo "pip-tools not found."; \
-		pip install pip-tools; \
-	fi; \
-
 # Install dependencies for the specified ENV
-install: pip_compile_check
-	@source $(VENV_DIR)/bin/activate; \
-	$(VENV_BIN)/pip-compile requirements/$(ENV).in -o requirements/$(ENV).txt; \
-	$(VENV_BIN)/pip-sync requirements/$(ENV).txt; \
-	echo "Installed $(ENV) dependencies."; \
+lock: venv
+	@echo "Updating lockfile...";
+	@uv pip compile $(REQ_IN) -o $(REQ_TXT) --quiet;
 
+install: venv
+	@uv pip sync $(REQ_TXT);
+	@echo "Installed dependencies";
+
+build:
+	@docker compose -f docker-compose.local.yml up --build -d;
+
+dev:
+	@source .venv/bin/activate
+	@fastapi dev src/across_api/main.py
+
+prod:
+	@docker compose up --build -d;
+	
 # Clean generated lock files
 clean:
-	rm -rf .env/$(ENV)
-	rm -f requirements/*.txt
+	@rm -rf $(VENV_DIR)
+	@rm -f $(REQ_DIR)/*.txt
+	@echo "Cleaned up environment and lock files."

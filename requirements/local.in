@@ -3,3 +3,6 @@
 -r test.in
 -r types.in
 -r lint.in
+
+# includes the cli
+fastapi[standard] ==0.115
