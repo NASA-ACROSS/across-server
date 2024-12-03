@@ -15,16 +15,15 @@ maintainers = [
   { name = "Samuel D. Wyatt", email = "samuel.d.wyatt@nasa.gov" },
 ]
 requires-python = ">=3.12"
-dependencies = ["python-multipart"]
-
-[project.optional-dependencies]
-test = ["pytest-fastapi-deps>=0.2.3,<0.3"]
 
 [build-system]
 build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["across_server"]
 [tool.hatch.version]
 path = "across_server/__about__.py"
+
+[tool.pytest]
+asyncio_mode = "auto"

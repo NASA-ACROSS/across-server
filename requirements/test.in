@@ -3,3 +3,4 @@
 pytest
 pytest-asyncio
 pytest-cov
+pytest-fastapi-deps >=0.2.3,<0.3

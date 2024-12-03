@@ -21,7 +21,7 @@ astropy-iers-data==0.2024.11.25.0.34.48
     # via astropy
 asyncer==0.0.8
     # via -r requirements/base.in
-asyncpg==0.29.0
+asyncpg==0.30.0
     # via -r requirements/base.in
 attrs==24.2.0
     # via rush
@@ -58,17 +58,20 @@ fastapi==0.115.0
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
+    #   pytest-fastapi-deps
 fastapi-cli==0.0.5
     # via fastapi
 filelock==3.16.1
     # via virtualenv
 geoalchemy2==0.15.2
     # via -r requirements/base.in
+greenlet==3.1.1
+    # via sqlalchemy
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-healpy==1.18.0
+healpy==1.17.3
     # via -r requirements/base.in
 httpcore==1.0.7
     # via httpx
@@ -154,9 +157,12 @@ pytest==8.3.3
     #   -r requirements/test.in
     #   pytest-asyncio
     #   pytest-cov
+    #   pytest-fastapi-deps
 pytest-asyncio==0.24.0
     # via -r requirements/test.in
 pytest-cov==6.0.0
+    # via -r requirements/test.in
+pytest-fastapi-deps==0.2.3
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via botocore

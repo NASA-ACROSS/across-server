@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm AS build
+FROM python:3.12-bookworm AS build
 
 # install make
 RUN apt-get update && apt-get install -y make
@@ -12,7 +12,7 @@ WORKDIR /app
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Turns off buffering for easier container logging
+# Turns off buffering for container logging
 ENV PYTHONUNBUFFERED=1
 
 # Copy only the necessary files for dependency installation first
@@ -25,7 +25,8 @@ COPY across_server/__about__.py ./across_server/
 RUN make venv ENV=${APP_ENV}
 RUN make install ENV=${APP_ENV}
 
-FROM python:3.12-slim-bookworm AS local
+
+FROM python:3.12-slim AS local
 
 WORKDIR /app
 
@@ -39,7 +40,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 
-FROM debian:bookworm-slim AS test
+FROM python:3.12-slim AS test
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv
@@ -48,7 +49,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy source code
 COPY ./across_server ./across_server
 
-FROM python:3.12-slim-bookworm AS production
+
+FROM python:3.12-slim AS production
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv
