@@ -15,11 +15,43 @@ UV_INSTALL_SCRIPT = https://astral.sh/uv/install.sh
 IS_UV_INSTALLED := $(shell which uv || echo "")
 IS_PIP_COMPILE_INSTALLED := $(shell which $(VENV_BIN)/pip-compile || echo "")
 
-# Tasks
-.PHONY:
-	check_env install_uv pip_tools venv_dir venv install clean dev help
 
-# @awk -F ':.*## ' '/^[a-zA-Z_-]+:.*## / && !/###/ { printf "    \033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+# The `ask` macro displays a prompt to the user, processes their input, 
+# and conditionally executes a command based on the response.
+#
+# Args:
+#   1: The message to display to the user (e.g., a question).
+#   2: The command to execute if the user responds with 'y' or 'Y'.
+#   3: The message to display and exit if the user responds with 'n' or 'N'.
+#
+# Example usage:
+#   $(call ask, "Installing dependency",echo "Installing dep..." && install,"Installation aborted.")
+#
+# Example output:
+# > Installing dependency, are you sure? (y/n)
+# > y
+# > Installing dep...
+# 
+# > Installing dependency, are you sure? (y/n)
+# > n
+# > Installation aborted
+define ask
+	echo "$(1) Are you sure? (y/n)"; \
+	read choice; \
+	if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
+		$(2); \
+	else \
+		echo "$(3)"; \
+		exit 0; \
+	fi
+endef
+
+# Tasks
+.PHONY: list_targets help init install_uv install lock configure venv_dir venv check_env install_deps start run stop build dev restart reset tail_logs temp_run test lint rev seed migrate prod clean prune rm_imgs
+
+list_targets: ### Internal command used for getting a list of commands for .PHONY
+	@awk '/^[a-zA-Z_\-]+:/ {sub(/:/, ""); printf "%s ", $$1} END {print ""}' $(MAKEFILE_LIST)
+	
 help:
 	@echo "Usage:\n    make \033[36m<target>\033[0m"
 	@awk ' \
@@ -38,34 +70,33 @@ help:
 	} \
 	' $(MAKEFILE_LIST)
 
-check_env: ### Check if the passed in ENV is valid
-	@if [ -z $(IS_ENV_VALID) ]; then \
-		echo "Invalid ENV: '$(ENV)'. Allowed values are: $(ENVS)"; \
-		exit 1; \
-	fi
 
 # Group: Setup
+init: install configure up migrate seed ## Initialize the project, dependencies, and start the server
+
 install_uv: ## Install 'uv' if needed (this will install it globally)
 	@echo "Installing 'uv'...";
 	@curl -LsSf $(UV_INSTALL_SCRIPT) | sh;
 
 install: check_env venv ## Install dependencies from the lockfile for the specified ENV
-	@if [ -z $(IS_UV_INSTALLED) ]; then \
-		echo "'uv' is not installed. Would you like to install it to the global system now? (y/n)"; \
-		read choice; \
-		if [ "$$choice" = "y" ] || [ "$$choice" = "Y" ]; then \
-			$(MAKE) install_uv; \
-		else \
-			echo "Cannot proceed without 'uv'. Exiting."; \
-			exit 1; \
-		fi; \
-	fi;
-	@uv pip sync $(REQ_TXT);
-	@echo "Installed dependencies";
+	@if [ -z "" ]; then \
+		$(call ask,\
+			"'uv' is not installed. Proceeding will install to the global system.",\
+			$(MAKE) install_deps,\
+			"Cannot proceed without 'uv'. Exiting."\
+		); \
+	else \
+		$(MAKE) install_deps; \
+	fi
 	
-lock: check_env venv ## Create or update the lockfile.
+lock: check_env venv ## Create or update the lockfile
 	@echo "Updating lockfile...";
 	@uv pip compile $(REQ_IN) -o $(REQ_TXT) --quiet;
+
+configure: ## Create a .env file for environment variables
+	@echo "Creating .env file..."
+	@$(VENV_BIN)/python scripts/create_env_file.py
+	@echo ".env file created."
 
 venv_dir:	### Create the venv dir if it DNE
 	@mkdir -p $(VENV_DIR)
@@ -76,12 +107,52 @@ venv: venv_dir ### Create venv within specified env
 		uv venv $(VENV_DIR) --python '>=3.12,<3.13'; \
 	fi;
 
+check_env: ### Check if the passed in ENV is valid
+	@if [ -z $(IS_ENV_VALID) ]; then \
+		echo "Invalid ENV: '$(ENV)'. Allowed values are: $(ENVS)"; \
+		exit 1; \
+	fi
+
+install_deps: ### Install dependencies
+	@uv pip sync $(REQ_TXT);
+	@echo "Installed dependencies";
+
 # Group: Development
-build: ## Build the local docker containers
-	@docker compose -f docker-compose.local.yml up --build -d;
+start: run migrate seed ## Start the application containers (includes migrating and seeding)
 
 dev: ## Start the server in the terminal
-	@$(VENV_BIN)/fastapi dev across_server/main.py;
+	@$(VENV_BIN)/fastapi dev across_server/main.py
+
+run: ## Only run the containers 
+	@docker compose -f docker-compose.local.yml up -d
+
+stop: ## Stop the containers
+	@docker compose -f docker-compose.local.yml down
+
+build: ## Build the containers (does not run)
+	@docker compose -f docker-compose.local.yml build
+
+restart: ## Restarts the app container
+	@docker compose -f docker-compose.local.yml restart
+
+reset: ## Resets the db containers and volumes
+	@$(call ask,\
+		"Proceeding will reset the db and delete any existing data.", \
+		docker compose -f docker-compose.local.yml down -v && $(MAKE) start,\
+		"Reset aborted."\
+	);
+
+hard_reset: ## Hard reset and rebuild everything (basically `rm -rf` for the entire stack)
+	@$(call ask,\
+		"Proceeding will reset everything locally.", \
+		docker compose -f docker-compose.local.yml down -v && $(MAKE) rm_imgs && $(MAKE) start,\
+		"Reset aborted."\
+	);
+tail_logs: ## Output a tail of logs for the server
+	@docker compose -f docker-compose.local.yml logs -ft app
+
+temp_run: ## Start a temporary container from an image with a bash shell for debugging
+	@docker run --rm -it --entrypoint=/bin/bash across-server-app
 
 # Group: Testing
 test: ## Run automated tests
@@ -90,13 +161,14 @@ test: ## Run automated tests
 lint: ## Run linting
 	@$(VENV_BIN)/pre-commit run;
 
+
 # Group: Database
 rev: ## Create a new database revision (migration). Usage: `make rev REV_TITLE="Migration title"`
 	@if [ -z $(REV_TITLE) ]; then \
-		echo "The REV_TITLE is missing for the revision.\n"; \
-		exit 1; \
+		echo "The REV_TITLE is missing for the revision."; \
+	else \
+		$(VENV_BIN)/alembic revision --autogenerate -m "$(REV_TITLE)"; \
 	fi
-	@$(VENV_BIN)/alembic revision --autogenerate -m "$(REV_TITLE)";
 
 seed: ## Seed the database with initial data (only used on local and dev environments)
 	@if [ -n "$(filter $(ENV), local)" ]; then \
@@ -108,11 +180,20 @@ seed: ## Seed the database with initial data (only used on local and dev environ
 migrate: ## Run the migrations for the database
 	@$(VENV_BIN)/alembic upgrade head
 
+
 # Group: Production
 prod: ## Build the production container
 	@docker compose up --build -d;
-	
+
+
 # Group: Cleaning
 clean: ## Clean virtual env
 	@rm -rf $(VENV_DIR)
 	@echo "Cleaned up environment."
+
+prune: ## prune the images and containers
+	@docker container prune
+	@docker image prune
+
+rm_imgs: ## Delete images associated with the application.
+	@docker compose down --rmi all
