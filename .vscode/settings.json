@@ -17,12 +17,14 @@
         "healpix",
         "healpy",
         "httpx",
+        "imgs",
         "itsdangerous",
         "joinedload",
         "mypy",
         "onupdate",
         "overrider",
         "pixi",
+        "pycache",
         "pydantic",
         "pyjwt",
         "pyproject",
@@ -41,6 +43,7 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
+    "python.defaultInterpreterPath": ".venv/bin/python",
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "makefile.configureOnOpen": false

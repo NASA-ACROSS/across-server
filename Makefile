@@ -3,6 +3,8 @@ ENV ?= local
 ENVS = local test lint prod
 IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 
+DOCKER_COMPOSE = containers/docker-compose.$(ENV).yml
+
 # define directories
 VENV_DIR = .venv
 VENV_BIN = $(VENV_DIR)/bin
@@ -16,7 +18,7 @@ IS_UV_INSTALLED := $(shell which uv || echo "")
 IS_PIP_COMPILE_INSTALLED := $(shell which $(VENV_BIN)/pip-compile || echo "")
 
 
-# The `ask` macro displays a prompt to the user, processes their input, 
+# The `ask` macro displays a prompt to the user, processes their input,
 # and conditionally executes a command based on the response.
 #
 # Args:
@@ -31,7 +33,7 @@ IS_PIP_COMPILE_INSTALLED := $(shell which $(VENV_BIN)/pip-compile || echo "")
 # > Installing dependency, are you sure? (y/n)
 # > y
 # > Installing dep...
-# 
+#
 # > Installing dependency, are you sure? (y/n)
 # > n
 # > Installation aborted
@@ -51,7 +53,7 @@ endef
 
 list_targets: ### Internal command used for getting a list of commands for .PHONY
 	@awk '/^[a-zA-Z_\-]+:/ {sub(/:/, ""); printf "%s ", $$1} END {print ""}' $(MAKEFILE_LIST)
-	
+
 help:
 	@echo "Usage:\n    make \033[36m<target>\033[0m"
 	@awk ' \
@@ -72,14 +74,14 @@ help:
 
 
 # Group: Setup
-init: install configure up migrate seed ## Initialize the project, dependencies, and start the server
+init: install configure run migrate seed ## Initialize the project, dependencies, and start the server
 
 install_uv: ## Install 'uv' if needed (this will install it globally)
 	@echo "Installing 'uv'...";
 	@curl -LsSf $(UV_INSTALL_SCRIPT) | sh;
 
 install: check_env venv ## Install dependencies from the lockfile for the specified ENV
-	@if [ -z "" ]; then \
+	@if [ -z $(IS_UV_INSTALLED) ]; then \
 		$(call ask,\
 			"'uv' is not installed. Proceeding will install to the global system.",\
 			$(MAKE) install_deps,\
@@ -88,7 +90,7 @@ install: check_env venv ## Install dependencies from the lockfile for the specif
 	else \
 		$(MAKE) install_deps; \
 	fi
-	
+
 lock: check_env venv ## Create or update the lockfile
 	@echo "Updating lockfile...";
 	@uv pip compile $(REQ_IN) -o $(REQ_TXT) --quiet;
@@ -113,46 +115,52 @@ check_env: ### Check if the passed in ENV is valid
 		exit 1; \
 	fi
 
+check_prod: ### Check if the env is prod
+	@if [ $(ENV) == prod ]; then \
+		echo "This can only be run on non-production environments."; \
+		exit 0; \
+	fi
+
 install_deps: ### Install dependencies
 	@uv pip sync $(REQ_TXT);
 	@echo "Installed dependencies";
 
-# Group: Development
-start: run migrate seed ## Start the application containers (includes migrating and seeding)
 
-dev: ## Start the server in the terminal
+# Group: Development
+start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
+
+dev: check_prod ## Start the server in the terminal
 	@$(VENV_BIN)/fastapi dev across_server/main.py
 
-run: ## Only run the containers 
-	@docker compose -f docker-compose.local.yml up -d
+stop: check_prod ## Stop the server container
+	@docker compose -f $(DOCKER_COMPOSE) down app
 
-stop: ## Stop the containers
-	@docker compose -f docker-compose.local.yml down
-
-build: ## Build the containers (does not run)
-	@docker compose -f docker-compose.local.yml build
+build: check_prod ## Build the containers (does not run)
+	@docker compose -f $(DOCKER_COMPOSE) build
 
 restart: ## Restarts the app container
-	@docker compose -f docker-compose.local.yml restart
+	@docker compose -f $(DOCKER_COMPOSE) restart
 
-reset: ## Resets the db containers and volumes
+reset: check_prod ## Resets the db containers and volumes
 	@$(call ask,\
 		"Proceeding will reset the db and delete any existing data.", \
-		docker compose -f docker-compose.local.yml down -v && $(MAKE) start,\
+		docker compose -f $(DOCKER_COMPOSE) down -v && $(MAKE) start,\
 		"Reset aborted."\
 	);
 
-hard_reset: ## Hard reset and rebuild everything (basically `rm -rf` for the entire stack)
+hard_reset: check_prod ## Hard reset and rebuild everything (basically `rm -rf` for the entire stack)
 	@$(call ask,\
 		"Proceeding will reset everything locally.", \
-		docker compose -f docker-compose.local.yml down -v && $(MAKE) rm_imgs && $(MAKE) start,\
+		docker compose -f $(DOCKER_COMPOSE) down -v && $(MAKE) rm_imgs && $(MAKE) start,\
 		"Reset aborted."\
 	);
-tail_logs: ## Output a tail of logs for the server
-	@docker compose -f docker-compose.local.yml logs -ft app
 
-temp_run: ## Start a temporary container from an image with a bash shell for debugging
+tail_logs: ## Output a tail of logs for the server
+	@docker compose -f $(DOCKER_COMPOSE) logs -ft app
+
+temp_run: check_prod ## Start a temporary container from an image with a bash shell for debugging
 	@docker run --rm -it --entrypoint=/bin/bash across-server-app
+
 
 # Group: Testing
 test: ## Run automated tests
@@ -160,6 +168,9 @@ test: ## Run automated tests
 
 lint: ## Run linting
 	@$(VENV_BIN)/pre-commit run;
+
+types: ## Run type checks
+	mypy
 
 
 # Group: Database
@@ -170,7 +181,7 @@ rev: ## Create a new database revision (migration). Usage: `make rev REV_TITLE="
 		$(VENV_BIN)/alembic revision --autogenerate -m "$(REV_TITLE)"; \
 	fi
 
-seed: ## Seed the database with initial data (only used on local and dev environments)
+seed: check_prod ## Seed the database with initial data (only used on local and dev environments)
 	@if [ -n "$(filter $(ENV), local)" ]; then \
 		$(VENV_BIN)/python -m migrations.seed; \
 	else \
@@ -181,9 +192,9 @@ migrate: ## Run the migrations for the database
 	@$(VENV_BIN)/alembic upgrade head
 
 
-# Group: Production
-prod: ## Build the production container
-	@docker compose up --build -d;
+# Group: Running
+run: ## Run the containers
+	@docker compose -f $(DOCKER_COMPOSE) up -d
 
 
 # Group: Cleaning
@@ -196,4 +207,4 @@ prune: ## prune the images and containers
 	@docker image prune
 
 rm_imgs: ## Delete images associated with the application.
-	@docker compose down --rmi all
+	@docker compose -f $(DOCKER_COMPOSE) down --rmi all

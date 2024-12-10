@@ -27,3 +27,6 @@ path = "across_server/__about__.py"
 
 [tool.pytest]
 asyncio_mode = "auto"
+
+[tool.mypy]
+files = ["."]

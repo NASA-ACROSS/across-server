@@ -17,12 +17,12 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy only the necessary files for dependency installation first
 COPY ./Makefile ./
-COPY requirements/${APP_ENV}.txt ./requirements/
+COPY ./requirements/${APP_ENV}.txt ./requirements/
 
 # Copy over the file holding the version for hatch build
-COPY across_server/__about__.py ./across_server/
+COPY ./across_server/__about__.py ./across_server/
 
-RUN make venv ENV=${APP_ENV}
+# RUN make venv ENV=${APP_ENV}
 RUN make install ENV=${APP_ENV}
 
 
@@ -47,17 +47,17 @@ COPY --from=build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
-COPY ./across_server ./across_server
+COPY ../across_server ./across_server
 
 
-FROM python:3.12-slim AS production
+FROM python:3.12-slim AS prod
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
-COPY ./across_server ./across_server
+COPY ../across_server ./across_server
 
 EXPOSE 8000
 

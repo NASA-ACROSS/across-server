@@ -8,13 +8,13 @@
             "name": "Uvicorn: FastAPI",
             "type": "debugpy",
             "request": "launch",
-            "module": "uvicorn",
             "preLaunchTask": "Run db",
             "envFile": "${workspaceFolder}/.env",
             "python": "${workspaceFolder}/.venv/bin/python",
             "pythonArgs": [
                 "-Xfrozen_modules=off"
             ],
+            "module": "uvicorn",
             "args": [
                 "across_server.main:app",
                 "--reload",
