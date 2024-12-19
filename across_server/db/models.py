@@ -11,7 +11,9 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     String,
+    Float,
     Table,
+    Integer,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -25,7 +27,13 @@ from sqlalchemy.orm import (
 )
 
 from ..routes.observatory.enums import OBSERVATORY_TYPE
-
+from .enums import (
+    ObservationType, 
+    ObservationStatus, 
+    DepthUnit,
+    IVOAObsCategory,
+    IVOAObsTrackingType
+)
 
 class Base(AsyncAttrs, DeclarativeBase):
     id: Mapped[uuid.UUID] = mapped_column(
@@ -300,6 +308,14 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         back_populates="instrument", lazy="selectin", cascade="all,delete"
     )
 
+    schedules: Mapped[List["Schedule"]] = relationship(
+        back_populates="instrument", lazy="selectin"
+    )
+
+    observations: Mapped[List["Observation"]] = relationship(
+        back_populates="instrument", lazy="selectin"
+    )
+
 
 class Footprint(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "footprint"
@@ -313,4 +329,73 @@ class Footprint(Base, CreatableMixin, ModifiableMixin):
 
     instrument: Mapped["Instrument"] = relationship(
         back_populates="footprints", lazy="selectin"
+    )
+
+
+class Schedule(Base, CreatableMixin, ModifiableMixin):
+
+    __tablename__ = "schedule"
+
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
+    )
+
+    instrument: Mapped["Instrument"] = relationship(
+        back_populates="schedules", lazy="selectin"
+    )
+
+    observations: Mapped[List["Observation"]] = relationship(
+        back_populates="schedule", lazy="selectin", cascade="all,delete"
+    )
+
+
+class Observation(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "observation"
+
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
+    )
+    schedule_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
+    )
+    object_name: Mapped[str] = mapped_column(String(100))
+    pointing_ra: Mapped[float] = mapped_column(Float(5))
+    pointing_dec: Mapped[float] = mapped_column(Float(5))
+    date_range_begin: Mapped[datetime] = mapped_column(DateTime)
+    date_range_end: Mapped[datetime] = mapped_column(DateTime)
+    external_observation_id: Mapped[str] = mapped_column(String(50))
+    type: Mapped[str] = mapped_column(ObservationType.to_psql_enum())
+    status: Mapped[str] = mapped_column(ObservationStatus.to_psql_enum())
+    exposure_time: Mapped[Optional[float]] = mapped_column(Float(2))
+    reason: Mapped[Optional[str]] = mapped_column(String(100))
+    description: Mapped[Optional[str]] = mapped_column(String(100))
+    proposal_reference: Mapped[Optional[str]] = mapped_column(String(100))
+    object_ra: Mapped[Optional[float]] = mapped_column(Float(5))
+    object_dec: Mapped[Optional[float]] = mapped_column(Float(5))
+    pointing_angle: Mapped[Optional[float]] = mapped_column(Float)
+    depth_value: Mapped[Optional[float]] = mapped_column(Float(2))
+    depth_unit: Mapped[Optional[str]] = mapped_column(DepthUnit.to_psql_enum())
+    central_wavelength: Mapped[Optional[float]] = mapped_column(Float(2))
+    bandwidth: Mapped[Optional[float]] = mapped_column(Float(2))
+    filter_name: Mapped[Optional[List[str]]] = mapped_column(String(50))
+    
+    # explicit ivoa ObsLocTap definitions
+    t_resolution: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    em_res_power: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    o_ucd: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    pol_states: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    pol_xel: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    category: Mapped[Optional[str]] = mapped_column(
+        IVOAObsCategory.to_psql_enum(), nullable=True
+    )
+    priority: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    tracking_type: Mapped[Optional[str]] = mapped_column(
+        IVOAObsTrackingType.to_psql_enum(), nullable=True
+    )
+
+    instrument: Mapped["Instrument"] = relationship(
+        back_populates="observations", lazy="selectin" 
+    )
+    schedule: Mapped["Schedule"] = relationship(
+        back_populates="observations", lazy="selectin"
     )

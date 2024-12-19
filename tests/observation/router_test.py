@@ -1,0 +1,126 @@
+import fastapi
+import pytest
+import pytest_asyncio
+import json
+from httpx import AsyncClient
+
+
+class TestObservationPostRoute:
+    @pytest_asyncio.fixture(autouse=True)
+    async def setup(
+        self, 
+        async_client: AsyncClient,
+        mock_observation_data: dict 
+    ):
+        self.client = async_client
+        self.endpoint = "/observation/"
+        self.data = mock_observation_data
+
+    @pytest.mark.asyncio
+    async def test_should_return_200_on_success(self):
+        """Should return a 200 when successful"""
+        res = await self.client.post(self.endpoint, json=self.data)
+        assert res.status_code == fastapi.status.HTTP_200_OK
+    
+    @pytest.mark.asyncio
+    async def test_should_return_created_observation_on_success(self):
+        """Should return created observation when successful"""
+        res = await self.client.post(self.endpoint, json=self.data)
+        assert json.loads(res.text)["description"] == "the returned observation"
+
+    @pytest.mark.asyncio
+    async def test_should_create_user_once(
+        self,
+        mock_observation_service
+    ):
+        """Should call the observation create endpoint once"""
+        await self.client.post(self.endpoint, json=self.data)
+        mock_observation_service.create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_instrument_id(self):
+        """Should return a 422 when the input is missing the instrument ID"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("instrument_id")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_schedule_id(self):
+        """Should return a 422 when the input is missing the schedule ID"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("schedule_id")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_object_name(self):
+        """Should return a 422 when the input is missing the object name"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("object_name")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_pointing_position(self):
+        """Should return a 422 when the input is missing the pointing position"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("pointing_position")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_date_range(self):
+        """Should return a 422 when the input is missing the date range"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("date_range")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_external_observation_id(self):
+        """Should return a 422 when the input is missing the external observation ID"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("external_observation_id")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_type(self):
+        """Should return a 422 when the input is missing the type"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("type")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.asyncio
+    async def test_should_return_422_when_missing_status(self):
+        """Should return a 422 when the input is missing the status"""
+
+        res = await self.client.post(
+            self.endpoint,
+            json=self.data.pop("status")
+        )
+
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
