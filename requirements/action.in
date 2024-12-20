@@ -1,0 +1,6 @@
+# Github Action workflow dependencies
+
+-r base.in
+-r types.in
+-r test.in
+-r lint.in

@@ -22,6 +22,7 @@ This is the codebase for the NASA ACROSS Server. It provides access to Science S
   - [Exception Handling](#exception-handling)
   - [Environment Variable Configuration](#environment-variable-configuration)
   - [Database Design](#database-design)
+- [Project Dependencies](#project-dependencies)
 - [Deployment](#deployment)
   - [Continuous Integration (CI)](#continuous-integration-ci)
   - [[TBD] Continuous Deployment (CD)](#continuous-deployment-cd)
@@ -35,52 +36,57 @@ This is the codebase for the NASA ACROSS Server. It provides access to Science S
 It is assumed that the user has completed and installed the following:
 
 - Clone the repository
-- [`pixi` Installation](https://pixi.sh/latest/#installation)
 - [Docker Desktop Installation](https://docs.docker.com/desktop/)
 
 Then simply run
 
 ```zsh
-pixi run init
+make init
 ```
 
-That's it! This is a [`pixi task`](https://pixi.sh/latest/features/advanced_tasks/) that will install dependencies, create a `.env` config file, build the docker containers, run migrations, and run the initial seed for basic usage with the ACROSS frontend.
+That's it! This is a [`Makefile target`](https://makefiletutorial.com/#targets) command that will:
 
-**small note:** `pixi` tasks can be run with `pixi r <task>` as well.
+- Ask to install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) if it's not installed. (This is a required step.)
+- Install dependencies
+- Install [`pre-commit`](https://pre-commit.com/) git hooks.
+- Create a `.env` config file
+- Build the containers
+- Run migrations
+- Run the initial seed for basic usage with the ACROSS frontend.
 
-If everything completed successfully, you should be able to access the generated OpenAPI docs locally at
+If everything completed successfully, you should be able to access the generated OpenAPI docs locally at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+General documentation for other project commands can be found with `make help`.
 
 ### Development
 
 In order to run the server through the CLI run
 
 ```zsh
-pixi run dev
+make dev
 ```
 
-This will start up the development server in your terminal which will run outside of the docker container.
+This will start up the development server in your terminal which will run outside of the container.
 
 If you already have the container running, you may need to stop the currently running server to free up the port using
 
 ```zsh
-pixi run down
+make stop
 ```
 
 This will only stop the `app` container which runs the server, _NOT_ the `db` container. This is acceptable since most cases will not need to stop the database itself, however if the `db` container is stopped at any point, fear not, it is volumed and will not clear the existing data.
 
-While it is possible to develop using the server running on the docker container, it may not always be ideal. Specifically, logs will output to the container itself. A tail of the logs can be output to your local terminal through the following `pixi` task for ease. Under the hood it runs a docker command.
+While it is possible to develop using the server running on the docker container, it may not always be ideal. Specifically, logs will output to the container itself. A tail of the logs can be output to your local terminal through the following command for ease. Under the hood it runs a docker command.
 
 ```zsh
-pixi run tail_log
+make tail_log
 ```
 
 #### Database
 
 A couple notes on developing against the database:
 
-1. When making changes to the db schema, you will likely want to reset your local db. This is possible through `pixi r reset`. **This is destructive and will delete all the local data.**
+1. When making changes to the db schema, you will likely want to reset your local db. This is possible through `make reset`. **This is destructive and will delete all the local data.**
 2. While developing new features or functionality, it is good practice to build out the seed data accordingly to make writing the PR for yourself as the author and testing the PR for others easier. Reducing the amount of required setup for a PR is a huge boon to quality since reviewers will be able to very quickly and easily test acceptance criteria.
 
 ### Testing Routes Locally
@@ -97,17 +103,13 @@ In the `Run and Debug` sidebar panel in vscode, launch `Uvicorn: Fastapi`. This 
 
 #### Python Interpreter
 
-When working on a python project is that VS Code will need to be told where the interpreter lives. With `pixi` the interpreter will be in the root of this project under `.pixi/envs/local/bin/python3.12`.
+When working on a python project is that VS Code will need to be told where the interpreter lives. The interpreter will be in the root of this project under `.venv/bin/python`.
 
 This should be automatically set when the extensions load due to the workspace setting `python.defaultInterpreterPath`. However, it can be set manually with the following steps:
 
 1. `CMD + SHIFT + P` to open the command palette
 2. Search for `Python: Select Interpreter`
-3. Click on `Enter interpreter path...`
-4. Click `Find...`
-5. Navigate to `.pixi/envs/local/bin/python3.12` (`CMD + SHIFT + .` to reveal hidden items)
-
-Alternatively, select whichever version of python you want to interpret with within the `.pixi` directory. This is required to enable proper code hints within VS Code. If you're wondering why it is specifically the `local` env, that is because `local` has dependencies to all the other environments. You can find the `local` env definition in `pyproject.toml` under `[tool.pixi.environments]`.
+3. Click on `Python 3.12.4 ('.venv')`
 
 #### Workspace
 
@@ -142,6 +144,10 @@ The database is separated and defined through `sqlalchemy` models. `sqlalchemy` 
 
 ```text
 across-server # Your named directory where the repo lives
+├── containers/
+│   ├── docker-compose.local.yml
+│   ├── docker-compose.prod.yml
+│   ├── Dockerfile
 ├── migrations/
 ├── across_server
 │   ├── auth/
@@ -193,11 +199,8 @@ across-server # Your named directory where the repo lives
 │   └── login-link-email.html
 ├── .env
 ├── .gitignore
-├── docker-compose.debug.yml
-├── docker-compose.yml
-├── Dockerfile
-├── pixi.lock
 ├── pyproject.toml
+├── Makefile
 ├── README.md
 └── ...
 
@@ -296,7 +299,7 @@ In most of the usages of exception handling, routers themselves do not concern t
 
 ### Environment Variable Configuration
 
-A "dotenv" (`.env`) file is created in the root of the project if it does not exist when running `pixi run init`. The specific task is `configure` which leads to `scripts/create_env_file.py`. This file holds the default values for local development, and is done this way since the `.env` is `.gitignore`d from the repository.
+A "dotenv" (`.env`) file is created in the root of the project if it does not exist when running `make init`. The specific task is `configure` which leads to `scripts/create_env_file.py`. This file holds the default values for local development, and is done this way since the `.env` is `.gitignore`d from the repository.
 
 The actual `.env` file may contain passwords and secrets to external services such as Space Track and those should not be committed. For sensitive values please reach out to an ACROSS admin or developer to obtain those secrets.
 
@@ -314,10 +317,10 @@ The usage of `UUID`s is helpful to simplify database seeding and any batch proce
 
 #### Migrations
 
-Database migrations are run with alembic. A utility `pixi` task is available:
+Database migrations are run with `alembic`. A utility command is available:
 
 ```bash
-pixi run rev "{title}"
+make rev REV_TITLE={title}
 ```
 
 The title should be relevant to the PR of the ticket, or directly related to the change (e.g. "create new user", "add column favorite_color to user", "add table telescope")
@@ -325,10 +328,16 @@ The title should be relevant to the PR of the ticket, or directly related to the
 For example:
 
 ```bash
-pixi run rev "create new user"
+make rev REV_TITLE="create new user"
 ```
 
 will automatically create a revision or migration file under `/migrations/versions` and have the format of `YYYY_MM_DD-<rev ID>_create_new_user.py`. More information about alembic configuration can be found in the `alembic.ini` file.
+
+## Project Dependencies
+
+### Installing New Dependencies
+
+Currently, the simplest way to install new dependencies is to add the dependency to the respective `.in` file within the `requirements/` directory and then run `make lock ENV=<env>` to update the lockfile and `make install ENV=<env>`.
 
 ## Deployment
 
@@ -342,21 +351,27 @@ TBD
 
 ### Helpful Docker Commands To Aid in Debugging a Dockerfile
 
-Build a container separately from docker-compose
+- Build a container separately from docker-compose
 
-```zsh
-docker build -t <image-name> .
-```
+  ```zsh
+  docker build -t <image-name> .
+  ```
 
-optionally add `--target` for whichever stage you want to build.
+  optionally add `--target` for whichever stage you want to build.
 
-Open a shell in a particular image by spinning up a temporary container for it
+- Open a shell in a particular image by spinning up a temporary container for it
 
-```zsh
-docker run --rm -it --entrypoint=/bin/bash <image-name>
-```
+  ```zsh
+  make temp_run
+  ```
 
-Note that it is assumed the image has bash installed.
+  or
+
+  ```zsh
+  docker run --rm -it --entrypoint=/bin/bash <image-name>
+  ```
+
+  Note that it is assumed the image has bash installed.
 
 ## Index
 
@@ -402,5 +417,6 @@ Helpful resources on REST APIs.
 - [Alembic](https://alembic.sqlalchemy.org/en/latest/index.html) for DB migrations
 - [PostgreSQL](https://www.postgresql.org/) for the database
 - [Docker](https://docs.docker.com/) for containerization and container composition with `docker-compose`
-- [Pixi](https://www.pixi.sh/) as the project management tool (dependency management, tasks, etc)
+- [uv](https://docs.astral.sh/uv/) as the dependency management tool (dependency management)
+- [Makefile](https://www.gnu.org/software/make/manual/make.html) - project management tool for helpful commands.
 - [pre-commit](https://pre-commit.com) for running linting/styling on the pre-commit git hook

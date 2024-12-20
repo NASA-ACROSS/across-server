@@ -1,22 +1,18 @@
-name: across-server
+name: across
 
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
-      target: local
-    volumes:
-      - ./across_server/main.py:/app/across_server/main.py
-      - ./across_server:/app/across_server
-    environment:
-      APP_ENV: local
-    command: fastapi dev across_server/main.py --host 0.0.0.0 --port 8000
+      context: ..
+      dockerfile: containers/Dockerfile
+      target: prod
     ports:
       - 8000:8000
+    environment:
+      APP_ENV: prod
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    command: uvicorn across_server.main:app --host 0.0.0.0 --port 8000
 
   db:
     image: postgis/postgis
