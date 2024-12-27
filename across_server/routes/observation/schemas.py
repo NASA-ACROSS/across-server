@@ -2,7 +2,7 @@ from typing import Optional
 import uuid
 from pydantic import BaseModel, ConfigDict
 
-from ...db.enums import (
+from ...core.enums import (
     ObservationType, 
     ObservationStatus,
     IVOAObsCategory,

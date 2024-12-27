@@ -1,8 +1,8 @@
 """Adding observation and schedule tables
 
-Revision ID: 87a81ecc8d08
+Revision ID: a3fa043a00e9
 Revises: 023e7f96f47f
-Create Date: 2024-12-18 17:38:51.307305
+Create Date: 2024-12-27 10:13:56.979596
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '87a81ecc8d08'
+revision: str = 'a3fa043a00e9'
 down_revision: Union[str, None] = '023e7f96f47f'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -41,8 +41,8 @@ def upgrade() -> None:
     sa.Column('date_range_begin', sa.DateTime(), nullable=False),
     sa.Column('date_range_end', sa.DateTime(), nullable=False),
     sa.Column('external_observation_id', sa.String(length=50), nullable=False),
-    sa.Column('type', sa.Enum('imaging', 'timing', 'spectroscopy', name='type'), nullable=False),
-    sa.Column('status', sa.Enum('planned', 'scheduled', 'unscheduled', 'performed', 'aborted', name='status'), nullable=False),
+    sa.Column('type', sa.String(length=50), nullable=False),
+    sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('exposure_time', sa.Float(precision=2), nullable=True),
     sa.Column('reason', sa.String(length=100), nullable=True),
     sa.Column('description', sa.String(length=100), nullable=True),
@@ -51,7 +51,7 @@ def upgrade() -> None:
     sa.Column('object_dec', sa.Float(precision=5), nullable=True),
     sa.Column('pointing_angle', sa.Float(), nullable=True),
     sa.Column('depth_value', sa.Float(precision=2), nullable=True),
-    sa.Column('depth_unit', sa.Enum('ab_mag', 'vega_mag', 'flux_erg', 'flux_jy', name='depth_unit'), nullable=True),
+    sa.Column('depth_unit', sa.String(length=50), nullable=True),
     sa.Column('central_wavelength', sa.Float(precision=2), nullable=True),
     sa.Column('bandwidth', sa.Float(precision=2), nullable=True),
     sa.Column('filter_name', sa.String(length=50), nullable=True),
@@ -60,9 +60,9 @@ def upgrade() -> None:
     sa.Column('o_ucd', sa.String(), nullable=True),
     sa.Column('pol_states', sa.String(), nullable=True),
     sa.Column('pol_xel', sa.String(), nullable=True),
-    sa.Column('category', sa.Enum('fixed', 'coordinated', 'window', 'other', name='category'), nullable=True),
+    sa.Column('category', sa.String(length=50), nullable=True),
     sa.Column('priority', sa.Integer(), nullable=True),
-    sa.Column('tracking_type', sa.Enum('sidereal', 'solar_system_object_tracking', 'fixed_az_el_transit', name='tracking_type'), nullable=True),
+    sa.Column('tracking_type', sa.String(length=50), nullable=True),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_by_id', sa.UUID(), nullable=True),
     sa.Column('created_on', sa.DateTime(), nullable=False),

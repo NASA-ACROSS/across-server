@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from .base import PrefixMixin
-from ...db.enums import DepthUnit
+from ..enums import DepthUnit
 
 
 class UnitValue(BaseModel, PrefixMixin):
