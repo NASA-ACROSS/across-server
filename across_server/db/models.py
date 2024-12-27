@@ -354,6 +354,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float] = mapped_column(Float(5))
     pointing_dec: Mapped[float] = mapped_column(Float(5))
+    pointing_position: Mapped[WKBElement] = mapped_column(Geography("POINT", srid=4326))
     date_range_begin: Mapped[datetime] = mapped_column(DateTime)
     date_range_end: Mapped[datetime] = mapped_column(DateTime)
     external_observation_id: Mapped[str] = mapped_column(String(50))
@@ -365,6 +366,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     proposal_reference: Mapped[Optional[str]] = mapped_column(String(100))
     object_ra: Mapped[Optional[float]] = mapped_column(Float(5))
     object_dec: Mapped[Optional[float]] = mapped_column(Float(5))
+    object_position: Mapped[WKBElement | None] = mapped_column(
+        Geography("POINT", srid=4326), nullable=True
+    )
     pointing_angle: Mapped[Optional[float]] = mapped_column(Float)
     depth_value: Mapped[Optional[float]] = mapped_column(Float(2))
     depth_unit: Mapped[Optional[str]] = mapped_column(String(50)) #Enum

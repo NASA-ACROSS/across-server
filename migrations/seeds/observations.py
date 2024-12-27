@@ -12,11 +12,13 @@ sandy_observation = Observation(
     object_name="Krusty Krab",
     pointing_ra=123.456,
     pointing_dec=-78.901,
+    pointing_position="POINT (123.456 -78.901)",
     date_range_begin=datetime.now(),
     date_range_end=datetime.now() + timedelta(days=1.0),
     external_observation_id="Sandy's Treedome Observations",
     object_ra=123.567,
     object_dec=-78.876,
+    object_position="POINT (123.567 -78.876)",
     type="imaging",
     status="planned"
 )

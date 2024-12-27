@@ -1,18 +1,18 @@
 """Adding observation and schedule tables
 
-Revision ID: a3fa043a00e9
+Revision ID: c5361765767a
 Revises: 023e7f96f47f
-Create Date: 2024-12-27 10:13:56.979596
+Create Date: 2024-12-27 11:18:12.540440
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from geoalchemy2 import Geography
 
 # revision identifiers, used by Alembic.
-revision: str = 'a3fa043a00e9'
+revision: str = 'c5361765767a'
 down_revision: Union[str, None] = '023e7f96f47f'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -38,6 +38,17 @@ def upgrade() -> None:
     sa.Column('object_name', sa.String(length=100), nullable=False),
     sa.Column('pointing_ra', sa.Float(precision=5), nullable=False),
     sa.Column('pointing_dec', sa.Float(precision=5), nullable=False),
+    sa.Column(
+        'pointing_position', 
+        Geography(
+            geometry_type='POINT', 
+            srid=4326, 
+            from_text='ST_GeogFromText', 
+            name='geography', 
+            nullable=False
+        ), 
+        nullable=False
+    ),
     sa.Column('date_range_begin', sa.DateTime(), nullable=False),
     sa.Column('date_range_end', sa.DateTime(), nullable=False),
     sa.Column('external_observation_id', sa.String(length=50), nullable=False),
@@ -49,6 +60,16 @@ def upgrade() -> None:
     sa.Column('proposal_reference', sa.String(length=100), nullable=True),
     sa.Column('object_ra', sa.Float(precision=5), nullable=True),
     sa.Column('object_dec', sa.Float(precision=5), nullable=True),
+    sa.Column(
+        'object_position', 
+        Geography(
+            geometry_type='POINT', 
+            srid=4326, 
+            from_text='ST_GeogFromText', 
+            name='geography'
+        ), 
+        nullable=True
+    ),
     sa.Column('pointing_angle', sa.Float(), nullable=True),
     sa.Column('depth_value', sa.Float(precision=2), nullable=True),
     sa.Column('depth_unit', sa.String(length=50), nullable=True),
