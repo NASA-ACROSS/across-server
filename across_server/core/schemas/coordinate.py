@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Any
 from geoalchemy2 import WKBElement, shape
 from shapely import Point
 from .base import PrefixMixin
@@ -7,7 +8,7 @@ class Coordinate(BaseModel, PrefixMixin):
     ra: float | None = Field(ge=0.0, le=360.0)
     dec: float | None = Field(ge=-90.0, le=90.0)
 
-    def model_post_init(self) -> None:
+    def model_post_init(self, __context: Any) -> None:
          """
          Pydantic post-init hook
          Ensure RA and dec are rounded to an appropriate precision
