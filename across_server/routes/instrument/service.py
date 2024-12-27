@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from ...db import models
 from ...db.database import get_session
+from .exceptions import InstrumentNotFoundException
 
 
 class InstrumentService:
@@ -25,6 +26,6 @@ class InstrumentService:
         instrument = result.scalar_one_or_none()
 
         if not instrument:
-            return False
+            raise InstrumentNotFoundException(instrument_id)
 
         return bool(instrument.footprints)
