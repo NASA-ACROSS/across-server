@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
-from datetime import datetime, timezone
+from datetime import datetime
 from .base import PrefixMixin
+from across_server.core.date_utils import convert_to_utc
 
 class DateRange(BaseModel, PrefixMixin):
     begin: datetime
@@ -8,9 +9,9 @@ class DateRange(BaseModel, PrefixMixin):
 
     @field_validator('begin', 'end', mode='before')
     @classmethod
-    def make_timezone_naive(cls, value: str) -> datetime:
+    def validate_timezone(cls, value: datetime) -> datetime:
         """
         Convert the datetime to UTC and remove timezone info 
         Timezone-naive datetime is needed for sqlalchemy
         """
-        return datetime.fromisoformat(value).astimezone(timezone.utc).replace(tzinfo=None)
+        return convert_to_utc(value)
