@@ -1,8 +1,7 @@
 from pydantic import EmailStr
 
-from .tokens.magic_token import MagicLinkToken
-
 from ..core.config import config as core_config
+from .tokens.magic_token import MagicLinkToken
 
 
 def generate(email: EmailStr) -> str:

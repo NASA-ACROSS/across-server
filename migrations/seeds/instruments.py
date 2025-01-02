@@ -1,7 +1,8 @@
 import uuid
-from across_server.db.models import Instrument
-from .telescopes import sandy_telescope
 
+from across_server.db.models import Instrument
+
+from .telescopes import sandy_telescope
 
 sandy_instrument = Instrument(
     id=uuid.uuid4(),

@@ -2,8 +2,8 @@ from datetime import timedelta
 from typing import Type
 from uuid import UUID
 
-from .base_token import TokenData, Token
 from ..config import auth_config
+from .base_token import Token, TokenData
 
 
 class RefreshTokenData(TokenData[str]):

@@ -1,6 +1,6 @@
 import uuid
-from across_server.db.models import Group
 
+from across_server.db.models import Group
 
 treedome_space_group = Group(
     id=uuid.uuid4(),

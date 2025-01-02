@@ -1,4 +1,4 @@
-from typing import Callable, TypeVar, Dict, Optional, cast
+from typing import Callable, Dict, Optional, TypeVar, cast
 
 T = TypeVar("T", bound=Dict)
 

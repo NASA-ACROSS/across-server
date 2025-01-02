@@ -1,11 +1,10 @@
 import uuid
-
 from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, Path, Security, status
 
-
-from ...db import models
 from ...auth.strategies import global_access, group_access
+from ...db import models
 from . import schemas
 from .service import GroupService
 

@@ -1,19 +1,18 @@
 import asyncio
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from across_server.db import config, models
 
-from .seeds.users import users
-from .seeds.permissions import permissions
-from .seeds.roles import roles
+from .seeds.footprints import footprints
 from .seeds.group_roles import group_roles
 from .seeds.groups import groups
-from .seeds.observatories import observatories
-from .seeds.telescopes import telescopes
 from .seeds.instruments import instruments
-from .seeds.footprints import footprints
-
+from .seeds.observatories import observatories
+from .seeds.permissions import permissions
+from .seeds.roles import roles
+from .seeds.telescopes import telescopes
+from .seeds.users import users
 
 seed_order = [
     [models.Permission.__tablename__, permissions],

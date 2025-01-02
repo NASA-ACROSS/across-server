@@ -1,29 +1,28 @@
 from __future__ import annotations
 
 import uuid
-
 from datetime import datetime
 from typing import List, Optional, cast, get_args
 
+from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     String,
     Table,
-    Enum,
     func,
 )
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import (
     DeclarativeBase,
-    mapped_column,
     Mapped,
-    relationship,
     declared_attr,
+    mapped_column,
+    relationship,
 )
-from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from geoalchemy2 import Geography, WKBElement
 
 from ..routes.observatory.enums import OBSERVATORY_TYPE
 

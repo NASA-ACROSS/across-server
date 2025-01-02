@@ -1,10 +1,10 @@
 from unittest import mock
+from unittest.mock import AsyncMock
+
 import fastapi
 import pytest
 import pytest_asyncio
-
 from httpx import AsyncClient
-from unittest.mock import AsyncMock
 
 
 class TestLoginRoute:

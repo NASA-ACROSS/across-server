@@ -1,12 +1,11 @@
+from typing import Annotated, Sequence
 from uuid import UUID
 
-from typing import Annotated, Sequence
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...db import get_session, models
-
 from .exceptions import GroupNotFoundException
 
 

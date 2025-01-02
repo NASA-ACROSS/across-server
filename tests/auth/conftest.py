@@ -1,6 +1,6 @@
-import pytest
-
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from across_server.auth import security, strategies
 from across_server.auth.service import AuthService

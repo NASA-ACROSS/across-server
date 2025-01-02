@@ -1,8 +1,8 @@
 from typing import List, Type
 
-from .base_token import TokenData, Token
 from ..config import auth_config
 from ..schemas import AuthUser, Group
+from .base_token import Token, TokenData
 
 
 class AccessTokenData(TokenData[str]):

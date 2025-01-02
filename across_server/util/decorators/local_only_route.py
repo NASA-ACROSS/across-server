@@ -1,7 +1,7 @@
-from fastapi import HTTPException, status
 from functools import wraps
-from fastapi import APIRouter
 from typing import Callable
+
+from fastapi import APIRouter, HTTPException, status
 
 from ...core.config import config
 

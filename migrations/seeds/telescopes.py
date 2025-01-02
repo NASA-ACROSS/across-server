@@ -1,7 +1,8 @@
 import uuid
-from across_server.db.models import Telescope
-from .observatories import sandy_observatory
 
+from across_server.db.models import Telescope
+
+from .observatories import sandy_observatory
 
 sandy_telescope = Telescope(
     id=uuid.uuid4(),

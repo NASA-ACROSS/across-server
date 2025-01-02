@@ -1,13 +1,11 @@
 import uuid
-
 from typing import Annotated, List
+
 from fastapi import APIRouter, Depends, status
 
-
+from ... import auth, db
 from . import schemas
-from ... import db, auth
 from .service import UserService
-
 
 router = APIRouter(
     prefix="/user",

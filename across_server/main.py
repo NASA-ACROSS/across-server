@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 
-from .core.config import config
-
 from . import auth
-from .routes import group, user, role
+from .core.config import config
+from .routes import group, role, user
 
 app = FastAPI(
     title="ACROSS Server",
