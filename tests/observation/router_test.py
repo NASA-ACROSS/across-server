@@ -29,7 +29,7 @@ class TestObservationPostRoute:
         assert json.loads(res.text)["description"] == "the returned observation"
 
     @pytest.mark.asyncio
-    async def test_should_create_user_once(
+    async def test_should_create_observation_once(
         self,
         mock_observation_service
     ):
