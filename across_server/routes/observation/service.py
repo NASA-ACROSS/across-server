@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import schemas
 from ...db.database import get_session
+from ...db.utils import from_orm
 
 
 class ObservationService:
@@ -14,11 +15,11 @@ class ObservationService:
     ) -> None:
         self.db = db
 
-    async def create(self, data: schemas.ObservationCreate) -> schemas.ObservationCreate:
+    async def create(self, data: schemas.ObservationCreate) -> schemas.Observation:
         observation = data.to_orm()
 
         self.db.add(observation)
         await self.db.commit()
         await self.db.refresh(observation)
 
-        return data.from_orm(observation)
+        return from_orm(data, observation)

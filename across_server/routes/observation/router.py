@@ -21,10 +21,10 @@ router = APIRouter(
     summary="Create an observation",
     description="Create a new observation.",
     status_code=status.HTTP_200_OK,
-    response_model=schemas.ObservationCreate,
+    response_model=schemas.Observation,
     responses={
         status.HTTP_200_OK: {
-            "model": schemas.ObservationCreate,
+            "model": schemas.Observation,
             "description": "The newly created observation",
         },
     },

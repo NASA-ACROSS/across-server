@@ -6,14 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class MockObservationSchema:
-    @staticmethod
-    def to_orm():
-        pass
-
     @classmethod
-    def from_orm(cls, data):
+    def to_orm(cls):
         return cls()
     
+    def __init__(self, **kwargs):
+        self.model_config = {"return_schema": self.__class__}
 
 @pytest.fixture(scope="function")
 def mock_observation():
@@ -32,7 +30,8 @@ def mock_observation_data():
         },
         "external_observation_id": "test-external-obsid",
         "type": "imaging",
-        "status": "planned"
+        "status": "planned",
+        "created_on": "2024-12-16 00:00:00"
     }
 
 @pytest.fixture(scope="function")
@@ -40,6 +39,7 @@ def mock_observation_service(mock_observation_data):
     mock = AsyncMock(ObservationService)
 
     returned_mock_observation = mock_observation_data
+    returned_mock_observation["id"] = str(uuid4())
     returned_mock_observation["description"] = "the returned observation"
     
     mock.create = AsyncMock(
