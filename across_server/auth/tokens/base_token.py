@@ -1,9 +1,9 @@
-import jwt
-
-from fastapi import HTTPException, status
-from typing import Generic, TypeVar, Type
-from datetime import datetime, timedelta, timezone
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta, timezone
+from typing import Generic, Type, TypeVar
+
+import jwt
+from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 # string of UUID or email

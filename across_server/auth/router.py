@@ -1,17 +1,15 @@
 from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, status, Response
-from pydantic import EmailStr
 
+from fastapi import APIRouter, Depends, Response, status
+from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
 from ..util.email.service import EmailService
-
-from . import schemas, magic_link, tokens, strategies
+from . import magic_link, schemas, strategies, tokens
 from .security import extract_creds
 from .service import AuthService
-
 
 router = APIRouter(
     prefix="/auth",

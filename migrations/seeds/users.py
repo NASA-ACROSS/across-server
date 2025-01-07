@@ -1,11 +1,10 @@
 import uuid
 
+from across_server.db.models import User
 
+from .group_roles import treedome_group_admin
 from .groups import treedome_space_group
 from .roles import across_admin_role
-from .group_roles import treedome_group_admin
-
-from across_server.db.models import User
 
 dev = User(
     id=uuid.UUID("173e35fa-9544-49e8-b5b9-d04ea884defb"),

@@ -2,6 +2,7 @@ from geoalchemy2 import WKTElement
 from shapely.geometry import Polygon
 
 from across_server.db.models import Footprint
+
 from .instruments import sandy_instrument
 
 

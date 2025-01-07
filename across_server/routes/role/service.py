@@ -1,6 +1,6 @@
+from typing import Annotated, Sequence
 from uuid import UUID
 
-from typing import Annotated, Sequence
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

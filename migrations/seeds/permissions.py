@@ -1,4 +1,5 @@
 import uuid
+
 from across_server.db.models import Permission
 
 # Note: These permissions will likely be data migrations

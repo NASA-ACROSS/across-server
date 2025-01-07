@@ -2,14 +2,13 @@ from typing import Annotated, TypedDict
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-
 from pydantic import EmailStr
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
-from . import schemas, tokens
 from ..db import get_session, models
+from . import schemas, tokens
 
 
 class Tokens(TypedDict):

@@ -1,6 +1,8 @@
 import uuid
+
 from across_server.db.models import Observatory
 from across_server.routes.observatory.enums import OBSERVATORY_TYPE
+
 from .groups import treedome_space_group
 
 space_based: OBSERVATORY_TYPE = "SPACE_BASED"

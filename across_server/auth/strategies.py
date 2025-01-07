@@ -1,13 +1,14 @@
 import secrets
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import Depends, HTTPException, Path, Request, status
 from fastapi.security import SecurityScopes
 
+from .config import auth_config
+from .schemas import AuthUser
 from .security import extract_creds
 from .service import AuthService
-from .schemas import AuthUser
-from .config import auth_config
 
 
 async def authenticate(

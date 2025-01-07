@@ -1,8 +1,9 @@
 from typing import Type
 
 from pydantic import EmailStr
-from .base_token import TokenData, Token
+
 from ..config import auth_config
+from .base_token import Token, TokenData
 
 
 class MagicLinkTokenData(TokenData[EmailStr]):

@@ -1,15 +1,14 @@
+from typing import Annotated, Sequence
 from uuid import UUID
 
-from typing import Annotated, Sequence
 from fastapi import Depends
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import schemas
-
 from ...db import models
 from ...db.database import get_session
+from . import schemas
 from .exceptions import DuplicateUserException, UserNotFoundException
 
 
