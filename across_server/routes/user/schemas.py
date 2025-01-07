@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -45,6 +45,6 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    first_name: str
-    last_name: str
-    username: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    username: Optional[str] = None
