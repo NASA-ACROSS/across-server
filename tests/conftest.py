@@ -1,10 +1,10 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import httpx
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, MagicMock
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 

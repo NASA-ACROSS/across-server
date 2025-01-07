@@ -1,9 +1,10 @@
 import uuid
 from datetime import datetime, timedelta
+
 from across_server.db.models import Observation
+
 from .instruments import sandy_instrument
 from .schedules import sandy_schedule
-
 
 sandy_observation = Observation(
     id=uuid.uuid4(),
@@ -20,7 +21,7 @@ sandy_observation = Observation(
     object_dec=-78.876,
     object_position="POINT (123.567 -78.876)",
     type="imaging",
-    status="planned"
+    status="planned",
 )
 
 observations = [sandy_observation]

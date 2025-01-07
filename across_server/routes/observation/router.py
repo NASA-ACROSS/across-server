@@ -1,9 +1,9 @@
 from typing import Annotated
+
 from fastapi import APIRouter, Depends, status
 
 from . import schemas
 from .service import ObservationService
-
 
 router = APIRouter(
     prefix="/observation",

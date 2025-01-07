@@ -1,11 +1,12 @@
-from .models import Base as PostgresModel
 from pydantic import BaseModel
+
+from .models import Base as PostgresModel
 
 
 def from_orm(
-        schema: BaseModel, 
-        model: PostgresModel, 
-    ) -> BaseModel:
+    schema: BaseModel,
+    model: PostgresModel,
+) -> BaseModel:
     """
     Returns the schema representation of a database model object
     utilizing the schema's `validate_from_database_model` method

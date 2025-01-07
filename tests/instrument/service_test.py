@@ -1,19 +1,20 @@
 from uuid import uuid4
+
 import pytest
-from across_server.routes.instrument.service import InstrumentService
+
 from across_server.routes.instrument.exceptions import InstrumentNotFoundException
+from across_server.routes.instrument.service import InstrumentService
 
 
 class MockInstrumentModelWithFootprint:
-    footprints = ['footprint_1']
-    
+    footprints = ["footprint_1"]
+
 
 class MockInstrumentModelWithoutFootprint:
     footprints = []
 
 
 class TestInstrumentFootprintService:
-
     @pytest.mark.asyncio
     async def test_has_footprint_should_return_true_when_footprint_exists(
         self, mock_db, mock_scalar_one_or_none, mock_result
@@ -34,9 +35,9 @@ class TestInstrumentFootprintService:
         mock_scalar_one_or_none.return_value = MockInstrumentModelWithoutFootprint
         mock_result.scalar_one_or_none = mock_scalar_one_or_none
         mock_db.execute.return_value = mock_result
-        
+
         service = InstrumentService(mock_db)
-        assert await service.has_footprint(uuid4()) == False
+        assert await service.has_footprint(uuid4()) is False
 
     @pytest.mark.asyncio
     async def test_has_footprint_should_raise_exception_when_no_instrument_exists(
@@ -46,7 +47,7 @@ class TestInstrumentFootprintService:
         mock_scalar_one_or_none.return_value = None
         mock_result.scalar_one_or_none = mock_scalar_one_or_none
         mock_db.execute.return_value = mock_result
-        
+
         service = InstrumentService(mock_db)
         with pytest.raises(InstrumentNotFoundException):
             await service.has_footprint(uuid4())

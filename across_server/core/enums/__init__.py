@@ -1,15 +1,15 @@
-from .environments import Environments
 from .depthunit import DepthUnit
-from .observationtype import ObservationType
-from .observationstatus import ObservationStatus
+from .environments import Environments
 from .ivoaobscategory import IVOAObsCategory
 from .ivoaobstrackingtype import IVOAObsTrackingType
+from .observationstatus import ObservationStatus
+from .observationtype import ObservationType
 
 __all__ = [
-    "Environments", 
-    "DepthUnit", 
-    "ObservationType", 
+    "Environments",
+    "DepthUnit",
+    "ObservationType",
     "ObservationStatus",
-    "IVOAObsCategory", 
-    "IVOAObsTrackingType"
+    "IVOAObsCategory",
+    "IVOAObsTrackingType",
 ]

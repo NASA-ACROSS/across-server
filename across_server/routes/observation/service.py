@@ -1,14 +1,14 @@
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import schemas
 from ...db.database import get_session
 from ...db.utils import from_orm
+from . import schemas
 
 
 class ObservationService:
-
     def __init__(
         self,
         db: Annotated[AsyncSession, Depends(get_session)],
