@@ -16,8 +16,10 @@ class Coordinate(BaseModel, PrefixMixin):
         Pydantic post-init hook
         Ensure RA and dec are rounded to an appropriate precision
         """
-        self.ra = round(self.ra, 5)
-        self.dec = round(self.dec, 5)
+        if self.ra is not None:
+            self.ra = round(self.ra, 5)
+        if self.dec is not None:
+            self.dec = round(self.dec, 5)
 
     def create_gis_point(self) -> WKBElement | None:
         """

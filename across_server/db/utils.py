@@ -1,14 +1,14 @@
-from pydantic import BaseModel
+from typing import Any
 
 from .models import Base as PostgresModel
 
 
 def from_orm(
-    schema: BaseModel,
+    schema: Any,
     model: PostgresModel,
-) -> BaseModel:
+) -> Any:
     """
     Returns the schema representation of a database model object
-    utilizing the schema's `validate_from_database_model` method
+    utilizing the schema's `return_schema`` attribute
     """
-    return schema.model_config["return_schema"](**model.__dict__)
+    return getattr(schema, "return_schema")(**model.__dict__)

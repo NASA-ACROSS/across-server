@@ -7,11 +7,11 @@ from across_server.routes.instrument.service import InstrumentService
 
 
 class MockInstrumentModelWithFootprint:
-    footprints = ["footprint_1"]
+    footprints: list = ["footprint_1"]
 
 
 class MockInstrumentModelWithoutFootprint:
-    footprints = []
+    footprints: list = []
 
 
 class TestInstrumentFootprintService:

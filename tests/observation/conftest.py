@@ -13,7 +13,7 @@ class MockObservationSchema:
         return cls()
 
     def __init__(self, **kwargs):
-        self.model_config = {"return_schema": self.__class__}
+        self.return_schema = self.__class__
 
 
 @pytest.fixture(scope="function")

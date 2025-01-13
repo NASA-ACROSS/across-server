@@ -13,7 +13,7 @@ class TestObservationService:
     ) -> None:
         """Should return the observation when successful"""
         service = ObservationService(mock_db_session)
-        observation = await service.create(mock_observation)
+        observation = await service.create(mock_observation)  # type: ignore
         assert isinstance(observation, MockObservationSchema)
 
     @pytest.mark.asyncio
@@ -22,6 +22,6 @@ class TestObservationService:
     ) -> None:
         """Should save the observation to the database when successful"""
         service = ObservationService(mock_db_session)
-        await service.create(mock_observation)
+        await service.create(mock_observation)  # type: ignore
 
-        mock_db_session.commit.assert_called_once()
+        mock_db_session.commit.assert_called_once()  # type: ignore

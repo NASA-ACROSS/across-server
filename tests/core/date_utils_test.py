@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from dateutil import tz
+from dateutil import tz  # type: ignore[import]
 
 from across_server.core.date_utils import convert_to_utc
 

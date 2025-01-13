@@ -5,8 +5,9 @@ class PrefixMixin:
     e.g. `pointing_position` -> `pointing_ra` and `pointing_dec`
     """
 
-    def model_dump_with_prefix(self, prefix: str | None = None) -> dict:
-        data = self.model_dump()
+    def model_dump_with_prefix(
+        self, prefix: str | None = None, data: dict = {}
+    ) -> dict:
         data_with_prefixes = {}
         if prefix is not None:
             for key, value in data.items():
@@ -21,8 +22,9 @@ class CoordinateConverterMixin:
     Coordinate schema during validation
     """
 
-    def coordinate_converter(cls, values: dict):
-        coordinates = {}
+    @staticmethod
+    def coordinate_converter(values: dict):
+        coordinates: dict = {}
         for key, value in values.items():
             if key.endswith("_ra") or key.endswith("_dec"):
                 coord_name = key.split("_")[0] + "_position"
@@ -40,8 +42,9 @@ class DateRangeConverterMixin:
     DateRange schema during validation
     """
 
-    def date_range_converter(cls, values: dict, name: str):
-        date_range = {}
+    @staticmethod
+    def date_range_converter(values: dict, name: str):
+        date_range: dict = {}
         for key, value in values.items():
             if key.endswith("_begin") or key.endswith("_end"):
                 field_name = key.split("_")[-1]
@@ -57,8 +60,9 @@ class UnitValueConverterMixin:
     UnitValue schema during validation
     """
 
-    def unit_value_converter(cls, values: dict, name: str):
-        unit_value = {}
+    @staticmethod
+    def unit_value_converter(values: dict, name: str):
+        unit_value: dict = {}
         for key, value in values.items():
             if key.endswith("_unit") or key.endswith("_value"):
                 field_name = key.split("_")[-1]
@@ -74,8 +78,9 @@ class BandpassConverterMixin:
     Bandpass schema during validation
     """
 
-    def bandpass_converter(cls, values: dict, name: str):
-        bandpass = {}
+    @staticmethod
+    def bandpass_converter(values: dict, name: str):
+        bandpass: dict = {}
         for key, value in values.items():
             if key in ["filter_name", "central_wavelength", "bandwidth"]:
                 bandpass[key] = value
