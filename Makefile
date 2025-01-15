@@ -183,7 +183,7 @@ lint: ## Run linting
 	@$(VENV_BIN)/pre-commit run;
 
 types: ## Run type checks
-	mypy
+	@$(VENV_BIN)/mypy;
 
 
 # Group: Database
