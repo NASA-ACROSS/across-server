@@ -1,7 +1,10 @@
+from unittest.mock import AsyncMock, MagicMock
+
 import httpx
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 
@@ -27,11 +30,24 @@ async def async_client(app: FastAPI):
         yield client
 
 
-# @pytest.fixture
-# def dep_overrider(request, app, fastapi_dep):
-#     parametrized = getattr(request, "param", None)
+@pytest.fixture
+def mock_scalar_one_or_none():
+    return MagicMock(return_value="default mocked scalar result")
 
-#     overrider = fastapi_dep(app, request) if parametrized else fastapi_dep(app)
 
-#     with overrider:
-#         yield overrider
+@pytest.fixture
+def mock_result(mock_scalar_one_or_none):
+    mock_result = AsyncMock(return_value="default result")
+    mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
+
+    yield mock_result
+
+
+@pytest.fixture
+def mock_db(mock_result):
+    mock = AsyncMock(AsyncSession)
+
+    # Mock the Result object that `execute` returns
+    mock.execute = AsyncMock(return_value=mock_result)
+
+    yield mock
