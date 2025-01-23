@@ -12,7 +12,8 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
-app.include_router(user.router)
+app.include_router(user.user_router)
+app.include_router(user.service_account_router)
 app.include_router(role.router)
 app.include_router(group.router)
 app.include_router(group.group_role.router)

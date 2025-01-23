@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
-from typing import List, Optional, cast, get_args
+from datetime import datetime, timedelta
+from typing import List, Optional, get_args
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
@@ -21,7 +21,6 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
-    declared_attr,
     mapped_column,
     relationship,
 )
@@ -38,32 +37,20 @@ class Base(AsyncAttrs, DeclarativeBase):
 ## Mixins ##
 class CreatableMixin:
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("user.id"), nullable=True
+        PG_UUID(as_uuid=True), nullable=True
     )
     created_on: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=func.now()
     )
 
-    @declared_attr
-    def created_by(self) -> Mapped["User"]:
-        return relationship(
-            "User", foreign_keys=[cast(Mapped[uuid.UUID], self.created_by_id)]
-        )
-
 
 class ModifiableMixin:
     modified_by_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("user.id"), nullable=True
+        PG_UUID(as_uuid=True), nullable=True
     )
     modified_on: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True, onupdate=func.now()
     )
-
-    @declared_attr
-    def modified_by(self) -> Mapped["User"]:
-        return relationship(
-            "User", foreign_keys=[cast(Mapped[uuid.UUID], self.modified_by_id)]
-        )
 
 
 ## Associations/Join Tables ##
@@ -85,6 +72,13 @@ user_group_role = Table(
     "user_group_role",
     Base.metadata,
     Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
+)
+
+service_account_group_role = Table(
+    "service_account_group_role",
+    Base.metadata,
+    Column("service_account_id", ForeignKey("service_account.id"), primary_key=True),
     Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
 )
 
@@ -189,8 +183,39 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     users: Mapped[Optional[List["User"]]] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
+    service_accounts: Mapped[Optional[List["ServiceAccount"]]] = relationship(
+        secondary=service_account_group_role,
+        back_populates="group_roles",
+        lazy="selectin",
+    )
     permissions: Mapped[List["Permission"]] = relationship(
         secondary=group_role_permission, back_populates="group_roles", lazy="selectin"
+    )
+
+
+class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "service_account"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("user.id")
+    )
+    expiration: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow() + timedelta(days=1)
+    )
+    expiration_duration: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=30
+    )
+    secret_key: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+
+    user: Mapped["User"] = relationship(
+        foreign_keys=[user_id], back_populates="service_accounts"
+    )
+    group_roles: Mapped[Optional[List["GroupRole"]]] = relationship(
+        secondary=service_account_group_role,
+        back_populates="service_accounts",
+        lazy="selectin",
     )
 
 
@@ -220,6 +245,11 @@ class User(Base, CreatableMixin, ModifiableMixin):
         back_populates="sender",
         lazy="selectin",
         foreign_keys=[GroupInvite.sender_id],
+    )
+    service_accounts: Mapped[List["ServiceAccount"]] = relationship(
+        back_populates="user",
+        lazy="selectin",
+        foreign_keys=[ServiceAccount.user_id],
     )
 
 
