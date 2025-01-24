@@ -27,7 +27,7 @@ class ServiceAccountService:
         now = datetime.datetime.now()
 
         # Get timestamp in seconds
-        timestamp_seconds = now.timestamp()
+        timestamp_seconds = now.replace(tzinfo=datetime.timezone.utc).timestamp()
 
         # Convert to nanoseconds
         timestamp_nanoseconds = int(timestamp_seconds * 1e9)

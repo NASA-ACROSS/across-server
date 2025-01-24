@@ -14,7 +14,8 @@ class TestServiceAccountService:
         self, patch_datetime_now, patch_config_secret, baked_secret
     ):
         """Service Account secret key generation test"""
-        assert ServiceAccountService.generate_secret_key() == baked_secret
+        generated_secret = ServiceAccountService.generate_secret_key()
+        assert generated_secret == baked_secret
 
     @pytest.mark.asyncio
     async def test_create_should_return_servie_account_when_successful(
