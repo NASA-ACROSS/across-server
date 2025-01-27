@@ -59,7 +59,9 @@ async def get(
     return await service.get(role_id)
 
 
-@router.post("/", dependencies=[Security(auth.global_access, scopes=["all:write"])])
+@router.post(
+    "/", dependencies=[Security(auth.strategies.global_access, scopes=["all:write"])]
+)
 async def create(
     service: Annotated[RoleService, Depends(RoleService)],
     data: schemas.RoleCreate,

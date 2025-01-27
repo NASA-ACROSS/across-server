@@ -1,14 +1,16 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
 
 import across_server.auth as auth
 from across_server.auth.service import AuthService
+from across_server.routes.user.schemas import UserCreate
 from across_server.routes.user.service import UserService
+from across_server.util.email.service import EmailService
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def mock_user_data():
     return {
         "id": str(uuid4()),
@@ -26,6 +28,7 @@ def mock_user_service(mock_user_data):
     mock = AsyncMock(UserService)
 
     mock.update = AsyncMock(return_value=mock_user_data)
+    mock.create = AsyncMock(return_value=UserCreate(**mock_user_data))
     yield mock
 
 
@@ -33,17 +36,27 @@ def mock_user_service(mock_user_data):
 def mock_auth_service():
     mock = AsyncMock(AuthService)
     mock.authenticate = AsyncMock()
+    mock.generate_magic_link = Mock(return_value="")
     yield mock
 
 
 @pytest.fixture(scope="function", autouse=True)
-def dep_override(app, fastapi_dep, mock_user_service, mock_auth_service):
+def dep_override(
+    app,
+    fastapi_dep,
+    mock_email_service,
+    mock_user_service,
+    mock_auth_service,
+    mock_webserver_access,
+):
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
+            EmailService: lambda: mock_email_service,
             UserService: lambda: mock_user_service,
             auth.strategies.self_access: lambda: mock_auth_service,
+            auth.strategies.webserver_access: lambda: mock_webserver_access,
         }
     ):
         yield overrider

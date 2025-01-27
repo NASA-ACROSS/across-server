@@ -3,7 +3,10 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, status
 
+from across_server.util.email.service import EmailService
+
 from ... import auth, db
+from ...auth import AuthService
 from . import schemas
 from .service import UserService
 
@@ -52,19 +55,31 @@ async def get(
     summary="Create a user",
     description="Create a new user for ACROSS.",
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.User,
     responses={
-        status.HTTP_201_CREATED: {
-            "model": schemas.User,
-            "description": "The newly created user",
-        },
+        status.HTTP_201_CREATED: {},
     },
+    dependencies=[Depends(auth.strategies.webserver_access)],
 )
 async def create(
-    service: Annotated[UserService, Depends(UserService)],
+    user_service: Annotated[UserService, Depends(UserService)],
+    auth_service: Annotated[AuthService, Depends(AuthService)],
+    email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
 ):
-    return await service.create(data)
+    user = await user_service.create(data)
+    magic_link = auth_service.generate_magic_link(user.email)
+    verification_email_body = email_service.construct_verification_email(
+        user, magic_link
+    )
+
+    try:
+        await email_service.send(
+            recipients=[user.email],
+            subject="NASA ACROSS Account Verification",
+            content_html=verification_email_body,
+        )
+    except Exception as e:
+        print(f"Email service failed to send with exception: {e}")
 
 
 @router.patch(

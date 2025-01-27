@@ -11,6 +11,8 @@ def generate(email: EmailStr) -> str:
     token = MagicLinkToken()
     encoded_token = token.encode(data=token.to_encode(email))
 
+    if core_config.is_local():
+        print(f"Magic Link Token: {encoded_token}")
     return f"{core_config.base_url()}/auth/verify?token={encoded_token}"
 
 

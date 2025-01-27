@@ -69,8 +69,14 @@ async def login(
 
     link = magic_link.generate(email)
 
-    # Send magic_link to user's email (implement email sending logic)
-    await email_service.send(email, {"link": link}, "login-link")
+    # Send magic_link to user's email
+    login_email_body = email_service.construct_login_email(user, link)
+
+    await email_service.send(
+        recipients=[email],
+        subject="NASA ACROSS Account Login",
+        content_html=login_email_body,
+    )
 
     return {"message": "Magic link sent", "magic_link": link, "user": user}
 

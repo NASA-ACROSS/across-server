@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -14,6 +14,8 @@ class AuthUser(BaseModel):
     id: UUID
     scopes: List[str]
     groups: List[Group]
+    first_name: Optional[str] = ""
+    last_name: Optional[str] = ""
 
 
 class AccessTokenResponse(BaseModel):
