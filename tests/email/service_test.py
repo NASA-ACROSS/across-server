@@ -1,6 +1,6 @@
-import smtplib
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
+import aiosmtplib
 import pytest
 import pytest_asyncio
 
@@ -13,16 +13,16 @@ class TestEmailService:
         self.recipient = "mockemail"
         self.subject = "Mock"
 
-        class mocksmtp(smtplib.SMTP_SSL):
-            def login(*args, **kwargs):
+        class mocksmtp(aiosmtplib.SMTP):
+            async def login(*args, **kwargs):
                 pass
 
-            def sendmail(*args, **kwargs):
+            async def sendmail(*args, **kwargs):
                 pass
 
-        mock_sendmail = Mock()  # Need to mock to assert it gets called
+        mock_sendmail = AsyncMock()  # Need to mock to assert it gets called
         monkeypatch.setattr(mocksmtp, "sendmail", mock_sendmail)
-        monkeypatch.setattr(smtplib, "SMTP_SSL", mocksmtp)
+        monkeypatch.setattr(aiosmtplib, "SMTP", mocksmtp)
 
         self.mocksmtp = mocksmtp
 

@@ -1,5 +1,6 @@
 # Core dependencies
 
+aiosmtplib >=3.0.0
 alembic >=1.13.2,<2
 asyncer >=0.0.8,<0.0.9
 astropy ==7.0.0

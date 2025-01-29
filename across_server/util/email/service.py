@@ -1,9 +1,9 @@
-import smtplib
-import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
 from typing import List, Optional
+
+import aiosmtplib
 
 from across_server.auth import schemas
 
@@ -90,9 +90,8 @@ class EmailService:
             # TODO: configure attachments, not sure if we will need this yet
             pass
 
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(
-            host=self.smtp_host, port=self.smtp_port, context=context
+        async with aiosmtplib.SMTP(
+            hostname=self.smtp_host, port=self.smtp_port, use_tls=True
         ) as smtp:
-            smtp.login(self.login_email_user, self.login_email_password)
-            smtp.sendmail(self.sender_email_addr, recipients, em.as_string())
+            await smtp.login(self.login_email_user, self.login_email_password)
+            await smtp.sendmail(self.sender_email_addr, recipients, em.as_string())
