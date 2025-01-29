@@ -30,7 +30,7 @@ class TestServiceAccountRouter:
             assert json.loads(res.text)["description"] == self.post_data["description"]
 
         @pytest.mark.asyncio
-        async def test_should_return_200(self, mock_service_account_data):
+        async def test_should_return_201(self, mock_service_account_data):
             """POST should return 201 when successful"""
             data = {
                 "name": "service account name",
@@ -41,7 +41,7 @@ class TestServiceAccountRouter:
             assert res.status_code == fastapi.status.HTTP_201_CREATED
 
         @pytest.mark.asyncio
-        async def test_should_return_422_when_missing_instrument_id(self):
+        async def test_should_return_422_when_missing_name(self):
             """Should return a 422 when the input is missing the name"""
             data = self.post_data
             data.pop("name")

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, get_args
 
 from geoalchemy2 import Geography, WKBElement
@@ -200,7 +200,9 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey("user.id")
     )
     expiration: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=datetime.utcnow() + timedelta(days=1)
+        DateTime,
+        nullable=False,
+        default=datetime.now(timezone.utc) + timedelta(days=30),
     )
     expiration_duration: Mapped[int] = mapped_column(
         Integer, nullable=False, default=30

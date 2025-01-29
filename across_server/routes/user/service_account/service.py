@@ -95,6 +95,7 @@ class ServiceAccountService:
             service_account.expiration = datetime.datetime.now() + datetime.timedelta(
                 days=serviceAccount.expiration_duration
             )
+            service_account.expiration_duration = serviceAccount.expiration_duration
 
         service_account.modified_by_id = modified_by.id
 
@@ -123,6 +124,7 @@ class ServiceAccountService:
         service_account = await self.get(service_account_id=id)
 
         service_account.expiration = datetime.datetime.now()
+        service_account.expiration_duration = -1
         service_account.modified_by_id = modified_by.id
 
         await self.db.commit()
