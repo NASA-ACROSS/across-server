@@ -65,12 +65,11 @@ async def login(
     email_service: Annotated[EmailService, Depends(EmailService)],
     auth_service: Annotated[AuthService, Depends(AuthService)],
 ):
-    auth_user = await auth_service.get_authenticated_user(email=email)
+    user = await auth_service.get_authenticated_user(email=email)
 
     link = magic_link.generate(email)
 
     # Send magic_link to user's email
-    user = await email_service.get_user_from_email(email)
     login_email_body = email_service.construct_login_email(user, link)
 
     await email_service.send(
@@ -79,7 +78,7 @@ async def login(
         content_html=login_email_body,
     )
 
-    return {"message": "Magic link sent", "magic_link": link, "user": auth_user}
+    return {"message": "Magic link sent", "magic_link": link, "user": user}
 
 
 @router.get("/verify")

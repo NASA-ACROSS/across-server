@@ -1,28 +1,25 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
-from typing import Annotated, List, Optional
+from typing import List, Optional
 
 import aiosmtplib
-from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...db import get_session, models
+from across_server.auth import schemas
+
+from ...db import models
 from .config import email_config
 
 
 class EmailService:
-    def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
+    def __init__(self) -> None:
         self.sender_email_addr = email_config.ACROSS_EMAIL
         self.login_email_user = email_config.ACROSS_EMAIL_USER
         self.login_email_password = email_config.ACROSS_EMAIL_PASSWORD
         self.smtp_host = email_config.ACROSS_EMAIL_HOST
         self.smtp_port = int(email_config.ACROSS_EMAIL_PORT)
 
-        self.db = db
-
-    def construct_login_email(self, user: models.User, login_link: str):
+    def construct_login_email(self, user: schemas.AuthUser, login_link: str):
         return f"""\
             <html>
             <p>Dear {user.first_name} {user.last_name},</p>
@@ -66,17 +63,6 @@ class EmailService:
             </p>
             </html>
         """
-
-    async def get_user_from_email(self, email: str) -> models.User:
-        query = select(models.User).where((models.User.email == email))
-
-        result = await self.db.execute(query)
-        user = result.scalar_one_or_none()
-
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-        return user
 
     async def send(
         self,
