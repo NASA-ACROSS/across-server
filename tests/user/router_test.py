@@ -54,14 +54,17 @@ class TestUserPostRoute:
         self.data = mock_user_data
 
     @pytest.mark.asyncio
-    async def test_should_send_email_when_user_is_created(
-        self, mock_email_service, monkeypatch
-    ):
+    async def test_should_send_email_when_user_is_created(self, mock_email_service):
         """Should send an email when a new user is successfully created"""
+        await self.client.post(self.endpoint, json=self.data)
+        mock_email_service.send.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_send_email_with_magic_link(self, monkeypatch):
+        """Should generate magic link as part of sending email"""
         mock_magic_link_generate = Mock(return_value="mock magic link")
         monkeypatch.setattr(magic_link, "generate", mock_magic_link_generate)
         await self.client.post(self.endpoint, json=self.data)
-        mock_email_service.send.assert_called_once()
         mock_magic_link_generate.assert_called_once()
 
     @pytest.mark.asyncio
