@@ -151,7 +151,7 @@ pyyaml==6.0.2
     #   pre-commit
 represent==2.1
     # via spacetrack
-ruff==0.8.2
+ruff==0.9.3
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
