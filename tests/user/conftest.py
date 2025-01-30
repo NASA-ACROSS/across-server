@@ -36,7 +36,7 @@ def mock_user_service(mock_user_data):
 def mock_auth_service():
     mock = AsyncMock(AuthService)
     mock.authenticate = AsyncMock()
-    mock.generate_magic_link = Mock(return_value="")
+    mock.generate_magic_link = Mock(return_value="login magic link")
     yield mock
 
 

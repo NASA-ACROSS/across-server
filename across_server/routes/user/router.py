@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, status
 from across_server.util.email.service import EmailService
 
 from ... import auth, db
-from ...auth import AuthService
 from . import schemas
 from .service import UserService
 
@@ -62,7 +61,7 @@ async def get(
 )
 async def create(
     user_service: Annotated[UserService, Depends(UserService)],
-    auth_service: Annotated[AuthService, Depends(AuthService)],
+    auth_service: Annotated[auth.AuthService, Depends(auth.AuthService)],
     email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
 ):
@@ -75,7 +74,7 @@ async def create(
     try:
         await email_service.send(
             recipients=[user.email],
-            subject="NASA ACROSS Account Verification",
+            subject="NASA ACROSS Login Link",
             content_html=verification_email_body,
         )
     except Exception as e:
