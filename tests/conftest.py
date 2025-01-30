@@ -69,6 +69,7 @@ def mock_db_session():
 def mock_email_service():
     mock = AsyncMock(EmailService)
     mock.send = AsyncMock(return_value=True)
+    mock.get_user_from_email = AsyncMock(return_value="mock user")
 
     yield mock
 
