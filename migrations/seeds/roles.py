@@ -10,10 +10,10 @@ across_admin_role = Role(
     permissions=[all_write],
 )
 
-user_service_account_role = Role(
+service_account_editor = Role(
     id=uuid.UUID("fda33adf-1d5b-4b01-878e-90d0c0888e2a"),
     name="ACROSS Service Account",
     permissions=[service_account_read, service_account_write],
 )
 
-roles = [across_admin_role]
+roles = [across_admin_role, service_account_editor]

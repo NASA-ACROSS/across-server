@@ -5,9 +5,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.auth import security, strategies
+from across_server.auth import strategies
 from across_server.auth.config import Config
-from across_server.auth.service import AuthService
 from across_server.routes.user.service_account.schemas import ServiceAccountCreate
 from across_server.routes.user.service_account.service import ServiceAccountService
 
@@ -56,30 +55,24 @@ def mock_global_access():
 
 
 @pytest.fixture
-def mock_auth_service():
-    mock = AsyncMock(AuthService)
-    mock.get_authenticated_user = AsyncMock(return_value="mocked_user")
-    mock.auth_user = AsyncMock(return_value="mocked_user")
+def mock_self_access():
+    mock = MagicMock(strategies.self_access)
+    mock.id = 1
 
     yield mock
 
 
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app,
-    fastapi_dep,
-    mock_service_account_service,
-    mock_auth_service,
-    mock_global_access,
+    app, fastapi_dep, mock_service_account_service, mock_global_access, mock_self_access
 ):
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
             ServiceAccountService: lambda: mock_service_account_service,
-            AuthService: lambda: mock_auth_service,
-            security.extract_creds: lambda: "credentials boyo",
             strategies.global_access: lambda: mock_global_access,
+            strategies.self_access: lambda: mock_self_access,
         }
     ):
         yield overrider
@@ -92,6 +85,9 @@ def fake_time():
 
 @pytest.fixture
 def baked_secret():
+    """
+    The actual generated secret key from the patched datetime.now() and patched config.SERVICE_ACCOUNT_SECRET_KEY
+    """
     return "de0c80b7c38a01c4dc35e698960e4553b6b87e9ea8ce6f5ce03bcb6d7bdd7324537e60a9397e5cb9f21b8857011ac55940a7e32e43a86391a13666916e6e7443"
 
 

@@ -4,7 +4,7 @@ from across_server.db.models import User
 
 from .group_roles import treedome_group_admin
 from .groups import treedome_space_group
-from .roles import across_admin_role, user_service_account_role
+from .roles import across_admin_role, service_account_editor
 
 dev = User(
     id=uuid.UUID("173e35fa-9544-49e8-b5b9-d04ea884defb"),
@@ -25,7 +25,7 @@ sandy = User(
     last_name="Cheeks",
     created_by_id=None,
     modified_by_id=None,
-    roles=[user_service_account_role],
+    roles=[service_account_editor],
     group_roles=[treedome_group_admin],
     groups=[treedome_space_group],
 )

@@ -19,24 +19,22 @@ class TestServiceAccountService:
 
     @pytest.mark.asyncio
     async def test_create_should_return_servie_account_when_successful(
-        self, mock_db_session, service_account_create_example, mock_auth_service
+        self, mock_db_session, service_account_create_example
     ) -> None:
         """Should return the service_account when creation successful"""
         service = ServiceAccountService(mock_db_session)
         service_account = await service.create(
-            service_account_create_example, created_by=mock_auth_service.auth_user
+            service_account_create_example, created_by_id=uuid4()
         )
         assert isinstance(service_account, models.ServiceAccount)
 
     @pytest.mark.asyncio
     async def test_create_should_save_service_account_to_database(
-        self, mock_db_session, service_account_create_example, mock_auth_service
+        self, mock_db_session, service_account_create_example
     ) -> None:
         """Should save the service_account to the database when successful"""
         service = ServiceAccountService(mock_db_session)
-        await service.create(
-            service_account_create_example, created_by=mock_auth_service.auth_user
-        )
+        await service.create(service_account_create_example, created_by_id=uuid4())
 
         mock_db_session.commit.assert_called_once()
 
@@ -51,4 +49,4 @@ class TestServiceAccountService:
 
         service = ServiceAccountService(mock_db)
         with pytest.raises(ServiceAccountNotFoundException):
-            await service.get(uuid4())
+            await service.get(uuid4(), uuid4())

@@ -25,6 +25,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+from ..core import config as core_config
 from ..routes.observatory.enums import OBSERVATORY_TYPE
 
 
@@ -75,11 +76,11 @@ user_group_role = Table(
     Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
 )
 
-service_account_group_role = Table(
-    "service_account_group_role",
+service_account_role = Table(
+    "service_account_role",
     Base.metadata,
     Column("service_account_id", ForeignKey("service_account.id"), primary_key=True),
-    Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
+    Column("role_id", ForeignKey("role.id"), primary_key=True),
 )
 
 role_permission = Table(
@@ -167,6 +168,11 @@ class Role(Base, CreatableMixin, ModifiableMixin):
     permissions: Mapped[List["Permission"]] = relationship(
         secondary=role_permission, back_populates="roles", lazy="selectin"
     )
+    service_accounts: Mapped[Optional[List["ServiceAccount"]]] = relationship(
+        secondary=service_account_role,
+        back_populates="roles",
+        lazy="selectin",
+    )
 
 
 class GroupRole(Base, CreatableMixin, ModifiableMixin):
@@ -183,11 +189,6 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     users: Mapped[Optional[List["User"]]] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
-    service_accounts: Mapped[Optional[List["ServiceAccount"]]] = relationship(
-        secondary=service_account_group_role,
-        back_populates="group_roles",
-        lazy="selectin",
-    )
     permissions: Mapped[List["Permission"]] = relationship(
         secondary=group_role_permission, back_populates="group_roles", lazy="selectin"
     )
@@ -202,7 +203,8 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     expiration: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.now(timezone.utc) + timedelta(days=30),
+        default=datetime.now(timezone.utc)
+        + timedelta(days=core_config.SERVICE_ACCOUNT_EXPIRATION_DURATION),
     )
     expiration_duration: Mapped[int] = mapped_column(
         Integer, nullable=False, default=30
@@ -214,8 +216,8 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     user: Mapped["User"] = relationship(
         foreign_keys=[user_id], back_populates="service_accounts"
     )
-    group_roles: Mapped[Optional[List["GroupRole"]]] = relationship(
-        secondary=service_account_group_role,
+    roles: Mapped[Optional[List["Role"]]] = relationship(
+        secondary=service_account_role,
         back_populates="service_accounts",
         lazy="selectin",
     )

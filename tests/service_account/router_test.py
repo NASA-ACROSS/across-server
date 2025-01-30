@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import json
 import uuid
 
 import fastapi
@@ -12,8 +9,9 @@ from httpx import AsyncClient
 class Setup:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, async_client: AsyncClient):
+        user_id = uuid.uuid4()
         self.client = async_client
-        self.endpoint = "/user/service_account/"
+        self.endpoint = f"/user/{user_id}/service_account/"
         self.post_data = {
             "name": "service account name",
             "description": "test service account description",
@@ -27,10 +25,10 @@ class TestServiceAccountRouter:
         async def test_should_return_service_account(self):
             """POST Should return created service_account when successful"""
             res = await self.client.post(self.endpoint, json=self.post_data)
-            assert json.loads(res.text)["description"] == self.post_data["description"]
+            assert res.json()["description"] == self.post_data["description"]
 
         @pytest.mark.asyncio
-        async def test_should_return_201(self, mock_service_account_data):
+        async def test_should_return_201(self):
             """POST should return 201 when successful"""
             data = {
                 "name": "service account name",
@@ -55,10 +53,7 @@ class TestServiceAccountRouter:
             """GET Should return created service_account when successful"""
             endpoint = self.endpoint + f"{uuid.uuid4()}"
             res = await self.client.get(endpoint)
-            assert (
-                json.loads(res.text)["description"]
-                == "test service account description"
-            )
+            assert res.json()["description"] == "test service account description"
 
         @pytest.mark.asyncio
         async def test_should_return_200(self):
@@ -71,11 +66,8 @@ class TestServiceAccountRouter:
         async def test_many_should_return_many(self):
             """GET many Should return multiple service_accounts when successful"""
             res = await self.client.get(self.endpoint)
-            assert len(json.loads(res.text))
-            assert (
-                json.loads(res.text)[0]["description"]
-                == "test service account description"
-            )
+            assert len(res.json())
+            assert res.json()[0]["description"] == "test service account description"
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self):
@@ -96,7 +88,7 @@ class TestServiceAccountRouter:
             res = await self.client.patch(
                 endpoint, json={"name": "update_service_account_name"}
             )
-            assert json.loads(res.text)["name"] == "update_service_account_name"
+            assert res.json()["name"] == "update_service_account_name"
 
         @pytest.mark.asyncio
         async def test_should_return_200_on_valid_service_account_patch(self):

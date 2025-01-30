@@ -38,18 +38,18 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "service_account_group_role",
+        "service_account_role",
         sa.Column("service_account_id", sa.UUID(), nullable=False),
-        sa.Column("group_role_id", sa.UUID(), nullable=False),
+        sa.Column("role_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["group_role_id"],
-            ["group_role.id"],
+            ["role_id"],
+            ["role.id"],
         ),
         sa.ForeignKeyConstraint(
             ["service_account_id"],
             ["service_account.id"],
         ),
-        sa.PrimaryKeyConstraint("service_account_id", "group_role_id"),
+        sa.PrimaryKeyConstraint("service_account_id", "role_id"),
     )
     op.drop_constraint("footprint_created_by_id_fkey", "footprint", type_="foreignkey")
     op.drop_constraint("footprint_modified_by_id_fkey", "footprint", type_="foreignkey")
@@ -202,6 +202,6 @@ def downgrade() -> None:
     op.create_foreign_key(
         "footprint_created_by_id_fkey", "footprint", "user", ["created_by_id"], ["id"]
     )
-    op.drop_table("service_account_group_role")
+    op.drop_table("service_group_role")
     op.drop_table("service_account")
     # ### end Alembic commands ###

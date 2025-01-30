@@ -8,11 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.auth.config import auth_config
+from across_server.auth.schemas import AuthUser
 
+from ....core import config
 from ....db import models
 from ....db.database import get_session
+from . import schemas
 from .exceptions import ServiceAccountNotFoundException
-from .schemas import ServiceAccountCreate, ServiceAccountUpdate
 
 
 class ServiceAccountService:
@@ -38,9 +40,12 @@ class ServiceAccountService:
 
         return hashlib.sha512(secret_string.encode()).hexdigest()
 
-    async def get(self, service_account_id: UUID) -> models.ServiceAccount:
+    async def get(
+        self, service_account_id: UUID, user_id: UUID
+    ) -> models.ServiceAccount:
         query = select(models.ServiceAccount).where(
-            models.ServiceAccount.id == service_account_id
+            models.ServiceAccount.id == service_account_id,
+            models.ServiceAccount.user_id == user_id,
         )
 
         result = await self.db.execute(query)
@@ -51,29 +56,37 @@ class ServiceAccountService:
 
         return service_account
 
-    async def get_many(self) -> Sequence[models.ServiceAccount]:
-        result = await self.db.scalars(select(models.ServiceAccount))
+    async def get_many(self, auth_user: AuthUser) -> Sequence[models.ServiceAccount]:
+        result = await self.db.scalars(
+            select(models.ServiceAccount).filter(
+                models.ServiceAccount.user_id == auth_user.id
+            )
+        )
         service_accounts = result.all()
 
         return service_accounts
 
     async def create(
-        self, serviceAccount: ServiceAccountCreate, created_by: models.User
+        self, service_account_create: schemas.ServiceAccountCreate, created_by_id: UUID
     ) -> models.ServiceAccount:
-        if not serviceAccount.expiration_duration:
-            serviceAccount.expiration_duration = 30
+        service_account_create.expiration_duration = (
+            service_account_create.expiration_duration
+            if service_account_create.expiration_duration
+            else config.SERVICE_ACCOUNT_EXPIRATION_DURATION
+        )
 
         expiration = datetime.datetime.now() + datetime.timedelta(
-            days=serviceAccount.expiration_duration
+            days=service_account_create.expiration_duration
         )
 
         service_account = models.ServiceAccount(
-            user_id=created_by.id,
-            name=serviceAccount.name,
-            description=serviceAccount.description,
+            user_id=created_by_id,
+            name=service_account_create.name,
+            description=service_account_create.description,
             secret_key=self.generate_secret_key(),
-            expiration_duration=serviceAccount.expiration_duration,
+            expiration_duration=service_account_create.expiration_duration,
             expiration=expiration,
+            created_by_id=created_by_id,
         )
 
         self.db.add(service_account)
@@ -83,49 +96,53 @@ class ServiceAccountService:
         return service_account
 
     async def update(
-        self, id: UUID, serviceAccount: ServiceAccountUpdate, modified_by: models.User
+        self,
+        id: UUID,
+        service_account_update: schemas.ServiceAccountUpdate,
+        modified_by_id: UUID,
     ) -> models.ServiceAccount:
-        service_account = await self.get(service_account_id=id)
+        service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
-        if serviceAccount.name:
-            service_account.name = serviceAccount.name
-        if serviceAccount.description:
-            service_account.description = serviceAccount.description
-        if serviceAccount.expiration_duration:
+        values = service_account_update.model_dump(exclude_unset=True).items()
+
+        for key, value in values:
+            setattr(service_account, key, value)
+
+        if service_account_update.expiration_duration:
             service_account.expiration = datetime.datetime.now() + datetime.timedelta(
-                days=serviceAccount.expiration_duration
+                days=service_account_update.expiration_duration
             )
-            service_account.expiration_duration = serviceAccount.expiration_duration
+            service_account.expiration_duration = (
+                service_account_update.expiration_duration
+            )
 
-        service_account.modified_by_id = modified_by.id
+        service_account.modified_by_id = modified_by_id
 
         await self.db.commit()
         await self.db.refresh(service_account)
 
         return service_account
 
-    async def rotate_key(
-        self, id: UUID, modified_by: models.User
-    ) -> models.ServiceAccount:
-        service_account = await self.get(service_account_id=id)
+    async def rotate_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
+        service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
         service_account.secret_key = self.generate_secret_key()
+        service_account.expiration = datetime.datetime.now() + datetime.timedelta(
+            days=service_account.expiration_duration
+        )
 
-        service_account.modified_by_id = modified_by.id
+        service_account.modified_by_id = modified_by_id
 
         await self.db.commit()
         await self.db.refresh(service_account)
 
         return service_account
 
-    async def expire_key(
-        self, id: UUID, modified_by: models.User
-    ) -> models.ServiceAccount:
-        service_account = await self.get(service_account_id=id)
+    async def expire_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
+        service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
         service_account.expiration = datetime.datetime.now()
-        service_account.expiration_duration = -1
-        service_account.modified_by_id = modified_by.id
+        service_account.modified_by_id = modified_by_id
 
         await self.db.commit()
         await self.db.refresh(service_account)
