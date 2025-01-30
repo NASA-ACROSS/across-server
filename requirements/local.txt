@@ -63,7 +63,7 @@ fastapi-cli[standard]==0.0.5
     # via fastapi
 filelock==3.16.1
     # via virtualenv
-geoalchemy2==0.15.2
+geoalchemy2==0.17.0
     # via -r requirements/base.in
 h11==0.14.0
     # via

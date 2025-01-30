@@ -13,7 +13,7 @@ asyncpg ==0.30.0
 shapely >=2.0.6,<3
 sgp4 >=2.23,<3
 sqlalchemy >=2.0.34,<3
-geoalchemy2 >=0.15.2,<0.16
+geoalchemy2 >=0.15.2,<0.18
 pyjwt >=2.9.0,<3
 skyfield >=1.49,<2
 pydantic-settings >=2.5.2,<3
