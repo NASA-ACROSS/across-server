@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 from typing import Annotated, Sequence
 from uuid import UUID
 
@@ -7,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....auth.config import auth_config
+from ....auth.security import generate_secret_key
 from ....core import config
 from ....db import models
 from ....db.database import get_session
@@ -21,22 +20,6 @@ class ServiceAccountService:
         db: Annotated[AsyncSession, Depends(get_session)],
     ) -> None:
         self.db = db
-
-    @staticmethod
-    def generate_secret_key() -> str:
-        now = datetime.datetime.now()
-
-        # Get timestamp in seconds
-        timestamp_seconds = now.replace(tzinfo=datetime.timezone.utc).timestamp()
-
-        # Convert to nanoseconds
-        timestamp_nanoseconds = int(timestamp_seconds * 1e9)
-
-        secret_string = auth_config.SERVICE_ACCOUNT_SECRET_KEY + str(
-            timestamp_nanoseconds
-        )
-
-        return hashlib.sha512(secret_string.encode()).hexdigest()
 
     async def get(
         self, service_account_id: UUID, user_id: UUID
@@ -81,7 +64,7 @@ class ServiceAccountService:
             user_id=created_by_id,
             name=service_account_create.name,
             description=service_account_create.description,
-            secret_key=self.generate_secret_key(),
+            secret_key=generate_secret_key(),
             expiration_duration=service_account_create.expiration_duration,
             expiration=expiration,
             created_by_id=created_by_id,
@@ -124,7 +107,7 @@ class ServiceAccountService:
     async def rotate_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
-        service_account.secret_key = self.generate_secret_key()
+        service_account.secret_key = generate_secret_key()
         service_account.expiration = datetime.datetime.now() + datetime.timedelta(
             days=service_account.expiration_duration
         )
