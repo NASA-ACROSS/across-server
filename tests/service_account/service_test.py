@@ -2,6 +2,7 @@ from uuid import uuid4
 
 import pytest
 
+from across_server.auth.security import generate_secret_key
 from across_server.db import models
 from across_server.routes.user.service_account.exceptions import (
     ServiceAccountNotFoundException,
@@ -14,7 +15,7 @@ class TestServiceAccountService:
         self, patch_datetime_now, patch_config_secret, baked_secret
     ):
         """Service Account secret key generation test"""
-        generated_secret = ServiceAccountService.generate_secret_key()
+        generated_secret = generate_secret_key()
         assert generated_secret == baked_secret
 
     @pytest.mark.asyncio
