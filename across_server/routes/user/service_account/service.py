@@ -7,9 +7,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.auth.config import auth_config
-from across_server.auth.schemas import AuthUser
-
+from ....auth.config import auth_config
 from ....core import config
 from ....db import models
 from ....db.database import get_session
@@ -56,10 +54,10 @@ class ServiceAccountService:
 
         return service_account
 
-    async def get_many(self, auth_user: AuthUser) -> Sequence[models.ServiceAccount]:
+    async def get_many(self, user_id: UUID) -> Sequence[models.ServiceAccount]:
         result = await self.db.scalars(
             select(models.ServiceAccount).filter(
-                models.ServiceAccount.user_id == auth_user.id
+                models.ServiceAccount.user_id == user_id
             )
         )
         service_accounts = result.all()

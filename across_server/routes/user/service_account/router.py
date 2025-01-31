@@ -26,16 +26,13 @@ router = APIRouter(
     response_model=List[schemas.ServiceAccount],
     dependencies=[
         Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-        Depends(auth.strategies.self_access),
     ],
 )
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[
-        auth.strategies.AuthUser, Depends(auth.strategies.self_access)
-    ],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
 ):
-    return await service.get_many(auth_user)
+    return await service.get_many(user_id=auth_user.id)
 
 
 @router.get(
@@ -52,14 +49,11 @@ async def get_many(
     },
     dependencies=[
         Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-        Depends(auth.strategies.self_access),
     ],
 )
 async def get(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[
-        auth.strategies.AuthUser, Depends(auth.strategies.self_access)
-    ],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ):
     return await service.get(service_account_id, user_id=auth_user.id)
@@ -83,9 +77,7 @@ async def get(
 )
 async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[
-        auth.strategies.AuthUser, Depends(auth.strategies.self_access)
-    ],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
 ):
     return await service.create(data, created_by_id=auth_user.id)
@@ -105,14 +97,11 @@ async def create(
     },
     dependencies=[
         Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-        Depends(auth.strategies.self_access),
     ],
 )
 async def update(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[
-        auth.strategies.AuthUser, Depends(auth.strategies.self_access)
-    ],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
     data: schemas.ServiceAccountUpdate,
 ):
@@ -126,14 +115,11 @@ async def update(
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[
         Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-        Depends(auth.strategies.self_access),
     ],
 )
 async def delete(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[
-        auth.strategies.AuthUser, Depends(auth.strategies.self_access)
-    ],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ):
     return await service.expire_key(service_account_id, modified_by_id=auth_user.id)

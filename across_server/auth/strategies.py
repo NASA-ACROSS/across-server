@@ -59,8 +59,6 @@ async def self_access(
     user_id: Annotated[UUID, Path(title="UUID of the user")],
     auth_user: Annotated[AuthUser, Depends(authenticate)],
 ):
-    print(user_id)
-    print(auth_user.id)
     if "all:write" in auth_user.scopes:
         return auth_user
 
