@@ -57,6 +57,8 @@ filelock==3.16.1
     # via virtualenv
 geoalchemy2==0.17.0
     # via -r requirements/base.in
+greenlet==3.1.1
+    # via sqlalchemy
 h11==0.14.0
     # via
     #   httpcore
@@ -151,7 +153,7 @@ pyyaml==6.0.2
     #   pre-commit
 represent==2.1
     # via spacetrack
-ruff==0.9.3
+ruff==0.9.4
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
