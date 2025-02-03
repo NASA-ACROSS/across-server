@@ -1,9 +1,8 @@
 import datetime
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.auth import strategies
 from across_server.auth.config import Config
@@ -33,16 +32,6 @@ def mock_service_account_service(mock_service_account_data):
     mock.get_many = AsyncMock(return_value=[mock_service_account_data])
     mock.update = AsyncMock(return_value=mock_service_account_data)
     mock.expire_key = AsyncMock(return_value={})
-
-    yield mock
-
-
-@pytest.fixture(scope="function")
-def mock_db_session():
-    mock = AsyncMock(AsyncSession)
-    mock.add = Mock()
-    mock.commit = AsyncMock()
-    mock.refresh = AsyncMock()
 
     yield mock
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import List, Optional, get_args
 
 from geoalchemy2 import Geography, WKBElement
@@ -25,7 +25,6 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core import config as core_config
 from ..routes.observatory.enums import OBSERVATORY_TYPE
 
 
@@ -200,15 +199,8 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("user.id")
     )
-    expiration: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=datetime.now(timezone.utc)
-        + timedelta(days=core_config.SERVICE_ACCOUNT_EXPIRATION_DURATION),
-    )
-    expiration_duration: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=30
-    )
+    expiration: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expiration_duration: Mapped[int] = mapped_column(Integer, nullable=False)
     secret_key: Mapped[str] = mapped_column(String, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)

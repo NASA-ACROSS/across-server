@@ -16,14 +16,14 @@ class TestServiceAccountService:
     ):
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
-        assert generated_secret == baked_secret
+        assert generated_secret.key == baked_secret
 
     @pytest.mark.asyncio
-    async def test_create_should_return_servie_account_when_successful(
-        self, mock_db_session, service_account_create_example
+    async def test_create_should_return_service_account_when_successful(
+        self, mock_db, service_account_create_example
     ) -> None:
         """Should return the service_account when creation successful"""
-        service = ServiceAccountService(mock_db_session)
+        service = ServiceAccountService(mock_db)
         service_account = await service.create(
             service_account_create_example, created_by_id=uuid4()
         )
@@ -31,13 +31,13 @@ class TestServiceAccountService:
 
     @pytest.mark.asyncio
     async def test_create_should_save_service_account_to_database(
-        self, mock_db_session, service_account_create_example
+        self, mock_db, service_account_create_example
     ) -> None:
         """Should save the service_account to the database when successful"""
-        service = ServiceAccountService(mock_db_session)
+        service = ServiceAccountService(mock_db)
         await service.create(service_account_create_example, created_by_id=uuid4())
 
-        mock_db_session.commit.assert_called_once()
+        mock_db.commit.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_should_return_not_found_exception_when_does_not_exist(

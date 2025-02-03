@@ -56,17 +56,17 @@ class ServiceAccountService:
             else config.SERVICE_ACCOUNT_EXPIRATION_DURATION
         )
 
-        expiration = datetime.datetime.now() + datetime.timedelta(
-            days=service_account_create.expiration_duration
+        secret_key_information = generate_secret_key(
+            expiration_duration=service_account_create.expiration_duration
         )
 
         service_account = models.ServiceAccount(
             user_id=created_by_id,
             name=service_account_create.name,
             description=service_account_create.description,
-            secret_key=generate_secret_key(),
+            secret_key=secret_key_information.key,
             expiration_duration=service_account_create.expiration_duration,
-            expiration=expiration,
+            expiration=secret_key_information.expiration,
             created_by_id=created_by_id,
         )
 
@@ -107,10 +107,12 @@ class ServiceAccountService:
     async def rotate_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
-        service_account.secret_key = generate_secret_key()
-        service_account.expiration = datetime.datetime.now() + datetime.timedelta(
-            days=service_account.expiration_duration
+        secret_key_information = generate_secret_key(
+            expiration_duration=service_account.expiration_duration
         )
+
+        service_account.secret_key = secret_key_information.key
+        service_account.expiration = secret_key_information.expiration
 
         service_account.modified_by_id = modified_by_id
 
