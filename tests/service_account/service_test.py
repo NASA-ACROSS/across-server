@@ -12,11 +12,13 @@ from across_server.routes.user.service_account.service import ServiceAccountServ
 
 class TestServiceAccountService:
     def test_service_account_secret_key_should_match(
-        self, patch_datetime_now, patch_config_secret, baked_secret
+        self, patch_datetime_now, patch_config_secret, baked_secret, baked_expiration
     ):
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
         assert generated_secret.key == baked_secret
+        print(generated_secret.expiration, baked_expiration)
+        assert generated_secret.expiration == baked_expiration
 
     @pytest.mark.asyncio
     async def test_create_should_return_service_account_when_successful(

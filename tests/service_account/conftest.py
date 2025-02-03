@@ -69,7 +69,7 @@ def dep_override(
 
 @pytest.fixture
 def fake_time():
-    return datetime.datetime(1992, 12, 23, 19, 15, 00)
+    return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.timezone.utc)
 
 
 @pytest.fixture
@@ -78,6 +78,11 @@ def baked_secret():
     The actual generated secret key from the patched datetime.now() and patched config.SERVICE_ACCOUNT_SECRET_KEY
     """
     return "de0c80b7c38a01c4dc35e698960e4553b6b87e9ea8ce6f5ce03bcb6d7bdd7324537e60a9397e5cb9f21b8857011ac55940a7e32e43a86391a13666916e6e7443"
+
+
+@pytest.fixture
+def baked_expiration(fake_time):
+    return fake_time + datetime.timedelta(days=30)
 
 
 @pytest.fixture
