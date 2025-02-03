@@ -17,7 +17,6 @@ class TestServiceAccountService:
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
         assert generated_secret.key == baked_secret
-        print(generated_secret.expiration, baked_expiration)
         assert generated_secret.expiration == baked_expiration
 
     @pytest.mark.asyncio
