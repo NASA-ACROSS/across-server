@@ -51,13 +51,6 @@ def mock_db(mock_result):
 
     # Mock the Result object that `execute` returns
     mock.execute = AsyncMock(return_value=mock_result)
-
-    yield mock
-
-
-@pytest.fixture(scope="function")
-def mock_db_session():
-    mock = AsyncMock(AsyncSession)
     mock.add = Mock()
     mock.commit = AsyncMock()
     mock.refresh = AsyncMock()
