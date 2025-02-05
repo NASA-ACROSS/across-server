@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 
 from . import auth
 from .core.config import config
@@ -10,6 +10,17 @@ app = FastAPI(
     description="Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts.",
     root_path=config.ROOT_PATH,
 )
+
+
+@app.get(
+    "/",
+    summary="Health Check",
+    description="Container Health Check Route",
+    status_code=status.HTTP_200_OK,
+)
+async def get():
+    return "ok"
+
 
 app.include_router(auth.router)
 app.include_router(user.router)

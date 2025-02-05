@@ -27,11 +27,15 @@ attrs==24.2.0
     # via rush
 boto3==1.36.6
     # via -r requirements/base.in
-botocore==1.36.6
+boto3-stubs==1.36.9
+    # via -r requirements/types.in
+botocore==1.35.71
     # via
     #   boto3
     #   s3transfer
-cachetools==5.5.1
+botocore-stubs==1.36.9
+    # via boto3-stubs
+cachetools==5.5.0
     # via -r requirements/base.in
 certifi==2024.8.30
     # via
@@ -111,6 +115,10 @@ mdurl==0.1.2
     # via markdown-it-py
 mypy==1.14.1
     # via -r requirements/types.in
+mypy-boto3-iam==1.36.0
+    # via boto3-stubs
+mypy-boto3-sts==1.36.0
+    # via boto3-stubs
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.9.1
@@ -213,6 +221,8 @@ starlette==0.38.6
     # via fastapi
 typer==0.14.0
     # via fastapi-cli
+types-awscrt==0.23.8
+    # via botocore-stubs
 types-cachetools==5.5.0.20240820
     # via -r requirements/types.in
 types-pyasn1==0.6.0.20240913
@@ -221,6 +231,8 @@ types-python-jose==3.3.4.20240106
     # via -r requirements/types.in
 types-requests==2.32.0.20241016
     # via -r requirements/types.in
+types-s3transfer==0.11.2
+    # via boto3-stubs
 types-shapely==2.0.0.20241112
     # via -r requirements/types.in
 typing-extensions==4.12.2
