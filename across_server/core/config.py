@@ -12,6 +12,7 @@ class Config(BaseConfig):
     HOST: str = "localhost"
     PORT: int = 8000
     ROOT_PATH: str = "/api"
+    SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
     def is_local(self):
         return self.APP_ENV == Environments.LOCAL

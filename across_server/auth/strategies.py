@@ -22,6 +22,9 @@ async def global_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
 ):
+    if "all:write" in auth_user.scopes:
+        return auth_user
+
     for scope in security_scopes.scopes:
         if scope not in auth_user.scopes:
             raise HTTPException(
