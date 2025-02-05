@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 from uuid import UUID
 
@@ -18,3 +19,8 @@ class AuthUser(BaseModel):
 class AccessTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class SecretKeySchema(BaseModel):
+    key: str
+    expiration: datetime.datetime

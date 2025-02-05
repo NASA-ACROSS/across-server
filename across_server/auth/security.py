@@ -1,7 +1,12 @@
-from typing import Annotated
+import datetime
+import hashlib
+from typing import Annotated, Optional
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from .config import auth_config
+from .schemas import SecretKeySchema
 
 security = HTTPBearer(
     scheme_name="Authorization",
@@ -14,3 +19,27 @@ def extract_creds(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
 ):
     return credentials.credentials
+
+
+def generate_secret_key(
+    expiration_duration: int = 30, generator_key: Optional[str] = None
+) -> SecretKeySchema:
+    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+
+    # if I have this defaulted to the config value in the function parameters, it won't be monkey-patched in the unit-tests
+    if not generator_key:
+        generator_key = auth_config.SERVICE_ACCOUNT_SECRET_KEY
+
+    # Get timestamp in seconds
+    timestamp_seconds = now.replace(tzinfo=datetime.timezone.utc).timestamp()
+
+    # Convert to nanoseconds
+    timestamp_nanoseconds = int(timestamp_seconds * 1e9)
+
+    # Construct the salt for the key
+    secret_string = generator_key + str(timestamp_nanoseconds)
+
+    return SecretKeySchema(
+        key=hashlib.sha512(secret_string.encode()).hexdigest(),
+        expiration=now + datetime.timedelta(days=expiration_duration),
+    )

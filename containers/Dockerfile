@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y make
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ARG APP_ENV=local
+# Exposed server port
+ENV PORT=8000
 
 WORKDIR /app
 
@@ -25,7 +27,6 @@ COPY ./across_server/__about__.py ./across_server/
 # RUN make venv ENV=${APP_ENV}
 RUN make install ENV=${APP_ENV}
 
-
 FROM python:3.12-slim AS local
 
 WORKDIR /app
@@ -40,14 +41,23 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 
-FROM python:3.12-slim AS test
+FROM python:3.12-slim AS dev
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy source code
+# Copy source code test
 COPY ../across_server ./across_server
+
+EXPOSE 8000
+
+# Creates a non-root user with an explicit UID and adds permission to access the /app folder
+# Create a non-root user with a UID of 5678 and no password, then change ownership of /app
+RUN useradd -m -u 5678 appuser && chown -R appuser /app
+USER appuser
+
+CMD ["sh", "-c", "fastapi dev across_server/main.py --host 0.0.0.0 --port 8000"]
 
 
 FROM python:3.12-slim AS prod
@@ -61,7 +71,9 @@ COPY ../across_server ./across_server
 
 EXPOSE 8000
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# Create a non-root user with a UID of 5678 and no password, then change ownership of /app
+# # Creates a non-root user with an explicit UID and adds permission to access the /app folder
+# # Create a non-root user with a UID of 5678 and no password, then change ownership of /app
 RUN useradd -m -u 5678 appuser && chown -R appuser /app
 USER appuser
+
+CMD ["sh", "-c", "uvicorn across_server.main:app --host 0.0.0.0 --port 8000"]

@@ -1,6 +1,6 @@
 # Define env variables
 ENV ?= local
-ENVS = local test action prod
+ENVS = local dev prod action
 IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 
 # Docker
@@ -51,7 +51,7 @@ define ask
 endef
 
 # Tasks
-.PHONY: list_targets help init install_uv install install_hooks lock configure venv_dir venv check_env install_deps start run stop build dev restart reset tail_logs temp_run test lint rev seed migrate prod clean prune rm_imgs
+.PHONY: list_targets help init install_uv install install_hooks lock configure venv_dir venv check_env install_deps start run stop build dev restart reset tail_logs temp_run test lint rev seed migrate prod clean prune rm_imgs mfa_auth
 
 list_targets: ### Internal command used for getting a list of commands for .PHONY
 	@awk '/^[a-zA-Z_\-]+:/ {sub(/:/, ""); printf "%s ", $$1} END {print ""}' $(MAKEFILE_LIST)
@@ -209,6 +209,9 @@ migrate: ## Run the migrations for the database
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d
 
+# Group: AWS
+mfa_auth: ## Get temporary MFA auth tokens for AWS CLI
+	@$(VENV_BIN)/python scripts/aws-mfa-auth.py
 
 # Group: Cleaning
 clean: ## Clean virtual env

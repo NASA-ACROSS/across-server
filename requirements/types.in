@@ -5,3 +5,4 @@ types-requests
 types-cachetools
 types-shapely
 types-python-jose
+boto3-stubs[iam,sts]
