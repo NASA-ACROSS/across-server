@@ -14,6 +14,8 @@ class TestEmailService:
         self.subject = "Mock"
 
         class mocksmtp(aiosmtplib.SMTP):
+            is_connected: bool = True
+
             async def login(*args, **kwargs):
                 pass
 
