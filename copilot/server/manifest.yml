@@ -35,23 +35,17 @@ memory: 2048
 observability:
   tracing: awsxray
 
-# Optional fields for more advanced use-cases.
-#
-# variables:                    # Pass environment variables as key value pairs.
-#   LOG_LEVEL: info
-#
+env_file: .env
+
 # tags:                         # Pass tags as key value pairs.
 #   project: project-name
 #
-# secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store and Secrets Manager.
+secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store and Secrets Manager.
+  ACROSS_DB_PWD: /copilot/${COPILOT_APPLICATION_NAME}/${COPILOT_ENVIRONMENT_NAME}/secrets/ACROSS_DB_PWD
 #   GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of an SSM parameter.
 
 # You can override any of the values defined above by environment.
 environments:
-  dev:
-    variables:
-      LOG_LEVEL: debug # Log level for the "test" environment.
-      APP_ENV: dev
     image:
       build:
         target: dev
