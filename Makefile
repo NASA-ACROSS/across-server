@@ -104,7 +104,12 @@ install_hooks: ## Install 'pre-commit' git hooks, only for local.
 
 lock: check_env venv ## Create or update the lockfile
 	@echo "Updating lockfile...";
-	@uv pip compile $(REQ_IN) -o $(REQ_TXT) --quiet;
+	@for env in $(ENVS); do \
+		in_file=$(REQ_DIR)/$$env.in; \
+		out_file=$(REQ_DIR)/$$env.txt; \
+		echo "Compiling $$in_file -> $$out_file"; \
+		uv pip compile $$in_file -o $$out_file --quiet; \
+	done
 
 configure: ## Create a .env file for environment variables
 	@echo "Creating .env file..."
