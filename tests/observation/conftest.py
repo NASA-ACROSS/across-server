@@ -1,8 +1,7 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.routes.observation.service import ObservationService
 
@@ -45,16 +44,6 @@ def mock_observation_service(mock_observation_data):
     returned_mock_observation["description"] = "the returned observation"
 
     mock.create = AsyncMock(return_value=returned_mock_observation)
-    yield mock
-
-
-@pytest.fixture(scope="function")
-def mock_db_session():
-    mock = AsyncMock(AsyncSession)
-    mock.add = Mock()
-    mock.commit = AsyncMock()
-    mock.refresh = AsyncMock()
-
     yield mock
 
 

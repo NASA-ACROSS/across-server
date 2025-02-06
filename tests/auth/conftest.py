@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,21 +11,6 @@ from across_server.util.email.service import EmailService
 def mock_auth_service():
     mock = AsyncMock(AuthService)
     mock.get_authenticated_user = AsyncMock(return_value="mocked_user")
-
-    yield mock
-
-
-@pytest.fixture
-def mock_email_service():
-    mock = AsyncMock(EmailService)
-    mock.send = AsyncMock(return_value=True)
-
-    yield mock
-
-
-@pytest.fixture
-def mock_webserver_access():
-    mock = MagicMock(strategies.webserver_access)
 
     yield mock
 

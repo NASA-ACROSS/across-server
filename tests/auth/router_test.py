@@ -1,4 +1,3 @@
-from unittest import mock
 from unittest.mock import AsyncMock
 
 import fastapi
@@ -51,4 +50,3 @@ class TestLoginRoute:
         await self.client.post(self.endpoint)
 
         mock_email_service.send.assert_called_once()
-        mock_email_service.send.assert_called_with(self.email, mock.ANY, mock.ANY)

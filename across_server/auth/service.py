@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from ..db import get_session, models
-from . import schemas, tokens
+from . import magic_link, schemas, tokens
 
 
 class Tokens(TypedDict):
@@ -19,6 +19,9 @@ class Tokens(TypedDict):
 class AuthService:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]):
         self.db = db
+
+    def generate_magic_link(self, email: str) -> str:
+        return magic_link.generate(email)
 
     async def authenticate(
         self,
@@ -74,6 +77,8 @@ class AuthService:
             id=user.id,
             groups=[],
             scopes=unique_permissions,
+            first_name=user.first_name,
+            last_name=user.last_name,
         )
 
         if user.groups:
