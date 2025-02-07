@@ -56,7 +56,7 @@ email-validator==2.2.0
     # via
     #   -r requirements/base.in
     #   fastapi
-fastapi==0.115.0
+fastapi==0.115.8
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
@@ -93,7 +93,7 @@ idna==3.10
     #   httpx
 iniconfig==2.0.0
     # via pytest
-jinja2==3.1.4
+jinja2==3.1.5
     # via fastapi
 jmespath==1.0.1
     # via
@@ -213,8 +213,10 @@ sqlalchemy==2.0.37
     #   -r requirements/base.in
     #   alembic
     #   geoalchemy2
-starlette==0.38.6
-    # via fastapi
+starlette==0.45.3
+    # via
+    #   -r requirements/base.in
+    #   fastapi
 typer==0.14.0
     # via fastapi-cli
 types-cachetools==5.5.0.20240820
