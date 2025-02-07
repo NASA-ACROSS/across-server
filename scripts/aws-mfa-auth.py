@@ -66,16 +66,16 @@ token_code = prompt_input("Enter your MFA code")
 
 # Get temporary credentials
 print("Fetching temporary credentials...")
-creds = sts_client.get_session_token(SerialNumber=mfa_arn, TokenCode=token_code)[
-    "Credentials"
-]
+
+max_duration_seconds = 129600  # 36 hours
+
+creds = sts_client.get_session_token(
+    SerialNumber=mfa_arn, TokenCode=token_code, DurationSeconds=max_duration_seconds
+)["Credentials"]
 
 # Prompt for a new profile name
 default_mfa_profile = f"{aws_profile}-mfa"
 mfa_profile = prompt_input("Enter a name for the new profile", default_mfa_profile)
-
-# # Write the new credentials to the AWS configuration
-# mfa_session = boto3.Session(profile_name=mfa_profile, region_name=session.region_name)
 
 # Read in the AWS credentials file
 config = configparser.ConfigParser()
