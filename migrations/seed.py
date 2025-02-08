@@ -14,6 +14,7 @@ from .seeds.permissions import permissions
 from .seeds.roles import roles
 from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
+from .seeds.tles import tles
 from .seeds.users import users
 
 seed_order = [
@@ -28,6 +29,7 @@ seed_order = [
     [models.Footprint.__tablename__, footprints],
     [models.Schedule.__tablename__, schedules],
     [models.Observation.__tablename__, observations],
+    [models.TLE.__tablename__, tles],
 ]
 
 

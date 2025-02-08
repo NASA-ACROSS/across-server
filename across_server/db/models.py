@@ -34,6 +34,10 @@ class Base(AsyncAttrs, DeclarativeBase):
     )
 
 
+class NoIdBase(AsyncAttrs, DeclarativeBase):
+    pass
+
+
 ## Mixins ##
 class CreatableMixin:
     created_by_id: Mapped[uuid.UUID] = mapped_column(
@@ -420,3 +424,13 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     schedule: Mapped["Schedule"] = relationship(
         back_populates="observations", lazy="selectin"
     )
+
+
+class TLE(NoIdBase):
+    __tablename__ = "tle"
+
+    norad_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    epoch: Mapped[datetime] = mapped_column(DateTime, nullable=False, primary_key=True)
+    satellite_name: Mapped[str] = mapped_column(String(69), nullable=False)
+    tle1: Mapped[str] = mapped_column(String(69), nullable=False)
+    tle2: Mapped[str] = mapped_column(String(69), nullable=False)
