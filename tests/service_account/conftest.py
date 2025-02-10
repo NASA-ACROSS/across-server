@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -32,21 +32,6 @@ def mock_service_account_service(mock_service_account_data):
     mock.get_many = AsyncMock(return_value=[mock_service_account_data])
     mock.update = AsyncMock(return_value=mock_service_account_data)
     mock.expire_key = AsyncMock(return_value={})
-
-    yield mock
-
-
-@pytest.fixture
-def mock_global_access():
-    mock = MagicMock(strategies.global_access)
-
-    yield mock
-
-
-@pytest.fixture
-def mock_self_access():
-    mock = MagicMock(strategies.self_access)
-    mock.id = 1
 
     yield mock
 

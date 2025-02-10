@@ -71,3 +71,18 @@ def mock_webserver_access():
     mock = MagicMock(strategies.webserver_access)
 
     yield mock
+
+
+@pytest.fixture
+def mock_global_access():
+    mock = MagicMock(strategies.global_access)
+
+    yield mock
+
+
+@pytest.fixture
+def mock_self_access():
+    mock = MagicMock(strategies.self_access)
+    mock.id = 1
+
+    yield mock
