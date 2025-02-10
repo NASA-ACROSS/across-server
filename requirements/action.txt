@@ -43,7 +43,7 @@ cfgv==3.4.0
     # via pre-commit
 click==8.1.7
     # via uvicorn
-coverage==7.6.9
+coverage[toml]==7.6.9
     # via pytest-cov
 distlib==0.3.9
     # via virtualenv
@@ -155,7 +155,7 @@ pyyaml==6.0.2
     #   pre-commit
 represent==2.1
     # via spacetrack
-ruff==0.9.4
+ruff==0.9.5
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
@@ -178,7 +178,7 @@ sniffio==1.3.1
     #   spacetrack
 spacetrack==1.3.1
     # via -r requirements/base.in
-sqlalchemy==2.0.37
+sqlalchemy[asyncio]==2.0.37
     # via
     #   -r requirements/base.in
     #   alembic
@@ -198,7 +198,6 @@ types-shapely==2.0.0.20241112
 typing-extensions==4.12.2
     # via
     #   alembic
-    #   anyio
     #   fastapi
     #   mypy
     #   pydantic
