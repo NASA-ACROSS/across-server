@@ -1,3 +1,4 @@
+from datetime import timezone
 from uuid import uuid4
 
 import pytest
@@ -17,7 +18,9 @@ class TestServiceAccountService:
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
         assert generated_secret.key == baked_secret
-        assert generated_secret.expiration == baked_expiration
+        assert (
+            generated_secret.expiration.replace(tzinfo=timezone.utc) == baked_expiration
+        )
 
     @pytest.mark.asyncio
     async def test_create_should_return_service_account_when_successful(
