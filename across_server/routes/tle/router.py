@@ -25,10 +25,12 @@ router = APIRouter(
     responses={
         status.HTTP_201_CREATED: {},
     },
+    response_model=schemas.TLE,
     dependencies=[Depends(auth.strategies.global_access)],
 )
 async def create(
     TLE_service: Annotated[TLEService, Depends(TLEService)],
     data: schemas.TLECreate,
 ):
-    await TLE_service.create(data)
+    tle = await TLE_service.create(data)
+    return schemas.TLE.model_validate(tle)
