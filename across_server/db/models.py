@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -32,10 +33,6 @@ class Base(AsyncAttrs, DeclarativeBase):
     id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-
-
-class NoIdBase(AsyncAttrs, DeclarativeBase):
-    pass
 
 
 ## Mixins ##
@@ -426,7 +423,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     )
 
 
-class TLE(NoIdBase):
+class TLE(Base):
     __tablename__ = "tle"
 
     norad_id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -434,3 +431,9 @@ class TLE(NoIdBase):
     satellite_name: Mapped[str] = mapped_column(String(69), nullable=False)
     tle1: Mapped[str] = mapped_column(String(69), nullable=False)
     tle2: Mapped[str] = mapped_column(String(69), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "epoch", "norad_id", name="uq_epoch_norad_id"
+        ),  # Enforce uniqueness
+    )
