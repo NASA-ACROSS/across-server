@@ -10,11 +10,36 @@ from across_server.routes.tle.service import TLEService
 
 
 @pytest.fixture(scope="function")
-def mock_tle_data():
+def todays_epoch():
+    return datetime.datetime.now()
+
+
+@pytest.fixture(scope="function")
+def todays_epoch_yyddd(todays_epoch):
+    date_str = todays_epoch.strftime(
+        "%y%j"
+    )  # %y = last two digits of the year, %j = day of the year
+
+    # Calculate fractional day
+    fractional_day = (
+        todays_epoch.hour / 24
+        + todays_epoch.minute / 1440
+        + todays_epoch.second / 86400
+        + todays_epoch.microsecond / 86400000000
+    )
+
+    # Combine to get final format
+    formatted_date = str(date_str) + f"{fractional_day:.8f}".lstrip("0")
+
+    return formatted_date
+
+
+@pytest.fixture(scope="function")
+def mock_tle_data(todays_epoch_yyddd):
     return {
         "norad_id": 12345,
         "satellite_name": "SWIFT",
-        "tle1": "1 28485U 04047A   25038.03159117  .00027471  00000+0  86373-3 0  9997",
+        "tle1": f"1 28485U 04047A   {todays_epoch_yyddd}  .00027471  00000+0  86373-3 0  9997",
         "tle2": "2 28485  20.5557 285.8116 0006385  93.6070 266.5099 15.31053389110064",
         "epoch": str(datetime.datetime(2025, 2, 7, 0, 45, 29, 477088)),
     }

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
@@ -45,14 +46,19 @@ class TLE(TLEBase):
         -------
             The calculated epoch of the TLE.
         """
-        # Extract year and days from TLE
-        tleepoch = self.tle1.split()[3]
-        tleyear = int(tleepoch[:2])
-        days = float(tleepoch[2:]) - 1
-
-        # Calculate epoch date
-        year = 2000 + tleyear if tleyear < 57 else 1900 + tleyear
-        return datetime(year, 1, 1) + timedelta(days=days)
+        try:
+            # Extract year and days from TLE
+            tleepoch = self.tle1.split()[3]
+            tleyear = int(tleepoch[:2])
+            days = float(tleepoch[2:]) - 1
+            if days > 365:
+                raise ValueError(f"Invalid TLE epoch format: {days} > 365 {tleepoch}")
+            # Calculate epoch date
+            year = 2000 + tleyear if tleyear < 57 else 1900 + tleyear
+            epoch = datetime(year, 1, 1) + timedelta(days=days)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="Invalid TLE epoch format")
+        return epoch
 
     # https://docs.pydantic.dev/latest/concepts/models/#arbitrary-class-instances
     model_config = ConfigDict(from_attributes=True)
