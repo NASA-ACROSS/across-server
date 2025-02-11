@@ -31,7 +31,7 @@ def generate_secret_key(
         generator_key = auth_config.SERVICE_ACCOUNT_SECRET_KEY
 
     # Get timestamp in seconds
-    timestamp_seconds = now.replace(tzinfo=datetime.timezone.utc).timestamp()
+    timestamp_seconds = now.timestamp()
 
     # Convert to nanoseconds
     timestamp_nanoseconds = int(timestamp_seconds * 1e9)
