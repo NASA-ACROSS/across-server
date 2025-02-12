@@ -242,7 +242,7 @@ requests==2.32.3
     #   pyvo
 rich==13.9.4
     # via typer
-ruff==0.9.4
+ruff==0.9.6
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
