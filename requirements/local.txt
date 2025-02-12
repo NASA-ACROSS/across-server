@@ -253,7 +253,7 @@ sgp4==2.23
     #   -r requirements/base.in
     #   across-tools
     #   skyfield
-shapely==2.0.6
+shapely==2.0.7
     # via -r requirements/base.in
 shellingham==1.5.4
     # via typer
@@ -273,7 +273,7 @@ spacetrack==1.3.1
     # via
     #   -r requirements/base.in
     #   across-tools
-spiceypy==6.0.0
+spiceypy==6.0.1
     # via across-tools
 sqlalchemy==2.0.37
     # via
@@ -325,7 +325,7 @@ urllib3==2.2.3
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.34.0
+uvicorn==0.34.3
     # via
     #   -r requirements/base.in
     #   fastapi
