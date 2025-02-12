@@ -31,7 +31,7 @@ astropy==7.0.1
     #   pyvo
 astropy-healpix==1.1.2
     # via -r requirements/base.in
-astropy-iers-data==0.2025.4.28.0.37.27
+astropy-iers-data==0.2025.2.10.0.33.26
     # via astropy
 astroquery==0.4.10
     # via across-tools

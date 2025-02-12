@@ -21,7 +21,7 @@ asgi-correlation-id==4.3.4
     # via -r requirements/base.in
 asgi-ratelimit==0.10.0
     # via -r requirements/base.in
-astropy==7.0.0
+astropy==7.0.1
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -31,7 +31,7 @@ astropy==7.0.0
     #   pyvo
 astropy-healpix==1.0.3
     # via -r requirements/base.in
-astropy-iers-data==0.2024.12.9.0.36.21
+astropy-iers-data==0.2025.2.10.0.33.26
     # via astropy
 astroquery==0.4.9.post1
     # via across-tools
