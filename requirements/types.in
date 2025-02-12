@@ -1,6 +1,6 @@
 # type dependencies
 
-mypy
+mypy >=1.15.0
 types-boto3[rds,ssm,sts]
 types-cachetools
 types-python-jose
