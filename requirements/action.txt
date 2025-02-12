@@ -274,9 +274,9 @@ types-python-jose==3.3.4.20240106
     # via -r requirements/types.in
 types-requests==2.32.0.20241016
     # via -r requirements/types.in
-types-s3transfer==0.11.4
+types-s3transfer==0.13.0
     # via types-boto3
-types-shapely==2.0.0.20241112
+types-shapely==2.0.0.20250202
     # via -r requirements/types.in
 typing-extensions==4.12.2
     # via
