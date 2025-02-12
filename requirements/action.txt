@@ -51,7 +51,7 @@ dnspython==2.7.0
     # via email-validator
 email-validator==2.2.0
     # via -r requirements/base.in
-fastapi==0.115.0
+fastapi==0.115.8
     # via
     #   -r requirements/base.in
     #   pytest-fastapi-deps
@@ -183,8 +183,10 @@ sqlalchemy==2.0.37
     #   -r requirements/base.in
     #   alembic
     #   geoalchemy2
-starlette==0.38.6
-    # via fastapi
+starlette==0.45.3
+    # via
+    #   -r requirements/base.in
+    #   fastapi
 types-cachetools==5.5.0.20240820
     # via -r requirements/types.in
 types-pyasn1==0.6.0.20240913

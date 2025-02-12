@@ -5,4 +5,4 @@
 -r lint.in
 
 # includes the cli
-fastapi[standard] ==0.115
+fastapi[standard] >=0.115
