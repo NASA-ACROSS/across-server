@@ -1,8 +1,14 @@
+import os
+import time
+
 from fastapi import FastAPI
 
 from . import auth
 from .core.config import config
 from .routes import group, observation, role, user
+
+os.environ["TZ"] = "UTC"
+time.tzset()
 
 app = FastAPI(
     title="ACROSS Server",

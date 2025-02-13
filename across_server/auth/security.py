@@ -24,14 +24,14 @@ def extract_creds(
 def generate_secret_key(
     expiration_duration: int = 30, generator_key: Optional[str] = None
 ) -> SecretKeySchema:
-    now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+    now = datetime.datetime.now()
 
     # if I have this defaulted to the config value in the function parameters, it won't be monkey-patched in the unit-tests
     if not generator_key:
         generator_key = auth_config.SERVICE_ACCOUNT_SECRET_KEY
 
     # Get timestamp in seconds
-    timestamp_seconds = now.replace(tzinfo=datetime.timezone.utc).timestamp()
+    timestamp_seconds = now.timestamp()
 
     # Convert to nanoseconds
     timestamp_nanoseconds = int(timestamp_seconds * 1e9)
