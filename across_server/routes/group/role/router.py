@@ -3,12 +3,11 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, status
 
-from ....db import models
 from . import schemas
 from .service import GroupRoleService
 
 router = APIRouter(
-    prefix="/{group_id}/role",
+    prefix="/group/{group_id}/role",
     tags=["Group Role"],
     responses={
         status.HTTP_404_NOT_FOUND: {
@@ -16,11 +15,6 @@ router = APIRouter(
         },
     },
 )
-
-
-# replace with security stuff
-async def get_current_user():
-    return models.User(id="173e35fa-9544-49e8-b5b9-d04ea884defb")
 
 
 @router.get(
