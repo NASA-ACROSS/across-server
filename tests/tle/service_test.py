@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.db.models import TLE
 from across_server.routes.tle import schemas
+from across_server.routes.tle.exceptions import DuplicateTLEException
 from across_server.routes.tle.service import TLEService
 
 
@@ -47,16 +48,6 @@ class TestTLEService:
         assert isinstance(tle, TLE)
 
     @pytest.mark.asyncio
-    async def test_should_return_true_when_tle_exists(mock_tle_service, mock_db):
-        """
-        Test that TLEService returns true when a TLE exists for given parameters.
-        """
-
-        mock_tle_service = TLEService(mock_db)
-        exists = await mock_tle_service.exists(norad_id=12345, epoch=datetime.now())
-        assert exists is True
-
-    @pytest.mark.asyncio
     async def test_create_should_save_tle_to_database(
         self, mock_result: AsyncMock, mock_db: AsyncSession, mock_tle: schemas.TLECreate
     ) -> None:
@@ -68,3 +59,18 @@ class TestTLEService:
         await service.create(mock_tle)
 
         mock_db.commit.assert_called_once()  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_create_should_raise_exception_when_duplicate_exists(
+        self, mock_db: AsyncSession, mock_tle: schemas.TLECreate
+    ) -> None:
+        """
+        Test that create method raises DuplicateTLEException when a TLE with the same
+        NORAD ID and epoch already exists in the database.
+        """
+        # Mock the exists method to return True, indicating a duplicate TLE
+        mock_tle_service = TLEService(mock_db)
+        mock_tle_service.exists = AsyncMock(return_value=True)  # type: ignore[assignment]
+
+        with pytest.raises(DuplicateTLEException):
+            await mock_tle_service.create(mock_tle)

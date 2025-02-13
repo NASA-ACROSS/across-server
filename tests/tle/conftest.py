@@ -46,6 +46,26 @@ def mock_tle_data(todays_epoch_yyddd):
 
 
 @pytest.fixture(scope="function")
+def mock_tle_data_explorer_6():
+    return {
+        "norad_id": 15,
+        "satellite_name": "EXPLORER 6",
+        "tle1": "1 00015U 59004A   59011.07596599  .00141866 +00000-0 +00000-0 0 09660",
+        "tle2": "2 00015 047.0999 025.2139 7504899 076.7382 327.1285 02.03707726003008",
+    }
+
+
+@pytest.fixture(scope="function")
+def mock_tle_data_invalid_epoch():
+    return {
+        "norad_id": 25544,
+        "satellite_name": "ISS",
+        "tle1": "1 25544U 98067A   23500.69874537  .00016721  00000-0  30899-3 0  9993",
+        "tle2": "2 25544  51.6415 329.4893 0003918  59.1794 300.9095 15.49591777399826",
+    }
+
+
+@pytest.fixture(scope="function")
 def mock_tle(mock_tle_data):
     return schemas.TLECreate(**mock_tle_data)
 
