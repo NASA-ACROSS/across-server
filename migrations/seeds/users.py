@@ -2,7 +2,7 @@ import uuid
 
 from across_server.db.models import User
 
-from .group_roles import treedome_group_admin
+from .group_roles import treedome_group_admin, treedome_schedule_operations
 from .groups import treedome_space_group
 from .roles import across_admin_role, service_account_editor
 
@@ -26,7 +26,7 @@ sandy = User(
     created_by_id=None,
     modified_by_id=None,
     roles=[service_account_editor],
-    group_roles=[treedome_group_admin],
+    group_roles=[treedome_group_admin, treedome_schedule_operations],
     groups=[treedome_space_group],
 )
 

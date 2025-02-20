@@ -53,6 +53,7 @@ class User(UserBase):
     id: uuid.UUID
     groups: list[Group]
     roles: list[RoleBase]
+    group_roles: list[GroupRole]
 
 
 class UserCreate(UserBase):

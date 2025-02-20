@@ -80,8 +80,17 @@ user_group_role = Table(
 service_account_role = Table(
     "service_account_role",
     Base.metadata,
-    Column("service_account_id", ForeignKey("service_account.id"), primary_key=True),
+    Column("service_account_id", ForeignKey(
+        "service_account.id"), primary_key=True),
     Column("role_id", ForeignKey("role.id"), primary_key=True),
+)
+
+service_account_group_role = Table(
+    "service_account_group_role",
+    Base.metadata,
+    Column("service_account_id", ForeignKey(
+        "service_account.id"), primary_key=True),
+    Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
 )
 
 role_permission = Table(
@@ -106,7 +115,7 @@ group_observatory = Table(
 )
 
 
-## Application Models
+# Application Models
 class GroupInvite(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "group_invite"
 
@@ -190,6 +199,12 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     users: Mapped[list["User"] | None] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
+
+    service_accounts: Mapped[list["ServiceAccount"]] = relationship(
+        secondary=service_account_group_role,
+        back_populates="group_roles",
+        lazy="selectin",
+    )
     permissions: Mapped[list["Permission"]] = relationship(
         secondary=group_role_permission, back_populates="group_roles", lazy="selectin"
     )
@@ -212,6 +227,11 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     )
     roles: Mapped[list["Role"] | None] = relationship(
         secondary=service_account_role,
+        back_populates="service_accounts",
+        lazy="selectin",
+    )
+    group_roles: Mapped[Optional[List["GroupRole"]]] = relationship(
+        secondary=service_account_group_role,
         back_populates="service_accounts",
         lazy="selectin",
     )
@@ -359,12 +379,14 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
     telescope_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
-    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range_begin: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False)
     date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
     external_id: Mapped[str] = mapped_column(String(256), nullable=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
-    fidelity: Mapped[str] = mapped_column(String(50), default="high", nullable=False)
+    fidelity: Mapped[str] = mapped_column(
+        String(50), default="high", nullable=False)
     checksum: Mapped[str] = mapped_column(String(128), nullable=False)
 
     telescope: Mapped["Telescope"] = relationship(
@@ -388,7 +410,8 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float] = mapped_column(Float(5))
     pointing_dec: Mapped[float] = mapped_column(Float(5))
-    pointing_position: Mapped[WKBElement] = mapped_column(Geography("POINT", srid=4326))
+    pointing_position: Mapped[WKBElement] = mapped_column(
+        Geography("POINT", srid=4326))
     date_range_begin: Mapped[datetime] = mapped_column(DateTime)
     date_range_end: Mapped[datetime] = mapped_column(DateTime)
     external_observation_id: Mapped[str] = mapped_column(String(50))
@@ -416,9 +439,11 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     o_ucd: Mapped[str | None] = mapped_column(String, nullable=True)
     pol_states: Mapped[str | None] = mapped_column(String, nullable=True)
     pol_xel: Mapped[str | None] = mapped_column(String, nullable=True)
-    category: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Enum
+    category: Mapped[str | None] = mapped_column(
+        String(50), nullable=True)  # Enum
     priority: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    tracking_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Enum
+    tracking_type: Mapped[str | None] = mapped_column(
+        String(50), nullable=True)  # Enum
 
     instrument: Mapped["Instrument"] = relationship(
         back_populates="observations", lazy="selectin"
@@ -432,7 +457,8 @@ class TLE(Base):
     __tablename__ = "tle"
 
     norad_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    epoch: Mapped[datetime] = mapped_column(DateTime, nullable=False, primary_key=True)
+    epoch: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, primary_key=True)
     satellite_name: Mapped[str] = mapped_column(String(69), nullable=False)
     tle1: Mapped[str] = mapped_column(String(69), nullable=False)
     tle2: Mapped[str] = mapped_column(String(69), nullable=False)

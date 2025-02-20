@@ -1,15 +1,18 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Security, status
+from fastapi import APIRouter, Depends, Security, status
 
 from across_server import auth
 
+from ....group.role.service import GroupRoleService
+from ...service import UserService
 from .. import schemas
+from ..service import ServiceAccountService
 from .service import ServiceAccountGroupRoleService
 
 router = APIRouter(
-    prefix="/user/{user_id}/service-account/{service_account_id}/group-role",
+    prefix="/user/{user_id}/service-account/{service_account_id}/group-id/{group_id}/group-role",
     tags=["ServiceAccount"],
     responses={
         status.HTTP_404_NOT_FOUND: {
@@ -24,16 +27,17 @@ router = APIRouter(
     summary="Assign group role",
     description="Assign a group role to a service account.",
     status_code=status.HTTP_201_CREATED,
+    response_model=schemas.ServiceAccount,
     responses={
         status.HTTP_201_CREATED: {
             "model": schemas.ServiceAccount,
-            "description": "The newly created service account",
+            "description": "Group Role has been assigned to service account",
         },
     },
     dependencies=[
         Security(
-            auth.strategies.global_access,
-            scopes=["user:service_account:group:role:write"],
+            auth.strategies.self_access,
+            scopes=["user:service_account:write"],
         )
     ],
 )
@@ -42,13 +46,21 @@ async def assign(
         ServiceAccountGroupRoleService, Depends(ServiceAccountGroupRoleService)
     ],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
-    service_account_id: Annotated[
-        UUID, Path(title="UUID of the service account to assign to")
+    service_account_id: UUID,
+    group_role_id: UUID,
+    service_account_service: Annotated[
+        ServiceAccountService, Depends(ServiceAccountService)
     ],
-    group_role_id: Annotated[UUID, Path(title="UUID of the group role to assign")],
+    group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
+    user_service: Annotated[UserService, Depends(UserService)],
 ):
-    service.assign(service_account_id, group_role_id, user_id=auth_user.id)
-    return
+    user = await user_service.get(auth_user.id)
+    service_account = await service_account_service.get(
+        service_account_id=service_account_id, user_id=auth_user.id
+    )
+    group_role = await group_role_service.get(group_role_id)
+
+    return await service.assign(service_account, group_role, user)
 
 
 @router.delete(
@@ -64,8 +76,8 @@ async def assign(
     },
     dependencies=[
         Security(
-            auth.strategies.global_access,
-            scopes=["user:service_account:group:role:write"],
+            auth.strategies.self_access,
+            scopes=["user:service_account:write"],
         ),
     ],
 )
@@ -74,10 +86,16 @@ async def remove(
         ServiceAccountGroupRoleService, Depends(ServiceAccountGroupRoleService)
     ],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
-    service_account_id: Annotated[
-        UUID, Path(title="UUID of the service account to remove from")
+    service_account_id: UUID,
+    group_role_id: UUID,
+    service_account_service: Annotated[
+        ServiceAccountService, Depends(ServiceAccountService)
     ],
-    group_role_id: Annotated[UUID, Path(title="UUID of the group role to remove")],
+    group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
 ):
-    service.remove(service_account_id, group_role_id, user_id=auth_user.id)
-    return
+    service_account = await service_account_service.get(
+        service_account_id=service_account_id, user_id=auth_user.id
+    )
+    group_role = await group_role_service.get(group_role_id)
+
+    return await service.remove(service_account, group_role)
