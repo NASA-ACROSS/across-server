@@ -7,7 +7,12 @@ on:
   pull_request:
     branches:
       - main
-
+  workflow_dispatch:
+    inputs:
+      run-build:
+        description: 'Run build job'
+        required: false
+        default: 'true'
 jobs:
   format:
     runs-on: ubuntu-latest
