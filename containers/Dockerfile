@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.2
 FROM python:3.12-bookworm AS build
 
 # install make
@@ -15,6 +16,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for container logging
 ENV PYTHONUNBUFFERED=1
 
+ENV DOCKER_BUILDKIT=1
+
 # Copy only the necessary files for dependency installation first
 COPY ./Makefile ./
 COPY ./requirements/${APP_ENV}.txt ./requirements/
@@ -23,8 +26,7 @@ COPY ./requirements/${APP_ENV}.txt ./requirements/
 COPY ./across_server/__about__.py ./across_server/
 
 # RUN make venv ENV=${APP_ENV}
-RUN make install ENV=${APP_ENV}
-
+RUN --mount=type=ssh make install ENV=${APP_ENV}
 
 FROM python:3.12-slim AS local
 

@@ -58,6 +58,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: false
+          ssh: |
+            default=${{ env.SSH_AUTH_SOCK }}
           file: containers/Dockerfile
           build-args: |
             APP_ENV=prod
