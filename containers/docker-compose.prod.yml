@@ -5,6 +5,8 @@ services:
     build:
       context: ..
       dockerfile: containers/Dockerfile
+      ssh:
+      - default
       target: prod
     ports:
       - 8000:8000
