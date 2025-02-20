@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from . import auth
 from .core.config import config
-from .routes import group, observation, role, user
+from .routes import group, observation, role, tle, user
 
 os.environ["TZ"] = "UTC"
 time.tzset()
@@ -24,3 +24,4 @@ app.include_router(role.router)
 app.include_router(group.router)
 app.include_router(group.group_role.router)
 app.include_router(observation.router)
+app.include_router(tle.router)
