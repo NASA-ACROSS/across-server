@@ -1,5 +1,5 @@
 import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -73,13 +73,6 @@ def mock_tle(mock_tle_data):
 @pytest.fixture(scope="function")
 def mock_tle_db(mock_tle_data):
     return models.TLE(**mock_tle_data)
-
-
-@pytest.fixture
-def mock_global_access():
-    mock = MagicMock(strategies.global_access)
-
-    yield mock
 
 
 @pytest.fixture(scope="function")
