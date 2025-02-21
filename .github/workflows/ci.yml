@@ -27,11 +27,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Setup
         uses: ./.github/actions/setup
 
@@ -43,6 +38,11 @@ jobs:
     steps:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Build
         uses: docker/build-push-action@v6
