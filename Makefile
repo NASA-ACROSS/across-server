@@ -154,7 +154,7 @@ stop_all: check_prod ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
 build: check_prod ## Build the containers (does not run)
-	@$(DOCKER_COMPOSE) build --ssh default
+	@$(DOCKER_COMPOSE) build
 
 restart: ## Restarts the app container
 	@$(DOCKER_COMPOSE) restart
