@@ -2,13 +2,12 @@
 FROM python:3.12-bookworm AS build
 
 # install make
-RUN apt-get update && apt-get install -y make openssh-client
+RUN apt-get update && apt-get install -y make
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Configure SSH to use the forwarded agent
 RUN echo "Host github.com\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null" >> /etc/ssh/ssh_config
-
 
 ARG APP_ENV=local
 
