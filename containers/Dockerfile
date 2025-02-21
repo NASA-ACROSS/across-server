@@ -26,7 +26,8 @@ COPY ./requirements/${APP_ENV}.txt ./requirements/
 COPY ./across_server/__about__.py ./across_server/
 
 # RUN make venv ENV=${APP_ENV}
-RUN make install ENV=${APP_ENV}
+RUN --mount=type=ssh make install ENV=${APP_ENV}
+
 
 FROM python:3.12-slim AS local
 
