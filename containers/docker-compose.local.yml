@@ -5,8 +5,6 @@ services:
     build:
       context: ..
       dockerfile: containers/Dockerfile
-      ssh:
-      - default
       target: local
     volumes:
       - ../across_server/main.py:/app/across_server/main.py
