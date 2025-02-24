@@ -50,9 +50,9 @@ botocore==1.36.6
     # via
     #   boto3
     #   s3transfer
-botocore-stubs==1.37.29
+botocore-stubs==1.38.30
     # via types-boto3
-cachetools==5.5.1
+cachetools==5.5.2
     # via -r requirements/base.in
 certifi==2024.8.30
     # via
