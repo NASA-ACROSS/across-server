@@ -270,7 +270,7 @@ types-cachetools==5.5.0.20240820
     # via -r requirements/types.in
 types-pyasn1==0.6.0.20240913
     # via types-python-jose
-types-python-jose==3.3.4.20240106
+types-python-jose==3.4.0.20250224
     # via -r requirements/types.in
 types-requests==2.32.0.20241016
     # via -r requirements/types.in
