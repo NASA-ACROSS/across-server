@@ -314,6 +314,9 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     instruments: Mapped[List["Instrument"]] = relationship(
         back_populates="telescope", lazy="selectin", cascade="all,delete"
     )
+    schedules: Mapped[List["Schedule"]] = relationship(
+        back_populates="telescope", lazy="selectin"
+    )
 
 
 class Instrument(Base, CreatableMixin, ModifiableMixin):
@@ -330,10 +333,6 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     footprints: Mapped[List["Footprint"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
-    )
-
-    schedules: Mapped[List["Schedule"]] = relationship(
-        back_populates="instrument", lazy="selectin"
     )
 
     observations: Mapped[List["Observation"]] = relationship(
@@ -359,11 +358,18 @@ class Footprint(Base, CreatableMixin, ModifiableMixin):
 class Schedule(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "schedule"
 
-    instrument_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
+    telescope_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
+    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(256), nullable=True)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    fidelity: Mapped[str] = mapped_column(String(50), default="high", nullable=False)
+    checksum: Mapped[str] = mapped_column(String(128), nullable=False)
 
-    instrument: Mapped["Instrument"] = relationship(
+    telescope: Mapped["Telescope"] = relationship(
         back_populates="schedules", lazy="selectin"
     )
 
@@ -404,7 +410,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     depth_unit: Mapped[Optional[str]] = mapped_column(String(50))  # Enum
     central_wavelength: Mapped[Optional[float]] = mapped_column(Float(2))
     bandwidth: Mapped[Optional[float]] = mapped_column(Float(2))
-    filter_name: Mapped[Optional[List[str]]] = mapped_column(String(50))
+    filter_name: Mapped[Optional[str]] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions
     t_resolution: Mapped[Optional[float]] = mapped_column(Float, nullable=True)

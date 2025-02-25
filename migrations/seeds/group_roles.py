@@ -8,6 +8,7 @@ from .permissions import (
     group_user_write,
     group_write,
     observatory_write,
+    schedule_write,
     telescope_write,
 )
 
@@ -20,6 +21,7 @@ treedome_group_admin = GroupRole(
         group_read,
         observatory_write,
         telescope_write,
+        schedule_write,
     ],
     group=treedome_space_group,
 )

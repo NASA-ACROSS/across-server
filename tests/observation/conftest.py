@@ -1,9 +1,10 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
 from across_server.routes.observation.service import ObservationService
+from across_server.routes.schedule.access import schedule_access
 
 
 class MockObservationSchema:
@@ -47,17 +48,21 @@ def mock_observation_service(mock_observation_data):
     yield mock
 
 
+@pytest.fixture
+def mock_schedule_access():
+    mock = MagicMock(schedule_access)
+
+    yield mock
+
+
 @pytest.fixture(scope="function", autouse=True)
-def dep_override(
-    app,
-    fastapi_dep,
-    mock_observation_service,
-):
+def dep_override(app, fastapi_dep, mock_observation_service, mock_schedule_access):
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
             ObservationService: lambda: mock_observation_service,
+            schedule_access: lambda: mock_schedule_access,
         }
     ):
         yield overrider

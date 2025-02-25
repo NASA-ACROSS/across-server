@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Security, status
 
+from ..schedule.access import schedule_access
 from . import schemas
 from .service import ObservationService
 
@@ -28,6 +29,7 @@ router = APIRouter(
             "description": "The newly created observation",
         },
     },
+    dependencies=[Security(schedule_access, scopes=["group:observation:write"])],
 )
 async def create(
     service: Annotated[ObservationService, Depends(ObservationService)],

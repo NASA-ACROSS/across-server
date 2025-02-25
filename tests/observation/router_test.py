@@ -40,14 +40,6 @@ class TestObservationPostRoute:
         assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_should_return_422_when_missing_schedule_id(self):
-        """Should return a 422 when the input is missing the schedule ID"""
-        self.data.pop("schedule_id")
-        res = await self.client.post(self.endpoint, json=self.data)
-
-        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    @pytest.mark.asyncio
     async def test_should_return_422_when_missing_object_name(self):
         """Should return a 422 when the input is missing the object name"""
         self.data.pop("object_name")

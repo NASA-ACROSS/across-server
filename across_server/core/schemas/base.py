@@ -1,7 +1,31 @@
+import hashlib
+
+from pydantic import BaseModel, ConfigDict
+
+
+class BaseSchema(BaseModel):
+    """
+    System BaseSchema for generating new methods for our schemas taking advantage of the
+    pydantic BaseModel.
+
+    Methods
+    -------
+    generate_checksum() -> str:
+        returns a string checksum string based on the encoded model json
+    """
+
+    # https://docs.pydantic.dev/latest/concepts/models/#arbitrary-class-instances
+    model_config = ConfigDict(from_attributes=True)
+
+    def generate_checksum(self) -> str:
+        json_data = self.model_dump_json()
+        return hashlib.sha512(json_data.encode()).hexdigest()
+
+
 class PrefixMixin:
     """
     Mixin to allow Pydantic to flatten nested schemas
-    duirng validation, given field names that share a prefix
+    during validation, given field names that share a prefix
     e.g. `pointing_position` -> `pointing_ra` and `pointing_dec`
     """
 

@@ -20,6 +20,7 @@ group_user_write = Permission(id=uuid.uuid4(), name="group:user:write")
 observatory_write = Permission(id=uuid.uuid4(), name="group:observatory:write")
 telescope_write = Permission(id=uuid.uuid4(), name="group:telescope:write")
 instrument_write = Permission(id=uuid.uuid4(), name="group:instrument:write")
+schedule_write = Permission(id=uuid.uuid4(), name="group:schedule:write")
 
 permissions = [
     all_write,
@@ -31,4 +32,5 @@ permissions = [
     observatory_write,
     telescope_write,
     instrument_write,
+    schedule_write,
 ]

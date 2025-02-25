@@ -2,10 +2,10 @@ import datetime
 import uuid
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from ....core.schemas.base import BaseSchema
 
 
-class ServiceAccount(BaseModel):
+class ServiceAccount(BaseSchema):
     id: uuid.UUID
     user_id: uuid.UUID
     name: str
@@ -14,17 +14,14 @@ class ServiceAccount(BaseModel):
     expiration_duration: int
     secret_key: str
 
-    # https://docs.pydantic.dev/latest/concepts/models/#arbitrary-class-instances
-    model_config = ConfigDict(from_attributes=True)
 
-
-class ServiceAccountCreate(BaseModel):
+class ServiceAccountCreate(BaseSchema):
     name: str
     description: Optional[str]
     expiration_duration: Optional[int]
 
 
-class ServiceAccountUpdate(BaseModel):
+class ServiceAccountUpdate(BaseSchema):
     name: Optional[str] = None
     description: Optional[str] = None
     expiration_duration: Optional[int] = None
