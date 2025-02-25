@@ -408,16 +408,16 @@ footprint = [
 
 OBSERVATORY = {
     "name": "Transiting Exoplanet Survey Satellite",
-    "short_name": "tess",
+    "short_name": "TESS",
     "observatory_type": "SPACE_BASED",
     "telescopes": [
         {
             "name": "Transiting Exoplanet Survey Satellite",
-            "short_name": "tess",
+            "short_name": "TESS",
             "instruments": [
                 {
                     "name": "Transiting Exoplanet Survey Satellite",
-                    "short_name": "tess",
+                    "short_name": "TESS",
                     "footprint": footprint,
                 }
             ],
