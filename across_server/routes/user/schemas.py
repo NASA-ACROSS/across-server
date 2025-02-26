@@ -1,16 +1,33 @@
+import re
 import uuid
-from typing import List, Optional
+from typing import Annotated, List, Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from fastapi import HTTPException, status
+from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr
 
 from ...core.schemas import Permission
 from ..role.schemas import RoleBase
 
+# Regular expression to detect HTML tags
+HTML_TAG_REGEX = re.compile(r"<[^>]*>|[^\w\s-]")
+
+
+def validate_no_html(value: str) -> str:
+    """Ensure the string contains no HTML tags or other special characters."""
+    if HTML_TAG_REGEX.search(value):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid format."
+        )
+    return value
+
+
+NoHTMLString = Annotated[str, BeforeValidator(validate_no_html)]
+
 
 class UserBase(BaseModel):
-    username: str
-    first_name: str
-    last_name: str
+    username: NoHTMLString
+    first_name: NoHTMLString
+    last_name: NoHTMLString
     email: EmailStr
 
 
@@ -45,6 +62,6 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    username: Optional[str] = None
+    first_name: Optional[NoHTMLString] = None
+    last_name: Optional[NoHTMLString] = None
+    username: Optional[NoHTMLString] = None
