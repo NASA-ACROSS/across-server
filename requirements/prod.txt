@@ -146,7 +146,7 @@ pydantic==2.11.4
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
-pydantic-settings==2.9.1
+pydantic-settings==2.8.1
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -221,9 +221,7 @@ typing-extensions==4.13.2
     #   sqlalchemy
     #   typing-inspection
 typing-inspection==0.4.0
-    # via
-    #   pydantic
-    #   pydantic-settings
+    # via pydantic
 urllib3==2.4.0
     # via
     #   botocore
