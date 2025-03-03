@@ -80,7 +80,7 @@ email-validator==2.2.0
     # via
     #   -r requirements/base.in
     #   fastapi
-fastapi==0.115.8
+fastapi==0.115.11
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
