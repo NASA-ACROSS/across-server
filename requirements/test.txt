@@ -20,7 +20,9 @@ pydantic==2.10.6
     # via fastapi
 pydantic-core==2.27.2
     # via pydantic
-pytest==8.3.4
+pygments==2.19.2
+    # via pytest
+pytest==8.4.1
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
