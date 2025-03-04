@@ -40,7 +40,9 @@ class CreatableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     created_on: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
@@ -49,7 +51,9 @@ class ModifiableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     modified_on: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc)
+        DateTime,
+        nullable=True,
+        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
