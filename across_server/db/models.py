@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, get_args
 
 from geoalchemy2 import Geography, WKBElement
@@ -15,7 +15,6 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -41,7 +40,7 @@ class CreatableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     created_on: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now()
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
     )
 
 
@@ -50,7 +49,7 @@ class ModifiableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     modified_on: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, onupdate=func.now()
+        DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc)
     )
 
 
