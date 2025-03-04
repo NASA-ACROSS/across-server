@@ -10,7 +10,7 @@ from ...auth.strategies import authenticate, group_access
 from .service import ScheduleService
 
 
-class access_schema(BaseModel):
+class ScheduleAccess(BaseModel):
     """
     A Pydantic model class representing the access to a Schedule
 
@@ -28,10 +28,10 @@ async def schedule_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[ScheduleService, Depends(ScheduleService)],
-    data: Annotated[access_schema, Body(title="UUID of the group")],
+    data: Annotated[ScheduleAccess, Body(title="UUID of the schedule")],
 ):
     """
-    Method that evaluates whether a user has access to a specific Schedule
+    Method that evaluates whether a user has access to a specific Schedule for a group
 
     Parameters
     ----------

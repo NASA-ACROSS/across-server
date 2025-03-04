@@ -10,7 +10,7 @@ from ...auth.strategies import authenticate, group_access
 from .service import TelescopeService
 
 
-class access_schema(BaseModel):
+class TelescopeAccess(BaseModel):
     """
     A Pydantic model class representing the access to a Telescope
 
@@ -28,14 +28,14 @@ async def telescope_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[TelescopeService, Depends(TelescopeService)],
-    data: Annotated[access_schema, Body(title="UUID of the group")],
+    data: Annotated[TelescopeAccess, Body(title="UUID of the telescope")],
 ):
     """
     Method that evaluates whether a user has access to a specific telescope
 
     Parameters
     ----------
-    security_scoopes: fastapi.SecurityScopes
+    security_scopes: fastapi.SecurityScopes
         list of strings scopes
     auth_user: auth.AuthUser
         an authenticated user retrieved from bearer token

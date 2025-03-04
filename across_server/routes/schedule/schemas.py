@@ -37,8 +37,8 @@ class ScheduleBase(BaseSchema):
     name: str
     date_range: DateRange
     status: ScheduleStatus
-    external_id: Optional[str]
-    fidelity: Optional[ScheduleFidelity]
+    external_id: Optional[str] = None
+    fidelity: Optional[ScheduleFidelity] = None
 
 
 class Schedule(ScheduleBase):

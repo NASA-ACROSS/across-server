@@ -64,9 +64,7 @@ class Observation(ObservationBase):
     id: uuid.UUID
     schedule_id: uuid.UUID
     created_on: datetime
-    modified_on: Optional[datetime] = None
     created_by_id: Optional[uuid.UUID] = None
-    modified_on_id: Optional[uuid.UUID] = None
 
     @model_validator(mode="before")
     def nest_flattened_jsons(cls, values: dict) -> dict:

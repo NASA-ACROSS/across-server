@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from across_server.auth.strategies import authenticate
 from across_server.core.enums.schedulefidelity import ScheduleFidelity
 from across_server.core.enums.schedulestatus import ScheduleStatus
 from across_server.core.schemas.daterange import DateRange
@@ -91,29 +90,19 @@ def mock_schedule_service(mock_schedule_data):
 @pytest.fixture
 def mock_telescope_access():
     mock = MagicMock(telescope_access)
-
-    yield mock
-
-
-@pytest.fixture
-def mock_authenticate():
-    mock = MagicMock(authenticate)
     mock.id = 1
 
     yield mock
 
 
 @pytest.fixture(scope="function", autouse=True)
-def dep_override(
-    app, fastapi_dep, mock_schedule_service, mock_telescope_access, mock_authenticate
-):
+def dep_override(app, fastapi_dep, mock_schedule_service, mock_telescope_access):
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
             ScheduleService: lambda: mock_schedule_service,
             telescope_access: lambda: mock_telescope_access,
-            authenticate: lambda: mock_authenticate,
         }
     ):
         yield overrider

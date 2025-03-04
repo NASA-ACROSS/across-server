@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Security, status
 
 from ...auth.schemas import AuthUser
-from ...auth.strategies import authenticate
 from ..telescope.access import telescope_access
 from . import schemas
 from .service import ScheduleService
@@ -24,7 +23,7 @@ router = APIRouter(
     "/",
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
-    description="Read many most recent schedules based on query params",
+    description="Read most recent schedules based on query params",
     response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
@@ -45,7 +44,7 @@ async def get_many(
     "/history",
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
-    description="Read many most recent schedules based on query params",
+    description="Read many recent schedules based on query params",
     response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
@@ -98,10 +97,11 @@ async def get(
         },
         status.HTTP_409_CONFLICT: {"description": "Duplicate schedule"},
     },
-    dependencies=[Security(telescope_access, scopes=["group:schedule:write"])],
 )
 async def create(
-    auth_user: Annotated[AuthUser, Depends(authenticate)],
+    auth_user: Annotated[
+        AuthUser, Security(telescope_access, scopes=["group:schedule:write"])
+    ],
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: schemas.ScheduleCreate,
 ):

@@ -1,5 +1,5 @@
 from typing import Annotated, Sequence
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends
 from sqlalchemy import func, or_, select
@@ -32,15 +32,6 @@ class ScheduleService:
         Retrieves all Schedules based on the ScheduleRead filter params
     create(data: schemas.ScheduleCreate) -> models.Schedule
         Create a new Schedule for a telescope with the ScheduleCreate metadata
-
-    Attributes
-    ----------
-    db : AsyncSession
-        The database session for executing queries.
-
-    Notes
-    -----
-    The service uses SQLAlchemy for database operations and handles Schedule data
     """
 
     def __init__(
@@ -51,7 +42,7 @@ class ScheduleService:
 
     async def get(self, schedule_id: UUID) -> models.Schedule:
         """
-        Retrieve the Schedule record with the given id.
+        Retrieve the Schedule record with the given checksum.
 
         Parameters
         ----------
@@ -77,7 +68,7 @@ class ScheduleService:
 
         return schedule
 
-    async def get_from_checksum(self, checksum: str) -> models.Schedule | None:
+    async def _exists(self, checksum: str) -> models.Schedule | None:
         """
         Retrieve the Schedule record with the given checksum.
 
@@ -97,8 +88,7 @@ class ScheduleService:
         schedule = result.scalar_one_or_none()
         return schedule
 
-    @staticmethod
-    def get_schedule_filter(data: schemas.ScheduleRead) -> list:
+    def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
         """
         Build the sql alchemy filter list based on ScheduleRead.
         Parses whether or not any of the fields are populated, and constructs a list
@@ -120,28 +110,35 @@ class ScheduleService:
             data_filter.append(
                 models.Schedule.date_range_begin >= data.date_range_begin
             )
+
         if data.date_range_end:
             data_filter.append(models.Schedule.date_range_end <= data.date_range_end)
+
         if data.status:
             data_filter.append(models.Schedule.status == data.status)
+
         if data.external_id:
             data_filter.append(
                 func.lower(models.Schedule.external_id).contains(
                     str.lower(data.external_id)
                 )
             )
+
         if data.created_on:
             data_filter.append(
                 models.Schedule.created_on > data.created_on
             )  # this should/could be a date-range parameter
+
         if data.observatory_ids and len(data.observatory_ids):
             data_filter.append(
                 models.Schedule.telescope.has(
                     models.Telescope.observatory_id.in_(data.observatory_ids)
                 )
             )
+
         if data.observatory_names and len(data.observatory_names):
             observatory_name_or_filter = []
+
             for observatory_name in data.observatory_names:
                 observatory_name_or_filter.append(
                     models.Schedule.telescope.has(
@@ -152,6 +149,7 @@ class ScheduleService:
                         )
                     )
                 )
+
                 observatory_name_or_filter.append(
                     models.Schedule.telescope.has(
                         models.Telescope.observatory.has(
@@ -161,11 +159,15 @@ class ScheduleService:
                         )
                     )
                 )
+
             data_filter.append(or_(*observatory_name_or_filter))
+
         if data.telescope_ids and len(data.telescope_ids):
             data_filter.append(models.Schedule.telescope_id.in_(data.telescope_ids))
+
         if data.telescope_names and len(data.telescope_names):
             telescope_name_or_filter = []
+
             for telescope_name in data.telescope_names:
                 telescope_name_or_filter.append(
                     models.Schedule.telescope.has(
@@ -174,6 +176,7 @@ class ScheduleService:
                         )
                     )
                 )
+
                 telescope_name_or_filter.append(
                     models.Schedule.telescope.has(
                         func.lower(models.Telescope.short_name).contains(
@@ -181,11 +184,14 @@ class ScheduleService:
                         )
                     )
                 )
+
             data_filter.append(or_(*telescope_name_or_filter))
+
         if data.name:
             data_filter.append(
                 func.lower(models.Schedule.name).contains(str.lower(data.name))
             )
+
         if data.fidelity:
             data_filter.append(models.Schedule.fidelity == data.fidelity.value)
 
@@ -206,7 +212,7 @@ class ScheduleService:
         Sequence[models.Schedule]
             The list of Schedules
         """
-        schedule_filter = self.get_schedule_filter(data=data)
+        schedule_filter = self._get_schedule_filter(data=data)
 
         schedule_query = (
             select(models.Schedule)
@@ -238,7 +244,7 @@ class ScheduleService:
         Sequence[models.Schedule]
             The list of Schedules
         """
-        schedule_filter = self.get_schedule_filter(data=data)
+        schedule_filter = self._get_schedule_filter(data=data)
 
         schedule_query = (
             select(models.Schedule)
@@ -282,13 +288,13 @@ class ScheduleService:
         """
         schedule = schedule_create.to_orm(created_by_id=created_by_id)
 
-        existing = await self.get_from_checksum(schedule.checksum)
+        existing = await self._exists(schedule.checksum)
 
         if existing:
             raise DuplicateScheduleException(existing.id, existing.checksum)
 
+        schedule.id = uuid4()
         self.db.add(schedule)
-        await self.db.flush([schedule])
 
         for observation_create in schedule_create.observations:
             observation = observation_create.to_orm()
