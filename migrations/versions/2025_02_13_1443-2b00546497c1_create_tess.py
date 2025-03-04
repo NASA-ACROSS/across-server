@@ -8,7 +8,6 @@ Create Date: 2025-02-13 14:43:06.464266
 
 from __future__ import annotations
 
-import datetime
 from typing import List, Sequence, Union
 from uuid import uuid4
 
@@ -431,13 +430,10 @@ def upgrade() -> None:
     session = orm.Session(bind=bind, expire_on_commit=False)
 
     # create group based off the observatory
-    observatory_user_group = Group(
-        id=uuid4(),
-        name=OBSERVATORY["name"],
-        short_name=OBSERVATORY["short_name"],
-        created_on=datetime.datetime.now(),
+    group = Group(
+        id=uuid4(), name=OBSERVATORY["name"], short_name=OBSERVATORY["short_name"]
     )
-    session.add(observatory_user_group)
+    session.add(group)
 
     # # create observatory
     observatory_insert = Observatory(
@@ -445,8 +441,7 @@ def upgrade() -> None:
         name=OBSERVATORY["name"],
         short_name=OBSERVATORY["short_name"],
         observatory_type=OBSERVATORY["observatory_type"],
-        created_on=datetime.datetime.now(),
-        group=observatory_user_group,
+        group=group,
     )
     session.add(observatory_insert)
     observatory_id = observatory_insert.id
@@ -460,7 +455,6 @@ def upgrade() -> None:
             name=telescope["name"],  #  type:ignore
             short_name=telescope["short_name"],  #  type:ignore
             observatory_id=observatory_id,
-            created_on=datetime.datetime.now(),
         )
         session.add(telescope_insert)
         telescope_id = telescope_insert.id
@@ -474,7 +468,6 @@ def upgrade() -> None:
                 name=instrument["name"],  #  type:ignore
                 short_name=instrument["short_name"],  #  type:ignore
                 telescope_id=telescope_id,
-                created_on=datetime.datetime.now(),
             )
             session.add(instrument_insert)
             instrument_id = instrument_insert.id
@@ -490,9 +483,7 @@ def upgrade() -> None:
 
                 # create the footprint model record
                 footprint_insert = Footprint(
-                    polygon=polygon,
-                    instrument_id=instrument_id,
-                    created_on=datetime.datetime.now(),
+                    polygon=polygon, instrument_id=instrument_id
                 )
                 session.add(footprint_insert)
 
@@ -520,10 +511,10 @@ def downgrade() -> None:
     instrument_ids = [i.id for i in instrument_records]
 
     # get user_group_id
-    user_group_record = (
+    group_record = (
         session.query(Group).filter(Group.name == observatory_record.name).one()
     )
-    user_group_id = user_group_record.id
+    user_group_id = group_record.id
 
     # delete the many_many
     session.query(group_observatory).filter(
