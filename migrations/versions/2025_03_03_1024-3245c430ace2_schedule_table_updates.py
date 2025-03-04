@@ -1,8 +1,8 @@
 """Schedule table updates
 
 Revision ID: 3245c430ace2
-Revises: 818523f50d93
-Create Date: 2025-01-29 10:24:31.321076
+Revises: 593643a8ac92
+Create Date: 2025-03-03 10:24:31.321076
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3245c430ace2"
-down_revision: Union[str, None] = "818523f50d93"
+down_revision: Union[str, None] = "593643a8ac92"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -291,7 +291,7 @@ class ScheduleService:
         existing = await self._exists(schedule.checksum)
 
         if existing:
-            raise DuplicateScheduleException(existing.id, existing.checksum)
+            raise DuplicateScheduleException(existing.id)
 
         schedule.id = uuid4()
         self.db.add(schedule)
@@ -299,6 +299,7 @@ class ScheduleService:
         for observation_create in schedule_create.observations:
             observation = observation_create.to_orm()
             observation.schedule_id = schedule.id
+            observation.created_by_id = created_by_id
             self.db.add(observation)
 
         await self.db.commit()
