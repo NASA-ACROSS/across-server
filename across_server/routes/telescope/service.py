@@ -43,7 +43,10 @@ class TelescopeService:
         ------
         TelescopeNotFoundException
         """
-        telescope = await self.db.get(models.Telescope, telescope_id)
+        query = select(models.Telescope).where(models.Telescope.id == telescope_id)
+
+        result = await self.db.execute(query)
+        telescope = result.scalar_one_or_none()
 
         if telescope is None:
             raise TelescopeNotFoundException(telescope_id)

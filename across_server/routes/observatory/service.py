@@ -44,7 +44,12 @@ class ObservatoryService:
         ------
         ObservatoryNotFoundException
         """
-        observatory = await self.db.get(models.Observatory, observatory_id)
+        query = select(models.Observatory).where(
+            models.Observatory.id == observatory_id
+        )
+
+        result = await self.db.execute(query)
+        observatory = result.scalar_one_or_none()
 
         if observatory is None:
             raise ObservatoryNotFoundException(observatory_id)

@@ -6,7 +6,7 @@ from typing import Optional
 
 from ...core.schemas.base import BaseSchema
 from ...db.models import Instrument as InstrumentModel
-from ..footprint.schemas import Footprint
+from ..footprint.schemas import Footprint, Point
 
 
 class InstrumentBase(BaseSchema):
@@ -31,7 +31,7 @@ class InstrumentBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
-    footprints: list[Footprint]
+    footprints: list[list[Point]]
 
 
 class Instrument(InstrumentBase):
@@ -60,13 +60,15 @@ class Instrument(InstrumentBase):
         -------
             schemas.Telescope
         """
+        footprints = [
+            Footprint.from_orm(footprint) for footprint in instrument.footprints
+        ]
+
         return Instrument(
             id=instrument.id,
             name=instrument.name,
             short_name=instrument.short_name,
-            footprints=[
-                Footprint.from_orm(footprint) for footprint in instrument.footprints
-            ],
+            footprints=[footprint.polygon for footprint in footprints],
             created_on=instrument.created_on,
         )
 

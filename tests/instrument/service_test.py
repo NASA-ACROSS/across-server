@@ -6,6 +6,22 @@ from across_server.routes.instrument.exceptions import InstrumentNotFoundExcepti
 from across_server.routes.instrument.service import InstrumentService
 
 
+class TestInstrumentService:
+    class TestGet:
+        @pytest.mark.asyncio
+        async def test_should_return_not_found_exception_when_does_not_exist(
+            self, mock_db, mock_scalar_one_or_none, mock_result
+        ) -> None:
+            """Should return False when the instrument does not exist"""
+            mock_scalar_one_or_none.return_value = None
+            mock_result.scalar_one_or_none = mock_scalar_one_or_none
+            mock_db.execute.return_value = mock_result
+
+            service = InstrumentService(mock_db)
+            with pytest.raises(InstrumentNotFoundException):
+                await service.get(uuid4())
+
+
 class MockInstrumentModelWithFootprint:
     footprints: list = ["footprint_1"]
 

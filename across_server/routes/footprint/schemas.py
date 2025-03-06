@@ -50,10 +50,12 @@ class Footprint(FootprintBase):
     def from_orm(footprint: FootprintModel) -> Footprint:
         """
         Method that converts a models.Footprint record to a schemas.Footprint
+
         Parameters
         ----------
         footprint: FootprintModel
             the models.Footprint record
+
         Returns
         -------
             schemas.Footprint
