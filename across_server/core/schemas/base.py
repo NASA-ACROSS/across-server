@@ -1,4 +1,5 @@
 import hashlib
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -7,7 +8,6 @@ class BaseSchema(BaseModel):
     """
     System BaseSchema for generating new methods for our schemas taking advantage of the
     pydantic BaseModel.
-
     Methods
     -------
     generate_checksum() -> str:
@@ -20,6 +20,11 @@ class BaseSchema(BaseModel):
     def generate_checksum(self) -> str:
         json_data = self.model_dump_json()
         return hashlib.sha512(json_data.encode()).hexdigest()
+
+
+class IDNameSchema(BaseModel):
+    id: UUID
+    name: str
 
 
 class PrefixMixin:
