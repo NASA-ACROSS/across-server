@@ -51,7 +51,7 @@ async def schedule_access(
     """
     schedule = await service.get(schedule_id=data.schedule_id)
 
-    group_id = str(schedule.telescope.observatory.group.id)
+    group_id = schedule.telescope.observatory.group.id
 
     auth_user = await group_access(
         security_scopes=security_scopes, group_id=group_id, auth_user=auth_user

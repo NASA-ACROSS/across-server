@@ -2,12 +2,16 @@ import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_serializer
 
 
 class Group(BaseModel):
-    id: str
+    id: UUID
     scopes: List[str]
+
+    @model_serializer
+    def serialize(self) -> dict:
+        return {"id": str(self.id), "scopes": self.scopes}
 
 
 class AuthUser(BaseModel):
