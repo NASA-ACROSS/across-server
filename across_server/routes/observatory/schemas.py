@@ -4,9 +4,9 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from ...core.enums import OBSERVATORY_TYPE
 from ...core.schemas.base import BaseSchema, IDNameSchema
 from ...db.models import Observatory as ObservatoryModel
-from .enums import OBSERVATORY_TYPE
 
 
 class ObservatoryBase(BaseSchema):
@@ -93,5 +93,5 @@ class ObservatoryRead(BaseSchema):
 
     name: Optional[str] = None
     short_name: Optional[str] = None
-    type: Optional[OBSERVATORY_TYPE]
+    type: Optional[OBSERVATORY_TYPE] = None
     created_on: Optional[datetime] = None

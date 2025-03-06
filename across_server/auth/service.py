@@ -92,7 +92,7 @@ class AuthService:
                 )
 
                 auth_user.groups.append(
-                    schemas.Group(id=str(group.id), scopes=unique_group_perms)
+                    schemas.Group(id=group.id, scopes=unique_group_perms)
                 )
 
         return auth_user

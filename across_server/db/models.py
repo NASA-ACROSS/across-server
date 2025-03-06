@@ -23,7 +23,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..routes.observatory.enums import OBSERVATORY_TYPE
+from ..core.enums import OBSERVATORY_TYPE
 
 
 class Base(AsyncAttrs, DeclarativeBase):

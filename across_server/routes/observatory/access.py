@@ -47,7 +47,7 @@ async def telescope_access(
     """
     observatory = await service.get(observatory_id=data.observatory_id)
 
-    group_id = str(observatory.group.id)
+    group_id = observatory.group.id
 
     auth_user = await group_access(
         security_scopes=security_scopes, group_id=group_id, auth_user=auth_user

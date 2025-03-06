@@ -40,7 +40,7 @@ async def global_access(
 
 async def group_access(
     security_scopes: SecurityScopes,
-    group_id: Annotated[UUID | str, Path(title="UUID of the group")],
+    group_id: Annotated[UUID, Path(title="UUID of the group")],
     auth_user: Annotated[AuthUser, Depends(authenticate)],
 ):
     if "all:write" in auth_user.scopes:

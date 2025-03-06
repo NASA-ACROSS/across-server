@@ -49,7 +49,7 @@ async def instrument_access(
     """
     instrument = await service.get(instrument_id=data.instrument_id)
 
-    group_id = str(instrument.telescope.observatory.group.id)
+    group_id = instrument.telescope.observatory.group.id
 
     auth_user = await group_access(
         security_scopes=security_scopes, group_id=group_id, auth_user=auth_user
