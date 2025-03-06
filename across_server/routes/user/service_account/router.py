@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Security, status
 
@@ -23,7 +23,7 @@ router = APIRouter(
     summary="Read service accounts",
     description="Read many service accounts",
     status_code=status.HTTP_200_OK,
-    response_model=List[schemas.ServiceAccount],
+    response_model=list[schemas.ServiceAccount],
     dependencies=[
         Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
     ],

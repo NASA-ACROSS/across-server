@@ -1,5 +1,3 @@
-from typing import Type
-
 from pydantic import EmailStr
 
 from ..config import auth_config
@@ -25,7 +23,7 @@ class MagicLinkToken(Token[MagicLinkTokenData, EmailStr]):
     key = auth_config.JWT_MAGIC_LINK_SECRET_KEY
 
     @property
-    def data_model(self) -> Type[MagicLinkTokenData]:
+    def data_model(self) -> type[MagicLinkTokenData]:
         return MagicLinkTokenData
 
     def to_encode(self, email: EmailStr) -> MagicLinkTokenData:

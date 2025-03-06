@@ -1,5 +1,3 @@
-from typing import List
-
 from ..core.config import BaseConfig
 
 
@@ -11,7 +9,7 @@ class Config(BaseConfig):
     JWT_ALGORITHM: str = "HS256"
     REFRESH_EXPIRES_IN_DAYS: int = 30
     WEBSERVER_SECRET: str = "WEBSERVER_SECRET_KEY"
-    ALLOWED_IPS: List[str] = ["127.0.0.1"]
+    ALLOWED_IPS: list[str] = ["127.0.0.1"]
 
 
 auth_config = Config()

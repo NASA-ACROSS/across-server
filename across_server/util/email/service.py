@@ -1,7 +1,6 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
-from typing import List, Optional
 
 import aiosmtplib
 
@@ -66,10 +65,10 @@ class EmailService:
 
     async def send(
         self,
-        recipients: List[str],
+        recipients: list[str],
         subject: str,
-        content_body: Optional[str] = None,
-        content_html: Optional[str] = None,
+        content_body: str | None = None,
+        content_html: str | None = None,
         attachments=[],
     ) -> None:
         em = MIMEMultipart("alternative")

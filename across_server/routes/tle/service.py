@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import func, literal, select
@@ -43,7 +43,7 @@ class TLEService:
     ) -> None:
         self.db = db
 
-    async def get(self, norad_id: int, epoch: datetime) -> Optional[models.TLE]:
+    async def get(self, norad_id: int, epoch: datetime) -> models.TLE | None:
         """
         Retrieves the closest TLE (Two-Line Element) entry for a given NORAD ID and epoch.
 

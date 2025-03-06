@@ -1,6 +1,6 @@
 import datetime
 import hashlib
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -22,7 +22,7 @@ def extract_creds(
 
 
 def generate_secret_key(
-    expiration_duration: int = 30, generator_key: Optional[str] = None
+    expiration_duration: int = 30, generator_key: str | None = None
 ) -> SecretKeySchema:
     now = datetime.datetime.now()
 
