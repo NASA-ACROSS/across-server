@@ -182,7 +182,7 @@ temp_run: check_prod ## Start a temporary container from an image with a bash sh
 
 # Group: Testing
 test: ## Run automated tests
-	@$(VENV_BIN)/pytest --cov=across_server **/*/*.py;
+	@$(VENV_BIN)/pytest --cov=across_server tests/**;
 
 lint: ## Run linting
 	@$(VENV_BIN)/pre-commit run;

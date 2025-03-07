@@ -17,6 +17,7 @@ class Config(BaseConfig):
 
     # Logging
     LOG_LEVEL: str = "DEBUG"
+    # Adjusts the output being rendered as JSON (False for dev with pretty-print).
     LOG_JSON_FORMAT: bool = False
 
     # Request Headers

@@ -1,3 +1,3 @@
-from .log_response import log_response
+from .logging import LoggingMiddleware
 
-__all__ = ["log_response"]
+__all__ = ["LoggingMiddleware"]
