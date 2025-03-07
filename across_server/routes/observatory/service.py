@@ -15,12 +15,13 @@ class ObservatoryService:
     """
     Observatory service for managing astronomical Observatory records in the ACROSS SSA system.
     This service handles retrieval operations for Observatory records.
+
     Methods
     -------
     get(observatory_id: UUID) -> models.Observatory
         Retrieve the Observatory record with the given id.
-    _get_filter()
-    get_many()
+    get_many(data: schemas.ObservatoryRead) -> Sequence[models.Observatory]
+        Retrieves many Observatories based on the ObservatoryRead filter params
     """
 
     def __init__(
@@ -61,10 +62,12 @@ class ObservatoryService:
         Build the sql alchemy filter list based on Observatory.
         Parses whether or not any of the fields are populated, and constructs a list
         of sqlalchemy filter booleans for an observatory
+
         Parameters
         ----------
         data : schemas.ObservatoryRead
              class representing Observatory filter parameters
+
         Returns
         -------
         list[sqlalchemy.filters]
@@ -100,10 +103,12 @@ class ObservatoryService:
         """
         Retrieve a list of Observatory records
         based on the ObservatoryRead filter parameters.
+
         Parameters
         ----------
-        data : schemas.Observatory
+        data : schemas.ObservatoryRead
              class representing Observatory filter parameters
+
         Returns
         -------
         Sequence[models.Observatory]

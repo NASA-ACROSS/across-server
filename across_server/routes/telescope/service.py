@@ -20,6 +20,8 @@ class TelescopeService:
     -------
     get(telescope_id: UUID) -> models.Telescope
         Retrieve the Telescope record with the given id.
+    get_many(data: schemas.TelescopeRead) -> Sequence[models.Telescope]
+        Retrieves many Telescopes based on the TelescopeRead filter params.
     """
 
     def __init__(

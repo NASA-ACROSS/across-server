@@ -1,7 +1,7 @@
 import uuid
 
+from across_server.core.enums import OBSERVATORY_TYPE
 from across_server.db.models import Observatory
-from across_server.routes.observatory.enums import OBSERVATORY_TYPE
 
 from .groups import treedome_space_group
 

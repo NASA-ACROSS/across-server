@@ -16,11 +16,13 @@ class InstrumentService:
     Observatory service for managing astronomical Observatory records in the ACROSS SSA system.
     This service handles CRUD operations for Observatory records. This includes retrieval,
     and creation of new Observatory records in the database.
+
     Methods
     -------
     get(instrument_id: UUID) -> models.Instrument
         Retrieve the Instrument record with the given id.
-
+    get_many(data: schemas.InstrumentRead) -> Sequence[models.Instrument]
+        Retrieves many Instruments based on the Instrument filter params.
     has_footprint()
     """
 
