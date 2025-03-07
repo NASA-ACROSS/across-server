@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, get_args
 
 from geoalchemy2 import Geography, WKBElement, shape
@@ -16,7 +16,7 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    func,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -42,7 +42,9 @@ class CreatableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     created_on: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=func.now()
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
@@ -51,7 +53,9 @@ class ModifiableMixin:
         PG_UUID(as_uuid=True), nullable=True
     )
     modified_on: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, onupdate=func.now()
+        DateTime,
+        nullable=True,
+        onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
 
@@ -312,6 +316,9 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     instruments: Mapped[List["Instrument"]] = relationship(
         back_populates="telescope", lazy="selectin", cascade="all,delete"
     )
+    schedules: Mapped[List["Schedule"]] = relationship(
+        back_populates="telescope", lazy="selectin"
+    )
 
 
 class Instrument(Base, CreatableMixin, ModifiableMixin):
@@ -328,10 +335,6 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     footprints: Mapped[List["Footprint"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
-    )
-
-    schedules: Mapped[List["Schedule"]] = relationship(
-        back_populates="instrument", lazy="selectin"
     )
 
     observations: Mapped[List["Observation"]] = relationship(
@@ -357,11 +360,18 @@ class Footprint(Base, CreatableMixin, ModifiableMixin):
 class Schedule(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "schedule"
 
-    instrument_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
+    telescope_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
+    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    external_id: Mapped[str] = mapped_column(String(256), nullable=True)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    fidelity: Mapped[str] = mapped_column(String(50), default="high", nullable=False)
+    checksum: Mapped[str] = mapped_column(String(128), nullable=False)
 
-    instrument: Mapped["Instrument"] = relationship(
+    telescope: Mapped["Telescope"] = relationship(
         back_populates="schedules", lazy="selectin"
     )
 
@@ -402,7 +412,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     depth_unit: Mapped[Optional[str]] = mapped_column(String(50))  # Enum
     central_wavelength: Mapped[Optional[float]] = mapped_column(Float(2))
     bandwidth: Mapped[Optional[float]] = mapped_column(Float(2))
-    filter_name: Mapped[Optional[List[str]]] = mapped_column(String(50))
+    filter_name: Mapped[Optional[str]] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions
     t_resolution: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -421,6 +431,22 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     )
     schedule: Mapped["Schedule"] = relationship(
         back_populates="observations", lazy="selectin"
+    )
+
+
+class TLE(Base):
+    __tablename__ = "tle"
+
+    norad_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    epoch: Mapped[datetime] = mapped_column(DateTime, nullable=False, primary_key=True)
+    satellite_name: Mapped[str] = mapped_column(String(69), nullable=False)
+    tle1: Mapped[str] = mapped_column(String(69), nullable=False)
+    tle2: Mapped[str] = mapped_column(String(69), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "epoch", "norad_id", name="uq_epoch_norad_id"
+        ),  # Enforce uniqueness
     )
 
 

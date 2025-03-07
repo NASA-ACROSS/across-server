@@ -1,35 +1,32 @@
 """create TESS
 
 Revision ID: 2b00546497c1
-Revises: 818523f50d93
-Create Date: 2025-02-13 14:43:06.464266
+Revises: 3245c430ace2
+Create Date: 2025-03-07 14:43:06.464266
 
 """
 
 from __future__ import annotations
 
-from typing import List, Sequence, Union
+from typing import Sequence, Union
 from uuid import uuid4
 
 from alembic import op
-from sqlalchemy import orm
+from sqlalchemy import orm, select
 
-from migrations.versions.model_snapshots.models_2025_02_13 import (
+from migrations.versions.model_snapshots.models_2025_03_07 import (
     ACROSSFootprintPoint,
     Footprint,
     Group,
     Instrument,
-    Observation,
     Observatory,
-    Schedule,
     Telescope,
     create_geography,
-    group_observatory,
 )
 
 # revision identifiers, used by Alembic.
 revision: str = "2b00546497c1"
-down_revision: Union[str, None] = "818523f50d93"
+down_revision: Union[str, None] = "3245c430ace2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -494,56 +491,13 @@ def downgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
-    # gather observatory id
-    observatory_record = (
-        session.query(Observatory).filter(Observatory.name == OBSERVATORY["name"]).one()
+    group = session.scalar(select(Group).filter_by(name=OBSERVATORY["name"]))
+    observatory = session.scalar(
+        select(Observatory).filter_by(name=OBSERVATORY["name"])
     )
-    observatory_id = observatory_record.id
 
-    # gather telescope ids
-    telescope_records = observatory_record.telescopes
-    telescope_ids = [t.id for t in telescope_records]
-
-    # gather instrument ids
-    instrument_records: List[Instrument] = []
-    for tele in telescope_records:
-        instrument_records.extend(tele.instruments)
-    instrument_ids = [i.id for i in instrument_records]
-
-    # get user_group_id
-    group_record = (
-        session.query(Group).filter(Group.name == observatory_record.name).one()
-    )
-    user_group_id = group_record.id
-
-    # delete the many_many
-    session.query(group_observatory).filter(
-        group_observatory.c.observatory_id == observatory_id
-    ).delete()
-
-    # delete all SSA objects related to instrument
-    session.query(Observation).filter(
-        Observation.instrument_id.in_(instrument_ids)
-    ).delete()
-
-    # this needs to change to telescope in the future
-    session.query(Schedule).filter(Schedule.instrument_id.in_(telescope_ids)).delete()
-
-    session.query(Footprint).filter(
-        Footprint.instrument_id.in_(instrument_ids)
-    ).delete()
-
-    # delete instrument
-    session.query(Instrument).filter(Instrument.id.in_(instrument_ids)).delete()
-
-    # delete telescopes
-    session.query(Telescope).filter(Telescope.id.in_(telescope_ids)).delete()
-
-    # delete the user_group
-    session.query(Group).filter(Group.id == user_group_id).delete()
-
-    # delete the observatory
-    session.query(Observatory).filter(Observatory.id == observatory_id).delete()
+    session.delete(group)
+    session.delete(observatory)
 
     session.commit()
     # fin
