@@ -12,7 +12,7 @@ from ..service import ServiceAccountService
 from .service import ServiceAccountGroupRoleService
 
 router = APIRouter(
-    prefix="/user/{user_id}/service-account/{service_account_id}/group-id/{group_id}/group-role",
+    prefix="/user/{user_id}/service-account/{service_account_id}/group-role",
     tags=["ServiceAccount"],
     responses={
         status.HTTP_404_NOT_FOUND: {
