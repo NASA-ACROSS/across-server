@@ -4,5 +4,5 @@ mypy >=1.15.0
 types-boto3[rds,ssm,sts]
 types-cachetools
 types-python-jose >=3.4.0
-types-requests
+types-requests >=2.32.0
 types-shapely
