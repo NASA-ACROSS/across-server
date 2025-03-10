@@ -23,7 +23,7 @@ def _add_correlation(
 def setup(json_logs: bool = False, log_level: str = "INFO"):
     shared_processors: list[Processor] = [
         _add_correlation,
-        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.TimeStamper(fmt="%Y-%m-%dT%H:%M:%S.%f"),
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -72,6 +72,9 @@ def setup(json_logs: bool = False, log_level: str = "INFO"):
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level.upper())
+
+    # Only output warning files changed
+    logging.getLogger("watchfiles").setLevel(logging.WARN)
 
     for _log in ["uvicorn", "uvicorn.error"]:
         # Clear the log handlers for uvicorn loggers, and enable propagation
