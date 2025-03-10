@@ -4,7 +4,7 @@ across-tools @ git+ssh://git@github.com/ACROSS-Team/across-tools.git@34e5573cae7
     # via -r requirements/base.in
 aiosmtplib==4.0.0
     # via -r requirements/base.in
-alembic==1.14.1
+alembic==1.15.1
     # via -r requirements/base.in
 annotated-types==0.7.0
     # via pydantic
