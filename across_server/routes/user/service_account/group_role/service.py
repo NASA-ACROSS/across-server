@@ -26,7 +26,9 @@ class ServiceAccountGroupRoleService:
         user: models.User,
     ) -> models.ServiceAccount:
         if service_account is None:
-            raise NotFoundException("service account", service_account.id)
+            raise NotFoundException("service account")
+        if service_account.expiration is None:
+            raise NotFoundException("service account expiration")
         if service_account.expiration <= datetime.datetime.now():
             raise AcrossHTTPException(
                 422,
@@ -36,14 +38,10 @@ class ServiceAccountGroupRoleService:
                     "expiration": f"{service_account.expiration}",
                 },
             )
-        if service_account.group_roles is None:
-            raise NotFoundException("service account group roles", service_account.id)
         if group_role is None:
-            raise NotFoundException("group role", group_role.id)
+            raise NotFoundException("group role")
         if user is None:
-            raise NotFoundException("user", user.id)
-        if user.group_roles is None:
-            raise NotFoundException("user group roles", user.id)
+            raise NotFoundException("user")
         if group_role not in user.group_roles:
             raise NotFoundException("group role in user group roles", group_role.id)
 
@@ -57,13 +55,13 @@ class ServiceAccountGroupRoleService:
         self, service_account: models.ServiceAccount, group_role: models.GroupRole
     ) -> models.ServiceAccount:
         if service_account is None:
-            raise NotFoundException("service account", service_account.id)
-        if service_account.group_roles is None:
-            raise NotFoundException("service account group roles", service_account.id)
+            raise NotFoundException("service account", None)
         if group_role is None:
-            raise NotFoundException("group_role", group_role.id)
+            raise NotFoundException("group_role", None)
         if group_role not in service_account.group_roles:
-            raise NotFoundException("group_role", group_role.id)
+            # when a user requests to remove a role that is not in the service account
+            # we should gracefully respond with ok
+            return service_account
 
         service_account.group_roles.remove(group_role)
         await self.db.commit()
