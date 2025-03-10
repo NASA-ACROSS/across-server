@@ -1,5 +1,3 @@
-from typing import List, Type
-
 from ..config import auth_config
 from ..schemas import AuthUser, Group
 from .base_token import Token, TokenData
@@ -18,15 +16,15 @@ class AccessTokenData(TokenData[str]):
         groups: groups the user belongs to and their associated scopes.
     """
 
-    scopes: List[str]
-    groups: List[Group]
+    scopes: list[str]
+    groups: list[Group]
 
 
 class AccessToken(Token[AccessTokenData, AuthUser]):
     key = auth_config.JWT_SECRET_KEY
 
     @property
-    def data_model(self) -> Type[AccessTokenData]:
+    def data_model(self) -> type[AccessTokenData]:
         return AccessTokenData
 
     def to_encode(self, auth_user: AuthUser):

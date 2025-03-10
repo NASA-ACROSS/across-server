@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Type
 from uuid import UUID
 
 from ..config import auth_config
@@ -24,7 +23,7 @@ class RefreshToken(Token[RefreshTokenData, UUID]):
     key: str = auth_config.JWT_REFRESH_SECRET_KEY
 
     @property
-    def data_model(self) -> Type[RefreshTokenData]:
+    def data_model(self) -> type[RefreshTokenData]:
         return RefreshTokenData
 
     def encode(

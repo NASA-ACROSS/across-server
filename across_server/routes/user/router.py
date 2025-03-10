@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
@@ -23,7 +23,7 @@ router = APIRouter(
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    response_model=List[schemas.User],
+    response_model=list[schemas.User],
 )
 async def get_many(service: Annotated[UserService, Depends(UserService)]):
     return await service.get_many()

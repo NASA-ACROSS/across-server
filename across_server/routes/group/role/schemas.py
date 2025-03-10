@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
@@ -33,6 +32,6 @@ class User(BaseModel):
 
 
 class GroupRole(GroupRoleRead):
-    users: List[User]
+    users: list[User]
 
     model_config = ConfigDict(from_attributes=True)

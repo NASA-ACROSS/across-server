@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Security, status
 
@@ -28,10 +28,10 @@ async def get_current_user():
     summary="Read roles",
     description="Read many roles.",
     status_code=status.HTTP_200_OK,
-    response_model=List[schemas.Role],
+    response_model=list[schemas.Role],
     responses={
         status.HTTP_200_OK: {
-            "model": List[schemas.Role],
+            "model": list[schemas.Role],
             "description": "A list of roles",
         },
     },

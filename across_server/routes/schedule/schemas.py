@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from ...core.enums import ScheduleFidelity, ScheduleStatus
 from ...core.schemas import DateRange
@@ -37,8 +36,8 @@ class ScheduleBase(BaseSchema):
     name: str
     date_range: DateRange
     status: ScheduleStatus
-    external_id: Optional[str] = None
-    fidelity: Optional[ScheduleFidelity] = None
+    external_id: str | None = None
+    fidelity: ScheduleFidelity | None = None
 
 
 class Schedule(ScheduleBase):
@@ -71,10 +70,10 @@ class Schedule(ScheduleBase):
     """
 
     id: uuid.UUID
-    observations: Optional[list[Observation]]
+    observations: list[Observation] | None
     created_on: datetime
-    created_by_id: Optional[uuid.UUID]
-    checksum: Optional[str] = ""
+    created_by_id: uuid.UUID | None
+    checksum: str | None = ""
 
     @staticmethod
     def from_orm(schedule: ScheduleModel) -> Schedule:
@@ -183,14 +182,14 @@ class ScheduleRead(BaseSchema):
 
     """
 
-    date_range_begin: Optional[datetime] = None
-    date_range_end: Optional[datetime] = None
-    status: Optional[ScheduleStatus] = None
-    external_id: Optional[str] = None
-    fidelity: Optional[ScheduleFidelity] = None
-    created_on: Optional[datetime] = None
-    observatory_ids: Optional[list[uuid.UUID]] = []
-    observatory_names: Optional[list[str]] = []
-    telescope_ids: Optional[list[uuid.UUID]] = []
-    telescope_names: Optional[list[str]] = []
-    name: Optional[str] = None
+    date_range_begin: datetime | None = None
+    date_range_end: datetime | None = None
+    status: ScheduleStatus | None = None
+    external_id: str | None = None
+    fidelity: ScheduleFidelity | None = None
+    created_on: datetime | None = None
+    observatory_ids: list[uuid.UUID] | None = []
+    observatory_names: list[str] | None = []
+    telescope_ids: list[uuid.UUID] | None = []
+    telescope_names: list[str] | None = []
+    name: str | None = None

@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
@@ -28,10 +27,10 @@ class User(BaseModel):
 
 class Role(RoleBase):
     id: uuid.UUID
-    users: List[User]
+    users: list[User]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RoleCreate(RoleBase):
-    permissions: List[str]
+    permissions: list[str]

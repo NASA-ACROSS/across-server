@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Security, status
 
@@ -29,10 +29,10 @@ async def get_current_user():
     summary="Read groups",
     description="Read many groups.",
     status_code=status.HTTP_200_OK,
-    response_model=List[schemas.Group],
+    response_model=list[schemas.Group],
     responses={
         status.HTTP_200_OK: {
-            "model": List[schemas.Group],
+            "model": list[schemas.Group],
             "description": "A list of groups",
         },
     },

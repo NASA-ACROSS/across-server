@@ -1,5 +1,4 @@
 import datetime
-from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, model_serializer
@@ -7,7 +6,7 @@ from pydantic import BaseModel, model_serializer
 
 class Group(BaseModel):
     id: UUID
-    scopes: List[str]
+    scopes: list[str]
 
     @model_serializer
     def serialize(self) -> dict:
@@ -16,10 +15,10 @@ class Group(BaseModel):
 
 class AuthUser(BaseModel):
     id: UUID
-    scopes: List[str]
-    groups: List[Group]
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    scopes: list[str]
+    groups: list[Group]
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 class AccessTokenResponse(BaseModel):

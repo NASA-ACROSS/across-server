@@ -54,7 +54,7 @@ def dep_override(
 
 @pytest.fixture
 def fake_time():
-    return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.timezone.utc)
+    return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.UTC)
 
 
 @pytest.fixture

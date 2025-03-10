@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
@@ -22,10 +22,10 @@ router = APIRouter(
     summary="Read group roles",
     description="Read many group roles.",
     status_code=status.HTTP_200_OK,
-    response_model=List[schemas.GroupRole],
+    response_model=list[schemas.GroupRole],
     responses={
         status.HTTP_200_OK: {
-            "model": List[schemas.GroupRole],
+            "model": list[schemas.GroupRole],
             "description": "A list of group roles",
         },
     },

@@ -1,9 +1,9 @@
 import re
 import uuid
-from typing import Annotated, List, Optional
+from typing import Annotated
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr
+from pydantic import BaseModel, BeforeValidator, EmailStr
 
 from ...core.schemas import Permission
 from ...core.schemas.base import BaseSchema
@@ -39,20 +39,20 @@ class UserBase(BaseModel):
 class GroupRole(BaseSchema):
     id: uuid.UUID
     name: str
-    permissions: List[Permission]
+    permissions: list[Permission]
 
 
 class Group(BaseSchema):
     id: uuid.UUID
     name: str
     short_name: str
-    roles: List[GroupRole]
+    roles: list[GroupRole]
 
 
 class User(UserBase):
     id: uuid.UUID
-    groups: List[Group]
-    roles: List[RoleBase]
+    groups: list[Group]
+    roles: list[RoleBase]
 
 
 class UserCreate(UserBase):
@@ -60,6 +60,6 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[NoHTMLString] = None
-    last_name: Optional[NoHTMLString] = None
-    username: Optional[NoHTMLString] = None
+    first_name: NoHTMLString | None = None
+    last_name: NoHTMLString | None = None
+    username: NoHTMLString | None = None

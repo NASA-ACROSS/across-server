@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
-from typing import Generic, Type, TypeVar
+from typing import Generic, TypeVar
 
 import jwt
 from fastapi import HTTPException, status
@@ -35,7 +35,7 @@ class Token(ABC, Generic[T, U]):
 
     @property
     @abstractmethod
-    def data_model(self) -> Type[T]:
+    def data_model(self) -> type[T]:
         """Specifies the Pydantic model that represents the token's data."""
         raise Exception("No data model specified for this token")
 
