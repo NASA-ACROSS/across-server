@@ -36,16 +36,12 @@ class TestEmailService:
         self.mocksmtp.sendmail.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_throw_error_when_email_fails(self, monkeypatch):
+    async def test_should_throw_error_when_email_fails(self):
         """
         Should throw an error when sending an email fails
-        Ignore the monkeypatched smptlib and instead throw error
-        by attempting to log in using incorrect credentials
         """
-        monkeypatch.undo()
+        self.mocksmtp.sendmail.side_effect = Exception("Mock Exception")
         service = EmailService()
-        service.login_email_user = "mock_user"
-        service.login_email_password = "mock_password"
         with pytest.raises(Exception):
             await service.send(recipients=[self.recipient], subject=self.subject)
 
