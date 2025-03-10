@@ -1,9 +1,8 @@
 import datetime
 import uuid
-from typing import List, Optional
+from typing import Optional
 
 from ....core.schemas.base import BaseSchema
-
 from ..schemas import GroupRole
 
 
@@ -15,7 +14,7 @@ class ServiceAccount(BaseSchema):
     expiration: datetime.datetime
     expiration_duration: int
     secret_key: str
-    group_roles: List[GroupRole]
+    group_roles: list[GroupRole]
 
 
 class ServiceAccountCreate(BaseSchema):

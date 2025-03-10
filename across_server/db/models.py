@@ -199,8 +199,7 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     users: Mapped[list["User"] | None] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
-
-    service_accounts: Mapped[list["ServiceAccount"]] = relationship(
+    service_accounts: Mapped[list["ServiceAccount"] | None] = relationship(
         secondary=service_account_group_role,
         back_populates="group_roles",
         lazy="selectin",
@@ -230,7 +229,7 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
         back_populates="service_accounts",
         lazy="selectin",
     )
-    group_roles: Mapped[Optional[List["GroupRole"]]] = relationship(
+    group_roles: Mapped[list["GroupRole"] | None] = relationship(
         secondary=service_account_group_role,
         back_populates="service_accounts",
         lazy="selectin",
