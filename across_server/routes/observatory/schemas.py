@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from ...core.enums import OBSERVATORY_TYPE
 from ...core.schemas.base import BaseSchema, IDNameSchema
@@ -91,7 +90,7 @@ class ObservatoryRead(BaseSchema):
         Query Param for evaluating Observatory.created_on > value
     """
 
-    name: Optional[str] = None
-    short_name: Optional[str] = None
-    type: Optional[OBSERVATORY_TYPE] = None
-    created_on: Optional[datetime] = None
+    name: str | None = None
+    short_name: str | None = None
+    type: OBSERVATORY_TYPE | None = None
+    created_on: datetime | None = None

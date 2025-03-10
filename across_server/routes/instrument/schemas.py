@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from ...core.schemas.base import BaseSchema
 from ...db.models import Instrument as InstrumentModel
@@ -86,6 +85,6 @@ class InstrumentRead(BaseSchema):
         Query Param for evaluating Instrument.created_on > value
     """
 
-    name: Optional[str] = None
-    short_name: Optional[str] = None
-    created_on: Optional[datetime] = None
+    name: str | None = None
+    short_name: str | None = None
+    created_on: datetime | None = None
