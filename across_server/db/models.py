@@ -23,7 +23,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core.enums import OBSERVATORY_TYPE
+from ..core.enums import ObservatoryType
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -278,9 +278,9 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    observatory_type: Mapped[OBSERVATORY_TYPE] = mapped_column(
+    observatory_type: Mapped[ObservatoryType] = mapped_column(
         Enum(
-            *get_args(OBSERVATORY_TYPE),
+            *ObservatoryType.get_args(),
             name="observatory_type",
             create_constraint=True,
             validate_strings=True,

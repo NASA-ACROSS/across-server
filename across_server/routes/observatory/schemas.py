@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from ...core.enums import OBSERVATORY_TYPE
+from ...core.enums import ObservatoryType
 from ...core.schemas.base import BaseSchema, IDNameSchema
 from ...db.models import Observatory as ObservatoryModel
 
@@ -32,7 +32,7 @@ class ObservatoryBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
-    type: OBSERVATORY_TYPE
+    type: ObservatoryType
     telescopes: list[IDNameSchema]
 
 
@@ -92,5 +92,5 @@ class ObservatoryRead(BaseSchema):
 
     name: str | None = None
     short_name: str | None = None
-    type: OBSERVATORY_TYPE | None = None
+    type: ObservatoryType | None = None
     created_on: datetime | None = None
