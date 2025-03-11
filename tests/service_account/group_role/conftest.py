@@ -10,11 +10,9 @@ from across_server.routes.user.service_account.group_role.service import (
     ServiceAccountGroupRoleService,
 )
 
-date_format = "%Y-%m-%d %H:%M:%S"
-
 
 @pytest.fixture
-def mock_service_account_data():
+def mock_service_account_data(frozen_time):
     return models.ServiceAccount(
         **{
             "id": str(uuid4()),
@@ -22,9 +20,7 @@ def mock_service_account_data():
             "name": "test service account",
             "description": "test service account description",
             "secret_key": "very secret key",
-            "expiration": datetime.datetime.strptime(
-                "2026-01-30 00:00:00", date_format
-            ),
+            "expiration": frozen_time + datetime.timedelta(days=3),
             "expiration_duration": "30",
             "group_roles": [],
         }

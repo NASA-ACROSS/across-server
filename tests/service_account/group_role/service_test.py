@@ -18,7 +18,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should return the service_account when assign is successful"""
         service = ServiceAccountGroupRoleService(mock_db)
         service_account = await service.assign(
             mock_service_account_data,
@@ -37,7 +37,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when service account is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_service_account_data = None
@@ -59,7 +59,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when service account expiration is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_service_account_data.expiration = None
@@ -81,7 +81,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when service account is expired"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         # mock expiration minus 3 days from frozen datettime patch
@@ -104,7 +104,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when group role is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_group_role_data = None
@@ -126,7 +126,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when user is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_user_data = None
@@ -148,7 +148,7 @@ class TestServiceAccountGroupRoleServiceAssign:
         mock_group_role_data,
         mock_user_data,
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw exception when group role is not users"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_user_data.group_roles = []
@@ -166,7 +166,7 @@ class TestServiceAccountGroupRoleServiceRemove:
     async def test_remove_should_return_service_account_when_successful(
         self, mock_db, mock_service_account_data, mock_group_role_data, mock_user_data
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should return the service_account when remove is successful"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_service_account_data.group_roles = [mock_group_role_data]
@@ -180,7 +180,7 @@ class TestServiceAccountGroupRoleServiceRemove:
     async def test_remove_should_return_service_account_when_group_role_is_not_in_service_account(
         self, mock_db, mock_service_account_data, mock_group_role_data, mock_user_data
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should return service account when group role is not in service account"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_service_account_data.group_roles = []
@@ -194,7 +194,7 @@ class TestServiceAccountGroupRoleServiceRemove:
     async def test_remove_should_throw_when_service_account_is_none(
         self, mock_db, mock_service_account_data, mock_group_role_data, mock_user_data
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw when service account is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_service_account_data = None
@@ -209,7 +209,7 @@ class TestServiceAccountGroupRoleServiceRemove:
     async def test_remove_should_throw_when_group_role_is_none(
         self, mock_db, mock_service_account_data, mock_group_role_data, mock_user_data
     ) -> None:
-        """Should return the service_account when creation successful"""
+        """Should throw when group role is none"""
         service = ServiceAccountGroupRoleService(mock_db)
 
         mock_group_role_data = None
