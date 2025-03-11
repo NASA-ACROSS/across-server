@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional, get_args
+from typing import get_args
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
@@ -149,11 +149,11 @@ class Permission(Base, CreatableMixin):
 
     name: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
-    roles: Mapped[List["Role"]] = relationship(
+    roles: Mapped[list["Role"]] = relationship(
         secondary=role_permission, back_populates="permissions", lazy="selectin"
     )
 
-    group_roles: Mapped[List["GroupRole"]] = relationship(
+    group_roles: Mapped[list["GroupRole"]] = relationship(
         secondary=group_role_permission, back_populates="permissions", lazy="selectin"
     )
 
@@ -163,13 +163,13 @@ class Role(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
 
-    users: Mapped[List["User"]] = relationship(
+    users: Mapped[list["User"]] = relationship(
         secondary=user_role, back_populates="roles", lazy="selectin"
     )
-    permissions: Mapped[List["Permission"]] = relationship(
+    permissions: Mapped[list["Permission"]] = relationship(
         secondary=role_permission, back_populates="roles", lazy="selectin"
     )
-    service_accounts: Mapped[Optional[List["ServiceAccount"]]] = relationship(
+    service_accounts: Mapped[list["ServiceAccount"] | None] = relationship(
         secondary=service_account_role,
         back_populates="roles",
         lazy="selectin",
@@ -187,10 +187,10 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     group: Mapped["Group"] = relationship(
         foreign_keys=[group_id], back_populates="roles"
     )
-    users: Mapped[Optional[List["User"]]] = relationship(
+    users: Mapped[list["User"] | None] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
-    permissions: Mapped[List["Permission"]] = relationship(
+    permissions: Mapped[list["Permission"]] = relationship(
         secondary=group_role_permission, back_populates="group_roles", lazy="selectin"
     )
 
@@ -210,7 +210,7 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     user: Mapped["User"] = relationship(
         foreign_keys=[user_id], back_populates="service_accounts"
     )
-    roles: Mapped[Optional[List["Role"]]] = relationship(
+    roles: Mapped[list["Role"] | None] = relationship(
         secondary=service_account_role,
         back_populates="service_accounts",
         lazy="selectin",
@@ -225,26 +225,26 @@ class User(Base, CreatableMixin, ModifiableMixin):
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
-    groups: Mapped[Optional[List["Group"]]] = relationship(
+    groups: Mapped[list["Group"] | None] = relationship(
         secondary=user_group, back_populates="users", lazy="selectin"
     )
-    roles: Mapped[List["Role"]] = relationship(
+    roles: Mapped[list["Role"]] = relationship(
         secondary=user_role, back_populates="users", lazy="selectin"
     )
-    group_roles: Mapped[Optional[List["GroupRole"]]] = relationship(
+    group_roles: Mapped[list["GroupRole"] | None] = relationship(
         secondary=user_group_role, back_populates="users", lazy="selectin"
     )
-    received_invites: Mapped[List["GroupInvite"]] = relationship(
+    received_invites: Mapped[list["GroupInvite"]] = relationship(
         back_populates="receiver",
         lazy="selectin",
         foreign_keys=[GroupInvite.receiver_id],
     )
-    sent_invites: Mapped[List["GroupInvite"]] = relationship(
+    sent_invites: Mapped[list["GroupInvite"]] = relationship(
         back_populates="sender",
         lazy="selectin",
         foreign_keys=[GroupInvite.sender_id],
     )
-    service_accounts: Mapped[List["ServiceAccount"]] = relationship(
+    service_accounts: Mapped[list["ServiceAccount"]] = relationship(
         back_populates="user",
         lazy="selectin",
         foreign_keys=[ServiceAccount.user_id],
@@ -257,18 +257,18 @@ class Group(Base, CreatableMixin, ModifiableMixin):
     name: Mapped[str] = mapped_column(String(256))
     short_name: Mapped[str] = mapped_column(String(25), index=True)
 
-    users: Mapped[List["User"]] = relationship(
+    users: Mapped[list["User"]] = relationship(
         secondary=user_group, back_populates="groups", lazy="selectin"
     )
-    observatories: Mapped[List["Observatory"]] = relationship(
+    observatories: Mapped[list["Observatory"]] = relationship(
         secondary=group_observatory, back_populates="group", lazy="selectin"
     )
-    roles: Mapped[Optional[List["GroupRole"]]] = relationship(
+    roles: Mapped[list["GroupRole"] | None] = relationship(
         back_populates="group",
         lazy="selectin",
         cascade="all,delete",
     )
-    invites: Mapped[Optional[List["GroupInvite"]]] = relationship(
+    invites: Mapped[list["GroupInvite"] | None] = relationship(
         back_populates="group", lazy="selectin"
     )
 
@@ -287,7 +287,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
         )
     )
 
-    telescopes: Mapped[List["Telescope"]] = relationship(
+    telescopes: Mapped[list["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"
     )
     group: Mapped["Group"] = relationship(
@@ -309,10 +309,10 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
     )
-    instruments: Mapped[List["Instrument"]] = relationship(
+    instruments: Mapped[list["Instrument"]] = relationship(
         back_populates="telescope", lazy="selectin", cascade="all,delete"
     )
-    schedules: Mapped[List["Schedule"]] = relationship(
+    schedules: Mapped[list["Schedule"]] = relationship(
         back_populates="telescope", lazy="selectin"
     )
 
@@ -329,11 +329,11 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"
     )
-    footprints: Mapped[List["Footprint"]] = relationship(
+    footprints: Mapped[list["Footprint"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
     )
 
-    observations: Mapped[List["Observation"]] = relationship(
+    observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="selectin"
     )
 
@@ -371,7 +371,7 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
         back_populates="schedules", lazy="selectin"
     )
 
-    observations: Mapped[List["Observation"]] = relationship(
+    observations: Mapped[list["Observation"]] = relationship(
         back_populates="schedule", lazy="selectin", cascade="all,delete"
     )
 
@@ -394,33 +394,31 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     external_observation_id: Mapped[str] = mapped_column(String(50))
     type: Mapped[str] = mapped_column(String(50))  # Enum
     status: Mapped[str] = mapped_column(String(50))  # Enum
-    exposure_time: Mapped[Optional[float]] = mapped_column(Float(2))
-    reason: Mapped[Optional[str]] = mapped_column(String(100))
-    description: Mapped[Optional[str]] = mapped_column(String(100))
-    proposal_reference: Mapped[Optional[str]] = mapped_column(String(100))
-    object_ra: Mapped[Optional[float]] = mapped_column(Float(5))
-    object_dec: Mapped[Optional[float]] = mapped_column(Float(5))
+    exposure_time: Mapped[float | None] = mapped_column(Float(2))
+    reason: Mapped[str | None] = mapped_column(String(100))
+    description: Mapped[str | None] = mapped_column(String(100))
+    proposal_reference: Mapped[str | None] = mapped_column(String(100))
+    object_ra: Mapped[float | None] = mapped_column(Float(5))
+    object_dec: Mapped[float | None] = mapped_column(Float(5))
     object_position: Mapped[WKBElement | None] = mapped_column(
         Geography("POINT", srid=4326), nullable=True
     )
-    pointing_angle: Mapped[Optional[float]] = mapped_column(Float)
-    depth_value: Mapped[Optional[float]] = mapped_column(Float(2))
-    depth_unit: Mapped[Optional[str]] = mapped_column(String(50))  # Enum
-    central_wavelength: Mapped[Optional[float]] = mapped_column(Float(2))
-    bandwidth: Mapped[Optional[float]] = mapped_column(Float(2))
-    filter_name: Mapped[Optional[str]] = mapped_column(String(50))
+    pointing_angle: Mapped[float | None] = mapped_column(Float)
+    depth_value: Mapped[float | None] = mapped_column(Float(2))
+    depth_unit: Mapped[str | None] = mapped_column(String(50))  # Enum
+    central_wavelength: Mapped[float | None] = mapped_column(Float(2))
+    bandwidth: Mapped[float | None] = mapped_column(Float(2))
+    filter_name: Mapped[str | None] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions
-    t_resolution: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    em_res_power: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    o_ucd: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    pol_states: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    pol_xel: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    category: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Enum
-    priority: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    tracking_type: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True
-    )  # Enum
+    t_resolution: Mapped[float | None] = mapped_column(Float, nullable=True)
+    em_res_power: Mapped[float | None] = mapped_column(Float, nullable=True)
+    o_ucd: Mapped[str | None] = mapped_column(String, nullable=True)
+    pol_states: Mapped[str | None] = mapped_column(String, nullable=True)
+    pol_xel: Mapped[str | None] = mapped_column(String, nullable=True)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Enum
+    priority: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tracking_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Enum
 
     instrument: Mapped["Instrument"] = relationship(
         back_populates="observations", lazy="selectin"
