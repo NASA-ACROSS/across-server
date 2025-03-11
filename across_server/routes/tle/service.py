@@ -19,7 +19,7 @@ class TLEService:
 
     Methods
     -------
-    get(norad_id: int, epoch: datetime) -> Optional[models.TLE]
+    get(norad_id: int, epoch: datetime) -> models.TLE or None
         Retrieve the TLE closest to the given epoch for a specific satellite.
     exists(norad_id: int, epoch: datetime) -> bool
         Check if a TLE exists for the given NORAD ID and epoch.
@@ -56,7 +56,7 @@ class TLEService:
 
         Returns
         -------
-        Optional[models.TLE]
+        models.TLE or None
             The closest TLE entry to the given epoch for the specified NORAD ID.
             Returns None if no entry is found.
 

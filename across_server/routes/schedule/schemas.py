@@ -73,7 +73,7 @@ class Schedule(ScheduleBase):
     observations: list[Observation] | None
     created_on: datetime
     created_by_id: uuid.UUID | None
-    checksum: str | None = ""
+    checksum: str = ""
 
     @staticmethod
     def from_orm(schedule: ScheduleModel) -> Schedule:
@@ -153,31 +153,31 @@ class ScheduleRead(BaseSchema):
 
     Parameters
     ----------
-    date_range_begin: Optional[datetime] = None
+    date_range_begin: datetime, optional
         Query Param for evaluating Schedule.date_range_begin >= value
-    date_range_end: Optional[datetime] = None
+    date_range_end: datetime, optional
         Query Param for evaluating Schedule.date_range_end <= value
-    status: Optional[ScheduleStatus] = None
+    status: ScheduleStatus, optional
         Query Param for evaluating Schedule.status == value
-    external_id: Optional[str] = None
+    external_id: str, optional
         Query Param for evaluating Schedule.external_id.contains(value)
-    fidelity: Optional[ScheduleFidelity] = None
+    fidelity: ScheduleFidelity, optional
         Query Param for evaluating Schedule.fidelity == value
-    created_on: Optional[datetime] = None
+    created_on: datetime, optional
         Query Param for evaluating Schedule.created_on > value
-    observatory_ids: Optional[list[uuid.UUID]] = []
+    observatory_ids: list[uuid.UUID], default = []
         Query Param for evaluating Schedule.Telescope.Observatory.id in value
-    observatory_names: Optional[list[str]] = []
+    observatory_names: list[str], default = []
         Query Param for evaluating Schedule.Telescope.Observatory.name in value
-    observatory_short_names: Optional[list[str]] = []
+    observatory_short_names: list[str], optional
         Query Param for evaluating Schedule.Telescope.Observatory.short_name in value
-    telescope_ids: Optional[list[uuid.UUID]] = []
+    telescope_ids: list[uuid.UUID], optional
         Query Param for evaluating Schedule.Telescope.id in value
-    telescope_names: Optional[list[str]] = []
+    telescope_names: list[str], optional
         Query Param for evaluating Schedule.Telescope.name in value
-    telescope_short_names: Optional[list[str]] = []
+    telescope_short_names: list[str], optional
         Query Param for evaluating Schedule.Telescope.short_name in value
-    name: Optional[str] = None
+    name: str, optional
         Query Param for evaluating Schedule.name.contains(value)
 
     """
@@ -188,8 +188,8 @@ class ScheduleRead(BaseSchema):
     external_id: str | None = None
     fidelity: ScheduleFidelity | None = None
     created_on: datetime | None = None
-    observatory_ids: list[uuid.UUID] | None = []
-    observatory_names: list[str] | None = []
-    telescope_ids: list[uuid.UUID] | None = []
-    telescope_names: list[str] | None = []
+    observatory_ids: list[uuid.UUID] = []
+    observatory_names: list[str] = []
+    telescope_ids: list[uuid.UUID] = []
+    telescope_names: list[str] = []
     name: str | None = None

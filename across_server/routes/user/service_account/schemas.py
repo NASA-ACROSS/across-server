@@ -1,5 +1,4 @@
 import datetime
-from typing import Optional
 import uuid
 
 from ....core.schemas.base import BaseSchema
@@ -22,6 +21,6 @@ class ServiceAccountCreate(BaseSchema):
 
 
 class ServiceAccountUpdate(BaseSchema):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    expiration_duration: Optional[int] = None
+    name: str | None = None
+    description: str | None = None
+    expiration_duration: int | None = None
