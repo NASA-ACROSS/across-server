@@ -17,12 +17,12 @@ class ObservatoryBase(BaseSchema):
     id : UUID
         Observatory id
     created_on : datetime
-        Datetime the observatory was created in our database
+        Datetime the observatory record was created
     name : str
         Name of the observatory
     short_name : str
         Short Name of the observatory
-    type: OBSERVATORY_TYPE
+    type: ObservatoryType
         Type of observatory (must be enum<GROUND_BASED, SPACE_BASED>)
     telescopes: list[IDNameSchema]
         List of telescopes belonging to observatory in id,name format
@@ -33,7 +33,7 @@ class ObservatoryBase(BaseSchema):
     name: str
     short_name: str
     type: ObservatoryType
-    telescopes: list[IDNameSchema]
+    telescopes: list[IDNameSchema] | None = None
 
 
 class Observatory(ObservatoryBase):
@@ -81,16 +81,20 @@ class ObservatoryRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query Param for evaluating Observatory.name.contains(value)
-    short_name: Optional[str] = None
-        Query Param for evaluating Observatory.short_name.contains(value)
-    type: Optional[OBSERVATORY_TYPE] = None
-        Query Param for evaluating Observatory.type == value
+        Query param for evaluating Observatory.name.contains(value) or
+        Observatory.short_name.contains(value)
+    telescope_name: Optional[str] = None
+        Query param for evaluating Observatory.telescopes.any((name or short_name).contains(value))
+    telescope_id: Optional[UUID] = None
+        Query param for evaluating Observatory.telescopes.any(id == value)
+    type: Optional[ObservatoryType] = None
+        Query param for evaluating Observatory.type == value
     created_on: Optional[datetime] = None
-        Query Param for evaluating Observatory.created_on > value
+        Query param for evaluating Observatory.created_on > value
     """
 
     name: str | None = None
-    short_name: str | None = None
     type: ObservatoryType | None = None
+    telescope_name: str | None = None
+    telescope_id: uuid.UUID | None = None
     created_on: datetime | None = None

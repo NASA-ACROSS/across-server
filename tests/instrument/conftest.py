@@ -1,18 +1,8 @@
-from datetime import datetime
 from unittest.mock import AsyncMock
-from uuid import uuid4
 
 import pytest
 
-from across_server.db.models import Instrument as InstrumentModel
 from across_server.routes.instrument.service import InstrumentService
-
-
-@pytest.fixture()
-def mock_instrument_data():
-    return InstrumentModel(
-        id=uuid4(), name="Test Instrument", short_name="TI", created_on=datetime.now()
-    )
 
 
 @pytest.fixture(scope="function")

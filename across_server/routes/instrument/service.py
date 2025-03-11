@@ -14,9 +14,9 @@ from .exceptions import InstrumentNotFoundException
 
 class InstrumentService:
     """
-    Observatory service for managing astronomical Observatory records in the ACROSS SSA system.
-    This service handles CRUD operations for Observatory records. This includes retrieval,
-    and creation of new Observatory records in the database.
+    Instrument service for managing astronomical Instrument records in the ACROSS SSA system.
+    This service handles CRUD operations for Instrument records. This includes retrieval Instrument
+    records in the database.
 
     Methods
     -------
@@ -36,7 +36,7 @@ class InstrumentService:
         Parameters
         ----------
         instrument_id : UUID
-            the Observatory id
+            the Instrument id
         Returns
         -------
         models.Instrument
@@ -74,7 +74,7 @@ class InstrumentService:
         Parameters
         ----------
         data : schemas.InstrumentRead
-             class representing Observatory filter parameters
+             class representing Instrument filter parameters
         Returns
         -------
         list[sqlalchemy.filters]
@@ -90,12 +90,21 @@ class InstrumentService:
         if data.name:
             data_filter.append(
                 func.lower(models.Instrument.name).contains(str.lower(data.name))
+                | func.lower(models.Instrument.short_name).contains(
+                    str.lower(data.name)
+                )
             )
 
-        if data.short_name:
+        if data.telescope_id:
+            data_filter.append(models.Instrument.telescope.id == data.telescope_id)
+
+        if data.telescope_name:
             data_filter.append(
-                func.lower(models.Instrument.short_name).contains(
-                    str.lower(data.short_name)
+                func.lower(models.Instrument.telescope.name).contains(
+                    str.lower(data.telescope_name)
+                )
+                | func.lower(models.Instrument.telescope.short_name).contains(
+                    str.lower(data.telescope_name)
                 )
             )
 

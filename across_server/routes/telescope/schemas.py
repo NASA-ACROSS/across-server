@@ -9,27 +9,28 @@ from ...db.models import Telescope as TelescopeModel
 
 class TelescopeBase(BaseSchema):
     """
-    A Pydantic model class representing an Telescope in the ACROSS SSA system.
+    A Pydantic model class representing a Telescope in the ACROSS SSA system.
 
     Parameters
     ----------
     id : UUID
         Telescope id
     created_on : datetime
-        Datetime the telescope was created in our database
+        Datetime the Telescope record was created
     name : str
-        Name of the telescope
+        Name of the Telescope
     short_name : str
-        Short Name of the telescope
+        Short Name of the Telescope
     instruments: list[IDNameSchema]
-        List of instruments belonging to observatory in id,name format
+        List of Instruments belonging to Telescope in id,name format
     """
 
     id: uuid.UUID
     created_on: datetime
     name: str
     short_name: str
-    instruments: list[IDNameSchema]
+    observatory: IDNameSchema | None = None
+    instruments: list[IDNameSchema] | None = None
 
 
 class Telescope(TelescopeBase):
@@ -62,6 +63,9 @@ class Telescope(TelescopeBase):
             id=telescope.id,
             name=telescope.name,
             short_name=telescope.short_name,
+            observatory=IDNameSchema(
+                id=telescope.observatory.id, name=telescope.observatory.name
+            ),
             instruments=[
                 IDNameSchema(id=instrument.id, name=instrument.name)
                 for instrument in telescope.instruments
@@ -76,13 +80,16 @@ class TelescopeRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query Param for evaluating Telescope.name.contains(value)
-    short_name: Optional[str] = None
-        Query Param for evaluating Telescope.short_name.contains(value)
+        Query param for evaluating Telescope.name.contains(value)
+    instrument_id: Optional[UUID] = None
+        Query param for evaluating Telescope.instruments.any(id==value)
+    instrument_name: Optional[str] = None
+        Query param for evaluating Telescope.instruments.any((name or shortname).contains(value))
     created_on: Optional[datetime] = None
-        Query Param for evaluating Telescope.created_on > value
+        Query param for evaluating Telescope.created_on > value
     """
 
     name: str | None = None
-    short_name: str | None = None
+    instrument_id: uuid.UUID | None = None
+    instrument_name: str | None = None
     created_on: datetime | None = None

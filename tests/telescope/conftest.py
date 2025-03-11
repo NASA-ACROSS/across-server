@@ -1,18 +1,8 @@
-from datetime import datetime
 from unittest.mock import AsyncMock
-from uuid import uuid4
 
 import pytest
 
-from across_server.db.models import Telescope as TelescopeModel
 from across_server.routes.telescope.service import TelescopeService
-
-
-@pytest.fixture()
-def mock_telescope_data():
-    return TelescopeModel(
-        id=uuid4(), name="Test Telescope", short_name="TT", created_on=datetime.now()
-    )
 
 
 @pytest.fixture(scope="function")

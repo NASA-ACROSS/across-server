@@ -84,12 +84,29 @@ class ObservatoryService:
         if data.name:
             data_filter.append(
                 func.lower(models.Observatory.name).contains(str.lower(data.name))
+                | func.lower(models.Observatory.short_name).contains(
+                    str.lower(data.name)
+                )
             )
 
-        if data.short_name:
+        if data.telescope_id:
             data_filter.append(
-                func.lower(models.Observatory.short_name).contains(
-                    str.lower(data.short_name)
+                models.Observatory.telescopes.any(
+                    models.Telescope.id == data.telescope_id
+                )
+            )
+
+        if data.telescope_name:
+            data_filter.append(
+                models.Observatory.telescopes.any(
+                    func.lower(models.Telescope.name).contains(
+                        str.lower(data.telescope_name)
+                    )
+                )
+                | models.Observatory.telescopes.any(
+                    func.lower(models.Telescope.short_name).contains(
+                        str.lower(data.telescope_name)
+                    )
                 )
             )
 

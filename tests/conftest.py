@@ -1,4 +1,6 @@
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock
+from uuid import uuid4
 
 import httpx
 import pytest
@@ -8,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 from across_server.auth import strategies
+from across_server.db.models import Instrument, Observatory, Telescope
 from across_server.util.email.service import EmailService
 
 
@@ -86,3 +89,36 @@ def mock_self_access():
     mock.id = 1
 
     yield mock
+
+
+@pytest.fixture()
+def mock_observatory_data():
+    return Observatory(
+        id=uuid4(),
+        name="Test Observatory",
+        short_name="TO",
+        observatory_type="GROUND_BASED",
+        created_on=datetime.now(),
+    )
+
+
+@pytest.fixture()
+def mock_telescope_data(mock_observatory_data):
+    return Telescope(
+        id=uuid4(),
+        name="Test Telescope",
+        short_name="TT",
+        created_on=datetime.now(),
+        observatory=mock_observatory_data,
+    )
+
+
+@pytest.fixture()
+def mock_instrument_data(mock_telescope_data):
+    return Instrument(
+        id=uuid4(),
+        name="Test Instrument",
+        short_name="TI",
+        created_on=datetime.now(),
+        telescope=mock_telescope_data,
+    )

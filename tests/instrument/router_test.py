@@ -21,7 +21,7 @@ class TestInstrumentRouter:
             """GET Should return created instrument when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
             res = await self.client.get(endpoint)
-            assert res.json()["name"] == "Test Instrument"
+            assert res.json()["name"] == self.get_data.name
 
         @pytest.mark.asyncio
         async def test_should_return_200(self):
@@ -35,7 +35,7 @@ class TestInstrumentRouter:
             """GET many should return multiple instruments when successful"""
             res = await self.client.get(self.endpoint)
             assert len(res.json())
-            assert res.json()[0]["name"] == "Test Instrument"
+            assert res.json()[0]["name"] == self.get_data.name
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self):

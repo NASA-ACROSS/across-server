@@ -26,9 +26,9 @@ router = APIRouter(
     responses={
         status.HTTP_200_OK: {
             "model": schemas.Instrument,
-            "description": "Return a Observatory",
+            "description": "Return an Instrument",
         },
-        status.HTTP_404_NOT_FOUND: {"description": "Observatory not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Instrument not found"},
     },
 )
 async def get(

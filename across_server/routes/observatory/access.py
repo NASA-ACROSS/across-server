@@ -12,17 +12,17 @@ from .service import ObservatoryService
 
 class ObservatoryAccess(BaseModel):
     """
-    A Pydantic model class representing the access to a Telescope
+    A Pydantic model class representing the access to a Observatory
     Parameters
     ----------
-    telescope_id : UUID
-        Record identifier for the telescope
+    observatory_id : UUID
+        Record identifier for the Observatory
     """
 
     observatory_id: UUID
 
 
-async def telescope_access(
+async def observatory_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[ObservatoryService, Depends(ObservatoryService)],

@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from ...core.schemas.base import BaseSchema
+from ...core.schemas.base import BaseSchema, IDNameSchema
 from ...db.models import Instrument as InstrumentModel
 from ..footprint.schemas import Footprint, Point
 
@@ -17,11 +17,13 @@ class InstrumentBase(BaseSchema):
     id : UUID
         Instrument id
     created_on : datetime
-        Datetime the Instrument was created in our database
+        Datetime the Instrument record was created
     name : str
         Name of the Instrument
     short_name : str
         Short Name of the Instrument
+    telescope: IDNameSchema
+        the Telescope record the instrument belongs to in id,name format
     footprints: list[Footprint]
         List of imaging footprint belonging to instrument
     """
@@ -30,7 +32,8 @@ class InstrumentBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
-    footprints: list[list[Point]]
+    telescope: IDNameSchema | None = None
+    footprints: list[list[Point]] | None = None
 
 
 class Instrument(InstrumentBase):
@@ -67,6 +70,9 @@ class Instrument(InstrumentBase):
             id=instrument.id,
             name=instrument.name,
             short_name=instrument.short_name,
+            telescope=IDNameSchema(
+                id=instrument.telescope.id, name=instrument.telescope.name
+            ),
             footprints=[footprint.polygon for footprint in footprints],
             created_on=instrument.created_on,
         )
@@ -78,13 +84,18 @@ class InstrumentRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query Param for evaluating Instrument.name.contains(value)
-    short_name: Optional[str] = None
-        Query Param for evaluating Instrument.short_name.contains(value)
+        Query Param for evaluating Instrument.name.contains(value) or
+        Instrument.short_name.contains(value)
+    telescope_id: Optional[UUID] = None
+        Query param for evaluating Instrument.telescope.id == value
+    telescope_name: Optional[str] = None
+        Query param for evaluating Instrument.telescope.name.contains(value) or
+        Instrument.telescope.short_name.contains(value)
     created_on: Optional[datetime] = None
         Query Param for evaluating Instrument.created_on > value
     """
 
     name: str | None = None
-    short_name: str | None = None
+    telescope_id: uuid.UUID | None = None
+    telescope_name: str | None = None
     created_on: datetime | None = None

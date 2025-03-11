@@ -15,8 +15,9 @@ from .exceptions import TelescopeNotFoundException
 class TelescopeService:
     """
     Telescope service for managing astronomical Telescope records in the ACROSS SSA system.
-    This service handles CRUD operations for Telescope records. This includes retrieval,
-    and creation of new Telescope records in the database.
+    This service handles CRUD operations for Telescope records. This includes retrieval of
+    Telescope records in the database.
+
     Methods
     -------
     get(telescope_id: UUID) -> models.Telescope
@@ -64,7 +65,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Observatory filter parameters
+             class representing Telescope filter parameters
         Returns
         -------
         list[sqlalchemy.filters]
@@ -80,12 +81,27 @@ class TelescopeService:
         if data.name:
             data_filter.append(
                 func.lower(models.Telescope.name).contains(str.lower(data.name))
+                | func.lower(models.Telescope.short_name).contains(str.lower(data.name))
             )
 
-        if data.short_name:
+        if data.instrument_id:
             data_filter.append(
-                func.lower(models.Telescope.short_name).contains(
-                    str.lower(data.short_name)
+                models.Telescope.instruments.any(
+                    models.Instrument.id == data.instrument_id
+                )
+            )
+
+        if data.instrument_name:
+            data_filter.append(
+                models.Telescope.instruments.any(
+                    func.lower(models.Instrument.name).contains(
+                        str.lower(data.instrument_name)
+                    )
+                )
+                | models.Telescope.instruments.any(
+                    func.lower(models.Instrument.short_name).contains(
+                        str.lower(data.instrument_name)
+                    )
                 )
             )
 
