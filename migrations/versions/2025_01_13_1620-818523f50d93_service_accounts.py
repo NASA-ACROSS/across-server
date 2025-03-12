@@ -1,7 +1,9 @@
 """Service Accounts
+
 Revision ID: 818523f50d93
 Revises: c5361765767a
 Create Date: 2025-01-13 16:20:21.233671
+
 """
 
 from typing import Sequence, Union
@@ -202,6 +204,6 @@ def downgrade() -> None:
     op.create_foreign_key(
         "footprint_created_by_id_fkey", "footprint", "user", ["created_by_id"], ["id"]
     )
-    op.drop_table("service_group_role")
+    op.drop_table("service_account_role")
     op.drop_table("service_account")
     # ### end Alembic commands ###

@@ -369,4 +369,5 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_user_username"), table_name="user")
     op.drop_index(op.f("ix_user_email"), table_name="user")
     op.drop_table("user")
+    sa.Enum(name="observatory_type").drop(op.get_bind(), checkfirst=False)
     # ### end Alembic commands ###
