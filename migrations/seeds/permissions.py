@@ -12,7 +12,6 @@ group_read = Permission(id=uuid.uuid4(), name="group:read")
 group_write = Permission(
     id=uuid.UUID("32a6e946-1f29-44d2-a3a7-3c45b5f46499"), name="group:write"
 )
-group_read = Permission(id=uuid.uuid4(), name="group:read")
 user_write = Permission(id=uuid.uuid4(), name="user:write")
 service_account_write = Permission(id=uuid.uuid4(), name="user:service_account:write")
 service_account_read = Permission(id=uuid.uuid4(), name="user:service_account:read")
