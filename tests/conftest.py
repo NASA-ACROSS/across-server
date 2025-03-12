@@ -41,9 +41,17 @@ def mock_scalar_one_or_none():
 
 
 @pytest.fixture
-def mock_result(mock_scalar_one_or_none):
+def mock_scalars():
+    mock_result = AsyncMock()
+    mock_result.all.return_value = []
+    yield mock_result
+
+
+@pytest.fixture
+def mock_result(mock_scalar_one_or_none, mock_scalars):
     mock_result = AsyncMock(return_value="default result")
     mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
+    mock_result.scalars = MagicMock(return_value=mock_scalars)
 
     yield mock_result
 
