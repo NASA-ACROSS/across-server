@@ -13,6 +13,8 @@ anyio==4.7.0
     #   asyncer
     #   httpx
     #   starlette
+asgi-correlation-id==4.3.4
+    # via -r requirements/base.in
 astropy==7.0.0
     # via
     #   -r requirements/base.in
@@ -144,6 +146,7 @@ numpy==2.2.0
     #   types-shapely
 packaging==24.2
     # via
+    #   asgi-correlation-id
     #   astropy
     #   geoalchemy2
     #   pytest
@@ -231,8 +234,10 @@ sqlalchemy==2.0.37
     #   geoalchemy2
 starlette==0.45.3
     # via
-    #   -r requirements/base.in
+    #   asgi-correlation-id
     #   fastapi
+structlog==25.1.0
+    # via -r requirements/base.in
 types-cachetools==5.5.0.20240820
     # via -r requirements/types.in
 types-pyasn1==0.6.0.20240913

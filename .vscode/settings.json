@@ -35,6 +35,7 @@
         "SPACETRACK",
         "sqlalchemy",
         "Treedome",
+        "tzset",
         "Uvicorn",
         "venv",
         "WEBSERVER"
