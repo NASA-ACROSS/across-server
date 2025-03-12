@@ -302,7 +302,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    observatory_id: Mapped[int] = mapped_column(
+    observatory_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Observatory.id)
     )
 
