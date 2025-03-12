@@ -80,13 +80,13 @@ class TelescopeRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query param for evaluating Telescope.name.contains(value)
+        Query param to search by name or short name
     instrument_id: Optional[UUID] = None
-        Query param for evaluating Telescope.instruments.any(id==value)
+        Query param to search by instruments id
     instrument_name: Optional[str] = None
-        Query param for evaluating Telescope.instruments.any((name or shortname).contains(value))
+        Query param to search by instruments name or short name
     created_on: Optional[datetime] = None
-        Query param for evaluating Telescope.created_on > value
+        Query param to search by created date after value
     """
 
     name: str | None = None

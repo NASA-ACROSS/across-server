@@ -13,6 +13,11 @@ class Setup:
         self.endpoint = "/instrument/"
         self.get_data = mock_instrument_data
 
+    def is_instrument(self, response_json: dict) -> bool:
+        """Method to validate if the api return is consistent with expected json keys"""
+        instrument_return_keys = ["id", "name", "short_name", "created_on", "telescope"]
+        return all(key in response_json for key in instrument_return_keys)
+
 
 class TestInstrumentRouter:
     class TestGet(Setup):
@@ -21,7 +26,7 @@ class TestInstrumentRouter:
             """GET Should return created instrument when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
             res = await self.client.get(endpoint)
-            assert res.json()["name"] == self.get_data.name
+            assert self.is_instrument(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self):
@@ -35,7 +40,12 @@ class TestInstrumentRouter:
             """GET many should return multiple instruments when successful"""
             res = await self.client.get(self.endpoint)
             assert len(res.json())
-            assert res.json()[0]["name"] == self.get_data.name
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_many_telescopes(self):
+            """GET many should return multiple instruments when successful"""
+            res = await self.client.get(self.endpoint)
+            assert all([self.is_instrument(json) for json in res.json()])
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self):

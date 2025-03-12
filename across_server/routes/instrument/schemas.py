@@ -24,8 +24,8 @@ class InstrumentBase(BaseSchema):
         Short Name of the Instrument
     telescope: IDNameSchema
         the Telescope record the instrument belongs to in id,name format
-    footprints: list[Footprint]
-        List of imaging footprint belonging to instrument
+    footprints: list[list[Point]]
+        List of imaging footprints belonging to instrument
     """
 
     id: uuid.UUID
@@ -84,15 +84,13 @@ class InstrumentRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query Param for evaluating Instrument.name.contains(value) or
-        Instrument.short_name.contains(value)
+        Query Param for searching by name or short name
     telescope_id: Optional[UUID] = None
-        Query param for evaluating Instrument.telescope.id == value
+        Query param for searching telescope id
     telescope_name: Optional[str] = None
-        Query param for evaluating Instrument.telescope.name.contains(value) or
-        Instrument.telescope.short_name.contains(value)
+        Query param for searching telescope name or short name
     created_on: Optional[datetime] = None
-        Query Param for evaluating Instrument.created_on > value
+        Query param to search by created date after value
     """
 
     name: str | None = None

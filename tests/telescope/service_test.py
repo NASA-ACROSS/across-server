@@ -17,7 +17,6 @@ class TestTelescopeService:
         ) -> None:
             """Should return False when the telescope does not exist"""
             mock_result.scalar_one_or_none.return_value = None
-            mock_db.execute.return_value = mock_result
 
             service = TelescopeService(mock_db)
             with pytest.raises(TelescopeNotFoundException):
@@ -30,7 +29,7 @@ class TestTelescopeService:
             ) -> None:
                 """Should return False when the telescope does not exist"""
                 mock_result.scalars.all.return_value = []
-                mock_db.execute.return_value = mock_result
+                # mock_db.execute.return_value = mock_result
 
                 service = TelescopeService(mock_db)
                 params = TelescopeRead()

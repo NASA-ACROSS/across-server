@@ -23,7 +23,7 @@ class ObservatoryBase(BaseSchema):
     short_name : str
         Short Name of the observatory
     type: ObservatoryType
-        Type of observatory (must be enum<GROUND_BASED, SPACE_BASED>)
+        Type of observatory
     telescopes: list[IDNameSchema]
         List of telescopes belonging to observatory in id,name format
     """
@@ -81,16 +81,15 @@ class ObservatoryRead(BaseSchema):
     Parameters
     ----------
     name: Optional[str] = None
-        Query param for evaluating Observatory.name.contains(value) or
-        Observatory.short_name.contains(value)
+        Query param to search by name or short name
     telescope_name: Optional[str] = None
-        Query param for evaluating Observatory.telescopes.any((name or short_name).contains(value))
+        Query param to search by telescopes names or short names
     telescope_id: Optional[UUID] = None
-        Query param for evaluating Observatory.telescopes.any(id == value)
+        Query param to search by telescopes id
     type: Optional[ObservatoryType] = None
-        Query param for evaluating Observatory.type == value
+        Query param to search by type
     created_on: Optional[datetime] = None
-        Query param for evaluating Observatory.created_on > value
+        Query param to search by created date after value
     """
 
     name: str | None = None
