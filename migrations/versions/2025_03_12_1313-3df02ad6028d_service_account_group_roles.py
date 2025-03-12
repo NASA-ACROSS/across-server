@@ -1,8 +1,8 @@
 """service account group roles
 
 Revision ID: 3df02ad6028d
-Revises: 3245c430ace2
-Create Date: 2025-03-07 15:28:39.513808
+Revises: 2b00546497c1
+Create Date: 2025-03-12 13:13:39.513808
 
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3df02ad6028d"
-down_revision: Union[str, None] = "3245c430ace2"
+down_revision: Union[str, None] = "2b00546497c1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
