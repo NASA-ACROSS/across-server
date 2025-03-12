@@ -3,7 +3,7 @@ from datetime import datetime
 from across_server.routes.tle.exceptions import DuplicateTLEException
 
 
-def test_duplicate_tle_exception_initialization():
+def test_duplicate_tle_exception_initialization() -> None:
     """
     Test that DuplicateTLEException is initialized correctly.
     """
@@ -14,7 +14,7 @@ def test_duplicate_tle_exception_initialization():
     assert exception.status_code == 409
 
 
-def test_duplicate_tle_exception_inheritance():
+def test_duplicate_tle_exception_inheritance() -> None:
     """
     Test that DuplicateTLEException inherits from AcrossHTTPException.
     """

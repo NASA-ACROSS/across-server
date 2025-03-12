@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -11,7 +12,7 @@ class TestInstrumentService:
     class TestGet:
         @pytest.mark.asyncio
         async def test_should_return_not_found_exception_when_does_not_exist(
-            self, mock_db, mock_result
+            self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
             """Should raise a not found exception when the instrument does not exist"""
             mock_result.scalar_one_or_none.return_value = None
@@ -23,7 +24,7 @@ class TestInstrumentService:
         class TestGetMany:
             @pytest.mark.asyncio
             async def test_should_return_empty_list_when_nothing_matches_params(
-                self, mock_db, mock_result
+                self, mock_db: AsyncMock, mock_result: AsyncMock
             ) -> None:
                 """Should return False when the telescope does not exist"""
                 mock_result.scalars.all.return_value = []
@@ -45,7 +46,10 @@ class MockInstrumentModelWithoutFootprint:
 class TestInstrumentFootprintService:
     @pytest.mark.asyncio
     async def test_has_footprint_should_return_true_when_footprint_exists(
-        self, mock_db, mock_scalar_one_or_none, mock_result
+        self,
+        mock_db: AsyncMock,
+        mock_scalar_one_or_none: MagicMock,
+        mock_result: AsyncMock,
     ) -> None:
         """Should return True when a footprint for the instrument exists"""
         mock_scalar_one_or_none.return_value = MockInstrumentModelWithFootprint
@@ -57,7 +61,10 @@ class TestInstrumentFootprintService:
 
     @pytest.mark.asyncio
     async def test_has_footprint_should_return_false_when_no_footprint_exists(
-        self, mock_db, mock_scalar_one_or_none, mock_result
+        self,
+        mock_db: AsyncMock,
+        mock_scalar_one_or_none: MagicMock,
+        mock_result: AsyncMock,
     ) -> None:
         """Should return False when a footprint for the instrument does not exist"""
         mock_scalar_one_or_none.return_value = MockInstrumentModelWithoutFootprint
@@ -69,7 +76,10 @@ class TestInstrumentFootprintService:
 
     @pytest.mark.asyncio
     async def test_has_footprint_should_raise_exception_when_no_instrument_exists(
-        self, mock_db, mock_scalar_one_or_none, mock_result
+        self,
+        mock_db: AsyncMock,
+        mock_scalar_one_or_none: MagicMock,
+        mock_result: AsyncMock,
     ) -> None:
         """Should return False when the instrument does not exist"""
         mock_scalar_one_or_none.return_value = None

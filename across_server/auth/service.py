@@ -17,7 +17,7 @@ class Tokens(TypedDict):
 
 
 class AuthService:
-    def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]):
+    def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
         self.db = db
 
     def generate_magic_link(self, email: str) -> str:
@@ -26,7 +26,7 @@ class AuthService:
     async def authenticate(
         self,
         token: str,
-    ):
+    ) -> schemas.AuthUser:
         token_data = tokens.AccessToken().decode(token)
         auth_user = await self.get_authenticated_user(user_id=UUID(token_data.sub))
 

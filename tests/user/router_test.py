@@ -1,4 +1,5 @@
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import MagicMock, Mock
 from uuid import uuid4
 
 import fastapi
@@ -14,12 +15,12 @@ class TestUserPatchRoute:
     async def setup(
         self,
         async_client: AsyncClient,
-    ):
+    ) -> None:
         self.client = async_client
         self.endpoint = "/user/" + str(uuid4())
 
     @pytest.mark.asyncio
-    async def test_should_return_200_when_modifying_first_name(self):
+    async def test_should_return_200_when_modifying_first_name(self) -> None:
         """Should return a 200 when successfully modifying user's first name"""
         res = await self.client.patch(
             self.endpoint,
@@ -28,7 +29,7 @@ class TestUserPatchRoute:
         assert res.status_code == fastapi.status.HTTP_200_OK
 
     @pytest.mark.asyncio
-    async def test_should_return_200_when_modifying_last_name(self):
+    async def test_should_return_200_when_modifying_last_name(self) -> None:
         """Should return a 200 when successfully modifying user's last name"""
         res = await self.client.patch(
             self.endpoint,
@@ -37,7 +38,7 @@ class TestUserPatchRoute:
         assert res.status_code == fastapi.status.HTTP_200_OK
 
     @pytest.mark.asyncio
-    async def test_should_return_200_when_modifying_username(self):
+    async def test_should_return_200_when_modifying_username(self) -> None:
         """Should return a 200 when successfully modifying user's username"""
         res = await self.client.patch(
             self.endpoint,
@@ -48,19 +49,21 @@ class TestUserPatchRoute:
 
 class TestUserPostRoute:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, async_client: AsyncClient, mock_user_data: dict):
+    async def setup(self, async_client: AsyncClient, mock_user_data: dict) -> None:
         self.client = async_client
         self.endpoint = "/user/"
         self.data = mock_user_data
 
     @pytest.mark.asyncio
-    async def test_should_send_email_when_user_is_created(self, mock_email_service):
+    async def test_should_send_email_when_user_is_created(
+        self, mock_email_service: MagicMock
+    ) -> None:
         """Should send an email when a new user is successfully created"""
         await self.client.post(self.endpoint, json=self.data)
         mock_email_service.send.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_send_email_with_magic_link(self, monkeypatch):
+    async def test_should_send_email_with_magic_link(self, monkeypatch: Any) -> None:
         """Should generate magic link as part of sending email"""
         mock_magic_link_generate = Mock(return_value="mock magic link")
         monkeypatch.setattr(magic_link, "generate", mock_magic_link_generate)
@@ -68,15 +71,15 @@ class TestUserPostRoute:
         mock_magic_link_generate.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_return_201_when_user_is_created(self):
+    async def test_should_return_201_when_user_is_created(self) -> None:
         """Should return a 201 when a new user is successfully created"""
         res = await self.client.post(self.endpoint, json=self.data)
         assert res.status_code == fastapi.status.HTTP_201_CREATED
 
     @pytest.mark.asyncio
     async def test_should_catch_error_when_email_service_throws_exception(
-        self, mock_email_service, capsys
-    ):
+        self, mock_email_service: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         """Should catch an error and print it when email service throws an exception"""
         mock_email_service.send.side_effect = Exception("Mock raised exception")
         await self.client.post(self.endpoint, json=self.data)

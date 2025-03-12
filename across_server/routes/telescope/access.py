@@ -29,7 +29,7 @@ async def telescope_access(
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[TelescopeService, Depends(TelescopeService)],
     data: Annotated[TelescopeAccess, Body(title="UUID of the telescope")],
-):
+) -> AuthUser:
     """
     Method that evaluates whether a user has access to a specific telescope
 

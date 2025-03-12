@@ -1,8 +1,11 @@
 import datetime
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from typing import Any, Self
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import FastAPI
 
 from across_server.auth import strategies
 from across_server.auth.config import Config
@@ -11,7 +14,7 @@ from across_server.routes.user.service_account.service import ServiceAccountServ
 
 
 @pytest.fixture
-def mock_service_account_data():
+def mock_service_account_data() -> dict:
     return {
         "id": str(uuid4()),
         "user_id": str(uuid4()),
@@ -25,7 +28,9 @@ def mock_service_account_data():
 
 
 @pytest.fixture(scope="function")
-def mock_service_account_service(mock_service_account_data):
+def mock_service_account_service(
+    mock_service_account_data: dict,
+) -> Generator[AsyncMock]:
     mock = AsyncMock(ServiceAccountService)
 
     mock.create = AsyncMock(return_value=mock_service_account_data)
@@ -39,8 +44,12 @@ def mock_service_account_service(mock_service_account_data):
 
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app, fastapi_dep, mock_service_account_service, mock_global_access, mock_self_access
-):
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_service_account_service: AsyncMock,
+    mock_global_access: MagicMock,
+    mock_self_access: MagicMock,
+) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
 
     with overrider.override(
@@ -54,12 +63,12 @@ def dep_override(
 
 
 @pytest.fixture
-def fake_time():
+def fake_time() -> datetime.datetime:
     return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.UTC)
 
 
 @pytest.fixture
-def baked_secret():
+def baked_secret() -> str:
     """
     The actual generated secret key from the patched datetime.now() and patched config.SERVICE_ACCOUNT_SECRET_KEY
     """
@@ -67,23 +76,24 @@ def baked_secret():
 
 
 @pytest.fixture
-def baked_expiration(fake_time):
+def baked_expiration(fake_time: datetime.datetime) -> datetime.datetime:
     return fake_time + datetime.timedelta(days=30)
 
 
 @pytest.fixture
-def patch_datetime_now(monkeypatch, fake_time):
+def patch_datetime_now(monkeypatch: Any, fake_time: datetime.datetime) -> None:
     class mydatetime(datetime.datetime):
         @classmethod
-        def now(cls):
-            return fake_time
+        def now(cls, tz: datetime.tzinfo | None = None) -> Self:
+            dt = fake_time.replace(tzinfo=tz) if tz else fake_time
+            return cls.fromtimestamp(dt.timestamp(), tz=dt.tzinfo)
 
     monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
 @pytest.fixture
-def patch_config_secret(monkeypatch):
-    def patch_config_secret_fn(self):
+def patch_config_secret(monkeypatch: Any) -> None:
+    def patch_config_secret_fn(self: Any) -> str:
         return "TEST_SECRET"
 
     monkeypatch.setattr(
@@ -94,8 +104,8 @@ def patch_config_secret(monkeypatch):
     )
 
 
-@pytest.fixture()
-def service_account_create_example():
+@pytest.fixture
+def service_account_create_example() -> ServiceAccountCreate:
     return ServiceAccountCreate(
         name="test service account",
         description="test service account description",

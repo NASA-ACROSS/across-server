@@ -27,5 +27,5 @@ class AccessToken(Token[AccessTokenData, AuthUser]):
     def data_model(self) -> type[AccessTokenData]:
         return AccessTokenData
 
-    def to_encode(self, auth_user: AuthUser):
+    def to_encode(self, auth_user: AuthUser) -> AccessTokenData:
         return AccessTokenData(sub=str(auth_user.id), **auth_user.model_dump())

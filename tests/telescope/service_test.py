@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -13,7 +14,7 @@ class TestTelescopeService:
     class TestGet:
         @pytest.mark.asyncio
         async def test_should_return_not_found_exception_when_does_not_exist(
-            self, mock_db, mock_result
+            self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
             """Should return False when the telescope does not exist"""
             mock_result.scalar_one_or_none.return_value = None
@@ -25,7 +26,7 @@ class TestTelescopeService:
         class TestGetMany:
             @pytest.mark.asyncio
             async def test_should_return_empty_list_when_nothing_matches_params(
-                self, mock_db, mock_result
+                self, mock_db: AsyncMock, mock_result: AsyncMock
             ) -> None:
                 """Should return False when the telescope does not exist"""
                 mock_result.scalars.all.return_value = []

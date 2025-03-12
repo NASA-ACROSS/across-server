@@ -23,7 +23,7 @@ if ctx_config.config_file_name is not None:
 target_metadata = models.Base.metadata
 
 
-def include_name(name, type_, parent_names):
+def include_name(name, type_, parent_names) -> bool:
     """Used to only autogenerate migrations ACROSS models
 
     See: [Alembic Docs](https://alembic.sqlalchemy.org/en/latest/api/runtime.html#alembic.runtime.environment.EnvironmentContext.configure.params.include_name)

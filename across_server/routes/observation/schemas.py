@@ -150,7 +150,7 @@ class ObservationCreate(ObservationBase):
 
     return_schema: ClassVar = Observation
 
-    def to_orm(self):
+    def to_orm(self) -> ObservationModel:
         """
         Converts Pydantic schema to ORM representation
         Translates field names and flattens nested Pydantic schemas

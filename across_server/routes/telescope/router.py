@@ -34,7 +34,7 @@ router = APIRouter(
 async def get(
     service: Annotated[TelescopeService, Depends(TelescopeService)],
     telescope_id: uuid.UUID,
-):
+) -> schemas.Telescope:
     telescope = await service.get(telescope_id)
 
     return schemas.Telescope.from_orm(telescope)
@@ -56,6 +56,6 @@ async def get(
 async def get_many(
     service: Annotated[TelescopeService, Depends(TelescopeService)],
     data: Annotated[schemas.TelescopeRead, Query()],
-):
+) -> list[schemas.Telescope]:
     telescopes = await service.get_many(data=data)
     return [schemas.Telescope.from_orm(telescope) for telescope in telescopes]

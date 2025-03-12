@@ -56,7 +56,7 @@ app.add_middleware(
     description="Health Check Route",
     status_code=status.HTTP_200_OK,
 )
-async def get():
+async def get() -> str:
     logger.debug("health check!")
     return "ok"
 

@@ -52,7 +52,7 @@ class CoordinateConverterMixin:
     """
 
     @staticmethod
-    def coordinate_converter(values: dict):
+    def coordinate_converter(values: dict) -> dict:
         coordinates: dict = {}
         for key, value in values.items():
             if key.endswith("_ra") or key.endswith("_dec"):
@@ -72,7 +72,7 @@ class DateRangeConverterMixin:
     """
 
     @staticmethod
-    def date_range_converter(values: dict, name: str):
+    def date_range_converter(values: dict, name: str) -> dict:
         date_range: dict = {}
         for key, value in values.items():
             if key.endswith("_begin") or key.endswith("_end"):
@@ -90,7 +90,7 @@ class UnitValueConverterMixin:
     """
 
     @staticmethod
-    def unit_value_converter(values: dict, name: str):
+    def unit_value_converter(values: dict, name: str) -> dict:
         unit_value: dict = {}
         for key, value in values.items():
             if key.endswith("_unit") or key.endswith("_value"):
@@ -108,7 +108,7 @@ class BandpassConverterMixin:
     """
 
     @staticmethod
-    def bandpass_converter(values: dict, name: str):
+    def bandpass_converter(values: dict, name: str) -> dict:
         bandpass: dict = {}
         for key, value in values.items():
             if key in ["filter_name", "central_wavelength", "bandwidth"]:

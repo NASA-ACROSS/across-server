@@ -8,10 +8,10 @@ logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
 class LoggingMiddleware:
-    def __init__(self, app: ASGIApp):
+    def __init__(self, app: ASGIApp) -> None:
         self.app = app
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
@@ -20,7 +20,7 @@ class LoggingMiddleware:
         start_time = time.perf_counter_ns()
         response = Response(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        async def send_wrapper(message: Message):
+        async def send_wrapper(message: Message) -> None:
             nonlocal response
             if message["type"] == "http.response.start":
                 response = Response(status_code=message["status"])

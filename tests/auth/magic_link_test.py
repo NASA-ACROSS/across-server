@@ -5,25 +5,27 @@ from across_server.auth.tokens import MagicLinkToken
 
 
 class MockTokenData:
-    def __init__(self):
+    def __init__(self) -> None:
         self.sub = "user@example.com"
         self.token = "mock-encoded-token"
 
 
 @pytest.fixture()
-def mock_token_data():
+def mock_token_data() -> MockTokenData:
     return MockTokenData()
 
 
 @pytest.fixture(autouse=True)
-def mock_magic_link_token(monkeypatch: pytest.MonkeyPatch, mock_token_data):
-    def to_encode():
+def mock_magic_link_token(
+    monkeypatch: pytest.MonkeyPatch, mock_token_data: MockTokenData
+) -> None:
+    def to_encode() -> MockTokenData:
         return mock_token_data
 
-    def encode():
+    def encode() -> str:
         return mock_token_data.token
 
-    def decode():
+    def decode() -> MockTokenData:
         return mock_token_data
 
     monkeypatch.setattr(
@@ -36,12 +38,12 @@ def mock_magic_link_token(monkeypatch: pytest.MonkeyPatch, mock_token_data):
 
 
 class TestGenerateMagicLink:
-    def test_should_generate_magic_link(self, mock_token_data):
+    def test_should_generate_magic_link(self, mock_token_data: MockTokenData) -> None:
         """Should generate a magic link"""
         assert generate(mock_token_data.sub).__contains__(
             f"/auth/verify?token={mock_token_data.token}"
         )
 
-    def test_should_verify_magic_link(self, mock_token_data):
+    def test_should_verify_magic_link(self, mock_token_data: MockTokenData) -> None:
         """Should verify a magic link to return the email of the auth'd user"""
         assert verify(mock_token_data.token) == mock_token_data.sub

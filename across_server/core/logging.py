@@ -2,6 +2,7 @@ import logging
 import sys
 import typing
 from collections.abc import MutableMapping
+from types import TracebackType
 
 import structlog
 from asgi_correlation_id import correlation_id
@@ -20,7 +21,7 @@ def _add_correlation(
 
 
 # This setup was heavily borrowed from https://gist.github.com/nymous/f138c7f06062b7c43c060bf03759c29e
-def setup(json_logs: bool = False, log_level: str = "INFO"):
+def setup(json_logs: bool = False, log_level: str = "INFO") -> None:
     shared_processors: list[Processor] = [
         _add_correlation,
         structlog.processors.TimeStamper(fmt="%Y-%m-%dT%H:%M:%S.%f"),
@@ -90,7 +91,11 @@ def setup(json_logs: bool = False, log_level: str = "INFO"):
     logging.getLogger("uvicorn.access").handlers.clear()
     logging.getLogger("uvicorn.access").propagate = False
 
-    def handle_exception(exc_type, exc_value, exc_traceback):
+    def handle_exception(
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        exc_traceback: TracebackType | None,
+    ) -> None:
         """
         Log any uncaught exception instead of letting it be printed by Python
         (but leave KeyboardInterrupt untouched to allow users to Ctrl+C to stop)

@@ -14,14 +14,14 @@ from .service import AuthService
 async def authenticate(
     service: Annotated[AuthService, Depends(AuthService)],
     token: Annotated[str, Depends(extract_creds)],
-):
+) -> AuthUser:
     return await service.authenticate(token)
 
 
 async def global_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
-):
+) -> AuthUser:
     if "all:write" in auth_user.scopes:
         return auth_user
 
@@ -42,7 +42,7 @@ async def group_access(
     security_scopes: SecurityScopes,
     group_id: Annotated[UUID, Path(title="UUID of the group")],
     auth_user: Annotated[AuthUser, Depends(authenticate)],
-):
+) -> AuthUser:
     if "all:write" in auth_user.scopes:
         return auth_user
 
@@ -58,7 +58,7 @@ async def group_access(
 async def self_access(
     user_id: Annotated[UUID, Path(title="UUID of the user")],
     auth_user: Annotated[AuthUser, Depends(authenticate)],
-):
+) -> AuthUser:
     if "all:write" in auth_user.scopes:
         return auth_user
 
@@ -73,7 +73,7 @@ async def self_access(
 async def webserver_access(
     request: Request,
     token: Annotated[str, Depends(extract_creds)],
-):
+) -> None:
     is_webserver = secrets.compare_digest(token, auth_config.WEBSERVER_SECRET)
 
     if request.client:

@@ -1,7 +1,9 @@
-from unittest.mock import AsyncMock, Mock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import uuid4
 
 import pytest
+from fastapi import FastAPI
 
 import across_server.auth as auth
 from across_server.auth.service import AuthService
@@ -11,7 +13,7 @@ from across_server.util.email.service import EmailService
 
 
 @pytest.fixture(scope="function")
-def mock_user_data():
+def mock_user_data() -> dict:
     return {
         "id": str(uuid4()),
         "username": "mock_user",
@@ -25,7 +27,7 @@ def mock_user_data():
 
 
 @pytest.fixture(scope="function")
-def mock_user_service(mock_user_data):
+def mock_user_service(mock_user_data: dict) -> Generator[AsyncMock]:
     mock = AsyncMock(UserService)
 
     mock.update = AsyncMock(return_value=mock_user_data)
@@ -34,7 +36,7 @@ def mock_user_service(mock_user_data):
 
 
 @pytest.fixture(scope="function")
-def mock_auth_service():
+def mock_auth_service() -> Generator[AsyncMock]:
     mock = AsyncMock(AuthService)
     mock.authenticate = AsyncMock()
     mock.generate_magic_link = Mock(return_value="login magic link")
@@ -43,13 +45,13 @@ def mock_auth_service():
 
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app,
-    fastapi_dep,
-    mock_email_service,
-    mock_user_service,
-    mock_auth_service,
-    mock_webserver_access,
-):
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_email_service: AsyncMock,
+    mock_user_service: AsyncMock,
+    mock_auth_service: AsyncMock,
+    mock_webserver_access: AsyncMock,
+) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
 
     with overrider.override(

@@ -1,7 +1,9 @@
 import datetime
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from fastapi import FastAPI
 
 from across_server.auth import strategies
 from across_server.db import models
@@ -10,12 +12,12 @@ from across_server.routes.tle.service import TLEService
 
 
 @pytest.fixture(scope="function")
-def todays_epoch():
+def todays_epoch() -> datetime.datetime:
     return datetime.datetime.now()
 
 
 @pytest.fixture(scope="function")
-def todays_epoch_yyddd(todays_epoch):
+def todays_epoch_yyddd(todays_epoch: datetime.datetime) -> str:
     date_str = todays_epoch.strftime(
         "%y%j"
     )  # %y = last two digits of the year, %j = day of the year
@@ -35,7 +37,7 @@ def todays_epoch_yyddd(todays_epoch):
 
 
 @pytest.fixture(scope="function")
-def mock_tle_data(todays_epoch_yyddd):
+def mock_tle_data(todays_epoch_yyddd: str) -> dict:
     return {
         "norad_id": 12345,
         "satellite_name": "SWIFT",
@@ -46,7 +48,7 @@ def mock_tle_data(todays_epoch_yyddd):
 
 
 @pytest.fixture(scope="function")
-def mock_tle_data_explorer_6():
+def mock_tle_data_explorer_6() -> dict:
     return {
         "norad_id": 15,
         "satellite_name": "EXPLORER 6",
@@ -56,7 +58,7 @@ def mock_tle_data_explorer_6():
 
 
 @pytest.fixture(scope="function")
-def mock_tle_data_invalid_epoch():
+def mock_tle_data_invalid_epoch() -> dict:
     return {
         "norad_id": 25544,
         "satellite_name": "ISS",
@@ -66,17 +68,17 @@ def mock_tle_data_invalid_epoch():
 
 
 @pytest.fixture(scope="function")
-def mock_tle(mock_tle_data):
+def mock_tle(mock_tle_data: dict) -> schemas.TLECreate:
     return schemas.TLECreate(**mock_tle_data)
 
 
 @pytest.fixture(scope="function")
-def mock_tle_db(mock_tle_data):
+def mock_tle_db(mock_tle_data: dict) -> models.TLE:
     return models.TLE(**mock_tle_data)
 
 
 @pytest.fixture(scope="function")
-def mock_tle_service(mock_tle_db):
+def mock_tle_service(mock_tle_db: models.TLE) -> Generator[AsyncMock]:
     mock = AsyncMock(TLEService)
 
     mock.get = AsyncMock(return_value=mock_tle_db)
@@ -86,7 +88,12 @@ def mock_tle_service(mock_tle_db):
 
 
 @pytest.fixture(scope="function", autouse=True)
-def dep_override(app, fastapi_dep, mock_tle_service, mock_global_access):
+def dep_override(
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_tle_service: MagicMock,
+    mock_global_access: MagicMock,
+) -> Generator:
     overrider = fastapi_dep(app)
 
     with overrider.override(

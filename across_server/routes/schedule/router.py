@@ -35,7 +35,7 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-):
+) -> list[schemas.Schedule]:
     schedules = await service.get_many(data=data)
     return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
 
@@ -56,7 +56,7 @@ async def get_many(
 async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-):
+) -> list[schemas.Schedule]:
     schedules = await service.get_history(data=data)
     return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
 
@@ -78,7 +78,7 @@ async def get_history(
 async def get(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     schedule_id: uuid.UUID,
-):
+) -> schemas.Schedule:
     schedule = await service.get(schedule_id)
 
     return schemas.Schedule.from_orm(schedule)
@@ -104,5 +104,5 @@ async def create(
     ],
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: schemas.ScheduleCreate,
-):
+) -> uuid.UUID:
     return await service.create(schedule_create=data, created_by_id=auth_user.id)

@@ -39,6 +39,7 @@ async def get_many(
     return [schemas.Group.model_validate(group) for group in group_models]
 
 
+
 @router.get(
     "/{group_id}",
     summary="Read a group",
@@ -59,3 +60,4 @@ async def get(
 ) -> schemas.Group:
     group_model = await service.get(group_id)
     return schemas.Group.model_validate(group_model)
+

@@ -23,10 +23,10 @@ class Config(BaseConfig):
     # Request Headers
     REQUEST_ID_HEADER: str = "X-Request-ID"
 
-    def is_local(self):
+    def is_local(self) -> bool:
         return self.APP_ENV == Environments.LOCAL
 
-    def base_url(self):
+    def base_url(self) -> str:
         return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
 
 
