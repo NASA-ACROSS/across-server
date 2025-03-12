@@ -1,4 +1,3 @@
-import datetime
 from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
@@ -12,7 +11,7 @@ from across_server.routes.user.service_account.group_role.service import (
 
 
 @pytest.fixture
-def mock_service_account_data(frozen_time):
+def mock_service_account_data():
     return models.ServiceAccount(
         **{
             "id": str(uuid4()),
@@ -20,7 +19,7 @@ def mock_service_account_data(frozen_time):
             "name": "test service account",
             "description": "test service account description",
             "secret_key": "very secret key",
-            "expiration": frozen_time + datetime.timedelta(days=3),
+            "expiration": "2025-03-13 00:00:00",
             "expiration_duration": "30",
             "group_roles": [],
         }
@@ -67,23 +66,3 @@ def mock_user_service(mock_user_data):
     mock = AsyncMock(UserService).return_value = mock_user_data
 
     yield mock
-
-
-@pytest.fixture(scope="function")
-def frozen_time():
-    return datetime.datetime(1993, 3, 13, 15, 13, 00)
-
-
-@pytest.fixture(scope="function")
-def patch_datetime_now(monkeypatch, frozen_time):
-    class FrozenDatetime(datetime.datetime):
-        @classmethod
-        def now(cls):
-            return frozen_time
-
-    monkeypatch.setattr(datetime, "datetime", FrozenDatetime)
-
-
-@pytest.fixture(scope="function")
-def frozen_expiration(frozen_time):
-    return frozen_time - datetime.timedelta(days=3)

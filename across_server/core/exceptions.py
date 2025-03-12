@@ -28,7 +28,7 @@ class DuplicateEntityException(AcrossHTTPException):
 
 
 class NotFoundException(AcrossHTTPException):
-    def __init__(self, entity_name: str, entity_id: uuid.UUID | None = None):
+    def __init__(self, entity_name: str, entity_id: uuid.UUID):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             message=f"{entity_name} not found.",

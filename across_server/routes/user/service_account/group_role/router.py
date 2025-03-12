@@ -16,7 +16,7 @@ router = APIRouter(
     tags=["ServiceAccount"],
     responses={
         status.HTTP_404_NOT_FOUND: {
-            "description": "The service account does not exist.",
+            "description": "The service account, user, or group role does not exist.",
         },
     },
 )
@@ -34,18 +34,12 @@ router = APIRouter(
             "description": "Group Role has been assigned to service account",
         },
     },
-    dependencies=[
-        Security(
-            auth.strategies.self_access,
-            scopes=["user:service_account:write"],
-        )
-    ],
 )
 async def assign(
     service: Annotated[
         ServiceAccountGroupRoleService, Depends(ServiceAccountGroupRoleService)
     ],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: UUID,
     group_role_id: UUID,
     service_account_service: Annotated[
@@ -74,18 +68,12 @@ async def assign(
             "description": "Group Role has been removed from the service account",
         },
     },
-    dependencies=[
-        Security(
-            auth.strategies.self_access,
-            scopes=["user:service_account:write"],
-        ),
-    ],
 )
 async def remove(
     service: Annotated[
         ServiceAccountGroupRoleService, Depends(ServiceAccountGroupRoleService)
     ],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: UUID,
     group_role_id: UUID,
     service_account_service: Annotated[
