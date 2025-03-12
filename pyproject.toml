@@ -30,3 +30,5 @@ asyncio_mode = "auto"
 
 [tool.mypy]
 files = ["."]
+plugins = ['pydantic.mypy']
+disallow_untyped_defs = true
