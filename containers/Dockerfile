@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y make
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Configure SSH to use the forwarded agent
+RUN echo "Host github.com\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null" >> /etc/ssh/ssh_config
+
 ARG APP_ENV=local
 
 WORKDIR /app
@@ -23,7 +26,7 @@ COPY ./requirements/${APP_ENV}.txt ./requirements/
 COPY ./across_server/__about__.py ./across_server/
 
 # RUN make venv ENV=${APP_ENV}
-RUN make install ENV=${APP_ENV}
+RUN --mount=type=ssh make install ENV=${APP_ENV}
 
 
 FROM python:3.12-slim AS local
