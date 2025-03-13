@@ -32,8 +32,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Run linting
-        run: make lint
+      - name: pre-commit
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --all-files
 
   build:
     runs-on: ubuntu-latest
