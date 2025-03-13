@@ -7,7 +7,8 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
 
 from . import auth
-from .core import logging, config
+from .core import config, logging
+from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
     instrument,
@@ -19,7 +20,6 @@ from .routes import (
     tle,
     user,
 )
-from .core.middleware import LoggingMiddleware
 
 # Configure UTC system time
 os.environ["TZ"] = "UTC"

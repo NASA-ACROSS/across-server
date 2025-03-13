@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timezone
-from typing import get_args
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (

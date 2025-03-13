@@ -185,7 +185,7 @@ test: ## Run automated tests
 	@$(VENV_BIN)/pytest --cov=across_server tests/**;
 
 lint: ## Run linting
-	@$(VENV_BIN)/pre-commit run;
+	@$(VENV_BIN)/pre-commit run --all-files;
 
 types: ## Run type checks
 	@$(VENV_BIN)/mypy;
