@@ -26,6 +26,7 @@ permissions = [
     all_write,
     group_read,
     group_write,
+    group_read,
     user_write,
     service_account_write,
     service_account_read,

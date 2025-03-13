@@ -83,6 +83,13 @@ service_account_role = Table(
     Column("role_id", ForeignKey("role.id"), primary_key=True),
 )
 
+service_account_group_role = Table(
+    "service_account_group_role",
+    Base.metadata,
+    Column("service_account_id", ForeignKey("service_account.id"), primary_key=True),
+    Column("group_role_id", ForeignKey("group_role.id"), primary_key=True),
+)
+
 role_permission = Table(
     "role_permission",
     Base.metadata,
@@ -105,7 +112,7 @@ group_observatory = Table(
 )
 
 
-## Application Models
+# Application Models
 class GroupInvite(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "group_invite"
 
@@ -189,6 +196,11 @@ class GroupRole(Base, CreatableMixin, ModifiableMixin):
     users: Mapped[list["User"] | None] = relationship(
         secondary=user_group_role, back_populates="group_roles", lazy="selectin"
     )
+    service_accounts: Mapped[list["ServiceAccount"] | None] = relationship(
+        secondary=service_account_group_role,
+        back_populates="group_roles",
+        lazy="selectin",
+    )
     permissions: Mapped[list["Permission"]] = relationship(
         secondary=group_role_permission, back_populates="group_roles", lazy="selectin"
     )
@@ -214,6 +226,11 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
         back_populates="service_accounts",
         lazy="selectin",
     )
+    group_roles: Mapped[list["GroupRole"]] = relationship(
+        secondary=service_account_group_role,
+        back_populates="service_accounts",
+        lazy="selectin",
+    )
 
 
 class User(Base, CreatableMixin, ModifiableMixin):
@@ -230,7 +247,7 @@ class User(Base, CreatableMixin, ModifiableMixin):
     roles: Mapped[list["Role"]] = relationship(
         secondary=user_role, back_populates="users", lazy="selectin"
     )
-    group_roles: Mapped[list["GroupRole"] | None] = relationship(
+    group_roles: Mapped[list["GroupRole"]] = relationship(
         secondary=user_group_role, back_populates="users", lazy="selectin"
     )
     received_invites: Mapped[list["GroupInvite"]] = relationship(

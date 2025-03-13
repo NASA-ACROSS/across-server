@@ -20,6 +20,7 @@ def mock_user_data():
         "email": "mockuser@nasa.gov",
         "groups": [],
         "roles": [],
+        "group_roles": [],
     }
 
 

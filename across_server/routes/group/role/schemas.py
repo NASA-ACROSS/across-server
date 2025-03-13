@@ -31,7 +31,15 @@ class User(BaseModel):
     email: str
 
 
+class ServiceAccount(BaseModel):
+    id: uuid.UUID
+    name: str
+    description: str | None
+    user: User
+
+
 class GroupRole(GroupRoleRead):
     users: list[User]
+    service_accounts: list[ServiceAccount] | None
 
     model_config = ConfigDict(from_attributes=True)

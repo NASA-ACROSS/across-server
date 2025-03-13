@@ -20,6 +20,7 @@ def mock_service_account_data():
         "secret_key": "very secret key",
         "expiration": "2025-01-30 00:00:00",
         "expiration_duration": "30",
+        "group_roles": [],
     }
 
 

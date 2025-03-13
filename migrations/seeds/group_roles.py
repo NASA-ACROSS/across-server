@@ -26,4 +26,11 @@ treedome_group_admin = GroupRole(
     group=treedome_space_group,
 )
 
-group_roles = [treedome_group_admin]
+treedome_schedule_operations = GroupRole(
+    id=uuid.UUID("12aa89d2-1b77-4a34-9504-063236b58782"),
+    name="Schedule Operations",
+    permissions=[schedule_write],
+    group=treedome_space_group,
+)
+
+group_roles = [treedome_group_admin, treedome_schedule_operations]

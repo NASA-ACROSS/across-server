@@ -123,3 +123,27 @@ async def delete(
     service_account_id: uuid.UUID,
 ):
     return await service.expire_key(service_account_id, modified_by_id=auth_user.id)
+
+
+@router.patch(
+    "/{service_account_id}/rotate_key",
+    summary="Rotate a service account key",
+    description="Rotate service account key and reset expiration based on expiration_duration",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.ServiceAccount,
+    responses={
+        status.HTTP_200_OK: {
+            "model": schemas.ServiceAccount,
+            "description": "The rotated service account",
+        },
+    },
+    dependencies=[
+        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
+    ],
+)
+async def rotate(
+    service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    service_account_id: uuid.UUID,
+):
+    return await service.rotate_key(service_account_id, modified_by_id=auth_user.id)
