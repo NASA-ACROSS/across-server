@@ -6,5 +6,5 @@ class ObservatoryType(str, Enum):
     GROUND_BASED = "GROUND_BASED"
 
     @classmethod
-    def get_args(cls):
+    def get_args(cls) -> tuple[str, ...]:
         return tuple(x.value for x in cls)
