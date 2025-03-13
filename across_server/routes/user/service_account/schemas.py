@@ -1,6 +1,5 @@
 import datetime
 import uuid
-from typing import Optional
 
 from ....core.schemas.base import BaseSchema
 from ..schemas import GroupRole
