@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import List, Optional, get_args
+from typing import List, Optional
 
 from geoalchemy2 import Geography, WKBElement, shape
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from across_server.routes.observatory.enums import OBSERVATORY_TYPE
+from across_server.core.enums import ObservatoryType
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -282,9 +282,9 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    observatory_type: Mapped[OBSERVATORY_TYPE] = mapped_column(
+    observatory_type: Mapped[ObservatoryType] = mapped_column(
         Enum(
-            *get_args(OBSERVATORY_TYPE),
+            *ObservatoryType.get_args(),
             name="observatory_type",
             create_constraint=True,
             validate_strings=True,
