@@ -3,7 +3,35 @@ from uuid import uuid4
 import pytest
 
 from across_server.routes.instrument.exceptions import InstrumentNotFoundException
+from across_server.routes.instrument.schemas import InstrumentRead
 from across_server.routes.instrument.service import InstrumentService
+
+
+class TestInstrumentService:
+    class TestGet:
+        @pytest.mark.asyncio
+        async def test_should_return_not_found_exception_when_does_not_exist(
+            self, mock_db, mock_result
+        ) -> None:
+            """Should raise a not found exception when the instrument does not exist"""
+            mock_result.scalar_one_or_none.return_value = None
+
+            service = InstrumentService(mock_db)
+            with pytest.raises(InstrumentNotFoundException):
+                await service.get(uuid4())
+
+        class TestGetMany:
+            @pytest.mark.asyncio
+            async def test_should_return_empty_list_when_nothing_matches_params(
+                self, mock_db, mock_result
+            ) -> None:
+                """Should return False when the telescope does not exist"""
+                mock_result.scalars.all.return_value = []
+
+                service = InstrumentService(mock_db)
+                params = InstrumentRead()
+                values = await service.get_many(params)
+                assert len(values) == 0
 
 
 class MockInstrumentModelWithFootprint:

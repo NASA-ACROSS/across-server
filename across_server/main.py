@@ -8,7 +8,17 @@ from fastapi import FastAPI, status
 
 from . import auth
 from .core import logging, config
-from .routes import group, observation, role, schedule, tle, user
+from .routes import (
+    group,
+    instrument,
+    observation,
+    observatory,
+    role,
+    schedule,
+    telescope,
+    tle,
+    user,
+)
 from .core.middleware import LoggingMiddleware
 
 # Configure UTC system time
@@ -60,3 +70,6 @@ app.include_router(group.group_role.router)
 app.include_router(observation.router)
 app.include_router(schedule.router)
 app.include_router(tle.router)
+app.include_router(observatory.router)
+app.include_router(telescope.router)
+app.include_router(instrument.router)

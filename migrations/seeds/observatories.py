@@ -1,12 +1,12 @@
 import uuid
 
+from across_server.core.enums import ObservatoryType
 from across_server.db.models import Observatory
-from across_server.routes.observatory.enums import OBSERVATORY_TYPE
 
 from .groups import treedome_space_group
 
-space_based: OBSERVATORY_TYPE = "SPACE_BASED"
-ground_based: OBSERVATORY_TYPE = "GROUND_BASED"
+space_based: str = ObservatoryType.SPACE_BASED.value
+ground_based: str = ObservatoryType.GROUND_BASED.value
 
 sandy_observatory = Observatory(
     id=uuid.uuid4(),
