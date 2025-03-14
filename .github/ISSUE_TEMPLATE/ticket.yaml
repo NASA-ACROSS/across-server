@@ -6,8 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please use this template to describe a piece of work that has gone
-        through the requirement gathering process.
+        Please use this template to describe a piece of work that has gone through the requirement gathering process.
 
   - type: textarea
     id: description
@@ -16,8 +15,7 @@ body:
     attributes:
       label: "Description"
       description: |
-        Describe the piece of work to be accomplished, usually describes the purpose
-        or goal and why it is important.
+        Describe the piece of work to be accomplished, usually describes the purpose or goal and why it is important.
       placeholder: |
         The purpose of this ticket is to provide the ability for users of the system to register
         themselves. This is a dependency to allow users to be able to log in and use the system.
@@ -28,12 +26,40 @@ body:
       label: "References"
       description: Recommended section to provide links to feature design or tech spec
 
-  - type: input
+  - type: textarea
     id: stakeholders
     attributes:
       label: "Stakeholders"
       description: Please reference the stakeholders for this ticket
       placeholder: "@ACROSS-Team/developers"
+
+  - type: textarea
+    id: interfaces
+    attributes:
+      label: "Interfaces"
+      description: Are there interfaces that need to be defined?
+      placeholder: |
+        ```py
+        class UserCreate:
+          first_name: str
+          last_name: str
+          email: EmailStr
+        ```
+
+  - type: textarea
+    id: database
+    attributes:
+      label: "Database"
+      description: |
+        Are the database schema changes or additions?
+      placeholder: |
+        ```txt
+        user
+        ------------------------
+        first_name: varchar(255)
+        last_name: varchar(255)
+        email: varchar(100)
+        ```
 
   - type: textarea
     id: functional_requirements
@@ -42,8 +68,10 @@ body:
     attributes:
       label: "Functional Requirements (FR)"
       description: |
-        What does the ticket need to do? What are the steps to implement the requirements?
-        This should be as detailed as needed for anyone to be able to contribute
+        What does the ticket need to do?
+        What are the steps to implement the requirements?
+
+        This should be as detailed as needed for anyone to be able to contribute.
       placeholder: |
         1. Create a new route `POST /user` in the `routes/user/router.py` file to create a new user.
         2. Add the `UserCreate` schema to the `schemas.py` file.
