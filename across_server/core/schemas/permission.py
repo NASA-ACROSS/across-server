@@ -1,8 +1,8 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from .base import BaseSchema
 
 
-class Permission(BaseModel):
+class Permission(BaseSchema):
     id: UUID
     name: str

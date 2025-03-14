@@ -2,8 +2,10 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.schemas.base import BaseSchema
 
-class RoleBase(BaseModel):
+
+class RoleBase(BaseSchema):
     name: str
 
 

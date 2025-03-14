@@ -25,8 +25,11 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.User],
 )
-async def get_many(service: Annotated[UserService, Depends(UserService)]):
-    return await service.get_many()
+async def get_many(
+    service: Annotated[UserService, Depends(UserService)],
+) -> list[schemas.User]:
+    many_user_models = await service.get_many()
+    return [schemas.User.model_validate(user_model) for user_model in many_user_models]
 
 
 @router.get(
@@ -45,8 +48,9 @@ async def get_many(service: Annotated[UserService, Depends(UserService)]):
 )
 async def get(
     service: Annotated[UserService, Depends(UserService)], user_id: uuid.UUID
-):
-    return await service.get(user_id)
+) -> schemas.User:
+    user_model = await service.get(user_id)
+    return schemas.User.model_validate(user_model)
 
 
 @router.post(
@@ -64,7 +68,7 @@ async def create(
     auth_service: Annotated[auth.AuthService, Depends(auth.AuthService)],
     email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
-):
+) -> None:
     user = await user_service.create(data)
     magic_link = auth_service.generate_magic_link(user.email)
     verification_email_body = email_service.construct_verification_email(
@@ -99,8 +103,9 @@ async def update(
     service: Annotated[UserService, Depends(UserService)],
     user_id: uuid.UUID,
     data: schemas.UserUpdate,
-):
-    return await service.update(user_id, data, modified_by=auth_user)
+) -> schemas.User:
+    user_model = await service.update(user_id, data, modified_by=auth_user)
+    return schemas.User.model_validate(user_model)
 
 
 @router.delete(
@@ -119,5 +124,6 @@ async def update(
 async def delete(
     service: Annotated[UserService, Depends(UserService)],
     user_id: uuid.UUID,
-):
-    return await service.delete(user_id)
+) -> schemas.User:
+    user_model = await service.delete(user_id)
+    return schemas.User.model_validate(user_model)
