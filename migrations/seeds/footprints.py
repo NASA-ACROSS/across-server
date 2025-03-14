@@ -7,7 +7,7 @@ from .instruments import sandy_instrument
 
 
 # Function to create a WKT polygon from a Shapely Polygon
-def create_polygon(vertices):
+def create_polygon(vertices: list[tuple]) -> WKTElement:
     # Create a Shapely Polygon
     shapely_polygon = Polygon(vertices)
 

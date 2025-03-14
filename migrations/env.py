@@ -1,5 +1,6 @@
 import asyncio
 from logging.config import fileConfig
+from typing import Any
 
 from alembic import context
 from geoalchemy2 import alembic_helpers
@@ -23,7 +24,7 @@ if ctx_config.config_file_name is not None:
 target_metadata = models.Base.metadata
 
 
-def include_name(name, type_, parent_names) -> bool:
+def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
     """Used to only autogenerate migrations ACROSS models
 
     See: [Alembic Docs](https://alembic.sqlalchemy.org/en/latest/api/runtime.html#alembic.runtime.environment.EnvironmentContext.configure.params.include_name)
