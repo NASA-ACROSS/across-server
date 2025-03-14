@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -12,7 +12,7 @@ class TestAuthService:
 
     def test_generate_magic_link_returns_link(
         self,
-        mock_db: MagicMock,
+        mock_db: AsyncMock,
     ) -> None:
         """Should return a new link when calling generate_magic_link"""
         service = AuthService(mock_db)
@@ -20,7 +20,7 @@ class TestAuthService:
         assert link.__contains__("/auth/verify?token=mock_token")
 
     def test_should_throw_error_when_magic_link_generation_fails(
-        self, mock_db: MagicMock, mock_magic_link_generate: MagicMock
+        self, mock_db: AsyncMock, mock_magic_link_generate: MagicMock
     ) -> None:
         """Should throw an error when calling generate_magic_link fails"""
         mock_magic_link_generate.side_effect = Exception("Mock Exception")

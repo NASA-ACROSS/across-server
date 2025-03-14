@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -31,7 +31,7 @@ class TestServiceAccountService:
 
     @pytest.mark.asyncio
     async def test_create_should_return_service_account_when_successful(
-        self, mock_db: MagicMock, service_account_create_example: ServiceAccountCreate
+        self, mock_db: AsyncMock, service_account_create_example: ServiceAccountCreate
     ) -> None:
         """Should return the service_account when creation successful"""
         service = ServiceAccountService(mock_db)
@@ -42,7 +42,7 @@ class TestServiceAccountService:
 
     @pytest.mark.asyncio
     async def test_create_should_save_service_account_to_database(
-        self, mock_db: MagicMock, service_account_create_example: ServiceAccountCreate
+        self, mock_db: AsyncMock, service_account_create_example: ServiceAccountCreate
     ) -> None:
         """Should save the service_account to the database when successful"""
         service = ServiceAccountService(mock_db)
@@ -53,7 +53,7 @@ class TestServiceAccountService:
     @pytest.mark.asyncio
     async def test_should_return_not_found_exception_when_does_not_exist(
         self,
-        mock_db: MagicMock,
+        mock_db: AsyncMock,
         mock_scalar_one_or_none: MagicMock,
         mock_result: MagicMock,
     ) -> None:

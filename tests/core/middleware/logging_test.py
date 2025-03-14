@@ -25,9 +25,6 @@ class TestLoggingMiddleware:
         """Should log request http data"""
 
         await self.client.get(self.endpoint)
-        """Should log request http data"""
-
-        await self.client.get(self.endpoint)
 
         # call to the middleware logger will be the last/most recent
         log = log_output.entries[-1]
