@@ -1,8 +1,8 @@
 ---
 name: Bug
 about: Create an issue to document a bug or issue with the system.
-title: "[BUG]"
-labels: bug
+type: bug
+projects: across-team/22
 ---
 
 # Bug Details :warning::bug:
