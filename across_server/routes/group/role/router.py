@@ -30,8 +30,11 @@ router = APIRouter(
         },
     },
 )
-async def get_many(service: Annotated[GroupRoleService, Depends(GroupRoleService)]):
-    return await service.get_many()
+async def get_many(
+    service: Annotated[GroupRoleService, Depends(GroupRoleService)],
+) -> list[schemas.GroupRole]:
+    group_role_models = await service.get_many()
+    return [schemas.GroupRole.model_validate(role) for role in group_role_models]
 
 
 @router.get(
@@ -50,5 +53,6 @@ async def get_many(service: Annotated[GroupRoleService, Depends(GroupRoleService
 async def get(
     service: Annotated[GroupRoleService, Depends(GroupRoleService)],
     group_role_id: uuid.UUID,
-):
-    return await service.get(group_role_id)
+) -> schemas.GroupRole:
+    group_role_model = await service.get(group_role_id)
+    return schemas.GroupRole.model_validate(group_role_model)

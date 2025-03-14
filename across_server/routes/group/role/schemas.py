@@ -1,9 +1,9 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from ....core.schemas.base import BaseSchema
 
 
-class GroupRoleBase(BaseModel):
+class GroupRoleBase(BaseSchema):
     name: str
 
 
@@ -23,7 +23,7 @@ class GroupRoleUpdate(GroupRoleBase):
 #   A) parent data should define what data from the child it needs
 #   B) pydantic does not handle circular imports, so even if we
 #      wanted to import the related schema, we can't use it.
-class User(BaseModel):
+class User(BaseSchema):
     id: uuid.UUID
     first_name: str
     last_name: str
@@ -31,7 +31,7 @@ class User(BaseModel):
     email: str
 
 
-class ServiceAccount(BaseModel):
+class ServiceAccount(BaseSchema):
     id: uuid.UUID
     name: str
     description: str | None
@@ -41,5 +41,3 @@ class ServiceAccount(BaseModel):
 class GroupRole(GroupRoleRead):
     users: list[User]
     service_accounts: list[ServiceAccount] | None
-
-    model_config = ConfigDict(from_attributes=True)
