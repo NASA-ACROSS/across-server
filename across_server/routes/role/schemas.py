@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 from ...core.schemas.base import BaseSchema
 
@@ -19,7 +19,7 @@ class Group(BaseModel):
     short_name: str
 
 
-class User(BaseModel):
+class User(BaseSchema):
     id: uuid.UUID
     first_name: str
     last_name: str
@@ -30,8 +30,6 @@ class User(BaseModel):
 class Role(RoleBase):
     id: uuid.UUID
     users: list[User]
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class RoleCreate(RoleBase):
