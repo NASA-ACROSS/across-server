@@ -78,6 +78,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Run Type Checking
         run: make types
