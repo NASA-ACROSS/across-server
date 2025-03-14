@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Security, status
 
-from ... import auth, db
+from ... import auth
 from . import schemas
 from .service import RoleService
 
@@ -16,11 +16,6 @@ router = APIRouter(
         },
     },
 )
-
-
-# replace with security stuff
-async def get_current_user() -> db.models.User:
-    return db.models.User(id="173e35fa-9544-49e8-b5b9-d04ea884defb")
 
 
 @router.get(
