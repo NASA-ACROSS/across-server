@@ -25,7 +25,7 @@ def validate_no_html(value: str) -> str:
 NoHTMLString = Annotated[str, BeforeValidator(validate_no_html)]
 
 
-class UserBase(BaseModel):
+class UserBase(BaseSchema):
     username: NoHTMLString
     first_name: NoHTMLString
     last_name: NoHTMLString
