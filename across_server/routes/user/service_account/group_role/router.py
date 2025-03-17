@@ -54,8 +54,8 @@ async def assign(
     )
     group_role = await group_role_service.get(group_role_id)
 
-    service_account = await service.assign(service_account, group_role, user)
-    return schemas.ServiceAccount.model_validate(service_account)
+    role_assigned_account = await service.assign(service_account, group_role, user)
+    return schemas.ServiceAccount.model_validate(role_assigned_account)
 
 
 @router.delete(
@@ -87,5 +87,5 @@ async def remove(
     )
     group_role = await group_role_service.get(group_role_id)
 
-    service_account = await service.remove(service_account, group_role)
-    return schemas.ServiceAccount.model_validate(service_account)
+    role_removed_account = await service.remove(service_account, group_role)
+    return schemas.ServiceAccount.model_validate(role_removed_account)
