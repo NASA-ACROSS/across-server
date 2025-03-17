@@ -31,8 +31,11 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
-):
-    return await service.get_many(user_id=auth_user.id)
+) -> list[schemas.ServiceAccount]:
+    service_accounts = await service.get_many(user_id=auth_user.id)
+    return [
+        schemas.ServiceAccount.model_validate(account) for account in service_accounts
+    ]
 
 
 @router.get(
@@ -55,8 +58,9 @@ async def get(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-):
-    return await service.get(service_account_id, user_id=auth_user.id)
+) -> schemas.ServiceAccount:
+    service_account = await service.get(service_account_id, user_id=auth_user.id)
+    return schemas.ServiceAccount.model_validate(service_account)
 
 
 @router.post(
@@ -79,8 +83,9 @@ async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
-):
-    return await service.create(data, created_by_id=auth_user.id)
+) -> schemas.ServiceAccount:
+    service_account = await service.create(data, created_by_id=auth_user.id)
+    return schemas.ServiceAccount.model_validate(service_account)
 
 
 @router.patch(
@@ -104,8 +109,11 @@ async def update(
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
     data: schemas.ServiceAccountUpdate,
-):
-    return await service.update(service_account_id, data, modified_by_id=auth_user.id)
+) -> schemas.ServiceAccount:
+    service_account = await service.update(
+        service_account_id, data, modified_by_id=auth_user.id
+    )
+    return schemas.ServiceAccount.model_validate(service_account)
 
 
 @router.delete(
@@ -121,8 +129,8 @@ async def delete(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-):
-    return await service.expire_key(service_account_id, modified_by_id=auth_user.id)
+) -> None:
+    await service.expire_key(service_account_id, modified_by_id=auth_user.id)
 
 
 @router.patch(
@@ -145,5 +153,8 @@ async def rotate(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-):
-    return await service.rotate_key(service_account_id, modified_by_id=auth_user.id)
+) -> schemas.ServiceAccount:
+    service_account = await service.rotate_key(
+        service_account_id, modified_by_id=auth_user.id
+    )
+    return schemas.ServiceAccount.model_validate(service_account)
