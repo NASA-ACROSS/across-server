@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path, Security, status
 
 from ...auth.strategies import global_access, group_access
-from ...db import models
 from . import schemas
 from .service import GroupService
 
@@ -17,11 +16,6 @@ router = APIRouter(
         },
     },
 )
-
-
-# replace with security stuff
-async def get_current_user():
-    return models.User(id="173e35fa-9544-49e8-b5b9-d04ea884defb")
 
 
 @router.get(
@@ -40,8 +34,9 @@ async def get_current_user():
 )
 async def get_many(
     service: Annotated[GroupService, Depends(GroupService)],
-):
-    return await service.get_many()
+) -> list[schemas.Group]:
+    group_models = await service.get_many()
+    return [schemas.Group.model_validate(group) for group in group_models]
 
 
 @router.get(
@@ -61,5 +56,6 @@ async def get_many(
 async def get(
     service: Annotated[GroupService, Depends(GroupService)],
     group_id: Annotated[uuid.UUID, Path(title="UUID of the group")],
-):
-    return await service.get(group_id)
+) -> schemas.Group:
+    group_model = await service.get(group_id)
+    return schemas.Group.model_validate(group_model)
