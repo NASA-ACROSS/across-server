@@ -29,12 +29,12 @@ class RefreshToken(Token[RefreshTokenData, UUID]):
     def encode(
         self,
         data: RefreshTokenData,
-        expires_delta=timedelta(days=auth_config.REFRESH_EXPIRES_IN_DAYS),
+        expires_delta: timedelta = timedelta(days=auth_config.REFRESH_EXPIRES_IN_DAYS),
     ) -> str:
         return super().encode(
             data,
             expires_delta=expires_delta,
         )
 
-    def to_encode(self, user_id: UUID):
+    def to_encode(self, user_id: UUID) -> RefreshTokenData:
         return RefreshTokenData(sub=str(user_id))

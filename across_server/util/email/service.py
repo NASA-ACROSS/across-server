@@ -18,7 +18,7 @@ class EmailService:
         self.smtp_host = email_config.ACROSS_EMAIL_HOST
         self.smtp_port = int(email_config.ACROSS_EMAIL_PORT)
 
-    def construct_login_email(self, user: schemas.AuthUser, login_link: str):
+    def construct_login_email(self, user: schemas.AuthUser, login_link: str) -> str:
         return f"""\
             <html>
             <p>Dear {user.first_name} {user.last_name},</p>
@@ -39,7 +39,7 @@ class EmailService:
             </html>
         """
 
-    def construct_verification_email(self, user: models.User, magic_link: str):
+    def construct_verification_email(self, user: models.User, magic_link: str) -> str:
         return f"""\
             <html>
             <p>Dear {user.first_name} {user.last_name},</p>
@@ -69,7 +69,7 @@ class EmailService:
         subject: str,
         content_body: str | None = None,
         content_html: str | None = None,
-        attachments=[],
+        attachments: list = [],
     ) -> None:
         em = MIMEMultipart("alternative")
         em["From"] = self.sender_email_addr

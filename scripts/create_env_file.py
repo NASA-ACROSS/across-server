@@ -1,7 +1,7 @@
 import os
 
 
-def create_env_file():
+def create_env_file() -> None:
     env_file_path = ".env"
 
     env_vars = {

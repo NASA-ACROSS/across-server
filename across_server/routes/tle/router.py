@@ -31,6 +31,6 @@ router = APIRouter(
 async def create(
     TLE_service: Annotated[TLEService, Depends(TLEService)],
     data: schemas.TLECreate,
-):
+) -> schemas.TLE:
     tle = await TLE_service.create(data)
     return schemas.TLE.model_validate(tle)

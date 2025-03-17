@@ -22,7 +22,7 @@ router = APIRouter(
 )
 
 
-def setRefreshTokenCookie(response: Response, token: str):
+def setRefreshTokenCookie(response: Response, token: str) -> Response:
     # Set HttpOnly cookie with refresh token
     response.set_cookie(
         key="refresh_token",
@@ -41,7 +41,7 @@ async def local_token(
     email: str,
     service: Annotated[AuthService, Depends(AuthService)],
     access_token: Annotated[tokens.AccessToken, Depends(tokens.AccessToken)],
-):
+) -> str:
     """
     For local only, directly return an access token for testing purposes
     that expires after 1 day
@@ -64,7 +64,7 @@ async def login(
     email: EmailStr,
     email_service: Annotated[EmailService, Depends(EmailService)],
     auth_service: Annotated[AuthService, Depends(AuthService)],
-):
+) -> dict:
     user = await auth_service.get_authenticated_user(email=email)
 
     link = magic_link.generate(email)
@@ -86,7 +86,7 @@ async def verify(
     token: str,
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],
-):
+) -> schemas.AccessTokenResponse:
     email = magic_link.verify(token)
 
     auth_user = await service.get_authenticated_user(email=email)
@@ -102,7 +102,7 @@ async def refresh_token(
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],
     refresh_token: Annotated[str, Depends(extract_creds)],
-):
+) -> schemas.AccessTokenResponse:
     token_data = tokens.RefreshToken().decode(refresh_token)
 
     user = await service.get_authenticated_user(user_id=UUID(token_data.sub))

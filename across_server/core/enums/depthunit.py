@@ -7,6 +7,6 @@ class DepthUnit(str, Enum):
     FLUX_ERG = "flux_erg"
     FLUX_JY = "flux_jy"
 
-    def __str__(self):
+    def __str__(self) -> str:
         split_name = str(self.name).split("_")
         return str.upper(split_name[0]) + " " + split_name[1]

@@ -17,7 +17,7 @@ security = HTTPBearer(
 
 def extract_creds(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-):
+) -> str:
     return credentials.credentials
 
 

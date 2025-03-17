@@ -8,13 +8,13 @@ from httpx import AsyncClient
 
 class TestLoginRoute:
     @pytest_asyncio.fixture(scope="function", autouse=True)
-    async def setup(self, async_client: AsyncClient):
+    async def setup(self, async_client: AsyncClient) -> None:
         self.client = async_client
         self.email = "user@example.com"
         self.endpoint = f"/auth/login?email={self.email}"
 
     @pytest.mark.asyncio
-    async def test_should_return_200_on_success(self):
+    async def test_should_return_200_on_success(self) -> None:
         """Should return a 200 when successful"""
 
         res = await self.client.post(self.endpoint)
@@ -25,7 +25,7 @@ class TestLoginRoute:
     async def test_should_call_magic_link_generate(
         self,
         mock_magic_link_generate: AsyncMock,
-    ):
+    ) -> None:
         """Should generate a magic link when logging in"""
         await self.client.post(self.endpoint)
 
@@ -34,8 +34,8 @@ class TestLoginRoute:
     @pytest.mark.asyncio
     async def test_should_verify_auth_user(
         self,
-        mock_auth_service,
-    ):
+        mock_auth_service: AsyncMock,
+    ) -> None:
         """Should verify the auth user by email when logging in"""
         await self.client.post(self.endpoint)
 
@@ -44,8 +44,8 @@ class TestLoginRoute:
     @pytest.mark.asyncio
     async def test_should_send_email_to_user(
         self,
-        mock_email_service,
-    ):
+        mock_email_service: AsyncMock,
+    ) -> None:
         """Should send an email to the user when logging in"""
         await self.client.post(self.endpoint)
 

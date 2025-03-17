@@ -33,7 +33,7 @@ seed_order = [
 ]
 
 
-async def seed():
+async def seed() -> None:
     engine = create_async_engine(config.DB_URI())
 
     async_session = async_sessionmaker(engine)

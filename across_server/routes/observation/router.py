@@ -34,5 +34,5 @@ router = APIRouter(
 async def create(
     service: Annotated[ObservationService, Depends(ObservationService)],
     data: schemas.ObservationCreate,
-):
+) -> schemas.Observation:
     return await service.create(data)

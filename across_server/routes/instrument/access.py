@@ -27,7 +27,7 @@ async def instrument_access(
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[InstrumentService, Depends(InstrumentService)],
     data: Annotated[InstrumentAccess, Body(title="UUID of the instrument")],
-):
+) -> AuthUser:
     """
     Method that evaluates whether a user has access to a specific instrument
 

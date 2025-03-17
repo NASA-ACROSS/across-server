@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import uuid4
@@ -15,12 +16,12 @@ from across_server.util.email.service import EmailService
 
 
 @pytest.fixture(scope="module")
-def app():
+def app() -> FastAPI:
     return main.app
 
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
-async def async_client(app: FastAPI):
+async def async_client(app: FastAPI) -> AsyncGenerator[httpx.AsyncClient]:
     host, port = "127.0.0.1", 9000
 
     client = httpx.AsyncClient(
@@ -36,18 +37,20 @@ async def async_client(app: FastAPI):
 
 
 @pytest.fixture
-def mock_scalar_one_or_none():
+def mock_scalar_one_or_none() -> MagicMock:
     return MagicMock(return_value="default mocked scalar result")
 
 
 @pytest.fixture
-def mock_scalars():
+def mock_scalars() -> Generator[MagicMock]:
     mock_result = MagicMock()
     yield mock_result
 
 
 @pytest.fixture
-def mock_result(mock_scalar_one_or_none, mock_scalars):
+def mock_result(
+    mock_scalar_one_or_none: MagicMock, mock_scalars: MagicMock
+) -> Generator[AsyncMock]:
     mock_result = AsyncMock(return_value="default result")
     mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
     mock_result.scalars = MagicMock(return_value=mock_scalars)
@@ -56,7 +59,7 @@ def mock_result(mock_scalar_one_or_none, mock_scalars):
 
 
 @pytest.fixture
-def mock_db(mock_result):
+def mock_db(mock_result: AsyncMock) -> Generator[AsyncMock]:
     mock = AsyncMock(AsyncSession)
 
     # Mock the Result object that `execute` returns
@@ -69,7 +72,7 @@ def mock_db(mock_result):
 
 
 @pytest.fixture
-def mock_email_service():
+def mock_email_service() -> Generator[AsyncMock]:
     mock = AsyncMock(EmailService)
     mock.send = AsyncMock(return_value=True)
 
@@ -77,21 +80,21 @@ def mock_email_service():
 
 
 @pytest.fixture
-def mock_webserver_access():
+def mock_webserver_access() -> Generator[MagicMock]:
     mock = MagicMock(strategies.webserver_access)
 
     yield mock
 
 
 @pytest.fixture
-def mock_global_access():
+def mock_global_access() -> Generator[MagicMock]:
     mock = MagicMock(strategies.global_access)
 
     yield mock
 
 
 @pytest.fixture
-def mock_self_access():
+def mock_self_access() -> Generator[MagicMock]:
     mock = MagicMock(strategies.self_access)
     mock.id = 1
 
@@ -99,7 +102,7 @@ def mock_self_access():
 
 
 @pytest.fixture()
-def mock_observatory_data():
+def mock_observatory_data() -> Observatory:
     return Observatory(
         id=uuid4(),
         name="Test Observatory",
@@ -110,7 +113,7 @@ def mock_observatory_data():
 
 
 @pytest.fixture()
-def mock_telescope_data(mock_observatory_data):
+def mock_telescope_data(mock_observatory_data: Observatory) -> Telescope:
     return Telescope(
         id=uuid4(),
         name="Test Telescope",
@@ -121,7 +124,7 @@ def mock_telescope_data(mock_observatory_data):
 
 
 @pytest.fixture()
-def mock_instrument_data(mock_telescope_data):
+def mock_instrument_data(mock_telescope_data: Telescope) -> Instrument:
     return Instrument(
         id=uuid4(),
         name="Test Instrument",

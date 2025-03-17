@@ -1,4 +1,6 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .config import config
 
@@ -15,7 +17,7 @@ async_session = async_sessionmaker(
 )
 
 
-async def get_session():
+async def get_session() -> AsyncGenerator[AsyncSession]:
     """
     Dependency to handle session lifecycle per request.
     Any dependency will used the cached result of this function when used with fastapi's `Depends`

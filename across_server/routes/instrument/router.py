@@ -34,7 +34,7 @@ router = APIRouter(
 async def get(
     service: Annotated[InstrumentService, Depends(InstrumentService)],
     instrument_id: uuid.UUID,
-):
+) -> schemas.Instrument:
     instrument = await service.get(instrument_id)
 
     return schemas.Instrument.from_orm(instrument)
@@ -56,6 +56,6 @@ async def get(
 async def get_many(
     service: Annotated[InstrumentService, Depends(InstrumentService)],
     data: Annotated[schemas.InstrumentRead, Query()],
-):
+) -> list[schemas.Instrument]:
     instruments = await service.get_many(data=data)
     return [schemas.Instrument.from_orm(instrument) for instrument in instruments]

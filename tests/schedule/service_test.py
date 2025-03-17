@@ -1,11 +1,14 @@
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
+from across_server.db.models import Schedule as ScheduleModel
 from across_server.routes.schedule.exceptions import (
     DuplicateScheduleException,
     ScheduleNotFoundException,
 )
+from across_server.routes.schedule.schemas import ScheduleCreate
 from across_server.routes.schedule.service import ScheduleService
 
 
@@ -14,11 +17,11 @@ class TestScheduleService:
         @pytest.mark.asyncio
         async def test_should_raise_duplicate_exception(
             self,
-            mock_db,
-            schedule_create_example,
-            mock_scalar_one_or_none,
-            mock_result,
-            mock_schedule_data,
+            mock_db: AsyncMock,
+            schedule_create_example: ScheduleCreate,
+            mock_scalar_one_or_none: MagicMock,
+            mock_result: AsyncMock,
+            mock_schedule_data: ScheduleModel,
         ) -> None:
             """Should raise duplicate schedule"""
             # sets the checksum query to a value so it raises
@@ -32,7 +35,11 @@ class TestScheduleService:
 
         @pytest.mark.asyncio
         async def test_should_save_service_account_to_database(
-            self, mock_db, schedule_create_example, mock_scalar_one_or_none, mock_result
+            self,
+            mock_db: AsyncMock,
+            schedule_create_example: ScheduleCreate,
+            mock_scalar_one_or_none: MagicMock,
+            mock_result: AsyncMock,
         ) -> None:
             """Should save the service_account to the database when successful"""
             # sets the checksum query to None so it creates
@@ -47,7 +54,10 @@ class TestScheduleService:
     class TestGet:
         @pytest.mark.asyncio
         async def test_should_return_not_found_exception_when_does_not_exist(
-            self, mock_db, mock_scalar_one_or_none, mock_result
+            self,
+            mock_db: AsyncMock,
+            mock_scalar_one_or_none: MagicMock,
+            mock_result: AsyncMock,
         ) -> None:
             """Should return False when the service account does not exist"""
             mock_scalar_one_or_none.return_value = None

@@ -1,9 +1,11 @@
+from collections.abc import Generator
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
+from fastapi import FastAPI
 
 from across_server.core.enums.schedulefidelity import ScheduleFidelity
 from across_server.core.enums.schedulestatus import ScheduleStatus
@@ -17,7 +19,7 @@ from across_server.routes.telescope.access import telescope_access
 
 
 @pytest.fixture
-def mock_schedule_post_data():
+def mock_schedule_post_data() -> dict:
     return {
         "telescope_id": str(uuid4()),
         "date_range": {
@@ -57,7 +59,7 @@ def mock_schedule_post_data():
 
 
 @pytest.fixture()
-def mock_schedule_data(mock_schedule_post_data):
+def mock_schedule_data(mock_schedule_post_data: dict) -> ScheduleModel:
     return ScheduleModel(
         id=uuid4(),
         telescope_id=UUID(mock_schedule_post_data["telescope_id"]),
@@ -76,7 +78,7 @@ def mock_schedule_data(mock_schedule_post_data):
 
 
 @pytest.fixture(scope="function")
-def mock_schedule_service(mock_schedule_data):
+def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncMock]:
     mock = AsyncMock(ScheduleService)
 
     mock.create = AsyncMock(return_value=uuid4())
@@ -88,7 +90,7 @@ def mock_schedule_service(mock_schedule_data):
 
 
 @pytest.fixture
-def mock_telescope_access():
+def mock_telescope_access() -> Generator[MagicMock]:
     mock = MagicMock(telescope_access)
     mock.id = 1
 
@@ -96,7 +98,12 @@ def mock_telescope_access():
 
 
 @pytest.fixture(scope="function", autouse=True)
-def dep_override(app, fastapi_dep, mock_schedule_service, mock_telescope_access):
+def dep_override(
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_schedule_service: AsyncMock,
+    mock_telescope_access: MagicMock,
+) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
 
     with overrider.override(
@@ -109,17 +116,17 @@ def dep_override(app, fastapi_dep, mock_schedule_service, mock_telescope_access)
 
 
 @pytest.fixture
-def patch_service_get_from_checksum_none(monkeypatch):
+def patch_service_get_from_checksum_none(monkeypatch: Any) -> None:
     class myschedule_service(ScheduleService):
         @classmethod
-        def get_from_checksum(cls, checksum: str):
+        def get_from_checksum(cls, checksum: str) -> None:
             return None
 
     monkeypatch.setattr(service, "ScheduleService", myschedule_service)
 
 
 @pytest.fixture()
-def schedule_create_example():
+def schedule_create_example() -> ScheduleCreate:
     return ScheduleCreate(
         name="test service account",
         telescope_id=uuid4(),

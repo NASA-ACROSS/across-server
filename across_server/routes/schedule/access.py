@@ -29,7 +29,7 @@ async def schedule_access(
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[ScheduleAccess, Body(title="UUID of the schedule")],
-):
+) -> AuthUser:
     """
     Method that evaluates whether a user has access to a specific Schedule for a group
 

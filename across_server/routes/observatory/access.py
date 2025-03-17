@@ -27,7 +27,7 @@ async def observatory_access(
     auth_user: Annotated[AuthUser, Depends(authenticate)],
     service: Annotated[ObservatoryService, Depends(ObservatoryService)],
     data: Annotated[ObservatoryAccess, Body(title="UUID of the observatory")],
-):
+) -> AuthUser:
     """
     Method that evaluates whether a user has access to a specific observatory
     Parameters

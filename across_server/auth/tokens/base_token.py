@@ -43,7 +43,7 @@ class Token(ABC, Generic[T, U]):
     def to_encode(self, data: U) -> T:
         raise Exception("Not implemented.")
 
-    def encode(self, data: T, expires_delta=timedelta(minutes=15)) -> str:
+    def encode(self, data: T, expires_delta: timedelta = timedelta(minutes=15)) -> str:
         """Encodes the token into a JWT string."""
 
         # Calculate expiration time
