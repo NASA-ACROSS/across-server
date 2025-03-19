@@ -1,18 +1,22 @@
 import uuid
 
+from across_server.core.schemas.permission import Permission
+
 from ....core.schemas.base import BaseSchema
 
 
 class GroupRoleBase(BaseSchema):
     name: str
+    permissions: list[Permission]
 
 
 class GroupRoleRead(GroupRoleBase):
     id: uuid.UUID
 
 
-class GroupRoleCreate(GroupRoleBase):
-    pass
+class GroupRoleCreate(BaseSchema):
+    name: str
+    permission_ids: list[uuid.UUID]
 
 
 class GroupRoleUpdate(GroupRoleBase):

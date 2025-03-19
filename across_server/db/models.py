@@ -241,7 +241,7 @@ class User(Base, CreatableMixin, ModifiableMixin):
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
 
-    groups: Mapped[list["Group"] | None] = relationship(
+    groups: Mapped[list["Group"]] = relationship(
         secondary=user_group, back_populates="users", lazy="selectin"
     )
     roles: Mapped[list["Role"]] = relationship(
@@ -279,7 +279,7 @@ class Group(Base, CreatableMixin, ModifiableMixin):
     observatories: Mapped[list["Observatory"]] = relationship(
         secondary=group_observatory, back_populates="group", lazy="selectin"
     )
-    roles: Mapped[list["GroupRole"] | None] = relationship(
+    roles: Mapped[list["GroupRole"]] = relationship(
         back_populates="group",
         lazy="selectin",
         cascade="all,delete",

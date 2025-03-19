@@ -5,6 +5,7 @@ from across_server.db.models import GroupRole
 from .groups import treedome_space_group
 from .permissions import (
     group_read,
+    group_role_write,
     group_user_write,
     group_write,
     observatory_write,
@@ -17,6 +18,7 @@ treedome_group_admin = GroupRole(
     name="Group Admin",
     permissions=[
         group_user_write,
+        group_role_write,
         group_write,
         group_read,
         observatory_write,
