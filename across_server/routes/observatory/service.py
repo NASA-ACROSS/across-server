@@ -119,7 +119,6 @@ class ObservatoryService:
 
         # Filter by ephemeris type
         if data.ephemeris_type:
-            print("Prk")
             data_filter.append(
                 models.Observatory.ephemeris_types.any(
                     models.ObservatoryEphemerisType.ephemeris_type.in_(
