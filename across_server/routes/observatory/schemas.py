@@ -4,8 +4,46 @@ import uuid
 from datetime import datetime
 
 from ...core.enums import ObservatoryType
+from ...core.enums.ephemeris_type import EphemerisType
 from ...core.schemas.base import BaseSchema, IDNameSchema
 from ...db.models import Observatory as ObservatoryModel
+
+
+class ObservatoryEphemerisType(BaseSchema):
+    """
+    A Pydantic model class representing an Observatory Ephemeris Type in the ACROSS SSA system.
+
+    Parameters
+    ----------
+    id : UUID
+        Observatory Ephemeris Type id
+    name : str
+        Name of the observatory ephemeris type
+    """
+
+    ephemeris_type: EphemerisType
+    priority: int
+
+
+class ObservatoryEphemerisParameters(BaseSchema):
+    """
+    A Pydantic model class representing an Observatory Ephemeris Parameter in the ACROSS SSA system.
+
+    Parameters
+    ----------
+    id : UUID
+        Observatory Ephemeris Parameter id
+    name : str
+        Name of the observatory ephemeris parameter
+    """
+
+    norad_id: int | None = None
+    norad_satellite_name: str | None = None
+    longitude: float | None = None
+    latitude: float | None = None
+    height: float | None = None
+    naif_id: int | None = None
+    spice_kernel_url: str | None = None
 
 
 class ObservatoryBase(BaseSchema):
@@ -34,6 +72,8 @@ class ObservatoryBase(BaseSchema):
     short_name: str
     type: ObservatoryType
     telescopes: list[IDNameSchema] | None = None
+    ephemeris_types: list[ObservatoryEphemerisType] | None = None
+    ephemeris_parameters: ObservatoryEphemerisParameters | None = None
 
 
 class Observatory(ObservatoryBase):
@@ -71,6 +111,15 @@ class Observatory(ObservatoryBase):
                 IDNameSchema(id=telescope.id, name=telescope.name)
                 for telescope in observatory.telescopes
             ],
+            ephemeris_types=[
+                ObservatoryEphemerisType.model_validate(etype)
+                for etype in observatory.ephemeris_types
+            ],
+            ephemeris_parameters=ObservatoryEphemerisParameters.model_validate(
+                observatory.ephemeris_parameters
+            )
+            if observatory.ephemeris_parameters
+            else None,
             created_on=observatory.created_on,
         )
 

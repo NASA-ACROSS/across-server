@@ -1,5 +1,6 @@
 from .depthunit import DepthUnit
 from .environments import Environments
+from .ephemeris_type import EphemerisType
 from .ivoaobscategory import IVOAObsCategory
 from .ivoaobstrackingtype import IVOAObsTrackingType
 from .observationstatus import ObservationStatus
@@ -18,4 +19,5 @@ __all__ = [
     "IVOAObsTrackingType",
     "ScheduleFidelity",
     "ScheduleStatus",
+    "EphemerisType",
 ]

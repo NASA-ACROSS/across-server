@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ...db import models
 from ...db.database import get_session
@@ -46,8 +47,13 @@ class ObservatoryService:
         ------
         ObservatoryNotFoundException
         """
-        query = select(models.Observatory).where(
-            models.Observatory.id == observatory_id
+        query = (
+            select(models.Observatory)
+            .where(models.Observatory.id == observatory_id)
+            .options(
+                selectinload(models.Observatory.ephemeris_types),
+                selectinload(models.Observatory.ephemeris_parameters),
+            )
         )
 
         result = await self.db.execute(query)
@@ -133,8 +139,14 @@ class ObservatoryService:
             The list of Observatory
         """
         observatory_filter = self._get_filter(data=data)
-
-        observatory_query = select(models.Observatory).filter(*observatory_filter)
+        observatory_query = (
+            select(models.Observatory)
+            .filter(*observatory_filter)
+            .options(
+                selectinload(models.Observatory.ephemeris_types),
+                selectinload(models.Observatory.ephemeris_parameters),
+            )
+        )
 
         result = await self.db.execute(observatory_query)
 
