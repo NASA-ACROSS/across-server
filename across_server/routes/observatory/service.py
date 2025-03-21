@@ -102,6 +102,7 @@ class ObservatoryService:
                 )
             )
 
+        # Filter by telescope name
         if data.telescope_name:
             data_filter.append(
                 models.Observatory.telescopes.any(
@@ -112,6 +113,17 @@ class ObservatoryService:
                 | models.Observatory.telescopes.any(
                     func.lower(models.Telescope.short_name).contains(
                         str.lower(data.telescope_name)
+                    )
+                )
+            )
+
+        # Filter by ephemeris type
+        if data.ephemeris_type:
+            print("Prk")
+            data_filter.append(
+                models.Observatory.ephemeris_types.any(
+                    models.ObservatoryEphemerisType.ephemeris_type.in_(
+                        data.ephemeris_type
                     )
                 )
             )

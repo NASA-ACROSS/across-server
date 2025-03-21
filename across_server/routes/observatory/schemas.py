@@ -161,4 +161,5 @@ class ObservatoryRead(BaseSchema):
     type: ObservatoryType | None = None
     telescope_name: str | None = None
     telescope_id: uuid.UUID | None = None
+    ephemeris_type: list[EphemerisType] | None = None
     created_on: datetime | None = None
