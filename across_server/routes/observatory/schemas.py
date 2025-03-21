@@ -11,14 +11,15 @@ from ...db.models import Observatory as ObservatoryModel
 
 class ObservatoryEphemerisType(BaseSchema):
     """
-    A Pydantic model class representing an Observatory Ephemeris Type in the ACROSS SSA system.
+    A Pydantic model class an Observatory Ephemeris Type. This class is used to
+    represent the ephemeris types that an observatory can have.
 
     Parameters
     ----------
-    id : UUID
-        Observatory Ephemeris Type id
-    name : str
-        Name of the observatory ephemeris type
+    ephemeris_type : EphemerisType
+        Type of ephemeris
+    priority : int
+        Priority of the ephemeris. Lower values have higher priority.
     """
 
     ephemeris_type: EphemerisType
@@ -27,14 +28,25 @@ class ObservatoryEphemerisType(BaseSchema):
 
 class ObservatoryEphemerisParameters(BaseSchema):
     """
-    A Pydantic model class representing an Observatory Ephemeris Parameter in the ACROSS SSA system.
+    A Pydantic model class representing an Observatory Ephemeris Parameters in
+    the ACROSS SSA system.
 
     Parameters
     ----------
-    id : UUID
-        Observatory Ephemeris Parameter id
-    name : str
-        Name of the observatory ephemeris parameter
+    norad_id : int
+        NORAD ID of the satellite
+    norad_satellite_name : str
+        NORAD satellite name
+    longitude : float
+        Longitude of the observatory
+    latitude : float
+        Latitude of the observatory
+    height : float
+        Height of the observatory
+    naif_id : int
+        NAIF ID of the observatory
+    spice_kernel_url : str
+        URL of the spice kernel
     """
 
     norad_id: int | None = None
@@ -64,6 +76,10 @@ class ObservatoryBase(BaseSchema):
         Type of observatory
     telescopes: list[IDNameSchema]
         List of telescopes belonging to observatory in id,name format
+    ephemeris_types: list[ObservatoryEphemerisType]
+        List of ephemeris types for the observatory
+    ephemeris_parameters: ObservatoryEphemerisParameters
+        Ephemeris parameters for the observatory
     """
 
     id: uuid.UUID
