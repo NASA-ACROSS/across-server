@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     DateTime,
     Enum,
@@ -110,6 +111,111 @@ group_observatory = Table(
     Column("group_id", ForeignKey("group.id"), primary_key=True),
     Column("observatory_id", ForeignKey("observatory.id"), primary_key=True),
 )
+
+
+class ObservatoryEphemerisType(Base):
+    __tablename__ = "observatory_ephemeris_type"
+
+    observatory_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+    )
+    ephemeris_type: Mapped[str] = mapped_column(
+        String(10), nullable=False, primary_key=True
+    )
+    priority: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Relationship to Observatory
+    observatory = relationship("Observatory", back_populates="ephemeris_types")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "observatory_id",
+            "ephemeris_type",
+            "priority",
+            name="uq_observatory_type_priority",
+        ),
+    )
+
+
+class ObservatoryEphemerisParameters(Base):
+    __tablename__ = "observatory_ephemeris_parameters"
+
+    observatory_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+    )
+    norad_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    norad_satellite_name: Mapped[str] = mapped_column(String(69), nullable=True)
+
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    height: Mapped[float | None] = mapped_column(Float, nullable=True)
+    naif_id: Mapped[int] = mapped_column(Integer, nullable=True)
+    spice_kernel_url: Mapped[str] = mapped_column(String(256), nullable=True)
+
+    observatory = relationship(
+        "Observatory", back_populates="ephemeris_parameters", uselist=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("observatory_id", name="uq_observatory_id"),
+        CheckConstraint(
+            """
+            (longitude IS NULL AND latitude IS NULL AND height IS NULL) OR
+            (longitude IS NOT NULL AND latitude IS NOT NULL AND height IS NOT NULL)
+            """,
+            name="ck_coordinates_all_or_none",
+        ),
+    )
+
+
+# class ObservatoryEarthLocation(Base, CreatableMixin, ModifiableMixin):
+#     __tablename__ = "observatory_earth_location"
+
+#     observatory_id: Mapped[uuid.UUID] = mapped_column(
+#         PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+#     )
+#     longitude: Mapped[float] = mapped_column(Float, nullable=False)
+#     latitude: Mapped[float] = mapped_column(Float, nullable=False)
+#     height: Mapped[float] = mapped_column(Float, nullable=False)
+
+
+# class ObservatoryTLE(Base, CreatableMixin, ModifiableMixin):
+#     __tablename__ = "observatory_tle"
+
+#     observatory_id: Mapped[uuid.UUID] = mapped_column(
+#         PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+#     )
+#     norad_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+#     norad_satellite_name: Mapped[str] = mapped_column(String(69), nullable=False)
+#     __table_args__ = (
+#         UniqueConstraint(
+#             "norad_id", "observatory_id", name="uq_norad_id_observatory_id"
+#         ),  # Enforce uniqueness
+#     )
+
+
+# class ObservatoryJPLEphemerisRetrevial(Base, CreatableMixin, ModifiableMixin):
+#     __tablename__ = "observatory_jpl_ephemeris_retrieval"
+
+#     observatory_id: Mapped[uuid.UUID] = mapped_column(
+#         PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+#     )
+#     naif_id: Mapped[int] = mapped_column(Integer, nullable=False)
+#     __table_args__ = (
+#         UniqueConstraint(
+#             "naif_id", "observatory_id", name="uq_naif_id_observatory_id"
+#         ),  # Enforce uniqueness
+#     )
+
+
+# class ObservatorySpiceKernel(Base, CreatableMixin, ModifiableMixin):
+#     __tablename__ = "observatory_spice_kernel"
+
+#     observatory_id: Mapped[uuid.UUID] = mapped_column(
+#         PG_UUID(as_uuid=True), ForeignKey("observatory.id"), primary_key=True
+#     )
+#     naif_id: Mapped[int] = mapped_column(Integer, nullable=False)
+#     spice_kernel_url: Mapped[str] = mapped_column(String(256), nullable=False)
 
 
 # Application Models
@@ -310,6 +416,12 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
         secondary=group_observatory,
         back_populates="observatories",
         lazy="selectin",
+    )
+    ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
+        "ObservatoryEphemerisType", back_populates="observatory"
+    )
+    ephemeris_parameters: Mapped["ObservatoryEphemerisParameters"] = relationship(
+        "ObservatoryEphemerisParameters", back_populates="observatory"
     )
 
 
