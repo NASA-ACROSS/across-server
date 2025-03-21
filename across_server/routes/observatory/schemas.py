@@ -72,7 +72,7 @@ class ObservatoryBase(BaseSchema):
     short_name: str
     type: ObservatoryType
     telescopes: list[IDNameSchema] | None = None
-    ephemeris_types: list[ObservatoryEphemerisType] | None = None
+    ephemeris_types: list[ObservatoryEphemerisType] = []
     ephemeris_parameters: ObservatoryEphemerisParameters | None = None
 
 
