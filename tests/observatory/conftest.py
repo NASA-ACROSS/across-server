@@ -17,7 +17,7 @@ def mock_observatory_data() -> ObservatoryModel:
         id=uuid4(),
         name="Test Observatory",
         short_name="TO",
-        observatory_type="GROUND_BASED",
+        type="GROUND_BASED",
         created_on=datetime.now(),
     )
 

@@ -37,7 +37,7 @@ async def get(
 ) -> schemas.Observatory:
     observatory = await service.get(observatory_id)
 
-    return schemas.Observatory.from_orm(observatory)
+    return schemas.Observatory.model_validate(observatory)
 
 
 @router.get(
@@ -58,4 +58,6 @@ async def get_many(
     data: Annotated[schemas.ObservatoryRead, Query()],
 ) -> list[schemas.Observatory]:
     observatories = await service.get_many(data=data)
-    return [schemas.Observatory.from_orm(observatory) for observatory in observatories]
+    return [
+        schemas.Observatory.model_validate(observatory) for observatory in observatories
+    ]
