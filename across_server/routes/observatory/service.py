@@ -128,7 +128,7 @@ class ObservatoryService:
             )
 
         if data.type:
-            data_filter.append(models.Observatory.observatory_type == data.type)
+            data_filter.append(models.Observatory.type == data.type)
 
         return data_filter
 

@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime
 
 from ...core.schemas.base import BaseSchema, IDNameSchema
-from ...db.models import Telescope as TelescopeModel
 
 
 class TelescopeBase(BaseSchema):
@@ -47,31 +46,31 @@ class Telescope(TelescopeBase):
         Static method that instantiates this class from a telescope database record
     """
 
-    @staticmethod
-    def from_orm(telescope: TelescopeModel) -> Telescope:
-        """
-        Method that converts a models.Telescope record to a schemas.Telescope
-        Parameters
-        ----------
-        Telescope: TelescopeModel
-            the models.Telescope record
-        Returns
-        -------
-            schemas.Telescope
-        """
-        return Telescope(
-            id=telescope.id,
-            name=telescope.name,
-            short_name=telescope.short_name,
-            observatory=IDNameSchema(
-                id=telescope.observatory.id, name=telescope.observatory.name
-            ),
-            instruments=[
-                IDNameSchema(id=instrument.id, name=instrument.name)
-                for instrument in telescope.instruments
-            ],
-            created_on=telescope.created_on,
-        )
+    # @staticmethod
+    # def from_orm(telescope: TelescopeModel) -> Telescope:
+    #     """
+    #     Method that converts a models.Telescope record to a schemas.Telescope
+    #     Parameters
+    #     ----------
+    #     Telescope: TelescopeModel
+    #         the models.Telescope record
+    #     Returns
+    #     -------
+    #         schemas.Telescope
+    #     """
+    #     return Telescope(
+    #         id=telescope.id,
+    #         name=telescope.name,
+    #         short_name=telescope.short_name,
+    #         observatory=IDNameSchema(
+    #             id=telescope.observatory.id, name=telescope.observatory.name
+    #         ),
+    #         instruments=[
+    #             IDNameSchema(id=instrument.id, name=instrument.name)
+    #             for instrument in telescope.instruments
+    #         ],
+    #         created_on=telescope.created_on,
+    #     )
 
 
 class TelescopeRead(BaseSchema):

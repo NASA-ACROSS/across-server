@@ -9,9 +9,9 @@ class Config(BaseSettings):
     ACROSS_DB_HOST: str = "localhost"
     ACROSS_DB_PORT: int = 5432
 
-    def DB_URI(self) -> URL:
+    def DB_URI(self, a: bool = True) -> URL:
         return URL.create(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+asyncpg" if a else "postgresql",
             username=self.ACROSS_DB_USER,
             password=self.ACROSS_DB_PWD,
             host=self.ACROSS_DB_HOST,

@@ -400,7 +400,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    observatory_type: Mapped[ObservatoryType] = mapped_column(
+    type: Mapped[ObservatoryType] = mapped_column(
         Enum(
             *ObservatoryType.get_args(),
             name="observatory_type",

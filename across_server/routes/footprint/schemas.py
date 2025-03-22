@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from geoalchemy2 import shape
+from typing import Any
+
+from geoalchemy2 import WKBElement, shape
+from pydantic import model_validator
 
 from ...core.schemas.base import BaseSchema
 from ...db.models import Footprint as FootprintModel
@@ -30,6 +33,21 @@ class FootprintBase(BaseSchema):
     """
 
     polygon: list[Point]
+
+    @model_validator(mode="before")
+    def validate_polygon(cls, values: Any) -> dict:
+        """
+        Validates the polygon attribute of the Footprint schema
+        to ensure it is a valid polygon
+        """
+        if not isinstance(values, dict):
+            values = values.__dict__
+        if isinstance(values["polygon"], WKBElement):
+            poly = shape.to_shape(values["polygon"])
+            x, y = poly.exterior.coords.xy
+            values["polygon"] = [Point(x=x[i], y=y[i]) for i in range(len(x))]
+        print(values)
+        return values
 
 
 class Footprint(FootprintBase):

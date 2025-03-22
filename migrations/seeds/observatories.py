@@ -14,7 +14,7 @@ ground_based: str = ObservatoryType.GROUND_BASED.value
 
 sandy_observatory = Observatory(
     id=uuid.uuid4(),
-    observatory_type=space_based,
+    type=space_based,
     name="SANDY'S SPACE STATION",
     short_name="SANDY",
     group=treedome_space_group,
