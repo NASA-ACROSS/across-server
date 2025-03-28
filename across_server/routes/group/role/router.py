@@ -134,9 +134,7 @@ async def remove(
             "description": "The created group role",
         },
     },
-    dependencies=[
-        Security(group_access, scopes=["group:user:write", "group:role:write"])
-    ],
+    dependencies=[Security(group_access, scopes=["group:role:write"])],
 )
 async def create(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
@@ -162,9 +160,7 @@ async def create(
             "description": "The created group role",
         },
     },
-    dependencies=[
-        Security(group_access, scopes=["group:user:write", "group:role:write"])
-    ],
+    dependencies=[Security(group_access, scopes=["group:role:write"])],
 )
 async def patch(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
@@ -195,9 +191,7 @@ async def patch(
             "description": "Group role successfully deleted",
         },
     },
-    dependencies=[
-        Security(group_access, scopes=["group:user:write", "group:role:write"])
-    ],
+    dependencies=[Security(group_access, scopes=["group:role:write"])],
 )
 async def delete(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],

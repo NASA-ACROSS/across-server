@@ -105,9 +105,9 @@ class GroupRoleService:
         await self.db.commit()
         return group_role
 
-    async def delete(self, group_role: models.GroupRole) -> models.GroupRole:
+    async def delete(self, group_role: models.GroupRole) -> None:
         # Delete the role, this will cascade delete the group_role from all users and service accounts.
         await self.db.delete(group_role)
 
         await self.db.commit()
-        return group_role
+        return
