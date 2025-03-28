@@ -34,8 +34,8 @@ class TestPermissionService:
 
             await service.get_many(permission_ids)
             assert (
-                mock_db.execute.call_args[0][0]
+                mock_db.execute.call_args[0][0]  # type: ignore[attr-defined]
                 .whereclause.clauses[1]
                 .right.effective_value
                 == permission_ids
-            )  # type: ignore[attr-defined]
+            )
