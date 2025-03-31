@@ -52,7 +52,7 @@ async def assign(
     service_account = await service_account_service.get(
         service_account_id=service_account_id, user_id=auth_user.id
     )
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_user(group_role_id, auth_user.id)
 
     role_assigned_account = await service.assign(service_account, group_role, user)
     return schemas.ServiceAccount.model_validate(role_assigned_account)
@@ -85,7 +85,7 @@ async def remove(
     service_account = await service_account_service.get(
         service_account_id=service_account_id, user_id=auth_user.id
     )
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_user(group_role_id, auth_user.id)
 
     role_removed_account = await service.remove(service_account, group_role)
     return schemas.ServiceAccount.model_validate(role_removed_account)

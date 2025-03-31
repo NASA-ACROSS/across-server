@@ -61,9 +61,10 @@ async def get_many(
 )
 async def get(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
+    group_id: uuid.UUID,
     group_role_id: uuid.UUID,
 ) -> schemas.GroupRoleRead:
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_group(group_role_id, group_id)
     return schemas.GroupRoleRead.model_validate(group_role)
 
 
@@ -90,7 +91,7 @@ async def assign(
 ) -> None:
     user = await user_service.get(user_id)
     group = await group_service.get(group_id)
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.assign(group_role, user, group)
     return
 
@@ -118,7 +119,7 @@ async def remove(
 ) -> None:
     user = await user_service.get(user_id)
     group = await group_service.get(group_id)
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.remove(group_role, user, group)
     return
 
@@ -171,7 +172,7 @@ async def patch(
     group_id: uuid.UUID,
 ) -> schemas.GroupRoleRead:
     group = await group_service.get(group_id)
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_group(group_role_id, group_id)
     permissions = await permission_service.get_many(data.permission_ids)
 
     created_role = await group_role_service.patch(
@@ -195,8 +196,9 @@ async def patch(
 )
 async def delete(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
+    group_id: uuid.UUID,
     group_role_id: uuid.UUID,
 ) -> None:
-    group_role = await group_role_service.get(group_role_id)
+    group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.delete(group_role)
     return

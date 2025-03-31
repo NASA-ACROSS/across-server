@@ -27,8 +27,30 @@ class GroupRoleService:
         roles = result.all()
         return roles
 
-    async def get(self, id: UUID) -> models.GroupRole:
-        role = await self.db.get(models.GroupRole, id)
+    async def get_for_group(self, id: UUID, group_id: UUID) -> models.GroupRole:
+        result = await self.db.scalars(
+            select(models.GroupRole)
+            .where(models.GroupRole.id == id)
+            .where(models.GroupRole.group_id == group_id)
+            .limit(1)
+        )
+
+        role = result.one_or_none()
+
+        if role is None:
+            raise GroupRoleNotFoundException(id)
+
+        return role
+
+    async def get_for_user(self, id: UUID, user_id: UUID) -> models.GroupRole:
+        result = await self.db.scalars(
+            select(models.GroupRole)
+            .where(models.GroupRole.id == id)
+            .where(models.GroupRole.users.any(models.User.id == user_id))
+            .limit(1)
+        )
+
+        role = result.one_or_none()
 
         if role is None:
             raise GroupRoleNotFoundException(id)
