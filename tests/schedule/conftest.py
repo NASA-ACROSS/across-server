@@ -7,9 +7,8 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import FastAPI
 
-from across_server.core.enums.schedulefidelity import ScheduleFidelity
-from across_server.core.enums.schedulestatus import ScheduleStatus
-from across_server.core.schemas.daterange import DateRange
+from across_server.core.enums import ScheduleFidelity, ScheduleStatus
+from across_server.core.schemas import DateRange
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.db.models import Telescope as TelescopeModel
 from across_server.routes.schedule import service
