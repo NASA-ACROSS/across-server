@@ -32,5 +32,5 @@ router = APIRouter(
 async def get(
     service: Annotated[PermissionService, Depends(PermissionService)],
 ) -> list[schemas.Permission]:
-    permissions = await service.get_many()
+    permissions = await service.get_all()
     return [schemas.Permission.model_validate(permission) for permission in permissions]

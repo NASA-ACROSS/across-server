@@ -1,14 +1,13 @@
-import uuid
-from typing import Annotated, Sequence
+from collections.abc import Sequence
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.routes.group.exceptions import GroupNotFoundException
-
 from ....db import get_session, models
+from ...group.exceptions import GroupNotFoundException
 from .exceptions import GroupRoleNotFoundException
 
 
@@ -97,7 +96,7 @@ class GroupRoleService:
         return
 
     async def create(
-        self, role_name: str, permissions: list[models.Permission], group_id: uuid.UUID
+        self, role_name: str, permissions: list[models.Permission], group_id: UUID
     ) -> models.GroupRole:
         group_role = models.GroupRole(
             group_id=group_id, name=role_name, permissions=permissions
@@ -108,7 +107,7 @@ class GroupRoleService:
         await self.db.commit()
         return group_role
 
-    async def patch(
+    async def update(
         self,
         role_name: str,
         permissions: list[models.Permission],
@@ -119,10 +118,8 @@ class GroupRoleService:
         if group_role not in group.roles:
             raise GroupRoleNotFoundException(group_role.id)
 
-        if role_name:
-            group_role.name = role_name
-        if permissions:
-            group_role.permissions = permissions
+        group_role.name = role_name
+        group_role.permissions = permissions
 
         await self.db.commit()
         return group_role

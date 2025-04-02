@@ -15,17 +15,25 @@ class PermissionService:
     ) -> None:
         self.db = db
 
-    async def get_many(
-        self, permission_ids: list[UUID] | None = None
+    async def get_all(
+        self,
     ) -> list[models.Permission]:
         # Limit to "group:" prefix permissions
         query = select(models.Permission).where(
             models.Permission.name.startswith("group")
         )
 
-        # Get permissions by id
-        if permission_ids:
-            query = query.where(models.Permission.id.in_(permission_ids))
+        permissions_result = await self.db.execute(query)
+        permissions = list(permissions_result.scalars().all())
+        return permissions
+
+    async def get_many(self, permission_ids: list[UUID]) -> list[models.Permission]:
+        # Limit to "group:" prefix permissions
+        query = (
+            select(models.Permission)
+            .where(models.Permission.name.startswith("group"))
+            .where(models.Permission.id.in_(permission_ids))
+        )
 
         permissions_result = await self.db.execute(query)
         permissions = list(permissions_result.scalars().all())

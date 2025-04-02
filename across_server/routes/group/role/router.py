@@ -3,9 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Security, status
 
-from across_server.routes.permission.service import PermissionService
-
 from ....auth.strategies import group_access
+from ...permission.service import PermissionService
 from ...user.service import UserService
 from ..service import GroupService
 from . import schemas
@@ -72,11 +71,10 @@ async def get(
     "/user/{user_id}/role/{group_role_id}",
     summary="Assign a group role to a user",
     description="Assign a group role by id to a user id within that group.",
-    status_code=status.HTTP_202_ACCEPTED,
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        status.HTTP_202_ACCEPTED: {
-            "model": schemas.GroupRoleRead,
-            "description": "The assigned group role",
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Group role successfully assigned to user",
         },
     },
     dependencies=[Security(group_access, scopes=["group:user:write"])],
@@ -93,7 +91,6 @@ async def assign(
     group = await group_service.get(group_id)
     group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.assign(group_role, user, group)
-    return
 
 
 @router.delete(
@@ -103,7 +100,6 @@ async def assign(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
-            "model": None,
             "description": "Group role successfully removed from user",
         },
     },
@@ -121,16 +117,15 @@ async def remove(
     group = await group_service.get(group_id)
     group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.remove(group_role, user, group)
-    return
 
 
 @router.post(
     "/role",
     summary="Create a group role",
     description="Create a group role with a set of permissions in a group that you control",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_200_OK: {
+        status.HTTP_201_CREATED: {
             "model": schemas.GroupRoleRead,
             "description": "The created group role",
         },
@@ -150,20 +145,20 @@ async def create(
     return schemas.GroupRoleRead.model_validate(created_role)
 
 
-@router.patch(
+@router.put(
     "/role/{group_role_id}",
-    summary="Modify a group role",
-    description="Modify a group role and its permissions in a group that you control",
+    summary="Update a group role",
+    description="Update a group role and its permissions in a group that you control",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
-            "model": schemas.GroupRoleRead,
-            "description": "The created group role",
+            "model": schemas.GroupRoleCreate,
+            "description": "The updated group role",
         },
     },
     dependencies=[Security(group_access, scopes=["group:role:write"])],
 )
-async def patch(
+async def update_role(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
     group_service: Annotated[GroupService, Depends(GroupService)],
     permission_service: Annotated[PermissionService, Depends(PermissionService)],
@@ -175,10 +170,10 @@ async def patch(
     group_role = await group_role_service.get_for_group(group_role_id, group_id)
     permissions = await permission_service.get_many(data.permission_ids)
 
-    created_role = await group_role_service.patch(
+    updated_role = await group_role_service.update(
         permissions=permissions, role_name=data.name, group_role=group_role, group=group
     )
-    return schemas.GroupRoleRead.model_validate(created_role)
+    return schemas.GroupRoleRead.model_validate(updated_role)
 
 
 @router.delete(
@@ -201,4 +196,3 @@ async def delete(
 ) -> None:
     group_role = await group_role_service.get_for_group(group_role_id, group_id)
     await group_role_service.delete(group_role)
-    return

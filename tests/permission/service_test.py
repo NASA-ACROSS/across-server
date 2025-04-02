@@ -9,7 +9,7 @@ from across_server.routes.permission.service import PermissionService
 
 
 class TestPermissionService:
-    class TestGetMany:
+    class TestGetAll:
         @pytest.mark.asyncio
         async def test_should_return_permissions_when_successful(
             self,
@@ -17,7 +17,23 @@ class TestPermissionService:
         ) -> None:
             """Should return permissions when is successful"""
             service = PermissionService(mock_db)
-            permissions = await service.get_many()
+            permissions = await service.get_all()
+            assert all(
+                isinstance(permission, models.Permission) for permission in permissions
+            )
+
+    class TestGet:
+        @pytest.mark.asyncio
+        async def test_should_return_permissions_when_successful(
+            self,
+            mock_db: AsyncMock,
+        ) -> None:
+            """Should return permissions when is successful"""
+            service = PermissionService(mock_db)
+
+            permission_ids: list[uuid.UUID] = [uuid.uuid4()]
+
+            permissions = await service.get_many(permission_ids)
             assert all(
                 isinstance(permission, models.Permission) for permission in permissions
             )

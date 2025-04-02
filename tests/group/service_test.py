@@ -233,7 +233,7 @@ class TestGroupRoleService:
             assert group_role.group_id == mock_group_id
             assert group_role.permissions == mock_permissions_data
 
-    class TestPatch:
+    class TestUpdate:
         @pytest.mark.asyncio
         async def test_should_return_group_role_when_successful(
             self,
@@ -245,7 +245,7 @@ class TestGroupRoleService:
         ) -> None:
             """Should return a group role when successful"""
             service = GroupRoleService(mock_db)
-            group_role = await service.patch(
+            group_role = await service.update(
                 mock_group_role_name,
                 mock_permissions_data,
                 mock_group_role_data,
@@ -264,7 +264,7 @@ class TestGroupRoleService:
         ) -> None:
             """Should return group with correct parameters when successful"""
             service = GroupRoleService(mock_db)
-            group_role = await service.patch(
+            group_role = await service.update(
                 mock_group_role_name,
                 mock_permissions_data,
                 mock_group_role_data,
@@ -287,7 +287,7 @@ class TestGroupRoleService:
 
             service = GroupRoleService(mock_db)
             with pytest.raises(GroupRoleNotFoundException):
-                await service.patch(
+                await service.update(
                     mock_group_role_name,
                     mock_permissions_data,
                     mock_group_role_data,
