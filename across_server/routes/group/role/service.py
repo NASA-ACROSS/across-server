@@ -93,7 +93,6 @@ class GroupRoleService:
             user.group_roles.remove(group_role)
 
         await self.db.commit()
-        return
 
     async def create(
         self, role_name: str, permissions: list[models.Permission], group_id: UUID
@@ -129,4 +128,3 @@ class GroupRoleService:
         await self.db.delete(group_role)
 
         await self.db.commit()
-        return
