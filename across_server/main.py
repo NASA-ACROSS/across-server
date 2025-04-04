@@ -14,6 +14,7 @@ from .routes import (
     instrument,
     observation,
     observatory,
+    permission,
     role,
     schedule,
     telescope,
@@ -62,6 +63,7 @@ async def get() -> str:
 
 
 app.include_router(auth.router)
+app.include_router(permission.router)
 app.include_router(user.router)
 app.include_router(user.service_account.router)
 app.include_router(user.service_account.group_role.router)

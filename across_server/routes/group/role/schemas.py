@@ -1,22 +1,21 @@
 import uuid
 
 from ....core.schemas.base import BaseSchema
+from ....core.schemas.permission import Permission
 
 
 class GroupRoleBase(BaseSchema):
     name: str
+    permissions: list[Permission]
 
 
 class GroupRoleRead(GroupRoleBase):
     id: uuid.UUID
 
 
-class GroupRoleCreate(GroupRoleBase):
-    pass
-
-
-class GroupRoleUpdate(GroupRoleBase):
-    pass
+class GroupRoleCreate(BaseSchema):
+    name: str
+    permission_ids: list[uuid.UUID]
 
 
 # This is explicitly defined due to

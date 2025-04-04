@@ -17,6 +17,7 @@ service_account_write = Permission(id=uuid.uuid4(), name="user:service_account:w
 service_account_read = Permission(id=uuid.uuid4(), name="user:service_account:read")
 group_user_read = Permission(id=uuid.uuid4(), name="group:user:read")
 group_user_write = Permission(id=uuid.uuid4(), name="group:user:write")
+group_role_write = Permission(id=uuid.uuid4(), name="group:role:write")
 observatory_write = Permission(id=uuid.uuid4(), name="group:observatory:write")
 telescope_write = Permission(id=uuid.uuid4(), name="group:telescope:write")
 instrument_write = Permission(id=uuid.uuid4(), name="group:instrument:write")
@@ -26,7 +27,8 @@ permissions = [
     all_write,
     group_read,
     group_write,
-    group_read,
+    group_user_write,
+    group_role_write,
     user_write,
     service_account_write,
     service_account_read,
