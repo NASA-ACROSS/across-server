@@ -3,9 +3,12 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from pydantic import Field
+
 from ...core.enums import ObservatoryType
 from ...core.schemas.base import BaseSchema, IDNameSchema
-from ...db.models import Observatory as ObservatoryModel
+
+# from ...db.models import Observatory as ObservatoryModel
 
 
 class ObservatoryBase(BaseSchema):
@@ -32,7 +35,7 @@ class ObservatoryBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
-    type: ObservatoryType
+    type: ObservatoryType = Field(alias="observatory_type")
     telescopes: list[IDNameSchema] | None = None
 
 
@@ -43,36 +46,37 @@ class Observatory(ObservatoryBase):
     Notes
     -----
     Inherits from ObservatoryBase
-
-    Methods
-    -------
-    from_orm(observatory: ObservatoryModel) -> Observatory
-        Static method that instantiates this class from a observatory database record
     """
 
-    @staticmethod
-    def from_orm(observatory: ObservatoryModel) -> Observatory:
-        """
-        Method that converts a models.Observatory record to a schemas.Observatory
-        Parameters
-        ----------
-        observatory: ObservatoryModel
-            the models.Observatory record
-        Returns
-        -------
-            schemas.Observatory
-        """
-        return Observatory(
-            id=observatory.id,
-            name=observatory.name,
-            short_name=observatory.short_name,
-            type=observatory.observatory_type,
-            telescopes=[
-                IDNameSchema(id=telescope.id, name=telescope.name)
-                for telescope in observatory.telescopes
-            ],
-            created_on=observatory.created_on,
-        )
+    # Methods
+    # -------
+    # from_orm(observatory: ObservatoryModel) -> Observatory
+    #     Static method that instantiates this class from a observatory database record
+    # """
+
+    # @staticmethod
+    # def from_orm(observatory: ObservatoryModel) -> Observatory:
+    #     """
+    #     Method that converts a models.Observatory record to a schemas.Observatory
+    #     Parameters
+    #     ----------
+    #     observatory: ObservatoryModel
+    #         the models.Observatory record
+    #     Returns
+    #     -------
+    #         schemas.Observatory
+    #     """
+    #     return Observatory(
+    #         id=observatory.id,
+    #         name=observatory.name,
+    #         short_name=observatory.short_name,
+    #         type=observatory.observatory_type,
+    #         telescopes=[
+    #             IDNameSchema(id=telescope.id, name=telescope.name)
+    #             for telescope in observatory.telescopes
+    #         ],
+    #         created_on=observatory.created_on,
+    #     )
 
 
 class ObservatoryRead(BaseSchema):

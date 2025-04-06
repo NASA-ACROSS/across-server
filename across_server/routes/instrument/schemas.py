@@ -4,8 +4,7 @@ import uuid
 from datetime import datetime
 
 from ...core.schemas.base import BaseSchema, IDNameSchema
-from ...db.models import Instrument as InstrumentModel
-from ..footprint.schemas import Footprint, Point
+from ..footprint.schemas import Footprint
 
 
 class InstrumentBase(BaseSchema):
@@ -33,7 +32,7 @@ class InstrumentBase(BaseSchema):
     name: str
     short_name: str
     telescope: IDNameSchema | None = None
-    footprints: list[list[Point]] | None = None
+    footprints: list[Footprint] | None = None
 
 
 class Instrument(InstrumentBase):
@@ -43,39 +42,7 @@ class Instrument(InstrumentBase):
     Notes
     -----
     Inherits from InstrumentBase
-
-    Methods
-    -------
-    from_orm(instrument: InstrumentModel) -> Instrument
-        Static method that instantiates this class from a Instrument database record
     """
-
-    @staticmethod
-    def from_orm(instrument: InstrumentModel) -> Instrument:
-        """
-        Method that converts a models.Instrument record to a schemas.Instrument
-        Parameters
-        ----------
-        Telescope: TelescopeModel
-            the models.Telescope record
-        Returns
-        -------
-            schemas.Telescope
-        """
-        footprints = [
-            Footprint.from_orm(footprint) for footprint in instrument.footprints
-        ]
-
-        return Instrument(
-            id=instrument.id,
-            name=instrument.name,
-            short_name=instrument.short_name,
-            telescope=IDNameSchema(
-                id=instrument.telescope.id, name=instrument.telescope.name
-            ),
-            footprints=[footprint.polygon for footprint in footprints],
-            created_on=instrument.created_on,
-        )
 
 
 class InstrumentRead(BaseSchema):

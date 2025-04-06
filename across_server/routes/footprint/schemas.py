@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from geoalchemy2 import shape
+from typing import Any
+
+from geoalchemy2 import WKBElement, shape
+from pydantic import field_validator
 
 from ...core.schemas.base import BaseSchema
-from ...db.models import Footprint as FootprintModel
 
 
 class Point(BaseSchema):
@@ -39,30 +41,17 @@ class Footprint(FootprintBase):
     Notes
     -----
     Inherits from FootprintBase
-
-    Methods
-    -------
-    from_orm(footprint: FootprintModel) -> Footprint
-        Static method that instantiates this class from a footprint database record
     """
 
-    @staticmethod
-    def from_orm(footprint: FootprintModel) -> Footprint:
+    @field_validator("polygon", mode="before")
+    @classmethod
+    def validate_polygon(cls, value: Any) -> list[Point]:
         """
-        Method that converts a models.Footprint record to a schemas.Footprint
-
-        Parameters
-        ----------
-        footprint: FootprintModel
-            the models.Footprint record
-
-        Returns
-        -------
-            schemas.Footprint
+        Validate the polygon field to ensure it is a list of Point objects. If
+        it is a WKBElement, convert it to a list of Point objects.
         """
-
-        poly = shape.to_shape(footprint.polygon)
-        x, y = poly.exterior.coords.xy  # type: ignore
-        polygon = [Point(x=x[i], y=y[i]) for i in range(len(x))]
-
-        return Footprint(polygon=polygon)
+        if isinstance(value, WKBElement):
+            # Convert WKBElement to a list of Point objects
+            polygon = shape.to_shape(value)
+            return [Point(x=point[0], y=point[1]) for point in polygon.exterior.coords]
+        return value
