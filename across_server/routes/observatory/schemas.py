@@ -48,36 +48,6 @@ class Observatory(ObservatoryBase):
     Inherits from ObservatoryBase
     """
 
-    # Methods
-    # -------
-    # from_orm(observatory: ObservatoryModel) -> Observatory
-    #     Static method that instantiates this class from a observatory database record
-    # """
-
-    # @staticmethod
-    # def from_orm(observatory: ObservatoryModel) -> Observatory:
-    #     """
-    #     Method that converts a models.Observatory record to a schemas.Observatory
-    #     Parameters
-    #     ----------
-    #     observatory: ObservatoryModel
-    #         the models.Observatory record
-    #     Returns
-    #     -------
-    #         schemas.Observatory
-    #     """
-    #     return Observatory(
-    #         id=observatory.id,
-    #         name=observatory.name,
-    #         short_name=observatory.short_name,
-    #         type=observatory.observatory_type,
-    #         telescopes=[
-    #             IDNameSchema(id=telescope.id, name=telescope.name)
-    #             for telescope in observatory.telescopes
-    #         ],
-    #         created_on=observatory.created_on,
-    #     )
-
 
 class ObservatoryRead(BaseSchema):
     """

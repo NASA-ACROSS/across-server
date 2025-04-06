@@ -37,7 +37,7 @@ async def get(
 ) -> schemas.Instrument:
     instrument = await service.get(instrument_id)
 
-    return schemas.Instrument.from_orm(instrument)
+    return schemas.Instrument.model_validate(instrument)
 
 
 @router.get(
@@ -58,4 +58,4 @@ async def get_many(
     data: Annotated[schemas.InstrumentRead, Query()],
 ) -> list[schemas.Instrument]:
     instruments = await service.get_many(data=data)
-    return [schemas.Instrument.from_orm(instrument) for instrument in instruments]
+    return [schemas.Instrument.model_validate(instrument) for instrument in instruments]
