@@ -1,7 +1,24 @@
 import hashlib
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+
+
+def _flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
+    items: list[tuple[str, Any]] = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+
+        if isinstance(v, BaseModel):
+            v = v.model_dump()  # convert before recursion
+
+        if isinstance(v, dict):
+            items.extend(_flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+
+    return dict(items)
 
 
 class BaseSchema(BaseModel):
@@ -15,14 +32,30 @@ class BaseSchema(BaseModel):
     """
 
     # https://docs.pydantic.dev/latest/concepts/models/#arbitrary-class-instances
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True)
 
     def generate_checksum(self) -> str:
         json_data = self.model_dump_json()
         return hashlib.sha512(json_data.encode()).hexdigest()
 
+    def model_dump(
+        self, *args: Any, flatten: bool = False, **kwargs: Any
+    ) -> dict[str, Any]:
+        """Override the model_dump method to flatten the dictionary."""
+        original_dump = super().model_dump(*args, **kwargs)
+        if flatten:
+            return _flatten_dict(original_dump)
 
-class IDNameSchema(BaseModel):
+        # Exclude fields with json_schema_extra set to flatten_only
+        for name, field in self.model_fields.items():
+            if isinstance(
+                field.json_schema_extra, dict
+            ) and field.json_schema_extra.get("flatten_only", False):
+                original_dump.pop(name, None)
+        return original_dump
+
+
+class IDNameSchema(BaseSchema):
     id: UUID
     name: str
 
@@ -34,11 +67,10 @@ class PrefixMixin:
     e.g. `pointing_position` -> `pointing_ra` and `pointing_dec`
     """
 
-    def model_dump_with_prefix(
-        self, prefix: str | None = None, data: dict = {}
-    ) -> dict:
+    def model_dump_with_prefix(self, data: dict = {}) -> dict:
         data_with_prefixes = {}
-        if prefix is not None:
+        if hasattr(self, "_db_prefix"):
+            prefix = self._db_prefix
             for key, value in data.items():
                 data_with_prefixes[prefix + "_" + key] = value
 
