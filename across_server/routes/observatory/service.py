@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -35,28 +35,35 @@ class ObservatoryService:
         self.db = db
 
     async def _get_ephem_parameters(
-        self, observatory: models.Observatory
-    ) -> models.Observatory:
+        self, observatories: Sequence[models.Observatory]
+    ) -> Sequence[models.Observatory]:
         """
-        Fetch and populate the ephemeris parameters for the given observatory.
+        Fetch and populate the ephemeris parameters for the given observatories.
 
         Parameters
         ----------
-        observatory : models.Observatory
-            The observatory for which to fetch ephemeris parameters.
+        observatories : list[models.Observatory]
+            The observatories for which to fetch ephemeris parameters.
 
         Returns
         -------
-        models.Observatory
-            The observatory with its ephemeris parameters populated.
+        list[models.Observatory]
+            The observatories with their ephemeris parameters populated.
 
         Raises
         ------
         ValueError
             If the ephemeris type is unknown.
         """
-        # Fetch the correct ephemeris parameters
-        for etype in observatory.ephemeris_types:
+        ephemeris_types: list[str] = []
+        for obs in observatories:
+            obs_etypes = [x.ephemeris_type for x in obs.ephemeris_types]
+            ephemeris_types.extend(obs_etypes)
+
+        observatory_ids = [x.id for x in observatories]
+
+        ephemeris_dictionaries: dict = {}
+        for etype in ephemeris_types:
             parameter_model: type[
                 models.JPLEphemerisParameters
                 | models.TLEParameters
@@ -65,7 +72,7 @@ class ObservatoryService:
             ]
 
             # Determine the model based on the ephemeris type
-            match etype.ephemeris_type:
+            match etype:
                 case EphemerisType.JPL.value:
                     parameter_model = models.JPLEphemerisParameters
                 case EphemerisType.TLE.value:
@@ -75,22 +82,25 @@ class ObservatoryService:
                 case EphemerisType.GROUND.value:
                     parameter_model = models.EarthLocationParameters
                 case _:
-                    raise ValueError(f"Unknown ephemeris type: {etype.ephemeris_type}")
+                    raise ValueError(f"Unknown ephemeris type: {etype}")
 
+            ephemeris_dictionaries[etype] = {}
             # Fetch the parameters for the observatory and populate them
             param_query = select(parameter_model).where(
-                parameter_model.observatory_id == observatory.id
+                parameter_model.observatory_id.in_(observatory_ids)
             )
             param_result = await self.db.execute(param_query)
-            ephem_parameters = param_result.scalar_one_or_none()
-            if ephem_parameters is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No ephemeris parameters found for observatory {observatory.id}",
-                )
-            etype.parameters = ephem_parameters
+            ephem_parameters = param_result.scalars()
+            for ep in ephem_parameters:
+                ephemeris_dictionaries[etype][ep.observatory_id] = ep  # type: ignore
 
-        return observatory
+        for observatory in observatories:
+            for obs_etype in observatory.ephemeris_types:
+                obs_etype.parameters = ephemeris_dictionaries[obs_etype.ephemeris_type][
+                    observatory.id
+                ]
+
+        return observatories
 
     async def get(self, observatory_id: UUID) -> models.Observatory:
         """
@@ -122,9 +132,8 @@ class ObservatoryService:
             raise ObservatoryNotFoundException(observatory_id)
 
         # Fetch the correct ephemeris parameters
-        observatory = await self._get_ephem_parameters(observatory)
-
-        return observatory
+        observatories = await self._get_ephem_parameters([observatory])
+        return observatories[0]
 
     def _get_filter(self, data: schemas.ObservatoryRead) -> list:
         """
@@ -226,10 +235,4 @@ class ObservatoryService:
 
         # Fetch the correct ephemeris parameters
         # for each observatory
-        observatories = [
-            await self._get_ephem_parameters(obs)
-            for obs in observatories
-            if obs is not None
-        ]
-
-        return observatories
+        return await self._get_ephem_parameters(observatories)
