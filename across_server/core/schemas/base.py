@@ -67,10 +67,11 @@ class PrefixMixin:
     e.g. `pointing_position` -> `pointing_ra` and `pointing_dec`
     """
 
-    def model_dump_with_prefix(self, data: dict = {}) -> dict:
+    def model_dump_with_prefix(
+        self, prefix: str | None = None, data: dict = {}
+    ) -> dict:
         data_with_prefixes = {}
-        if hasattr(self, "_db_prefix"):
-            prefix = self._db_prefix
+        if prefix is not None:
             for key, value in data.items():
                 data_with_prefixes[prefix + "_" + key] = value
 
