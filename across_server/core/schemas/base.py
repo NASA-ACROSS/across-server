@@ -6,23 +6,55 @@ from pydantic import BaseModel, ConfigDict
 from pydantic.json_schema import SkipJsonSchema
 
 
-def _flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
+def _flatten_dict(dictionary: dict, parent_key: str = "", separator: str = "_") -> dict:
+    """
+    Recursively flattens a nested dictionary. So if a dictionary has
+    a key with a dictionary as its value, it will be flattened into
+    a single level dictionary with keys that are the concatenation
+    of the parent key and the child key, separated by the specified
+    separator.
+
+    Parameters
+    ----------
+    d : dict
+        The dictionary to flatten.
+    parent_key : str
+        The base key string to append to the keys of the flattened dictionary.
+    sep : str
+        The separator to use between keys.
+
+    Returns
+    -------
+    dict
+        The flattened dictionary.
+    """
     items: list[tuple[str, Any]] = []
-    for k, v in d.items():
-        new_key = f"{parent_key}{sep}{k}" if parent_key else k
-
-        if isinstance(v, BaseModel):
-            v = v.model_dump()  # convert before recursion
-
-        if isinstance(v, dict):
-            items.extend(_flatten_dict(v, new_key, sep=sep).items())
+    for key, value in dictionary.items():
+        new_key = parent_key + separator + key if parent_key else key
+        if isinstance(value, dict):
+            items.extend(_flatten_dict(value, new_key, separator=separator).items())
         else:
-            items.append((new_key, v))
-
+            items.append((new_key, value))
     return dict(items)
 
 
 def _exclude_fields(data: Any, model: BaseModel) -> Any:
+    """
+    Recursively exclude fields from a dictionary based on the model's metadata.
+    This is used to skip fields that have SkipJsonSchema set to exclude.
+
+    Parameters
+    ----------
+    data : Any
+        The data to be filtered.
+    model : BaseModel
+        The Pydantic model to check against.
+
+    Returns
+    -------
+    Any
+        The filtered data.
+    """
     if isinstance(data, dict):
         result = {}
         for key, value in data.items():
