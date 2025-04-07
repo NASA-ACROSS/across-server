@@ -375,8 +375,8 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
     telescope_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
-    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range__begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range__end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False)
     external_id: Mapped[str] = mapped_column(String(256), nullable=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
@@ -402,13 +402,13 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
     )
     object_name: Mapped[str] = mapped_column(String(100))
-    pointing_position_ra: Mapped[float] = mapped_column(Float(5))
-    pointing_position_dec: Mapped[float] = mapped_column(Float(5))
-    pointing_position_position: Mapped[WKBElement] = mapped_column(
+    pointing_position__ra: Mapped[float] = mapped_column(Float(5))
+    pointing_position__dec: Mapped[float] = mapped_column(Float(5))
+    pointing_position__position: Mapped[WKBElement] = mapped_column(
         Geography("POINT", srid=4326)
     )
-    date_range_begin: Mapped[datetime] = mapped_column(DateTime)
-    date_range_end: Mapped[datetime] = mapped_column(DateTime)
+    date_range__begin: Mapped[datetime] = mapped_column(DateTime)
+    date_range__end: Mapped[datetime] = mapped_column(DateTime)
     external_observation_id: Mapped[str] = mapped_column(String(50))
     type: Mapped[str] = mapped_column(String(50))  # Enum
     status: Mapped[str] = mapped_column(String(50))  # Enum
@@ -416,16 +416,16 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     reason: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(String(100))
     proposal_reference: Mapped[str | None] = mapped_column(String(100))
-    object_position_ra: Mapped[float | None] = mapped_column(Float(5))
-    object_position_dec: Mapped[float | None] = mapped_column(Float(5))
-    object_position_position: Mapped[WKBElement | None] = mapped_column(
+    object_position__ra: Mapped[float | None] = mapped_column(Float(5))
+    object_position__dec: Mapped[float | None] = mapped_column(Float(5))
+    object_position__position: Mapped[WKBElement | None] = mapped_column(
         Geography("POINT", srid=4326), nullable=True
     )
     pointing_angle: Mapped[float | None] = mapped_column(Float)
-    depth_value: Mapped[float | None] = mapped_column(Float(2))
-    depth_unit: Mapped[str | None] = mapped_column(String(50))  # Enum
-    bandpass_central_wavelength: Mapped[float | None] = mapped_column(Float(2))
-    bandpass_bandwidth: Mapped[float | None] = mapped_column(Float(2))
+    depth__value: Mapped[float | None] = mapped_column(Float(2))
+    depth__unit: Mapped[str | None] = mapped_column(String(50))  # Enum
+    bandpass__central_wavelength: Mapped[float | None] = mapped_column(Float(2))
+    bandpass__bandwidth: Mapped[float | None] = mapped_column(Float(2))
     filter_name: Mapped[str | None] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions
