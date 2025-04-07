@@ -134,8 +134,7 @@ def upgrade() -> None:
             priority=2,
         ),
     ]
-    for ephemeris_type in ephemeris_types:
-        session.add(ephemeris_type)
+    session.add_all(ephemeris_types)
 
     # Add TLEParameters for TESS
     tle_parameters = TLEParameters(
