@@ -1,4 +1,5 @@
-from typing import Annotated, Sequence
+from collections.abc import Sequence
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import Depends

@@ -1,12 +1,14 @@
 import hashlib
-from typing import Any
+from typing import Any, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.json_schema import SkipJsonSchema
 
 
-def _flatten_dict(dictionary: dict, parent_key: str = "", separator: str = "_") -> dict:
+def _flatten_dict(
+    dictionary: dict, parent_key: str = "", separator: str = "__"
+) -> dict:
     """
     Recursively flattens a nested dictionary. So if a dictionary has
     a key with a dictionary as its value, it will be flattened into
@@ -36,6 +38,33 @@ def _flatten_dict(dictionary: dict, parent_key: str = "", separator: str = "_") 
         else:
             items.append((new_key, value))
     return dict(items)
+
+
+def _unflatten_dict(dictionary: dict, separator: str = "__") -> dict:
+    """
+    Converts a flattened dictionary back into a nested dictionary structure.
+    Keys containing the separator will be split and nested accordingly.
+
+    Parameters
+    ----------
+    dictionary : dict
+        The flattened dictionary to unflatten.
+    separator : str
+        The separator used in the flattened keys.
+
+    Returns
+    -------
+    dict
+        The unflattened, nested dictionary.
+    """
+    result: dict[str, Any] = {}
+    for key, value in dictionary.items():
+        parts = key.split(separator)
+        target = result
+        for part in parts[:-1]:
+            target = target.setdefault(part, {})
+        target[parts[-1]] = value
+    return result
 
 
 def _exclude_fields(data: Any, model: BaseModel) -> Any:
@@ -109,6 +138,18 @@ class BaseSchema(BaseModel):
 
         # Exclude fields with json_schema_extra set to exclude
         return _exclude_fields(original_dump, self)
+
+    @classmethod
+    def model_validate(cls, obj: Any, *args: Any, **kwargs: Any) -> Self:
+        """
+        Override the model_validate method to unflatten the dictionary
+        before validating.
+        """
+        if not isinstance(obj, dict):
+            # If obj is not a dictionary, return it as is
+            obj = obj.__dict__
+        obj = _unflatten_dict(obj)
+        return super().model_validate(obj, *args, **kwargs)
 
 
 class IDNameSchema(BaseSchema):
