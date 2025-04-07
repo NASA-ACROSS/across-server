@@ -2,6 +2,7 @@ from typing import Any
 
 from geoalchemy2 import WKBElement, shape
 from pydantic import Field
+from pydantic.json_schema import SkipJsonSchema
 from shapely import Point
 
 from .base import BaseSchema, PrefixMixin
@@ -10,9 +11,7 @@ from .base import BaseSchema, PrefixMixin
 class Coordinate(BaseSchema, PrefixMixin):
     ra: float | None = Field(ge=0.0, le=360.0)
     dec: float | None = Field(ge=-90.0, le=90.0)
-    position: WKBElement | None = Field(
-        default=None, json_schema_extra={"flatten_only": True}
-    )
+    position: SkipJsonSchema[WKBElement | None] = None
 
     def model_post_init(self, __context: Any) -> None:
         """

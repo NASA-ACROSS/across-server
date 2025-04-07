@@ -110,7 +110,8 @@ class Observation(ObservationBase):
             schedule_id=observation.schedule_id,
             object_name=observation.object_name,
             pointing_position=Coordinate(
-                ra=observation.pointing_ra, dec=observation.pointing_dec
+                ra=observation.pointing_position_ra,
+                dec=observation.pointing_position_dec,
             ),
             date_range=DateRange(
                 begin=observation.date_range_begin, end=observation.date_range_end
@@ -124,13 +125,13 @@ class Observation(ObservationBase):
             description=observation.description,
             proposal_reference=observation.proposal_reference,
             object_position=Coordinate(
-                ra=observation.object_ra, dec=observation.object_dec
+                ra=observation.object_position_ra, dec=observation.object_position_dec
             ),
             depth=depth,
             bandpass=Bandpass(
                 filter_name=observation.filter_name,
-                central_wavelength=observation.central_wavelength,
-                bandwidth=observation.bandwidth,
+                central_wavelength=observation.bandpass_central_wavelength,
+                bandwidth=observation.bandpass_bandwidth,
             ),
             t_resolution=observation.t_resolution,
             em_res_power=observation.em_res_power,
@@ -157,9 +158,7 @@ class ObservationCreate(ObservationBase):
         """
         data = self.model_dump(exclude_unset=True)
 
-        pointing_coords = self.pointing_position.model_dump_with_prefix(
-            prefix="pointing", data=self.pointing_position.model_dump()
-        )
+        pointing_coords = self.pointing_position.model_dump(flatten=True)
         pointing_position_element = self.pointing_position.create_gis_point()
 
         if self.object_position:

@@ -402,9 +402,11 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
     )
     object_name: Mapped[str] = mapped_column(String(100))
-    pointing_ra: Mapped[float] = mapped_column(Float(5))
-    pointing_dec: Mapped[float] = mapped_column(Float(5))
-    pointing_position: Mapped[WKBElement] = mapped_column(Geography("POINT", srid=4326))
+    pointing_position_ra: Mapped[float] = mapped_column(Float(5))
+    pointing_position_dec: Mapped[float] = mapped_column(Float(5))
+    pointing_position_position: Mapped[WKBElement] = mapped_column(
+        Geography("POINT", srid=4326)
+    )
     date_range_begin: Mapped[datetime] = mapped_column(DateTime)
     date_range_end: Mapped[datetime] = mapped_column(DateTime)
     external_observation_id: Mapped[str] = mapped_column(String(50))
@@ -414,16 +416,16 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     reason: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(String(100))
     proposal_reference: Mapped[str | None] = mapped_column(String(100))
-    object_ra: Mapped[float | None] = mapped_column(Float(5))
-    object_dec: Mapped[float | None] = mapped_column(Float(5))
-    object_position: Mapped[WKBElement | None] = mapped_column(
+    object_position_ra: Mapped[float | None] = mapped_column(Float(5))
+    object_position_dec: Mapped[float | None] = mapped_column(Float(5))
+    object_position_position: Mapped[WKBElement | None] = mapped_column(
         Geography("POINT", srid=4326), nullable=True
     )
     pointing_angle: Mapped[float | None] = mapped_column(Float)
     depth_value: Mapped[float | None] = mapped_column(Float(2))
     depth_unit: Mapped[str | None] = mapped_column(String(50))  # Enum
-    central_wavelength: Mapped[float | None] = mapped_column(Float(2))
-    bandwidth: Mapped[float | None] = mapped_column(Float(2))
+    bandpass_central_wavelength: Mapped[float | None] = mapped_column(Float(2))
+    bandpass_bandwidth: Mapped[float | None] = mapped_column(Float(2))
     filter_name: Mapped[str | None] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions

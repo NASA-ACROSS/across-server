@@ -286,7 +286,11 @@ class ScheduleService:
         The function validates the input data, checks for duplicates based on a checksum created from the
         create schemas performs the database insertion for the schedule and observations in a single commit.
         """
-        schedule = schedule_create.to_orm(created_by_id=created_by_id)
+        # schedule = schedule_create.to_orm(created_by_id=created_by_id)
+        schedule = models.Schedule(
+            created_by_id=created_by_id,
+            **schedule_create.model_dump(flatten=True),
+        )
 
         existing = await self._exists(schedule.checksum)
 
@@ -297,9 +301,14 @@ class ScheduleService:
         self.db.add(schedule)
 
         for observation_create in schedule_create.observations:
-            observation = observation_create.to_orm()
-            observation.schedule_id = schedule.id
-            observation.created_by_id = created_by_id
+            # observation = observation_create.to_orm()
+            # observation.schedule_id = schedule.id
+            # observation.created_by_id = created_by_id
+            observation = models.Observation(
+                schedule_id=schedule.id,
+                created_by_id=created_by_id,
+                **observation_create.model_dump(flatten=True),
+            )
             self.db.add(observation)
 
         await self.db.commit()

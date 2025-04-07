@@ -3,6 +3,7 @@ from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+from pydantic.json_schema import SkipJsonSchema
 
 
 def _flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
@@ -21,36 +22,28 @@ def _flatten_dict(d: dict, parent_key: str = "", sep: str = "_") -> dict:
     return dict(items)
 
 
-def _exclude_flatten_only_fields(data: Any, model: BaseModel) -> Any:
+def _exclude_fields(data: Any, model: BaseModel) -> Any:
     if isinstance(data, dict):
         result = {}
         for key, value in data.items():
             field = model.model_fields.get(key)
-            if (
-                field
-                and isinstance(field.json_schema_extra, dict)
-                and field.json_schema_extra.get("flatten_only")
-            ):
+            if field and any([type(m) is SkipJsonSchema for m in field.metadata]):
+                # Skip fields with SkipJsonSchema set to exclude
                 continue
 
             attr = getattr(model, key, None)
 
             # Recurse into nested BaseModels
             if isinstance(attr, BaseModel):
-                result[key] = _exclude_flatten_only_fields(value, attr)
+                result[key] = _exclude_fields(value, attr)
             elif isinstance(attr, list) and attr and isinstance(attr[0], BaseModel):
-                result[key] = [
-                    _exclude_flatten_only_fields(v, m) for v, m in zip(value, attr)
-                ]
+                result[key] = [_exclude_fields(v, m) for v, m in zip(value, attr)]
             elif (
                 isinstance(attr, dict)
                 and attr
                 and isinstance(next(iter(attr.values())), BaseModel)
             ):
-                result[key] = {
-                    k: _exclude_flatten_only_fields(v, attr[k])
-                    for k, v in value.items()
-                }
+                result[key] = {k: _exclude_fields(v, attr[k]) for k, v in value.items()}
             else:
                 result[key] = value
         return result
@@ -82,8 +75,8 @@ class BaseSchema(BaseModel):
         if flatten:
             return _flatten_dict(original_dump)
 
-        # Exclude fields with json_schema_extra set to flatten_only
-        return _exclude_flatten_only_fields(original_dump, self)
+        # Exclude fields with json_schema_extra set to exclude
+        return _exclude_fields(original_dump, self)
 
 
 class IDNameSchema(BaseSchema):
