@@ -51,6 +51,7 @@ def mock_schedule_post_data() -> dict:
                     "filter_name": "g",
                     "central_wavelength": 5500,
                     "bandwidth": 1000,
+                    "unit": "angstrom",
                 },
             }
         ],

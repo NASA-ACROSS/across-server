@@ -4,7 +4,9 @@ import uuid
 from datetime import datetime
 from typing import Annotated, ClassVar
 
-from pydantic import BeforeValidator, model_validator
+from across.tools import WavelengthBandpass
+from across.tools import enums as tools_enums
+from pydantic import BeforeValidator
 
 from ...core.date_utils import convert_to_utc
 from ...core.enums import (
@@ -14,23 +16,16 @@ from ...core.enums import (
     ObservationStatus,
     ObservationType,
 )
-from ...core.schemas import Bandpass, Coordinate, DateRange, UnitValue
+from ...core.schemas import Coordinate, DateRange, UnitValue
+from ...core.schemas.bandpass import BandpassSchema
 from ...core.schemas.base import (
-    BandpassConverterMixin,
     BaseSchema,
-    CoordinateConverterMixin,
-    DateRangeConverterMixin,
-    UnitValueConverterMixin,
 )
 from ...db.models import Observation as ObservationModel
 
 
 class ObservationBase(
     BaseSchema,
-    CoordinateConverterMixin,
-    DateRangeConverterMixin,
-    UnitValueConverterMixin,
-    BandpassConverterMixin,
 ):
     instrument_id: uuid.UUID
     object_name: str
@@ -46,7 +41,7 @@ class ObservationBase(
     proposal_reference: str | None = None
     object_position: Coordinate | None = None
     depth: UnitValue | None = None
-    bandpass: Bandpass | None = None
+    bandpass: BandpassSchema
     # Explicit IVOA ObsLocTap
     t_resolution: float | None = None
     em_res_power: float | None = None
@@ -66,25 +61,6 @@ class Observation(ObservationBase):
     created_on: datetime
     created_by_id: uuid.UUID | None = None
 
-    @model_validator(mode="before")
-    def nest_flattened_jsons(cls, values: dict) -> dict:
-        """
-        Converts flat JSON representation of database model
-        to nested JSON needed for Pydantic validation
-        """
-        values = cls.coordinate_converter(values)
-
-        if "date_range" not in values.keys():
-            values = cls.date_range_converter(values, "date_range")
-
-        if "depth" not in values.keys():
-            values = cls.unit_value_converter(values, "depth")
-
-        if "bandpass" not in values.keys():
-            values = cls.bandpass_converter(values, "bandpass")
-
-        return values
-
     @staticmethod
     def from_orm(observation: ObservationModel) -> Observation:
         if observation.depth_unit:
@@ -103,6 +79,13 @@ class Observation(ObservationBase):
             tracking_type = IVOAObsTrackingType(observation.tracking_type)
         else:
             tracking_type = None
+
+        bandpass = WavelengthBandpass(
+            central_wavelength=observation.central_wavelength,
+            bandwidth=observation.bandwidth,
+            filter_name=observation.filter_name,
+            unit=tools_enums.WavelengthUnit.ANGSTROM,
+        )
 
         return Observation(
             id=observation.id,
@@ -127,11 +110,7 @@ class Observation(ObservationBase):
                 ra=observation.object_ra, dec=observation.object_dec
             ),
             depth=depth,
-            bandpass=Bandpass(
-                filter_name=observation.filter_name,
-                central_wavelength=observation.central_wavelength,
-                bandwidth=observation.bandwidth,
-            ),
+            bandpass=BandpassSchema(**bandpass.model_dump()),
             t_resolution=observation.t_resolution,
             em_res_power=observation.em_res_power,
             o_ucd=observation.o_ucd,
@@ -181,16 +160,17 @@ class ObservationCreate(ObservationBase):
         )
         del data["date_range"]
 
-        for key, val in data.get("bandpass", {}).items():
-            data[key] = val
-            if "bandpass" in data.keys():
-                del data["bandpass"]
-
         for obj in [pointing_coords, date_range_data]:
             data.update(obj)
 
         data["pointing_position"] = pointing_position_element
         if self.object_position:
             data["object_position"] = object_position_element
+
+        for key, val in self.bandpass.bandpass_converter().items():
+            data[key] = val
+
+        if "bandpass" in data.keys():
+            del data["bandpass"]
 
         return self.orm_model(**data)
