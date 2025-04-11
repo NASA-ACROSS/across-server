@@ -11,7 +11,7 @@ from across_server.core.schemas.base import BaseSchema
 from ..exceptions import UnproccessableEntityException
 
 
-class BandpassSchema(BaseSchema):
+class Bandpass(BaseSchema):
     """
     Schema for representing a spectral bandpass filter.
 

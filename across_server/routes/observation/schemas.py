@@ -16,8 +16,7 @@ from ...core.enums import (
     ObservationStatus,
     ObservationType,
 )
-from ...core.schemas import Coordinate, DateRange, UnitValue
-from ...core.schemas.bandpass import BandpassSchema
+from ...core.schemas import Bandpass, Coordinate, DateRange, UnitValue
 from ...core.schemas.base import (
     BaseSchema,
 )
@@ -41,7 +40,7 @@ class ObservationBase(
     proposal_reference: str | None = None
     object_position: Coordinate | None = None
     depth: UnitValue | None = None
-    bandpass: BandpassSchema
+    bandpass: Bandpass
     # Explicit IVOA ObsLocTap
     t_resolution: float | None = None
     em_res_power: float | None = None
@@ -110,7 +109,7 @@ class Observation(ObservationBase):
                 ra=observation.object_ra, dec=observation.object_dec
             ),
             depth=depth,
-            bandpass=BandpassSchema(**bandpass.model_dump()),
+            bandpass=Bandpass(**bandpass.model_dump()),
             t_resolution=observation.t_resolution,
             em_res_power=observation.em_res_power,
             o_ucd=observation.o_ucd,
