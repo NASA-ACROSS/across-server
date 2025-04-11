@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -112,6 +113,13 @@ group_observatory = Table(
     Base.metadata,
     Column("group_id", ForeignKey("group.id"), primary_key=True),
     Column("observatory_id", ForeignKey("observatory.id"), primary_key=True),
+)
+
+instrument_filter = Table(
+    "instrument_filter",
+    Base.metadata,
+    Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
+    Column("filter_id", ForeignKey("filter.id"), primary_key=True),
 )
 
 
@@ -377,6 +385,8 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
     type: Mapped[str] = mapped_column(String(25), nullable=False)
+    reference_url: Mapped[str] = mapped_column(String(100), nullable=True)
+    is_operational: Mapped[bool] = mapped_column(Boolean)
 
     telescopes: Mapped[list["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"
@@ -399,6 +409,8 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     observatory_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Observatory.id)
     )
+    reference_url: Mapped[str] = mapped_column(String(100), nullable=True)
+    is_operational: Mapped[bool] = mapped_column(Boolean)
 
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
@@ -419,6 +431,9 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     telescope_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
+    type: Mapped[str] = mapped_column(String(50))
+    reference_url: Mapped[str] = mapped_column(String(100), nullable=True)
+    is_operational: Mapped[bool] = mapped_column(Boolean)
 
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"
@@ -430,6 +445,20 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="selectin"
     )
+
+
+class Filter(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "filter"
+
+    name: Mapped[str] = mapped_column(String(50))
+    peak_wavelength: Mapped[float] = mapped_column(Float(5))
+    min_wavelength: Mapped[float] = mapped_column(Float(5))
+    max_wavelength: Mapped[float] = mapped_column(Float(5))
+    is_operational: Mapped[bool] = mapped_column(Boolean)
+    sensitivity_depth_unit: Mapped[str] = mapped_column(String(50), nullable=True)
+    sensitivity_depth: Mapped[float] = mapped_column(Float(5), nullable=True)
+    sensitivity_time_seconds: Mapped[float] = mapped_column(Float(5), nullable=True)
+    reference_url: Mapped[str] = mapped_column(String(100), nullable=True)
 
 
 class Footprint(Base, CreatableMixin, ModifiableMixin):

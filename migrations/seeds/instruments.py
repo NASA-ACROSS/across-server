@@ -9,6 +9,8 @@ sandy_instrument = Instrument(
     name="SANDY'S X-RAY",
     short_name="SANDY_XRAY",
     telescope=sandy_telescope,
+    type="calorimeter",
+    is_operational=True,
 )
 
 sandy_instrument = Instrument(
@@ -16,6 +18,8 @@ sandy_instrument = Instrument(
     name="SANDY'S OPTICAL",
     short_name="SANDOPT",
     telescope=sandy_smaller_telescope,
+    type="photometric",
+    is_operational=True,
 )
 
 instruments = [sandy_instrument]
