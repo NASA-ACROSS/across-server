@@ -36,12 +36,3 @@ class NotFoundException(AcrossHTTPException):
                 f"{entity_name}": entity_id,
             },
         )
-
-
-class UnproccessableEntityException(AcrossHTTPException):
-    def __init__(self, entity_name: str, description: str):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            message=f"Unprocessable entity: {entity_name}. {description}",
-            log_data={"Unprocessable entity": entity_name},
-        )

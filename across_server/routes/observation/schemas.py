@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime
 from typing import Annotated, ClassVar
 
-from across.tools import WavelengthBandpass
 from across.tools import enums as tools_enums
 from pydantic import BeforeValidator
 
@@ -16,7 +15,13 @@ from ...core.enums import (
     ObservationStatus,
     ObservationType,
 )
-from ...core.schemas import Bandpass, Coordinate, DateRange, UnitValue
+from ...core.schemas import Coordinate, DateRange, UnitValue
+from ...core.schemas.bandpass import (
+    EnergyBandpassCreate,
+    FrequencyBandpassCreate,
+    WavelengthBandpassCreate,
+    bandpass_converter,
+)
 from ...core.schemas.base import (
     BaseSchema,
 )
@@ -40,7 +45,7 @@ class ObservationBase(
     proposal_reference: str | None = None
     object_position: Coordinate | None = None
     depth: UnitValue | None = None
-    bandpass: Bandpass
+    bandpass: EnergyBandpassCreate | FrequencyBandpassCreate | WavelengthBandpassCreate
     # Explicit IVOA ObsLocTap
     t_resolution: float | None = None
     em_res_power: float | None = None
@@ -79,13 +84,6 @@ class Observation(ObservationBase):
         else:
             tracking_type = None
 
-        bandpass = WavelengthBandpass(
-            central_wavelength=observation.central_wavelength,
-            bandwidth=observation.bandwidth,
-            filter_name=observation.filter_name,
-            unit=tools_enums.WavelengthUnit.ANGSTROM,
-        )
-
         return Observation(
             id=observation.id,
             instrument_id=observation.instrument_id,
@@ -109,7 +107,12 @@ class Observation(ObservationBase):
                 ra=observation.object_ra, dec=observation.object_dec
             ),
             depth=depth,
-            bandpass=Bandpass(**bandpass.model_dump()),
+            bandpass=WavelengthBandpassCreate(
+                central_wavelength=observation.central_wavelength,
+                bandwidth=observation.bandwidth,
+                filter_name=observation.filter_name,
+                unit=tools_enums.WavelengthUnit.ANGSTROM,
+            ),
             t_resolution=observation.t_resolution,
             em_res_power=observation.em_res_power,
             o_ucd=observation.o_ucd,
@@ -166,7 +169,7 @@ class ObservationCreate(ObservationBase):
         if self.object_position:
             data["object_position"] = object_position_element
 
-        for key, val in self.bandpass.bandpass_converter().items():
+        for key, val in bandpass_converter(self.bandpass).items():
             data[key] = val
 
         if "bandpass" in data.keys():
