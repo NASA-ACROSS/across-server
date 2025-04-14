@@ -55,10 +55,9 @@ class ObservatoryService:
         ValueError
             If the ephemeris type is unknown.
         """
-        ephemeris_types: list[str] = []
-        for obs in observatories:
-            obs_etypes = [x.ephemeris_type for x in obs.ephemeris_types]
-            ephemeris_types.extend(obs_etypes)
+        ephemeris_types = {
+            et.ephemeris_type for obs in observatories for et in obs.ephemeris_types
+        }
 
         observatory_ids = [x.id for x in observatories]
 
