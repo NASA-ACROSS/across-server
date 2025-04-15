@@ -59,7 +59,19 @@ def mock_result(
 
 
 @pytest.fixture
-def mock_db(mock_result: AsyncMock) -> Generator[AsyncMock]:
+def mock_scalar_result() -> Generator[AsyncMock]:
+    mock_result = AsyncMock()
+    mock_result.all = MagicMock()
+    mock_result.one = MagicMock()
+    mock_result.one_or_none = MagicMock()
+
+    yield mock_result
+
+
+@pytest.fixture
+def mock_db(
+    mock_result: AsyncMock, mock_scalar_result: AsyncMock
+) -> Generator[AsyncMock]:
     mock = AsyncMock(AsyncSession)
 
     # Mock the Result object that `execute` returns
@@ -67,6 +79,8 @@ def mock_db(mock_result: AsyncMock) -> Generator[AsyncMock]:
     mock.add = Mock()
     mock.commit = AsyncMock()
     mock.refresh = AsyncMock()
+    mock.scalars = AsyncMock(return_value=mock_scalar_result)
+    mock.delete = AsyncMock()
 
     yield mock
 

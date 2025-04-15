@@ -24,13 +24,10 @@ router = APIRouter(
     description="Read many service accounts",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.ServiceAccount],
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-    ],
 )
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
 ) -> list[schemas.ServiceAccount]:
     service_accounts = await service.get_many(user_id=auth_user.id)
     return [
@@ -50,13 +47,10 @@ async def get_many(
             "description": "Return a service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-    ],
 )
 async def get(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccount:
     service_account = await service.get(service_account_id, user_id=auth_user.id)
@@ -75,13 +69,10 @@ async def get(
             "description": "The newly created service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"])
-    ],
 )
 async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
 ) -> schemas.ServiceAccount:
     service_account = await service.create(data, created_by_id=auth_user.id)
@@ -100,13 +91,10 @@ async def create(
             "description": "The updated service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def update(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
     data: schemas.ServiceAccountUpdate,
 ) -> schemas.ServiceAccount:
@@ -121,13 +109,10 @@ async def update(
     summary="Delete a service_account",
     description="Expire a service account",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def delete(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> None:
     await service.expire_key(service_account_id, modified_by_id=auth_user.id)
@@ -145,13 +130,10 @@ async def delete(
             "description": "The rotated service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def rotate(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccount:
     service_account = await service.rotate_key(

@@ -361,7 +361,7 @@ class Group(Base, CreatableMixin, ModifiableMixin):
         lazy="selectin",
         cascade="all,delete",
     )
-    invites: Mapped[list["GroupInvite"] | None] = relationship(
+    invites: Mapped[list["GroupInvite"]] = relationship(
         back_populates="group", lazy="selectin"
     )
 

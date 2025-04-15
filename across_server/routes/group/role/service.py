@@ -75,10 +75,6 @@ class GroupRoleService:
     async def remove(
         self, group_role: models.GroupRole, user: models.User, group: models.Group
     ) -> None:
-        # User must belong to group
-        if group not in user.groups:
-            raise GroupNotFoundException(group.id)
-
         # Group role must belong to group
         if group_role not in group.roles:
             raise GroupRoleNotFoundException(group_role.id)

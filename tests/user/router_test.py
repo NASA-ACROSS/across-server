@@ -49,10 +49,10 @@ class TestUserPatchRoute:
 
 class TestUserPostRoute:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, async_client: AsyncClient, mock_user_data: dict) -> None:
+    async def setup(self, async_client: AsyncClient, mock_user_json: dict) -> None:
         self.client = async_client
         self.endpoint = "/user/"
-        self.data = mock_user_data
+        self.data = mock_user_json
 
     @pytest.mark.asyncio
     async def test_should_send_email_when_user_is_created(

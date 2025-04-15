@@ -3,9 +3,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from across_server.util.email.service import EmailService
-
 from ... import auth, db
+from ...util.email.service import EmailService
+from ..group.invite.service import GroupInviteService
+from ..group.service import GroupService
+from ..user.invite.service import UserInviteService
 from . import schemas
 from .service import UserService
 
@@ -50,7 +52,11 @@ async def get(
     service: Annotated[UserService, Depends(UserService)], user_id: uuid.UUID
 ) -> schemas.User:
     user_model = await service.get(user_id)
-    return schemas.User.model_validate(user_model)
+
+    for invite in user_model.received_invites:
+        await invite.awaitable_attrs.sender
+
+    return schemas.User.model_validate(user_model, from_attributes=True)
 
 
 @router.post(
@@ -127,3 +133,94 @@ async def delete(
 ) -> schemas.User:
     user_model = await service.delete(user_id)
     return schemas.User.model_validate(user_model)
+
+
+# Invites
+@router.get(
+    "/{user_id}/invite",
+    summary="Read a user's group invites",
+    description="Read a user's group invites by a user ID.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "model": list[schemas.GroupInvite],
+            "description": "List of group invites for a user id",
+        },
+    },
+    dependencies=[Depends(auth.strategies.self_access)],
+)
+async def get_invites(
+    service: Annotated[UserInviteService, Depends(UserInviteService)],
+    user_id: uuid.UUID,
+) -> list[schemas.GroupInvite]:
+    group_invites = await service.get_many(user_id)
+    return [schemas.GroupInvite.model_validate(invite) for invite in group_invites]
+
+
+@router.patch(
+    "/{user_id}/invite/{invite_id}",
+    summary="Accept a group invitation",
+    description="Accept a group invitation to join a user group.",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "The group invitation has been accepted",
+        },
+    },
+    dependencies=[Depends(auth.strategies.self_access)],
+)
+async def accept_invite(
+    user_invite_service: Annotated[UserInviteService, Depends(UserInviteService)],
+    group_invite_service: Annotated[GroupInviteService, Depends(GroupInviteService)],
+    user_id: uuid.UUID,
+    invite_id: uuid.UUID,
+) -> None:
+    group_invite = await user_invite_service.get(user_id, invite_id)
+    await group_invite_service.accept(group_invite)
+    return
+
+
+@router.delete(
+    "/{user_id}/invite/{invite_id}",
+    summary="Decline a group invitation",
+    description="Decline a group invitation to refuse joining a user group.",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "The group invitation has been declined",
+        },
+    },
+    dependencies=[Depends(auth.strategies.self_access)],
+)
+async def decline_invite(
+    user_invite_service: Annotated[UserInviteService, Depends(UserInviteService)],
+    group_invite_service: Annotated[GroupInviteService, Depends(GroupInviteService)],
+    user_id: uuid.UUID,
+    invite_id: uuid.UUID,
+) -> None:
+    group_invite = await user_invite_service.get(user_id, invite_id)
+    await group_invite_service.delete(group_invite)
+    return
+
+
+# Leave Group
+@router.delete(
+    "/{user_id}/group/{group_id}",
+    summary="Leave a group",
+    description="Leave a group by id",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "The group invitation has been declined",
+        },
+    },
+    dependencies=[Depends(auth.strategies.self_access)],
+)
+async def leave_group(
+    user_service: Annotated[UserService, Depends(UserService)],
+    group_service: Annotated[GroupService, Depends(GroupService)],
+    user_id: uuid.UUID,
+    group_id: uuid.UUID,
+) -> None:
+    user = await user_service.get(user_id)
+    await group_service.remove_user(user, group_id)

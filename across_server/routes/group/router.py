@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Path, Security, status
 
 from ...auth.strategies import global_access, group_access
+from ..user.service import UserService
 from . import schemas
 from .service import GroupService
 
@@ -59,3 +60,20 @@ async def get(
 ) -> schemas.Group:
     group_model = await service.get(group_id)
     return schemas.Group.model_validate(group_model)
+
+
+@router.delete(
+    "/{group_id}/user/{user_id}",
+    summary="Remove a user from a group",
+    description="Remove a user from a group by ID",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Security(group_access, scopes=["group:user:write"])],
+)
+async def remove_user(
+    user_service: Annotated[UserService, Depends(UserService)],
+    group_service: Annotated[GroupService, Depends(GroupService)],
+    user_id: uuid.UUID,
+    group_id: uuid.UUID,
+) -> None:
+    user = await user_service.get(user_id)
+    await group_service.remove_user(user, group_id)
