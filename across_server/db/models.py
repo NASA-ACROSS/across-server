@@ -422,8 +422,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     pointing_angle: Mapped[float | None] = mapped_column(Float)
     depth_value: Mapped[float | None] = mapped_column(Float(2))
     depth_unit: Mapped[str | None] = mapped_column(String(50))  # Enum
-    central_wavelength: Mapped[float | None] = mapped_column(Float(2))
-    bandwidth: Mapped[float | None] = mapped_column(Float(2))
+    peak_wavelength: Mapped[float | None] = mapped_column(Float(2), nullable=True)
+    max_wavelength: Mapped[float | None] = mapped_column(Float(2))
+    min_wavelength: Mapped[float | None] = mapped_column(Float(2))
     filter_name: Mapped[str | None] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions

@@ -129,8 +129,8 @@ class Observation(ObservationBase):
             depth=depth,
             bandpass=Bandpass(
                 filter_name=observation.filter_name,
-                central_wavelength=observation.central_wavelength,
-                bandwidth=observation.bandwidth,
+                min_wavelength=observation.min_wavelength,
+                max_wavelength=observation.max_wavelength,
             ),
             t_resolution=observation.t_resolution,
             em_res_power=observation.em_res_power,

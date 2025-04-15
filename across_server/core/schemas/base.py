@@ -111,7 +111,7 @@ class BandpassConverterMixin:
     def bandpass_converter(values: dict, name: str) -> dict:
         bandpass: dict = {}
         for key, value in values.items():
-            if key in ["filter_name", "central_wavelength", "bandwidth"]:
+            if key in ["filter_name", "min_wavelength", "max_wavelength"]:
                 bandpass[key] = value
         if bool(bandpass):
             values.update({name: bandpass})
