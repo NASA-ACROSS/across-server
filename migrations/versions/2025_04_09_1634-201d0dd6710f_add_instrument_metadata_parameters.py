@@ -23,14 +23,14 @@ def upgrade() -> None:
     op.create_table(
         "filter",
         sa.Column("name", sa.String(length=50), nullable=False),
-        sa.Column("peak_wavelength", sa.Float(precision=5), nullable=False),
-        sa.Column("min_wavelength", sa.Float(precision=5), nullable=False),
-        sa.Column("max_wavelength", sa.Float(precision=5), nullable=False),
+        sa.Column("peak_wavelength", sa.Float(), nullable=False),
+        sa.Column("min_wavelength", sa.Float(), nullable=False),
+        sa.Column("max_wavelength", sa.Float(), nullable=False),
         sa.Column("is_operational", sa.Boolean(), nullable=False),
         sa.Column("sensitivity_depth_unit", sa.String(length=50), nullable=True),
-        sa.Column("sensitivity_depth", sa.Float(precision=5), nullable=True),
-        sa.Column("sensitivity_time_seconds", sa.Float(precision=5), nullable=True),
-        sa.Column("reference_url", sa.String(length=100), nullable=True),
+        sa.Column("sensitivity_depth", sa.Float(), nullable=True),
+        sa.Column("sensitivity_time_seconds", sa.Float(), nullable=True),
+        sa.Column("reference_url", sa.String(length=256), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("created_by_id", sa.UUID(), nullable=True),
         sa.Column("created_on", sa.DateTime(), nullable=False),
@@ -62,7 +62,7 @@ def upgrade() -> None:
         ),
     )
     op.add_column(
-        "instrument", sa.Column("reference_url", sa.String(length=100), nullable=True)
+        "instrument", sa.Column("reference_url", sa.String(length=256), nullable=True)
     )
     op.add_column(
         "instrument",
@@ -71,7 +71,7 @@ def upgrade() -> None:
         ),
     )
     op.add_column(
-        "observatory", sa.Column("reference_url", sa.String(length=100), nullable=True)
+        "observatory", sa.Column("reference_url", sa.String(length=256), nullable=True)
     )
     op.add_column(
         "observatory",
@@ -80,7 +80,7 @@ def upgrade() -> None:
         ),
     )
     op.add_column(
-        "telescope", sa.Column("reference_url", sa.String(length=100), nullable=True)
+        "telescope", sa.Column("reference_url", sa.String(length=256), nullable=True)
     )
     op.add_column(
         "telescope",
