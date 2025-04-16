@@ -7,8 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from across_server.core.enums.ephemeris_type import EphemerisType
-
+from ...core.enums.ephemeris_type import EphemerisType
 from ...db import models
 from ...db.database import get_session
 from . import schemas
