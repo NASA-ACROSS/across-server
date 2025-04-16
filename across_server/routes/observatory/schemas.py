@@ -4,8 +4,34 @@ import uuid
 from datetime import datetime
 
 from ...core.enums import ObservatoryType
+from ...core.enums.ephemeris_type import EphemerisType
 from ...core.schemas.base import BaseSchema, IDNameSchema
-from ...db.models import Observatory as ObservatoryModel
+
+
+class TLEParameters(BaseSchema):
+    norad_id: int
+    norad_satellite_name: str
+
+
+class JPLParameters(BaseSchema):
+    naif_id: int
+
+
+class SPICEParameters(BaseSchema):
+    naif_id: int
+    spice_kernel_url: str
+
+
+class GroundParameters(BaseSchema):
+    longitude: float
+    latitude: float
+    height: float
+
+
+class ObservatoryEphemerisType(BaseSchema):
+    ephemeris_type: EphemerisType
+    priority: int
+    parameters: TLEParameters | JPLParameters | SPICEParameters | GroundParameters
 
 
 class ObservatoryBase(BaseSchema):
@@ -26,6 +52,8 @@ class ObservatoryBase(BaseSchema):
         Type of observatory
     telescopes: list[IDNameSchema]
         List of telescopes belonging to observatory in id,name format
+    ephemeris_types: list[ObservatoryEphemerisType]
+        List of ephemeris types for the observatory
     """
 
     id: uuid.UUID
@@ -34,6 +62,7 @@ class ObservatoryBase(BaseSchema):
     short_name: str
     type: ObservatoryType
     telescopes: list[IDNameSchema] | None = None
+    ephemeris_types: list[ObservatoryEphemerisType] | None = None
 
 
 class Observatory(ObservatoryBase):
@@ -43,36 +72,7 @@ class Observatory(ObservatoryBase):
     Notes
     -----
     Inherits from ObservatoryBase
-
-    Methods
-    -------
-    from_orm(observatory: ObservatoryModel) -> Observatory
-        Static method that instantiates this class from a observatory database record
     """
-
-    @staticmethod
-    def from_orm(observatory: ObservatoryModel) -> Observatory:
-        """
-        Method that converts a models.Observatory record to a schemas.Observatory
-        Parameters
-        ----------
-        observatory: ObservatoryModel
-            the models.Observatory record
-        Returns
-        -------
-            schemas.Observatory
-        """
-        return Observatory(
-            id=observatory.id,
-            name=observatory.name,
-            short_name=observatory.short_name,
-            type=observatory.observatory_type,
-            telescopes=[
-                IDNameSchema(id=telescope.id, name=telescope.name)
-                for telescope in observatory.telescopes
-            ],
-            created_on=observatory.created_on,
-        )
 
 
 class ObservatoryRead(BaseSchema):
@@ -90,10 +90,13 @@ class ObservatoryRead(BaseSchema):
         Query param to search by type
     created_on: Optional[datetime] = None
         Query param to search by created date after value
+    ephemeris_type: Optional[list[EphemerisType]] = None
+        Query param to search by ephemeris types
     """
 
     name: str | None = None
     type: ObservatoryType | None = None
     telescope_name: str | None = None
     telescope_id: uuid.UUID | None = None
+    ephemeris_type: list[EphemerisType] | None = None
     created_on: datetime | None = None

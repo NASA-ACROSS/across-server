@@ -9,7 +9,13 @@ from .seeds.group_roles import group_roles
 from .seeds.groups import groups
 from .seeds.instruments import instruments
 from .seeds.observations import observations
-from .seeds.observatories import observatories
+from .seeds.observatories import (
+    earth_location_parameters,
+    jpl_parameters,
+    observatories,
+    spice_kernel_parameters,
+    tle_parameters,
+)
 from .seeds.permissions import permissions
 from .seeds.roles import roles
 from .seeds.schedules import schedules
@@ -30,6 +36,10 @@ seed_order = [
     [models.Schedule.__tablename__, schedules],
     [models.Observation.__tablename__, observations],
     [models.TLE.__tablename__, tles],
+    [models.TLEParameters.__tablename__, tle_parameters],
+    [models.JPLEphemerisParameters.__tablename__, jpl_parameters],
+    [models.SpiceKernelParameters.__tablename__, spice_kernel_parameters],
+    [models.EarthLocationParameters.__tablename__, earth_location_parameters],
 ]
 
 

@@ -22,7 +22,7 @@ class BaseSchema(BaseModel):
         return hashlib.sha512(json_data.encode()).hexdigest()
 
 
-class IDNameSchema(BaseModel):
+class IDNameSchema(BaseSchema):
     id: UUID
     name: str
 
