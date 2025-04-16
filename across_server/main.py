@@ -12,7 +12,6 @@ from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
     instrument,
-    observation,
     observatory,
     permission,
     role,
@@ -70,7 +69,6 @@ app.include_router(user.service_account.group_role.router)
 app.include_router(role.router)
 app.include_router(group.router)
 app.include_router(group.group_role.router)
-app.include_router(observation.router)
 app.include_router(schedule.router)
 app.include_router(tle.router)
 app.include_router(observatory.router)
