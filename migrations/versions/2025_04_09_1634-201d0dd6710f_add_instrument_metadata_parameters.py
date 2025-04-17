@@ -1,7 +1,7 @@
 """add instrument metadata parameters
 
 Revision ID: 201d0dd6710f
-Revises: 3df02ad6028d
+Revises: 438a1fe7c75c
 Create Date: 2025-04-09 16:34:23.524925
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "201d0dd6710f"
-down_revision: Union[str, None] = "3df02ad6028d"
+down_revision: Union[str, None] = "438a1fe7c75c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
