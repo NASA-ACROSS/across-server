@@ -23,7 +23,7 @@ def upgrade() -> None:
     op.create_table(
         "filter",
         sa.Column("name", sa.String(length=50), nullable=False),
-        sa.Column("peak_wavelength", sa.Float(), nullable=False),
+        sa.Column("peak_wavelength", sa.Float(), nullable=True),
         sa.Column("min_wavelength", sa.Float(), nullable=False),
         sa.Column("max_wavelength", sa.Float(), nullable=False),
         sa.Column("is_operational", sa.Boolean(), nullable=False),

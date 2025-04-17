@@ -451,7 +451,7 @@ class Filter(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "filter"
 
     name: Mapped[str] = mapped_column(String(50))
-    peak_wavelength: Mapped[float] = mapped_column(Float)
+    peak_wavelength: Mapped[float] = mapped_column(Float, nullable=True)
     min_wavelength: Mapped[float] = mapped_column(Float)
     max_wavelength: Mapped[float] = mapped_column(Float)
     is_operational: Mapped[bool] = mapped_column(Boolean)
