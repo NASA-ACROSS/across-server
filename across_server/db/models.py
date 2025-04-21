@@ -385,7 +385,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
     type: Mapped[str] = mapped_column(String(25), nullable=False)
-    reference_url: Mapped[str] = mapped_column(String(256), nullable=True)
+    reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean)
 
     telescopes: Mapped[list["Telescope"]] = relationship(
@@ -409,7 +409,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     observatory_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey(Observatory.id)
     )
-    reference_url: Mapped[str] = mapped_column(String(256), nullable=True)
+    reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean)
 
     observatory: Mapped["Observatory"] = relationship(
@@ -432,7 +432,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
     )
     type: Mapped[str] = mapped_column(String(50))
-    reference_url: Mapped[str] = mapped_column(String(256), nullable=True)
+    reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean)
 
     telescope: Mapped["Telescope"] = relationship(
@@ -458,7 +458,7 @@ class Filter(Base, CreatableMixin, ModifiableMixin):
     sensitivity_depth_unit: Mapped[str] = mapped_column(String(50), nullable=True)
     sensitivity_depth: Mapped[float] = mapped_column(Float, nullable=True)
     sensitivity_time_seconds: Mapped[float] = mapped_column(Float, nullable=True)
-    reference_url: Mapped[str] = mapped_column(String(256), nullable=True)
+    reference_url: Mapped[str] = mapped_column(String, nullable=True)
 
 
 class Footprint(Base, CreatableMixin, ModifiableMixin):

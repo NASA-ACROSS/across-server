@@ -30,7 +30,7 @@ def upgrade() -> None:
         sa.Column("sensitivity_depth_unit", sa.String(length=50), nullable=True),
         sa.Column("sensitivity_depth", sa.Float(), nullable=True),
         sa.Column("sensitivity_time_seconds", sa.Float(), nullable=True),
-        sa.Column("reference_url", sa.String(length=256), nullable=True),
+        sa.Column("reference_url", sa.String(), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("created_by_id", sa.UUID(), nullable=True),
         sa.Column("created_on", sa.DateTime(), nullable=False),
@@ -61,27 +61,21 @@ def upgrade() -> None:
             "type", sa.String(length=50), nullable=False, server_default="photometric"
         ),
     )
-    op.add_column(
-        "instrument", sa.Column("reference_url", sa.String(length=256), nullable=True)
-    )
+    op.add_column("instrument", sa.Column("reference_url", sa.String(), nullable=True))
     op.add_column(
         "instrument",
         sa.Column(
             "is_operational", sa.Boolean(), nullable=False, server_default="True"
         ),
     )
-    op.add_column(
-        "observatory", sa.Column("reference_url", sa.String(length=256), nullable=True)
-    )
+    op.add_column("observatory", sa.Column("reference_url", sa.String(), nullable=True))
     op.add_column(
         "observatory",
         sa.Column(
             "is_operational", sa.Boolean(), nullable=False, server_default="True"
         ),
     )
-    op.add_column(
-        "telescope", sa.Column("reference_url", sa.String(length=256), nullable=True)
-    )
+    op.add_column("telescope", sa.Column("reference_url", sa.String(), nullable=True))
     op.add_column(
         "telescope",
         sa.Column(
