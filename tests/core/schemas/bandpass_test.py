@@ -19,19 +19,19 @@ class TestBandpass:
         )
         result = bandpass_converter(schema)
         assert result["filter_name"] == "test_filter"
-        assert np.isclose(result["central_wavelength"], 5000.0)
-        assert np.isclose(result["bandwidth"], 1000.0)
+        assert np.isclose(result["min_wavelength"], 4000.0)
+        assert np.isclose(result["max_wavelength"], 6000.0)
 
     def test_converter_energy(self) -> None:
         schema = EnergyBandpassCreate(min=2.0, max=4.0, unit=tools_enums.EnergyUnit.keV)
         result = bandpass_converter(schema)
-        assert "central_wavelength" in result
-        assert "bandwidth" in result
+        assert "min_wavelength" in result
+        assert "max_wavelength" in result
 
     def test_converter_frequency(self) -> None:
         schema = FrequencyBandpassCreate(
             min=3e14, max=6e14, unit=tools_enums.FrequencyUnit.Hz
         )
         result = bandpass_converter(schema)
-        assert "central_wavelength" in result
-        assert "bandwidth" in result
+        assert "min_wavelength" in result
+        assert "max_wavelength" in result
