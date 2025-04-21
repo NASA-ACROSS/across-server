@@ -19,6 +19,7 @@ class AuthUser(BaseModel):
     groups: list[Group]
     first_name: str | None = None
     last_name: str | None = None
+    username: str | None = None
 
 
 class AccessTokenResponse(BaseModel):

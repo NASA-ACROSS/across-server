@@ -5,10 +5,10 @@ from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
+    MetaData,
     String,
     Table,
     UniqueConstraint,
@@ -22,10 +22,13 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core.enums import ObservatoryType
+from .config import config
+
+base_metadata = MetaData(schema=config.ACROSS_DB_NAME)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
+    metadata = base_metadata
     id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
@@ -371,14 +374,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    type: Mapped[ObservatoryType] = mapped_column(
-        Enum(
-            *ObservatoryType.get_args(),
-            name="observatory_type",
-            create_constraint=True,
-            validate_strings=True,
-        )
-    )
+    type: Mapped[str] = mapped_column(String(25), nullable=False)
 
     telescopes: Mapped[list["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"

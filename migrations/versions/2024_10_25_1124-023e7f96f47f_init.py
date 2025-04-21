@@ -70,12 +70,7 @@ def upgrade() -> None:
         sa.Column("short_name", sa.String(length=50), nullable=True),
         sa.Column(
             "observatory_type",
-            sa.Enum(
-                "SPACE_BASED",
-                "GROUND_BASED",
-                name="observatory_type",
-                create_constraint=True,
-            ),
+            sa.String(length=25),
             nullable=False,
         ),
         sa.Column("id", sa.UUID(), nullable=False),
@@ -369,5 +364,4 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_user_username"), table_name="user")
     op.drop_index(op.f("ix_user_email"), table_name="user")
     op.drop_table("user")
-    sa.Enum(name="observatory_type").drop(op.get_bind(), checkfirst=False)
     # ### end Alembic commands ###

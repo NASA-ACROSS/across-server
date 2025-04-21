@@ -25,5 +25,25 @@
             ],
             "jinja": true
         },
+        {
+            "name": "NON-LOCAL: Uvicorn: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+            "jinja": true
+        },
     ]
 }

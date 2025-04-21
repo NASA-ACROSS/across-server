@@ -11,7 +11,6 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm, select
-from sqlalchemy.dialects import postgresql
 
 from across_server.core.enums.ephemeris_type import EphemerisType
 from migrations.versions.model_snapshots.models_2025_04_05 import (
@@ -107,9 +106,7 @@ def upgrade() -> None:
         "observatory",
         "observatory_type",
         new_column_name="type",
-        existing_type=postgresql.ENUM(
-            "SPACE_BASED", "GROUND_BASED", name="observatory_type"
-        ),
+        existing_type=sa.String(25),
         existing_nullable=False,
     )
 
@@ -164,9 +161,6 @@ def downgrade() -> None:
         "observatory",
         "type",
         new_column_name="observatory_type",
-        existing_type=postgresql.ENUM(
-            "SPACE_BASED", "GROUND_BASED", name="observatory_type"
-        ),
         existing_nullable=False,
     )
 

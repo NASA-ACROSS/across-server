@@ -15,6 +15,9 @@ class Config(BaseConfig):
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
+    # AWS Configuration
+    AWS_REGION: str = "us-east-2"
+
     # Logging
     LOG_LEVEL: str = "DEBUG"
     # Adjusts the output being rendered as JSON (False for dev with pretty-print).

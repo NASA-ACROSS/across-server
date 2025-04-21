@@ -1,12 +1,10 @@
 import uuid
 from datetime import datetime, timezone
-from enum import Enum as notTheSQLEnum
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -22,15 +20,6 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-
-
-class ObservatoryType(str, notTheSQLEnum):
-    SPACE_BASED = "SPACE_BASED"
-    GROUND_BASED = "GROUND_BASED"
-
-    @classmethod
-    def get_args(cls) -> tuple[str, ...]:
-        return tuple(x.value for x in cls)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -379,14 +368,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    type: Mapped[ObservatoryType] = mapped_column(
-        Enum(
-            *ObservatoryType.get_args(),
-            name="observatory_type",
-            create_constraint=True,
-            validate_strings=True,
-        )
-    )
+    type: Mapped[str] = mapped_column(String(25), nullable=False)
 
     telescopes: Mapped[list["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"

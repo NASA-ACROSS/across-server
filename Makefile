@@ -76,6 +76,9 @@ help:
 
 
 # Group: Setup
+mfa: ## Auth with AWS through MFA
+	@scripts/mfa.sh
+
 init: install configure run migrate seed ## Initialize the project, dependencies, and start the server
 
 install_uv: ## Install 'uv' if needed (this will install it globally)
@@ -208,7 +211,6 @@ seed: check_prod ## Seed the database with initial data (only used on local and 
 
 migrate: ## Run the migrations for the database
 	@$(VENV_BIN)/alembic upgrade head
-
 
 # Group: Running
 run: ## Run the containers

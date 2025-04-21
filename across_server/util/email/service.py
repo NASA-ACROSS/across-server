@@ -5,8 +5,8 @@ from email.utils import make_msgid
 import aiosmtplib
 
 from across_server.auth import schemas
+from across_server.db import models
 
-from ...db import models
 from .config import email_config
 
 

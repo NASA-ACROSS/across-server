@@ -11,7 +11,6 @@ from shapely import Polygon
 from sqlalchemy import (
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -290,14 +289,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
 
     name: Mapped[str] = mapped_column(String(100))
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    observatory_type: Mapped[ObservatoryType] = mapped_column(
-        Enum(
-            *ObservatoryType.get_args(),
-            name="observatory_type",
-            create_constraint=True,
-            validate_strings=True,
-        )
-    )
+    observatory_type: Mapped[str] = mapped_column(String(25), nullable=False)
 
     telescopes: Mapped[List["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"

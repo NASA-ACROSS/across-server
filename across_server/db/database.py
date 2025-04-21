@@ -2,10 +2,13 @@ from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from ..core.config import config as core_config
 from .config import config
 
 engine = create_async_engine(
-    config.DB_URI(), connect_args={"ssl": "allow"}, pool_pre_ping=True
+    url=config.DB_URI(),
+    pool_pre_ping=True,
+    connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
 )
 
 async_session = async_sessionmaker(
