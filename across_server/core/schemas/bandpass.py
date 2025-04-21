@@ -46,6 +46,7 @@ def bandpass_converter(
 
     return {
         "filter_name": wavelength_bandpass.filter_name,
-        "central_wavelength": wavelength_bandpass.central_wavelength,
-        "bandwidth": wavelength_bandpass.bandwidth,
+        "min_wavelength": wavelength_bandpass.min,
+        "max_wavelength": wavelength_bandpass.max,
+        "peak_wavelength": wavelength_bandpass.peak_wavelength,
     }

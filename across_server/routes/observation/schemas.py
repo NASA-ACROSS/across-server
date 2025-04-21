@@ -108,8 +108,9 @@ class Observation(ObservationBase):
             ),
             depth=depth,
             bandpass=WavelengthBandpassCreate(
-                central_wavelength=observation.central_wavelength,
-                bandwidth=observation.bandwidth,
+                min=observation.min_wavelength,
+                max=observation.max_wavelength,
+                peak_wavelength=observation.peak_wavelength,
                 filter_name=observation.filter_name,
                 unit=tools_enums.WavelengthUnit.ANGSTROM,
             ),
