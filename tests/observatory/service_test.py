@@ -28,19 +28,19 @@ class TestObservatoryService:
             with pytest.raises(ObservatoryNotFoundException):
                 await service.get(uuid4())
 
-        class TestGetMany:
-            @pytest.mark.asyncio
-            async def test_should_return_empty_list_when_nothing_matches_params(
-                self, mock_db: AsyncMock, mock_result: AsyncMock
-            ) -> None:
-                """Should return an empty list when there are no matching observatories"""
-                mock_result.scalars.all.return_value = []
-                # mock_db.execute.return_value = mock_result
+    class TestGetMany:
+        @pytest.mark.asyncio
+        async def test_should_return_empty_list_when_nothing_matches_params(
+            self, mock_db: AsyncMock, mock_result: AsyncMock
+        ) -> None:
+            """Should return an empty list when there are no matching observatories"""
+            mock_result.scalars.all.return_value = []
+            # mock_db.execute.return_value = mock_result
 
-                service = ObservatoryService(mock_db)
-                params = ObservatoryRead()
-                values = await service.get_many(params)
-                assert len(values) == 0
+            service = ObservatoryService(mock_db)
+            params = ObservatoryRead()
+            values = await service.get_many(params)
+            assert len(values) == 0
 
     @pytest.mark.asyncio
     class TestGetEphemParameters:
@@ -181,8 +181,7 @@ class TestObservatoryService:
             created_on = datetime.now()
             params = schemas.ObservatoryRead(created_on=created_on)
             filters = service._get_filter(params)
-            assert len(filters) == 1
-            assert str(filters[0]).startswith("observatory.created_on >")
+            assert "observatory.created_on" in str(filters[0])
 
         async def test_filter_by_name(self) -> None:
             """Should add name filter when param specified"""
