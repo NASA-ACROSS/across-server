@@ -5,11 +5,13 @@ def create_env_file() -> None:
     env_file_path = ".env"
 
     env_vars = {
+        "APP_ENV": "local",
         "ACROSS_DB_USER": "admin",
         "ACROSS_DB_PWD": "local",
         "ACROSS_DB_NAME": "across",
         "ACROSS_DB_HOST": "localhost",
         "ACROSS_DB_PORT": "5432",
+        "ACROSS_DB_ROLE": "aws-developer-role",
         "ACROSS_DB_DEBUG": "False",
         "ACROSS_ADMIN_TOKEN": "admin-token-local",
         "ACROSS_FRONTEND_URL": "http://localhost:5173",
