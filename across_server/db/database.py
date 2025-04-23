@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from .config import config
 
 engine = create_async_engine(
-    config.DB_URI(),
-    connect_args={"ssl": "allow"},
+    config.DB_URI(), connect_args={"ssl": "allow"}, pool_pre_ping=True
 )
 
 async_session = async_sessionmaker(
