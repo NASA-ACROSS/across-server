@@ -36,6 +36,7 @@ def mock_observation_data() -> dict:
         "type": "imaging",
         "status": "planned",
         "created_on": "2024-12-16 00:00:00",
+        "bandpass": {"min": 2000, "max": 4000, "unit": "angstrom"},
     }
 
 

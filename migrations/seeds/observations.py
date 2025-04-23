@@ -22,6 +22,8 @@ sandy_observation = Observation(
     object_position="POINT (123.567 -78.876)",
     type="imaging",
     status="planned",
+    min_wavelength=4500,
+    max_wavelength=6500,
 )
 
 observations = [sandy_observation]
