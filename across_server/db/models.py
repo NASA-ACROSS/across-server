@@ -115,13 +115,6 @@ group_observatory = Table(
     Column("observatory_id", ForeignKey("observatory.id"), primary_key=True),
 )
 
-instrument_filter = Table(
-    "instrument_filter",
-    Base.metadata,
-    Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
-    Column("filter_id", ForeignKey("filter.id"), primary_key=True),
-)
-
 
 class EarthLocationParameters(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "earth_location_parameters"
@@ -386,7 +379,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     short_name: Mapped[str] = mapped_column(String(50), nullable=True)
     type: Mapped[str] = mapped_column(String(25), nullable=False)
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
-    is_operational: Mapped[bool] = mapped_column(Boolean)
+    is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
 
     telescopes: Mapped[list["Telescope"]] = relationship(
         back_populates="observatory", lazy="selectin", cascade="all,delete"
@@ -410,7 +403,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Observatory.id)
     )
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
-    is_operational: Mapped[bool] = mapped_column(Boolean)
+    is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
 
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
@@ -433,7 +426,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     type: Mapped[str] = mapped_column(String(50))
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
-    is_operational: Mapped[bool] = mapped_column(Boolean)
+    is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
 
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"
@@ -445,6 +438,9 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="selectin"
     )
+    filters: Mapped[list["Filter"]] = relationship(
+        back_populates="instrument", lazy="selectin", cascade="all,delete"
+    )
 
 
 class Filter(Base, CreatableMixin, ModifiableMixin):
@@ -454,11 +450,18 @@ class Filter(Base, CreatableMixin, ModifiableMixin):
     peak_wavelength: Mapped[float] = mapped_column(Float, nullable=True)
     min_wavelength: Mapped[float] = mapped_column(Float)
     max_wavelength: Mapped[float] = mapped_column(Float)
-    is_operational: Mapped[bool] = mapped_column(Boolean)
+    is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
     sensitivity_depth_unit: Mapped[str] = mapped_column(String(50), nullable=True)
     sensitivity_depth: Mapped[float] = mapped_column(Float, nullable=True)
     sensitivity_time_seconds: Mapped[float] = mapped_column(Float, nullable=True)
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
+    )
+
+    instrument: Mapped["Instrument"] = relationship(
+        back_populates="filters", lazy="selectin"
+    )
 
 
 class Footprint(Base, CreatableMixin, ModifiableMixin):

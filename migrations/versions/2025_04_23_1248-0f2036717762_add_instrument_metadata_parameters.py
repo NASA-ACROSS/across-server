@@ -1,8 +1,8 @@
 """add instrument metadata parameters
 
-Revision ID: 201d0dd6710f
+Revision ID: 0f2036717762
 Revises: 438a1fe7c75c
-Create Date: 2025-04-09 16:34:23.524925
+Create Date: 2025-04-23 12:48:30.301710
 
 """
 
@@ -10,12 +10,38 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy import orm, select
+
+from across_server.core.enums import InstrumentType
+from migrations.versions.model_snapshots.models_2025_04_23 import (
+    Observatory,
+)
 
 # revision identifiers, used by Alembic.
-revision: str = "201d0dd6710f"
+revision: str = "0f2036717762"
 down_revision: Union[str, None] = "438a1fe7c75c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
+
+OBSERVATORY = {
+    "name": "Transiting Exoplanet Survey Satellite",
+    "short_name": "TESS",
+    "observatory_type": "SPACE_BASED",
+    "reference_url": "https://science.nasa.gov/mission/tess/",
+    "telescopes": [
+        {
+            "name": "Transiting Exoplanet Survey Satellite",
+            "short_name": "TESS",
+            "instruments": [
+                {
+                    "name": "Transiting Exoplanet Survey Satellite",
+                    "short_name": "TESS",
+                    "type": InstrumentType.PHOTOMETRIC.value,
+                }
+            ],
+        }
+    ],
+}
 
 
 def upgrade() -> None:
@@ -26,41 +52,26 @@ def upgrade() -> None:
         sa.Column("peak_wavelength", sa.Float(), nullable=True),
         sa.Column("min_wavelength", sa.Float(), nullable=False),
         sa.Column("max_wavelength", sa.Float(), nullable=False),
-        sa.Column("is_operational", sa.Boolean(), nullable=False),
+        sa.Column(
+            "is_operational", sa.Boolean(), nullable=False, server_default="True"
+        ),
         sa.Column("sensitivity_depth_unit", sa.String(length=50), nullable=True),
         sa.Column("sensitivity_depth", sa.Float(), nullable=True),
         sa.Column("sensitivity_time_seconds", sa.Float(), nullable=True),
         sa.Column("reference_url", sa.String(), nullable=True),
+        sa.Column("instrument_id", sa.UUID(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("created_by_id", sa.UUID(), nullable=True),
         sa.Column("created_on", sa.DateTime(), nullable=False),
         sa.Column("modified_by_id", sa.UUID(), nullable=True),
         sa.Column("modified_on", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_table(
-        "instrument_filter",
-        sa.Column("instrument_id", sa.UUID(), nullable=False),
-        sa.Column("filter_id", sa.UUID(), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["filter_id"],
-            ["filter.id"],
-        ),
         sa.ForeignKeyConstraint(
             ["instrument_id"],
             ["instrument.id"],
         ),
-        sa.PrimaryKeyConstraint("instrument_id", "filter_id"),
+        sa.PrimaryKeyConstraint("id"),
     )
-
-    # We need to give the required columns a default value that will be assigned
-    # to the existing TESS observatory package from a previous migration
-    op.add_column(
-        "instrument",
-        sa.Column(
-            "type", sa.String(length=50), nullable=False, server_default="photometric"
-        ),
-    )
+    op.add_column("instrument", sa.Column("type", sa.String(length=50), nullable=True))
     op.add_column("instrument", sa.Column("reference_url", sa.String(), nullable=True))
     op.add_column(
         "instrument",
@@ -84,11 +95,25 @@ def upgrade() -> None:
     )
     # ### end Alembic commands ###
 
-    # Drop the default values now that they've been assigned to the existing observatory package objects
-    op.alter_column("instrument", "type", server_default=None)
-    op.alter_column("instrument", "is_operational", server_default=None)
-    op.alter_column("observatory", "is_operational", server_default=None)
-    op.alter_column("telescope", "is_operational", server_default=None)
+    # Add additional metadata to TESS observatory package
+    bind = op.get_bind()
+    session = orm.Session(bind=bind, expire_on_commit=False)
+    stmt = select(Observatory).where(Observatory.short_name == "TESS")
+    tess = session.execute(stmt).scalar_one_or_none()
+
+    if tess is None:
+        raise ValueError("TESS observatory not found")
+
+    tess.reference_url = OBSERVATORY["reference_url"]  # type: ignore
+    tess.telescopes[0].instruments[0].type = OBSERVATORY["telescopes"][0][
+        "instruments"
+    ][0]["type"]  # type: ignore
+
+    # Commit the changes
+    session.commit()
+    session.close()
+
+    op.alter_column("instrument", "type", nullable=False)
 
 
 def downgrade() -> None:
@@ -100,6 +125,5 @@ def downgrade() -> None:
     op.drop_column("instrument", "is_operational")
     op.drop_column("instrument", "reference_url")
     op.drop_column("instrument", "type")
-    op.drop_table("instrument_filter")
     op.drop_table("filter")
     # ### end Alembic commands ###
