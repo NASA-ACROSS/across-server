@@ -28,9 +28,10 @@ def bandpass_converter(
 
     Returns:
         dict: A dictionary containing:
-            - "filter_name" (str): The name of the filter.
-            - "central_wavelength" (float): Central wavelength of the bandpass.
-            - "bandwidth" (float): Bandwidth in wavelength units.
+            - "filter_name" (str): The name of the bandpass filter.
+            - "min_wavelength" (float): Minimum wavelength of the bandpass.
+            - "max_wavelength" (float): Maximum wavelength of the bandpass.
+            - "peak_wavelength" (float): Peak wavelength of the bandpass.
     """
     unit = bandpass.unit
     if unit in tools_enums.WavelengthUnit:
