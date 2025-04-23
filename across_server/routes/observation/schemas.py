@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, ClassVar
 
+from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
 from pydantic import BeforeValidator
 
@@ -16,12 +17,7 @@ from ...core.enums import (
     ObservationType,
 )
 from ...core.schemas import Coordinate, DateRange, UnitValue
-from ...core.schemas.bandpass import (
-    EnergyBandpassCreate,
-    FrequencyBandpassCreate,
-    WavelengthBandpassCreate,
-    bandpass_converter,
-)
+from ...core.schemas.bandpass import bandpass_converter
 from ...core.schemas.base import (
     BaseSchema,
 )
@@ -45,7 +41,7 @@ class ObservationBase(
     proposal_reference: str | None = None
     object_position: Coordinate | None = None
     depth: UnitValue | None = None
-    bandpass: EnergyBandpassCreate | FrequencyBandpassCreate | WavelengthBandpassCreate
+    bandpass: EnergyBandpass | FrequencyBandpass | WavelengthBandpass
     # Explicit IVOA ObsLocTap
     t_resolution: float | None = None
     em_res_power: float | None = None
@@ -107,7 +103,7 @@ class Observation(ObservationBase):
                 ra=observation.object_ra, dec=observation.object_dec
             ),
             depth=depth,
-            bandpass=WavelengthBandpassCreate(
+            bandpass=WavelengthBandpass(
                 min=observation.min_wavelength,
                 max=observation.max_wavelength,
                 peak_wavelength=observation.peak_wavelength,
@@ -170,8 +166,11 @@ class ObservationCreate(ObservationBase):
         if self.object_position:
             data["object_position"] = object_position_element
 
-        for key, val in bandpass_converter(self.bandpass).items():
-            data[key] = val
+        bandpass = bandpass_converter(self.bandpass)
+        data["filter_name"] = bandpass.filter_name
+        data["min_wavelength"] = bandpass.min
+        data["max_wavelength"] = bandpass.max
+        data["peak_wavelength"] = bandpass.peak_wavelength
 
         if "bandpass" in data.keys():
             del data["bandpass"]
