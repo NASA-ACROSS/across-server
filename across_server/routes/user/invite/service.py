@@ -5,10 +5,9 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.routes.group.invite.exceptions import GroupInviteNotFoundException
-
 from ....db import models
 from ....db.database import get_session
+from ....routes.group.invite.exceptions import GroupInviteNotFoundException
 
 
 class UserInviteService:
