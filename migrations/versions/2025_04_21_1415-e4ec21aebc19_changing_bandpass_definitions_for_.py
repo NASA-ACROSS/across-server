@@ -1,7 +1,7 @@
 """changing bandpass definitions for observations
 
 Revision ID: e4ec21aebc19
-Revises: 3df02ad6028d
+Revises: 438a1fe7c75c
 Create Date: 2025-04-21 14:15:30.165398
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "e4ec21aebc19"
-down_revision: Union[str, None] = "3df02ad6028d"
+down_revision: Union[str, None] = "438a1fe7c75c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
