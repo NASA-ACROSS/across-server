@@ -19,7 +19,7 @@ from migrations.versions.model_snapshots.models_2025_04_23 import (
 
 # revision identifiers, used by Alembic.
 revision: str = "0f2036717762"
-down_revision: Union[str, None] = "438a1fe7c75c"
+down_revision: Union[str, None] = "e4ec21aebc19"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
