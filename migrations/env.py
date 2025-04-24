@@ -5,7 +5,6 @@ from typing import Any
 import structlog
 from alembic import context
 from geoalchemy2 import alembic_helpers
-from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.schema import CreateSchema
@@ -77,6 +76,7 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        version_table_schema=target_metadata.schema,
         include_name=include_name,
         render_item=alembic_helpers.render_item,
     )
@@ -86,7 +86,6 @@ def do_run_migrations(connection: Connection) -> None:
             # The schema must be created separately outside of the actual migration
             # because the migration context will not have the schema created yet.
             context.execute(CreateSchema(target_metadata.schema, if_not_exists=True))
-            context.execute(text(f"SET search_path TO {target_metadata.schema},public"))
 
         context.run_migrations()
 

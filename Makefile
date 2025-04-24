@@ -76,9 +76,6 @@ help:
 
 
 # Group: Setup
-mfa: ## Auth with AWS through MFA
-	@scripts/mfa.sh
-
 init: install configure run migrate seed ## Initialize the project, dependencies, and start the server
 
 install_uv: ## Install 'uv' if needed (this will install it globally)
@@ -143,6 +140,8 @@ install_deps: ### Install dependencies
 	@uv pip sync $(REQ_TXT);
 	@echo "Installed dependencies";
 
+mfa: ## Auth with AWS through MFA
+	@scripts/mfa.sh
 
 # Group: Development
 start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
@@ -214,8 +213,7 @@ migrate: ## Run the migrations for the database
 
 # Group: Running
 run: ## Run the containers
-	@$(DOCKER_COMPOSE) up -d
-
+	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 
 # Group: Cleaning
 clean: ## Clean virtual env

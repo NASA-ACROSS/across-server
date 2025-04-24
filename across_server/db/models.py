@@ -24,7 +24,7 @@ from sqlalchemy.orm import (
 
 from .config import config
 
-base_metadata = MetaData(schema=config.ACROSS_DB_NAME)
+base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
 
 class Base(AsyncAttrs, DeclarativeBase):

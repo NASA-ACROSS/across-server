@@ -1,7 +1,7 @@
 """create TESS
 
 Revision ID: 2b00546497c1
-Revises: 3245c430ace2
+Revises: ed3a08dbfcc0
 Create Date: 2025-03-07 14:43:06.464266
 
 """
@@ -14,19 +14,23 @@ from uuid import uuid4
 from alembic import op
 from sqlalchemy import orm, select
 
-from migrations.versions.model_snapshots.models_2025_03_07 import (
+from across_server.core.enums.ephemeris_type import EphemerisType
+from migrations.versions.model_snapshots.models_2025_04_23 import (
     ACROSSFootprintPoint,
     Footprint,
     Group,
     Instrument,
+    JPLEphemerisParameters,
     Observatory,
+    ObservatoryEphemerisType,
     Telescope,
+    TLEParameters,
     create_geography,
 )
 
 # revision identifiers, used by Alembic.
 revision: str = "2b00546497c1"
-down_revision: Union[str, None] = "3245c430ace2"
+down_revision: Union[str, None] = "ed3a08dbfcc0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -405,7 +409,7 @@ footprint = [
 OBSERVATORY = {
     "name": "Transiting Exoplanet Survey Satellite",
     "short_name": "TESS",
-    "observatory_type": "SPACE_BASED",
+    "type": "SPACE_BASED",
     "telescopes": [
         {
             "name": "Transiting Exoplanet Survey Satellite",
@@ -437,7 +441,7 @@ def upgrade() -> None:
         id=uuid4(),
         name=OBSERVATORY["name"],
         short_name=OBSERVATORY["short_name"],
-        observatory_type=OBSERVATORY["observatory_type"],
+        type=OBSERVATORY["type"],
         group=group,
     )
     session.add(observatory_insert)
@@ -483,6 +487,35 @@ def upgrade() -> None:
                     polygon=polygon, instrument_id=instrument_id
                 )
                 session.add(footprint_insert)
+
+    ephemeris_types = [
+        ObservatoryEphemerisType(
+            observatory_id=observatory_id,
+            ephemeris_type=EphemerisType.JPL,
+            priority=1,
+        ),
+        ObservatoryEphemerisType(
+            observatory_id=observatory_id,
+            ephemeris_type=EphemerisType.TLE,
+            priority=2,
+        ),
+    ]
+    session.add_all(ephemeris_types)
+
+    # Add TLEParameters for TESS
+    tle_parameters = TLEParameters(
+        observatory_id=observatory_id,
+        norad_id=43435,
+        norad_satellite_name="TESS",
+    )
+    session.add(tle_parameters)
+
+    # Add JPLEphemerisParameters for TESS
+    jpl_parameters = JPLEphemerisParameters(
+        observatory_id=observatory_id,
+        naif_id=-95,
+    )
+    session.add(jpl_parameters)
 
     session.commit()
 
