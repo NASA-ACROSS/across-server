@@ -6,6 +6,7 @@ def create_env_file() -> None:
 
     env_vars = {
         "ACROSS_DB_USER": "admin",
+        "HOST": "http://localhost",
         "ACROSS_DB_PWD": "local",
         "ACROSS_DB_NAME": "across",
         "ACROSS_DB_HOST": "localhost",

@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import fastapi
@@ -78,10 +78,11 @@ class TestUserPostRoute:
 
     @pytest.mark.asyncio
     async def test_should_catch_error_when_email_service_throws_exception(
-        self, mock_email_service: MagicMock, capsys: pytest.CaptureFixture[str]
+        self, mock_email_service: MagicMock
     ) -> None:
         """Should catch an error and print it when email service throws an exception"""
         mock_email_service.send.side_effect = Exception("Mock raised exception")
-        await self.client.post(self.endpoint, json=self.data)
-        printed_error = capsys.readouterr()
-        assert "Mock raised exception" in printed_error.out
+
+        with patch("across_server.routes.user.router.logger") as log_mock:
+            await self.client.post(self.endpoint, json=self.data)
+            assert "Email service failed" in log_mock.error.call_args.args[0]

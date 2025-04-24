@@ -5,8 +5,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.core.exceptions import DuplicateEntityException
-
+from ....core.exceptions import DuplicateEntityException
 from ....db import models
 from ....db.database import get_session
 from .exceptions import GroupInviteNotFoundException
@@ -32,7 +31,6 @@ class GroupInviteService:
             select(models.GroupInvite)
             .where(models.GroupInvite.id == id)
             .where(models.GroupInvite.group_id == group_id)
-            .limit(1)
         )
 
         invite = result.one_or_none()
@@ -73,10 +71,10 @@ class GroupInviteService:
     async def accept(self, invite: models.GroupInvite) -> None:
         """Accept a group invite and delete the invite entity"""
         invite.group.users.append(invite.receiver)
-        await self.delete(invite)
+        await self.db.delete(invite)
+        await self.db.commit()
 
-    async def delete(self, invite: models.GroupInvite) -> UUID:
+    async def delete(self, invite: models.GroupInvite) -> None:
         """Delete an invite entity from the database"""
         await self.db.delete(invite)
         await self.db.commit()
-        return invite.id

@@ -33,7 +33,7 @@ router = APIRouter(
             "description": "A list of group roles",
         },
     },
-    dependencies=[Security(group_access)],
+    dependencies=[Depends(group_access)],
 )
 async def get_many(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
@@ -56,7 +56,7 @@ async def get_many(
             "description": "The requested group role",
         },
     },
-    dependencies=[Security(group_access)],
+    dependencies=[Depends(group_access)],
 )
 async def get(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],

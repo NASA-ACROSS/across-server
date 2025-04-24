@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security, status
+from fastapi import APIRouter, Depends, status
 
 from .... import auth
 from . import schemas
@@ -27,7 +27,7 @@ router = APIRouter(
 )
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
 ) -> list[schemas.ServiceAccount]:
     service_accounts = await service.get_many(user_id=auth_user.id)
     return [
@@ -50,7 +50,7 @@ async def get_many(
 )
 async def get(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccount:
     service_account = await service.get(service_account_id, user_id=auth_user.id)
@@ -72,7 +72,7 @@ async def get(
 )
 async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
 ) -> schemas.ServiceAccount:
     service_account = await service.create(data, created_by_id=auth_user.id)
@@ -94,7 +94,7 @@ async def create(
 )
 async def update(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
     data: schemas.ServiceAccountUpdate,
 ) -> schemas.ServiceAccount:
@@ -112,7 +112,7 @@ async def update(
 )
 async def delete(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> None:
     await service.expire_key(service_account_id, modified_by_id=auth_user.id)
@@ -133,7 +133,7 @@ async def delete(
 )
 async def rotate(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
-    auth_user: Annotated[auth.schemas.AuthUser, Security(auth.strategies.self_access)],
+    auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccount:
     service_account = await service.rotate_key(

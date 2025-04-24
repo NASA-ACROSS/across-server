@@ -1,6 +1,7 @@
 import uuid
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, Security, status
 
 from ....auth import magic_link
@@ -11,6 +12,8 @@ from ...user.service import UserService
 from ..service import GroupService
 from . import schemas
 from .service import GroupInviteService
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 router = APIRouter(
     prefix="/group/{group_id}",
@@ -112,7 +115,7 @@ async def create(
             content_html=invitation_email_body,
         )
     except Exception as e:
-        print(f"Email service failed to send with exception: {e}")
+        logger.error("Email service failed to send group invitation email", e=e)
 
     return schemas.GroupInvite.model_validate(group_invite, from_attributes=True)
 
@@ -122,6 +125,7 @@ async def create(
     summary="Delete a group invite",
     description="Delete a group invite by ID",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Security(group_access, scopes=["group:user:write"])],
 )
 async def delete_invite(
     group_invite_service: Annotated[GroupInviteService, Depends(GroupInviteService)],

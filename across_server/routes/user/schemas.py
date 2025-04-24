@@ -35,7 +35,6 @@ class UserBase(BaseSchema):
 
 class UserInfo(UserBase):
     id: uuid.UUID
-    pass
 
 
 # This is explicitly defined due to

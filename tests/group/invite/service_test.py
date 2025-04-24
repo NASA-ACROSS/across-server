@@ -156,8 +156,7 @@ class TestGroupInviteService:
                 invite = await service.send(
                     uuid.uuid4(), mock_group_data, mock_user_data
                 )
-                mock_db.add.assert_called_once()
-                mock_db.add.assert_called_with(invite)
+                mock_db.add.assert_called_once_with(invite)
 
     class TestAccept:
         @pytest.mark.asyncio
@@ -170,33 +169,20 @@ class TestGroupInviteService:
             assert mock_group_invite_data.receiver in mock_group_invite_data.group.users
 
         @pytest.mark.asyncio
-        async def test_should_call_delete(
+        async def test_should_call_db_delete_with_invite_record_once_when_successful(
             self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            # Patch the delete method with a return value
-            with patch.object(
-                service, "delete", return_value=uuid.uuid4()
-            ) as mock_patch_delete:
-                await service.accept(mock_group_invite_data)
-                mock_patch_delete.assert_called_once()
+            await service.accept(mock_group_invite_data)
+            mock_db.delete.assert_called_once_with(mock_group_invite_data)
 
     class TestDelete:
         @pytest.mark.asyncio
-        async def test_should_call_db_delete_with_invite_record_when_successful(
+        async def test_should_call_db_delete_with_invite_record_once_when_successful(
             self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
         ) -> None:
             service = GroupInviteService(mock_db)
 
             await service.delete(mock_group_invite_data)
-            mock_db.delete.assert_called_once()
-
-        @pytest.mark.asyncio
-        async def test_should_return_uuid_of_invite_record_when_successful(
-            self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
-        ) -> None:
-            service = GroupInviteService(mock_db)
-
-            deleted_uuid = await service.delete(mock_group_invite_data)
-            assert isinstance(deleted_uuid, uuid.UUID)
+            mock_db.delete.assert_called_once_with(mock_group_invite_data)

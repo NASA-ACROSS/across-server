@@ -40,7 +40,9 @@ class UserService:
 
     async def get_by_email(self, email: str) -> models.User:
         result = await self.db.scalars(
-            select(models.User).where(models.User.email == email)
+            select(models.User).where(
+                models.User.email.ilike(email)
+            )  # case insensitive email lookup
         )
 
         user = result.one_or_none()

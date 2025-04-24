@@ -6,10 +6,9 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.routes.group.role.service import GroupRoleService
-
 from ...db import get_session, models
 from .exceptions import GroupNotFoundException
+from .role.service import GroupRoleService
 
 
 class GroupService:

@@ -1,6 +1,7 @@
 import uuid
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, status
 
 from ... import auth, db
@@ -10,6 +11,8 @@ from ..group.service import GroupService
 from ..user.invite.service import UserInviteService
 from . import schemas
 from .service import UserService
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 router = APIRouter(
     prefix="/user",
@@ -88,7 +91,7 @@ async def create(
             content_html=verification_email_body,
         )
     except Exception as e:
-        print(f"Email service failed to send with exception: {e}")
+        logger.error("Email service failed to send user registration email", e=e)
 
 
 @router.patch(
@@ -177,7 +180,6 @@ async def accept_invite(
 ) -> None:
     group_invite = await user_invite_service.get(user_id, invite_id)
     await group_invite_service.accept(group_invite)
-    return
 
 
 @router.delete(
@@ -200,7 +202,6 @@ async def decline_invite(
 ) -> None:
     group_invite = await user_invite_service.get(user_id, invite_id)
     await group_invite_service.delete(group_invite)
-    return
 
 
 # Leave Group
@@ -211,7 +212,7 @@ async def decline_invite(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
-            "description": "The group invitation has been declined",
+            "description": "Successfully left the group",
         },
     },
     dependencies=[Depends(auth.strategies.self_access)],
