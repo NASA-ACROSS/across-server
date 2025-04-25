@@ -32,7 +32,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def arcmin_to_deg(arcmin: float) -> float:
-    """Convert arcminutes to degrees."""
+    """Convert arcminute to degrees."""
     return arcmin / 60.0
 
 
