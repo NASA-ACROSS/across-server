@@ -1,5 +1,6 @@
 import asyncio
 
+import structlog
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from across_server.db import config, models
@@ -22,6 +23,8 @@ from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
 from .seeds.tles import tles
 from .seeds.users import users
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 seed_order = [
     [models.Permission.__tablename__, permissions],
@@ -54,12 +57,12 @@ async def seed() -> None:
                 for record in records:
                     session.add(record)
 
-                print(f"seeded {table}")
+                logger.info(f"seeded {table}")
 
             await session.commit()
-        except Exception as e:
+        except Exception as err:
+            logger.error("Seeding failed, rolling back.", err=err)
             await session.rollback()
-            print(f"Rolled back due to an error: {e}")
 
     await engine.dispose()
 

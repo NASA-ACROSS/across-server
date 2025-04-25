@@ -2,11 +2,14 @@ import asyncio
 from logging.config import fileConfig
 from typing import Any
 
+import structlog
 from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.schema import CreateSchema
 
+from across_server.core import config as core_config
 from across_server.db import config, models
 
 # this is the Alembic Config object, which provides
@@ -18,6 +21,7 @@ ctx_config = context.config
 if ctx_config.config_file_name is not None:
     fileConfig(ctx_config.config_file_name)
 
+logger = structlog.getLogger()
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -41,6 +45,7 @@ def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
 # ... etc.
 
 DATABASE_URL = config.DB_URI()
+logger.info(f"Running migration for '{core_config.APP_ENV.value}' environment.")
 
 
 def run_migrations_offline() -> None:
@@ -71,11 +76,17 @@ def do_run_migrations(connection: Connection) -> None:
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
+        version_table_schema=target_metadata.schema,
         include_name=include_name,
         render_item=alembic_helpers.render_item,
     )
 
     with context.begin_transaction():
+        if target_metadata.schema:
+            # The schema must be created separately outside of the actual migration
+            # because the migration context will not have the schema created yet.
+            context.execute(CreateSchema(target_metadata.schema, if_not_exists=True))
+
         context.run_migrations()
 
 

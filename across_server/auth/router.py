@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Response, status
 from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
-from ..util.email.service import EmailService
+from ..util.email import EmailService
 from . import magic_link, schemas, strategies, tokens
 from .security import extract_creds
 from .service import AuthService

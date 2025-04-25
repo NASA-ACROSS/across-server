@@ -1,1 +1,27 @@
-Generic single-database configuration with an async dbapi.
+# ACROSS Database
+
+## Initial Setup
+
+The ACROSS DB must go through a few initial manual steps for any new environment in AWS. This must be completed prior to migrations, and cannot be part of migrations since these are prerequisites for migrations to run successfully. See the [AWS docs for IAM auth](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.Connecting.html) and enabling [POSTGIS extension](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Appendix.PostgreSQL.CommonDBATasks.PostGIS.html)for more context.
+
+The following statements must be executed from the `postgres` superuser. The credentials can be found in the SSM parameter store.
+
+**IMPORTANT:** Take note of the proper env you are accessing. For example,
+
+`/aurora-postgres/across-ue2-dev-core-server-db/admin/password`
+
+will access the dev db.
+
+Below is the sql to run once logged in. You may run into an error creating the `postgis_tiger_geocoder` extension that says a function `soundex` doesn't exist, but it does. You can search for it and it exists under the `public` schema. I do not understand why the next extension sometimes fails to find it. You will have to disconnect and reconnect from the db and continue.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+CREATE EXTENSION IF NOT EXISTS postgis_topology;
+
+CREATE USER developer;
+CREATE USER ci;
+GRANT rds_iam TO developer,ci;
+GRANT ALL PRIVILEGES ON DATABASE across TO developer,ci;
+```

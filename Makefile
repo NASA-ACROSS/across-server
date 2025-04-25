@@ -140,6 +140,8 @@ install_deps: ### Install dependencies
 	@uv pip sync $(REQ_TXT);
 	@echo "Installed dependencies";
 
+mfa: ## Auth with AWS through MFA
+	@scripts/mfa.sh
 
 # Group: Development
 start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
@@ -209,11 +211,9 @@ seed: check_prod ## Seed the database with initial data (only used on local and 
 migrate: ## Run the migrations for the database
 	@$(VENV_BIN)/alembic upgrade head
 
-
 # Group: Running
 run: ## Run the containers
-	@$(DOCKER_COMPOSE) up -d
-
+	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 
 # Group: Cleaning
 clean: ## Clean virtual env
