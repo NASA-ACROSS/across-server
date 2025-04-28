@@ -180,7 +180,9 @@ class ObservatoryEphemerisType(Base):
     parameters: Base | None = None
 
     # Relationship to Observatory
-    observatory = relationship("Observatory", back_populates="ephemeris_types")
+    observatory: Mapped["Observatory"] = relationship(
+        "Observatory", back_populates="ephemeris_types"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -385,7 +387,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
         lazy="selectin",
     )
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
-        "ObservatoryEphemerisType", back_populates="observatory"
+        "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
 
 

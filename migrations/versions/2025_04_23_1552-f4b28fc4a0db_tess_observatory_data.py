@@ -15,8 +15,8 @@ from alembic import op
 from sqlalchemy import orm, select
 
 from across_server.core.enums.ephemeris_type import EphemerisType
+from migrations.db_util import ACROSSFootprintPoint, create_geography
 from migrations.versions.model_snapshots.models_2025_04_23 import (
-    ACROSSFootprintPoint,
     Footprint,
     Group,
     Instrument,
@@ -25,7 +25,6 @@ from migrations.versions.model_snapshots.models_2025_04_23 import (
     ObservatoryEphemerisType,
     Telescope,
     TLEParameters,
-    create_geography,
 )
 
 # revision identifiers, used by Alembic.
