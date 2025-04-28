@@ -1,6 +1,12 @@
 import uuid
 
-from ...core.exceptions import DuplicateEntityException, NotFoundException
+from fastapi import status
+
+from ...core.exceptions import (
+    AcrossHTTPException,
+    DuplicateEntityException,
+    NotFoundException,
+)
 
 
 class UserNotFoundException(NotFoundException):
@@ -14,4 +20,16 @@ class DuplicateUserException(DuplicateEntityException):
             entity_name="User",
             field_name=field_name,
             field_value=field_value,
+        )
+
+
+class UserEmailNotFoundException(AcrossHTTPException):
+    def __init__(self, user_email: str):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            message=f"User with email {user_email} not found.",
+            log_data={
+                "entity": "User",
+                "user_email": user_email,
+            },
         )

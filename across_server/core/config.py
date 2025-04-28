@@ -9,7 +9,8 @@ class BaseConfig(BaseSettings):
 
 class Config(BaseConfig):
     APP_ENV: Environments = Environments.LOCAL
-    HOST: str = "localhost"
+    # need http:// prefix to prevent href removal in some email clients
+    HOST: str = "http://localhost"
     PORT: int = 8000
     ROOT_PATH: str = "/api"
 

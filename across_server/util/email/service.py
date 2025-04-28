@@ -39,6 +39,35 @@ class EmailService:
             </html>
         """
 
+    def construct_group_invitation_email(
+        self,
+        sender: models.User,
+        receiver: models.User,
+        group: models.Group,
+        login_link: str,
+    ) -> str:
+        return f"""\
+            <html>
+            <p>Dear {receiver.first_name} {receiver.last_name},</p>
+            <p>You have been invited to join the ACROSS user group:</p>
+            <p><b>{group.name}</b></p>
+            <p>by {sender.first_name} {sender.last_name} <i>{sender.email}</i></p>
+            <p>Please follow the link below to login to your account and view the invitation
+                on your profile page.</p>
+
+            <a href="{login_link}">Login to your NASA-ACROSS account</a>
+            <p>
+                If you think that this message has been sent in error, please reach out to the sender above or contact an ACROSS administrator.
+            <p>
+            <p>
+                Best,
+            </p>
+            <p>
+                NASA-ACROSS
+            </p>
+            </html>
+        """
+
     def construct_verification_email(self, user: models.User, magic_link: str) -> str:
         return f"""\
             <html>

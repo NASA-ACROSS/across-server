@@ -10,7 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...db import models
 from ...db.database import get_session
 from . import schemas
-from .exceptions import DuplicateUserException, UserNotFoundException
+from .exceptions import (
+    DuplicateUserException,
+    UserEmailNotFoundException,
+    UserNotFoundException,
+)
 
 
 class UserService:
@@ -31,6 +35,20 @@ class UserService:
 
         if user is None:
             raise UserNotFoundException(user_id)
+
+        return user
+
+    async def get_by_email(self, email: str) -> models.User:
+        result = await self.db.scalars(
+            select(models.User).where(
+                models.User.email.ilike(email)
+            )  # case insensitive email lookup
+        )
+
+        user = result.one_or_none()
+
+        if user is None:
+            raise UserEmailNotFoundException(email)
 
         return user
 

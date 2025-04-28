@@ -1,3 +1,4 @@
+import datetime
 import re
 import uuid
 from typing import Annotated
@@ -32,10 +33,27 @@ class UserBase(BaseSchema):
     email: EmailStr
 
 
+class UserInfo(UserBase):
+    id: uuid.UUID
+
+
 # This is explicitly defined due to
 #   A) parent data should define what data from the child it needs
 #   B) pydantic does not handle circular imports, so even if we
-#      wanted to import the User schema, we can't use it.
+#      wanted to import these schemas, we can't.
+class GroupInviteGroupDetails(BaseSchema):
+    id: uuid.UUID
+    name: str
+    short_name: str
+    created_on: datetime.datetime
+
+
+class GroupInvite(BaseSchema):
+    id: uuid.UUID
+    group: GroupInviteGroupDetails
+    sender: UserInfo
+
+
 class GroupRole(BaseSchema):
     id: uuid.UUID
     name: str
@@ -54,6 +72,7 @@ class User(UserBase):
     groups: list[Group]
     roles: list[RoleBase]
     group_roles: list[GroupRole]
+    received_invites: list[GroupInvite]
 
 
 class UserCreate(UserBase):

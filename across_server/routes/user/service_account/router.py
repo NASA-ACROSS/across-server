@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security, status
+from fastapi import APIRouter, Depends, status
 
 from .... import auth
 from . import schemas
@@ -24,9 +24,6 @@ router = APIRouter(
     description="Read many service accounts",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.ServiceAccount],
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-    ],
 )
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -50,9 +47,6 @@ async def get_many(
             "description": "Return a service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:read"]),
-    ],
 )
 async def get(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -75,9 +69,6 @@ async def get(
             "description": "The newly created service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"])
-    ],
 )
 async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -100,9 +91,6 @@ async def create(
             "description": "The updated service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def update(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -121,9 +109,6 @@ async def update(
     summary="Delete a service_account",
     description="Expire a service account",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def delete(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -145,9 +130,6 @@ async def delete(
             "description": "The rotated service account",
         },
     },
-    dependencies=[
-        Security(auth.strategies.global_access, scopes=["user:service_account:write"]),
-    ],
 )
 async def rotate(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],

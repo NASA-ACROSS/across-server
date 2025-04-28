@@ -12,6 +12,7 @@ def mock_group_data(mock_group_role_data: models.GroupRole) -> models.Group:
             "id": str(uuid4()),
             "name": "test group",
             "roles": [mock_group_role_data],
+            "users": [],  # gets populated with mock_user_data at runtime by the model because of groups relationship in mock_user_data below
         }
     )
 
@@ -43,6 +44,7 @@ def mock_user_data(
             "groups": [mock_group_data],
             "group_roles": [mock_group_role_data],
             "service_accounts": [mock_service_account_data],
+            "received_invites": [],
         }
     )
 
