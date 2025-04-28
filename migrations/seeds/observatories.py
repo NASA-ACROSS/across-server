@@ -21,6 +21,7 @@ sandy_observatory = Observatory(
     name="SANDY'S SPACE STATION",
     short_name="SANDY",
     group=treedome_space_group,
+    is_operational=True,
     ephemeris_types=[
         ObservatoryEphemerisType(ephemeris_type=EphemerisType.TLE, priority=1),
         ObservatoryEphemerisType(ephemeris_type=EphemerisType.JPL, priority=2),

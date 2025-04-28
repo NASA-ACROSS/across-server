@@ -1,5 +1,6 @@
 import uuid
 
+from across_server.core.enums import InstrumentType
 from across_server.db.models import Instrument
 
 from .telescopes import sandy_smaller_telescope, sandy_telescope
@@ -9,6 +10,8 @@ sandy_instrument = Instrument(
     name="SANDY'S X-RAY",
     short_name="SANDY_XRAY",
     telescope=sandy_telescope,
+    type=InstrumentType.CALORIMETER.value,
+    is_operational=True,
 )
 
 sandy_instrument = Instrument(
@@ -16,6 +19,8 @@ sandy_instrument = Instrument(
     name="SANDY'S OPTICAL",
     short_name="SANDOPT",
     telescope=sandy_smaller_telescope,
+    type=InstrumentType.PHOTOMETRIC.value,
+    is_operational=True,
 )
 
 instruments = [sandy_instrument]

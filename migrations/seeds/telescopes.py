@@ -9,6 +9,7 @@ sandy_telescope = Telescope(
     name="SANDY'S EYE IN THE SKY",
     short_name="SANDY_EYE",
     observatory=sandy_observatory,
+    is_operational=True,
 )
 
 sandy_smaller_telescope = Telescope(
@@ -16,6 +17,7 @@ sandy_smaller_telescope = Telescope(
     name="SANDY'S SECOND EYE IN THE SKY",
     short_name="SANDY_2EYE",
     observatory=sandy_observatory,
+    is_operational=True,
 )
 
 telescopes = [sandy_telescope, sandy_smaller_telescope]
