@@ -1,7 +1,7 @@
 """create TESS
 
 Revision ID: 2b00546497c1
-Revises: ed3a08dbfcc0
+Revises: e4ec21aebc19
 Create Date: 2025-03-07 14:43:06.464266
 
 """
@@ -30,7 +30,7 @@ from migrations.versions.model_snapshots.models_2025_04_23 import (
 
 # revision identifiers, used by Alembic.
 revision: str = "2b00546497c1"
-down_revision: Union[str, None] = "ed3a08dbfcc0"
+down_revision: Union[str, None] = "e4ec21aebc19"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
