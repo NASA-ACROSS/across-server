@@ -1,9 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from geoalchemy2 import Geography, WKBElement, shape
-from pydantic import BaseModel
-from shapely import Polygon
+from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
     Column,
     DateTime,
@@ -182,7 +180,9 @@ class ObservatoryEphemerisType(Base):
     parameters: Base | None = None
 
     # Relationship to Observatory
-    observatory = relationship("Observatory", back_populates="ephemeris_types")
+    observatory: Mapped["Observatory"] = relationship(
+        "Observatory", back_populates="ephemeris_types"
+    )
 
     __table_args__ = (
         UniqueConstraint(
@@ -366,7 +366,7 @@ class Group(Base, CreatableMixin, ModifiableMixin):
         lazy="selectin",
         cascade="all,delete",
     )
-    invites: Mapped[list["GroupInvite"] | None] = relationship(
+    invites: Mapped[list["GroupInvite"]] = relationship(
         back_populates="group", lazy="selectin"
     )
 
@@ -387,7 +387,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
         lazy="selectin",
     )
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
-        "ObservatoryEphemerisType", back_populates="observatory"
+        "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
 
 
@@ -500,8 +500,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     pointing_angle: Mapped[float | None] = mapped_column(Float)
     depth_value: Mapped[float | None] = mapped_column(Float(2))
     depth_unit: Mapped[str | None] = mapped_column(String(50))  # Enum
-    central_wavelength: Mapped[float | None] = mapped_column(Float(2))
-    bandwidth: Mapped[float | None] = mapped_column(Float(2))
+    max_wavelength: Mapped[float | None] = mapped_column(Float)
+    min_wavelength: Mapped[float | None] = mapped_column(Float)
+    peak_wavelength: Mapped[float | None] = mapped_column(Float)
     filter_name: Mapped[str | None] = mapped_column(String(50))
 
     # explicit ivoa ObsLocTap definitions
@@ -536,17 +537,3 @@ class TLE(Base):
             "epoch", "norad_id", name="uq_epoch_norad_id"
         ),  # Enforce uniqueness
     )
-
-
-class ACROSSFootprintPoint(BaseModel):
-    x: float  # ra
-    y: float  # dec
-
-
-def create_geography(polygon: list[ACROSSFootprintPoint]) -> WKBElement:
-    try:
-        geography = shape.from_shape(Polygon([[point.x, point.y] for point in polygon]))
-    except ValueError:
-        # If the inputs cannot make a valid polygon, then raise an error
-        pass
-    return geography
