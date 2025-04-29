@@ -11,17 +11,22 @@ from __future__ import annotations
 from typing import Sequence, Union
 from uuid import uuid4
 
+from across.tools import EnergyBandpass, convert_to_wave
+from across.tools import enums as tools_enums
 from alembic import op
 from sqlalchemy import orm, select
 
-from migrations.versions.model_snapshots.models_2025_04_24 import (
-    ACROSSFootprintPoint,
+from across_server.core.enums.ephemeris_type import EphemerisType
+from migrations.db_util import ACROSSFootprintPoint, create_geography
+from migrations.versions.model_snapshots.models_2025_04_28 import (
+    Filter,
     Footprint,
     Group,
     Instrument,
     Observatory,
+    ObservatoryEphemerisType,
     Telescope,
-    create_geography,
+    TLEParameters,
 )
 
 # revision identifiers, used by Alembic.
@@ -47,21 +52,41 @@ footprint: list[list[dict]] = [
     ]
 ]
 
+IXPE_BANDPASS = EnergyBandpass(
+    min=2.0,
+    max=8.0,
+    unit=tools_enums.EnergyUnit.keV,
+)
+IXPE_WAVELENGTH = convert_to_wave(IXPE_BANDPASS)
+
 OBSERVATORY = {
     "name": "Imaging X-Ray Polarimetry Explorer",
     "short_name": "IXPE",
     "observatory_type": "SPACE_BASED",
     "reference_url": "https://ixpe.msfc.nasa.gov/index.html",
+    "is_operational": True,
     "telescopes": [
         {
             "name": "Imaging X-Ray Polarimetry Explorer",
             "short_name": "IXPE",
+            "is_operational": True,
+            "reference_url": "https://ixpe.msfc.nasa.gov/index.html",
             "instruments": [
                 {
                     "name": "Imaging X-Ray Polarimetry Explorer",
                     "short_name": "IXPE",
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/ixpe.html",
                     "footprint": footprint,
+                    "is_operational": True,
+                    "filters": [
+                        {
+                            "name": "IXPE Bandpass",
+                            "min_wavelength": IXPE_WAVELENGTH.min,
+                            "max_wavelength": IXPE_WAVELENGTH.max,
+                            "is_operational": True,
+                            "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/ixpe.html",
+                        }
+                    ],
                 }
             ],
         }
@@ -85,6 +110,8 @@ def upgrade() -> None:
         name=OBSERVATORY["name"],
         short_name=OBSERVATORY["short_name"],
         type=OBSERVATORY["observatory_type"],
+        reference_url=OBSERVATORY["reference_url"],
+        is_operational=OBSERVATORY["is_operational"],
         group=group,
     )
     session.add(observatory_insert)
@@ -92,12 +119,14 @@ def upgrade() -> None:
 
     # get the telescopes
     telescopes = OBSERVATORY["telescopes"]
-    for telescope in telescopes:
+    for telescope in telescopes:  #  type:ignore
         # create the telescope record
         telescope_insert = Telescope(
             id=uuid4(),
-            name=telescope["name"],  #  type:ignore
-            short_name=telescope["short_name"],  #  type:ignore
+            name=telescope["name"],
+            short_name=telescope["short_name"],
+            reference_url=telescope["reference_url"],
+            is_operational=telescope["is_operational"],
             observatory_id=observatory_id,
         )
         session.add(telescope_insert)
@@ -109,8 +138,8 @@ def upgrade() -> None:
             # create the instrument record
             instrument_insert = Instrument(
                 id=uuid4(),
-                name=instrument["name"],  #  type:ignore
-                short_name=instrument["short_name"],  #  type:ignore
+                name=instrument["name"],
+                short_name=instrument["short_name"],
                 telescope_id=telescope_id,
             )
             session.add(instrument_insert)
@@ -130,6 +159,27 @@ def upgrade() -> None:
                     polygon=polygon, instrument_id=instrument_id
                 )
                 session.add(footprint_insert)
+
+            filters = instrument["filters"]
+            for filter in filters:
+                filter_insert = Filter(**filter)
+                filter_insert.instrument_id = instrument_id
+                session.add(filter_insert)
+
+    ephemeris_type = ObservatoryEphemerisType(
+        observatory_id=observatory_id,
+        ephemeris_type=EphemerisType.TLE,
+        priority=1,
+    )
+
+    session.add(ephemeris_type)
+    # Add TLEParameters for TESS
+    tle_parameters = TLEParameters(
+        observatory_id=observatory_id,
+        norad_id=49954,
+        norad_satellite_name="IXPE",
+    )
+    session.add(tle_parameters)
 
     session.commit()
 
