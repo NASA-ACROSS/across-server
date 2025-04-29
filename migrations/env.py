@@ -31,10 +31,11 @@ target_metadata = models.Base.metadata
 def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
     """Used to only autogenerate migrations ACROSS models
 
-    See: [Alembic Docs](https://alembic.sqlalchemy.org/en/latest/api/runtime.html#alembic.runtime.environment.EnvironmentContext.configure.params.include_name)
+    See: [Alembic Docs](https://alembic.sqlalchemy.org/en/latest/autogenerate.html#omitting-schema-names-from-the-autogenerate-process)
     """
-    if type_ == "table":
-        return name in target_metadata.tables
+    if type_ == "schema":
+        # this **will** include the default schema
+        return name in [config.ACROSS_DB_NAME]
     else:
         return True
 
@@ -65,6 +66,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_schemas=True,
         render_item=alembic_helpers.render_item,
     )
 
@@ -78,6 +80,8 @@ def do_run_migrations(connection: Connection) -> None:
         target_metadata=target_metadata,
         version_table_schema=target_metadata.schema,
         include_name=include_name,
+        include_schemas=True,
+        compare_type=True,
         render_item=alembic_helpers.render_item,
     )
 
