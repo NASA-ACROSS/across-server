@@ -1,7 +1,7 @@
 """create ixpe
 
 Revision ID: a6590318e932
-Revises: e4ec21aebc19
+Revises: 0f2036717762
 Create Date: 2025-04-24 15:21:03.729061
 
 """
@@ -17,6 +17,7 @@ from alembic import op
 from sqlalchemy import orm, select
 
 from across_server.core.enums.ephemeris_type import EphemerisType
+from across_server.core.enums.instrument_type import InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
 from migrations.versions.model_snapshots.models_2025_04_28 import (
     Filter,
@@ -31,7 +32,7 @@ from migrations.versions.model_snapshots.models_2025_04_28 import (
 
 # revision identifiers, used by Alembic.
 revision: str = "a6590318e932"
-down_revision: Union[str, None] = "e4ec21aebc19"
+down_revision: Union[str, None] = "0f2036717762"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -52,12 +53,12 @@ footprint: list[list[dict]] = [
     ]
 ]
 
-IXPE_BANDPASS = EnergyBandpass(
+IXPE_ENERGY_BANDPASS = EnergyBandpass(
     min=2.0,
     max=8.0,
     unit=tools_enums.EnergyUnit.keV,
 )
-IXPE_WAVELENGTH = convert_to_wave(IXPE_BANDPASS)
+IXPE_WAVELENGTH_BANDPASS = convert_to_wave(IXPE_ENERGY_BANDPASS)
 
 OBSERVATORY = {
     "name": "Imaging X-Ray Polarimetry Explorer",
@@ -78,11 +79,12 @@ OBSERVATORY = {
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/ixpe.html",
                     "footprint": footprint,
                     "is_operational": True,
+                    "type": InstrumentType.POLARIMETER.value,
                     "filters": [
                         {
                             "name": "IXPE Bandpass",
-                            "min_wavelength": IXPE_WAVELENGTH.min,
-                            "max_wavelength": IXPE_WAVELENGTH.max,
+                            "min_wavelength": IXPE_WAVELENGTH_BANDPASS.min,
+                            "max_wavelength": IXPE_WAVELENGTH_BANDPASS.max,
                             "is_operational": True,
                             "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/ixpe.html",
                         }
@@ -140,6 +142,9 @@ def upgrade() -> None:
                 id=uuid4(),
                 name=instrument["name"],
                 short_name=instrument["short_name"],
+                type=instrument["type"],
+                reference_url=instrument["reference_url"],
+                is_operational=instrument["is_operational"],
                 telescope_id=telescope_id,
             )
             session.add(instrument_insert)
@@ -166,6 +171,7 @@ def upgrade() -> None:
                 filter_insert.instrument_id = instrument_id
                 session.add(filter_insert)
 
+    # Add TLEParameters for IXPE
     ephemeris_type = ObservatoryEphemerisType(
         observatory_id=observatory_id,
         ephemeris_type=EphemerisType.TLE,
@@ -173,7 +179,7 @@ def upgrade() -> None:
     )
 
     session.add(ephemeris_type)
-    # Add TLEParameters for TESS
+
     tle_parameters = TLEParameters(
         observatory_id=observatory_id,
         norad_id=49954,
