@@ -81,7 +81,6 @@ def do_run_migrations(connection: Connection) -> None:
         version_table_schema=target_metadata.schema,
         include_name=include_name,
         include_schemas=True,
-        compare_type=True,
         render_item=alembic_helpers.render_item,
     )
 
