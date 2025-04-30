@@ -1,6 +1,6 @@
 import uuid
 
-from across_server.core.enums import InstrumentType
+from across_server.core.enums import InstrumentFOV, InstrumentType
 from across_server.db.models import Instrument
 
 from .telescopes import sandy_smaller_telescope, sandy_telescope
@@ -11,6 +11,7 @@ sandy_instrument_calorimeter = Instrument(
     short_name="SANDY_XRAY",
     telescope=sandy_telescope,
     type=InstrumentType.CALORIMETER.value,
+    field_of_view=InstrumentFOV.POLYGON.value,
     is_operational=True,
 )
 
@@ -20,6 +21,7 @@ sandy_instrument_photometric = Instrument(
     short_name="SANDOPT",
     telescope=sandy_smaller_telescope,
     type=InstrumentType.PHOTOMETRIC.value,
+    field_of_view=InstrumentFOV.POLYGON.value,
     is_operational=True,
 )
 

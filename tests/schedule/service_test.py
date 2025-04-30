@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from across_server.db.models import Instrument as InstrumentModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.routes.schedule.exceptions import (
     DuplicateScheduleException,
@@ -31,7 +32,11 @@ class TestScheduleService:
             service = ScheduleService(mock_db)
 
             with pytest.raises(DuplicateScheduleException):
-                await service.create(schedule_create_example, created_by_id=uuid4())
+                await service.create(
+                    schedule_create_example,
+                    instruments=[InstrumentModel()],
+                    created_by_id=uuid4(),
+                )
 
         @pytest.mark.asyncio
         async def test_should_save_service_account_to_database(
@@ -47,7 +52,11 @@ class TestScheduleService:
             mock_result.scalar_one_or_none = mock_scalar_one_or_none
             mock_db.execute.return_value = mock_result
             service = ScheduleService(mock_db)
-            await service.create(schedule_create_example, created_by_id=uuid4())
+            await service.create(
+                schedule_create_example,
+                instruments=[InstrumentModel()],
+                created_by_id=uuid4(),
+            )
 
             mock_db.commit.assert_called_once()
 

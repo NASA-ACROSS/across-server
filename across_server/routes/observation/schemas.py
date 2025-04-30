@@ -8,6 +8,8 @@ from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
 from pydantic import BeforeValidator
 
+from across_server.core.enums.instrument_fov import InstrumentFOV
+
 from ...core.date_utils import convert_to_utc
 from ...core.enums import (
     DepthUnit,
@@ -29,7 +31,7 @@ class ObservationBase(
 ):
     instrument_id: uuid.UUID
     object_name: str
-    pointing_position: Coordinate
+    pointing_position: Coordinate | None = None
     date_range: DateRange
     external_observation_id: str
     type: ObservationType
@@ -128,17 +130,26 @@ class ObservationCreate(ObservationBase):
 
     return_schema: ClassVar = Observation
 
-    def to_orm(self) -> ObservationModel:
+    def to_orm(self, instrument_fov: InstrumentFOV) -> ObservationModel:
         """
         Converts Pydantic schema to ORM representation
         Translates field names and flattens nested Pydantic schemas
         """
         data = self.model_dump(exclude_unset=True)
 
-        pointing_coords = self.pointing_position.model_dump_with_prefix(
-            prefix="pointing", data=self.pointing_position.model_dump()
-        )
-        pointing_position_element = self.pointing_position.create_gis_point()
+        if (
+            instrument_fov in [InstrumentFOV.POINT, InstrumentFOV.POLYGON]
+            and not self.pointing_position
+        ):
+            raise ValueError(
+                "Pointing position is required for Point and Polygon FOVs."
+            )
+
+        if self.pointing_position:
+            pointing_coords = self.pointing_position.model_dump_with_prefix(
+                prefix="pointing", data=self.pointing_position.model_dump()
+            )
+            pointing_position_element = self.pointing_position.create_gis_point()
 
         if self.object_position:
             object_coords = self.object_position.model_dump_with_prefix(

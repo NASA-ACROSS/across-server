@@ -9,12 +9,14 @@ from fastapi import FastAPI
 
 from across_server.core.enums import ScheduleFidelity, ScheduleStatus
 from across_server.core.schemas import DateRange
+from across_server.db.models import Instrument as InstrumentModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.db.models import Telescope as TelescopeModel
 from across_server.routes.schedule import service
 from across_server.routes.schedule.schemas import ScheduleCreate
 from across_server.routes.schedule.service import ScheduleService
 from across_server.routes.telescope.access import telescope_access
+from across_server.routes.telescope.service import TelescopeService
 
 
 @pytest.fixture
@@ -77,6 +79,18 @@ def mock_schedule_data(mock_schedule_post_data: dict) -> ScheduleModel:
     )
 
 
+@pytest.fixture()
+def mock_telescope_data(mock_schedule_post_data: dict) -> TelescopeModel:
+    return TelescopeModel(
+        id=UUID(mock_schedule_post_data["telescope_id"]),
+        instruments=[
+            InstrumentModel(
+                id=UUID(mock_schedule_post_data["observations"][0]["instrument_id"]),
+            )
+        ],
+    )
+
+
 @pytest.fixture(scope="function")
 def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncMock]:
     mock = AsyncMock(ScheduleService)
@@ -85,6 +99,15 @@ def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncM
     mock.get = AsyncMock(return_value=mock_schedule_data)
     mock.get_many = AsyncMock(return_value=[mock_schedule_data])
     mock.get_history = AsyncMock(return_value=[mock_schedule_data])
+
+    yield mock
+
+
+@pytest.fixture(scope="function")
+def mock_telescope_service(mock_telescope_data: TelescopeModel) -> Generator[AsyncMock]:
+    mock = AsyncMock(TelescopeService)
+
+    mock.get = AsyncMock(return_value=mock_telescope_data)
 
     yield mock
 
@@ -102,6 +125,7 @@ def dep_override(
     app: FastAPI,
     fastapi_dep: MagicMock,
     mock_schedule_service: AsyncMock,
+    mock_telescope_service: AsyncMock,
     mock_telescope_access: MagicMock,
 ) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
@@ -109,6 +133,7 @@ def dep_override(
     with overrider.override(
         {
             ScheduleService: lambda: mock_schedule_service,
+            TelescopeService: lambda: mock_telescope_service,
             telescope_access: lambda: mock_telescope_access,
         }
     ):

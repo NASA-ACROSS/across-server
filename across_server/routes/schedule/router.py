@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query, Security, status
 
 from ...auth.schemas import AuthUser
 from ..telescope.access import telescope_access
+from ..telescope.service import TelescopeService
 from . import schemas
 from .service import ScheduleService
 
@@ -103,6 +104,11 @@ async def create(
         AuthUser, Security(telescope_access, scopes=["group:schedule:write"])
     ],
     service: Annotated[ScheduleService, Depends(ScheduleService)],
+    telescope_service: Annotated[TelescopeService, Depends(TelescopeService)],
     data: schemas.ScheduleCreate,
 ) -> uuid.UUID:
-    return await service.create(schedule_create=data, created_by_id=auth_user.id)
+    telescope = await telescope_service.get(data.telescope_id)
+    instruments = telescope.instruments
+    return await service.create(
+        schedule_create=data, instruments=instruments, created_by_id=auth_user.id
+    )
