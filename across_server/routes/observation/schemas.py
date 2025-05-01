@@ -148,16 +148,16 @@ class ObservationCreate(ObservationBase):
                 prefix="pointing", data=self.pointing_position.model_dump()
             )
             data.update(pointing_coords)
-            pointing_position_element = self.pointing_position.create_gis_point()
-            data["pointing_position"] = pointing_position_element
+
+            data["pointing_position"] = self.pointing_position.create_gis_point()
 
         if self.object_position:
             object_coords = self.object_position.model_dump_with_prefix(
                 prefix="object", data=self.object_position.model_dump()
             )
             data.update(object_coords)
-            object_position_element = self.object_position.create_gis_point()
-            data["object_position"] = object_position_element
+
+            data["object_position"] = self.object_position.create_gis_point()
 
         if self.depth:
             depth_data = self.depth.model_dump_with_prefix(
