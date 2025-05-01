@@ -12,12 +12,3 @@ class ObservationService:
         db: Annotated[AsyncSession, Depends(get_session)],
     ) -> None:
         self.db = db
-
-    # async def create(self, data: schemas.ObservationCreate) -> schemas.Observation:
-    #     observation = data.to_orm()
-
-    #     self.db.add(observation)
-    #     await self.db.commit()
-    #     await self.db.refresh(observation)
-
-    #     return from_orm(data, observation)
