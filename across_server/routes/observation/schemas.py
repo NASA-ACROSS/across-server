@@ -147,14 +147,17 @@ class ObservationCreate(ObservationBase):
             pointing_coords = self.pointing_position.model_dump_with_prefix(
                 prefix="pointing", data=self.pointing_position.model_dump()
             )
+            data.update(pointing_coords)
             pointing_position_element = self.pointing_position.create_gis_point()
+            data["pointing_position"] = pointing_position_element
 
         if self.object_position:
             object_coords = self.object_position.model_dump_with_prefix(
                 prefix="object", data=self.object_position.model_dump()
             )
-            object_position_element = self.object_position.create_gis_point()
             data.update(object_coords)
+            object_position_element = self.object_position.create_gis_point()
+            data["object_position"] = object_position_element
 
         if self.depth:
             depth_data = self.depth.model_dump_with_prefix(
@@ -167,13 +170,7 @@ class ObservationCreate(ObservationBase):
             prefix="date_range", data=self.date_range.model_dump()
         )
         del data["date_range"]
-
-        for obj in [pointing_coords, date_range_data]:
-            data.update(obj)
-
-        data["pointing_position"] = pointing_position_element
-        if self.object_position:
-            data["object_position"] = object_position_element
+        data.update(date_range_data)
 
         bandpass = bandpass_converter(self.bandpass)
         data["filter_name"] = bandpass.filter_name

@@ -33,3 +33,12 @@ class TestObservationSchemas:
         mock_observation_create.pointing_position = None
         with pytest.raises(ObservationPointingPositionRequired):
             mock_observation_create.to_orm(InstrumentFOV.POLYGON)
+
+    @pytest.mark.asyncio
+    async def test_to_orm_should_return_observation_model_for_allsky_FOV_and_no_pointing(
+        self, mock_observation_create: ObservationCreate
+    ) -> None:
+        """Should return the observation model when successful"""
+        mock_observation_create.pointing_position = None
+        observation_model = mock_observation_create.to_orm(InstrumentFOV.ALL_SKY)
+        assert isinstance(observation_model, ObservationModel)
