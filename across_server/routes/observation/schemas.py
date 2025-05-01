@@ -8,8 +8,6 @@ from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
 from pydantic import BeforeValidator
 
-from across_server.core.enums.instrument_fov import InstrumentFOV
-
 from ...core.date_utils import convert_to_utc
 from ...core.enums import (
     DepthUnit,
@@ -18,12 +16,14 @@ from ...core.enums import (
     ObservationStatus,
     ObservationType,
 )
+from ...core.enums.instrument_fov import InstrumentFOV
 from ...core.schemas import Coordinate, DateRange, UnitValue
 from ...core.schemas.bandpass import bandpass_converter
 from ...core.schemas.base import (
     BaseSchema,
 )
 from ...db.models import Observation as ObservationModel
+from .exceptions import ObservationPointingPositionRequired
 
 
 class ObservationBase(
@@ -141,9 +141,7 @@ class ObservationCreate(ObservationBase):
             instrument_fov in [InstrumentFOV.POINT, InstrumentFOV.POLYGON]
             and not self.pointing_position
         ):
-            raise ValueError(
-                "Pointing position is required for Point and Polygon FOVs."
-            )
+            raise ObservationPointingPositionRequired()
 
         if self.pointing_position:
             pointing_coords = self.pointing_position.model_dump_with_prefix(

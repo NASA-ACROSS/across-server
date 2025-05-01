@@ -22,7 +22,7 @@ class DuplicateScheduleException(AcrossHTTPException):
 class InvalidScheduleInstrument(AcrossHTTPException):
     def __init__(self, instrument_id: uuid.UUID, telescope_id: uuid.UUID):
         super().__init__(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            message=f"Invalid Instrument ID {instrument_id} in for telescope ID {telescope_id}.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            message=f"Invalid Instrument ID {instrument_id} for telescope ID {telescope_id}.",
             log_data={"entity": "Schedule", "instrument_id": instrument_id},
         )

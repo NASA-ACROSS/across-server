@@ -5,13 +5,19 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
+from across.tools import WavelengthBandpass
+from across.tools import enums as tools_enums
 from fastapi import FastAPI
 
 from across_server.core.enums import ScheduleFidelity, ScheduleStatus
-from across_server.core.schemas import DateRange
+from across_server.core.enums.instrument_fov import InstrumentFOV
+from across_server.core.enums.observation_status import ObservationStatus
+from across_server.core.enums.observation_type import ObservationType
+from across_server.core.schemas import Coordinate, DateRange
 from across_server.db.models import Instrument as InstrumentModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.db.models import Telescope as TelescopeModel
+from across_server.routes.observation.schemas import ObservationCreate
 from across_server.routes.schedule import service
 from across_server.routes.schedule.schemas import ScheduleCreate
 from across_server.routes.schedule.service import ScheduleService
@@ -152,6 +158,30 @@ def patch_service_get_from_checksum_none(monkeypatch: Any) -> None:
 
 @pytest.fixture()
 def schedule_create_example() -> ScheduleCreate:
+    instrument_id = uuid4()
+
+    observation_create = ObservationCreate(
+        instrument_id=instrument_id,
+        object_name="Test Object",
+        pointing_position=Coordinate(
+            ra=42,
+            dec=42,
+        ),
+        date_range=DateRange(
+            begin=datetime.now(), end=datetime.now() + timedelta(seconds=45)
+        ),
+        external_observation_id="external",
+        type=ObservationType.IMAGING,
+        status=ObservationStatus.PLANNED,
+        pointing_angle=0,
+        bandpass=WavelengthBandpass(
+            filter_name="g",
+            central_wavelength=5500,
+            bandwidth=1000,
+            unit=tools_enums.WavelengthUnit.ANGSTROM,
+        ),
+    )
+
     return ScheduleCreate(
         name="test service account",
         telescope_id=uuid4(),
@@ -161,7 +191,18 @@ def schedule_create_example() -> ScheduleCreate:
         status=ScheduleStatus.PLANNED,
         external_id="external_id",
         fidelity=ScheduleFidelity.LOW,
-        observations=[],
+        observations=[observation_create],
+    )
+
+
+@pytest.fixture
+def instrument_model_example(
+    schedule_create_example: ScheduleCreate,
+) -> InstrumentModel:
+    return InstrumentModel(
+        id=schedule_create_example.observations[0].instrument_id,
+        telescope_id=schedule_create_example.telescope_id,
+        field_of_view=InstrumentFOV.POLYGON,
     )
 
 

@@ -7,6 +7,7 @@ from across_server.db.models import Instrument as InstrumentModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.routes.schedule.exceptions import (
     DuplicateScheduleException,
+    InvalidScheduleInstrument,
     ScheduleNotFoundException,
 )
 from across_server.routes.schedule.schemas import ScheduleCreate
@@ -21,6 +22,7 @@ class TestScheduleService:
             mock_db: AsyncMock,
             schedule_create_example: ScheduleCreate,
             mock_scalar_one_or_none: MagicMock,
+            instrument_model_example: InstrumentModel,
             mock_result: AsyncMock,
             mock_schedule_data: ScheduleModel,
         ) -> None:
@@ -34,7 +36,32 @@ class TestScheduleService:
             with pytest.raises(DuplicateScheduleException):
                 await service.create(
                     schedule_create_example,
-                    instruments=[InstrumentModel()],
+                    instruments=[instrument_model_example],
+                    created_by_id=uuid4(),
+                )
+
+        @pytest.mark.asyncio
+        async def test_should_raise_invalid_instrument(
+            self,
+            mock_db: AsyncMock,
+            schedule_create_example: ScheduleCreate,
+            mock_scalar_one_or_none: MagicMock,
+            instrument_model_example: InstrumentModel,
+            mock_result: AsyncMock,
+        ) -> None:
+            """Should raise duplicate schedule"""
+            # sets the checksum query to a value so it raises
+            mock_scalar_one_or_none.return_value = None
+            mock_result.scalar_one_or_none = mock_scalar_one_or_none
+            mock_db.execute.return_value = mock_result
+            service = ScheduleService(mock_db)
+
+            instrument_model_example.id = uuid4()
+
+            with pytest.raises(InvalidScheduleInstrument):
+                await service.create(
+                    schedule_create_example,
+                    instruments=[instrument_model_example],
                     created_by_id=uuid4(),
                 )
 
@@ -43,6 +70,7 @@ class TestScheduleService:
             self,
             mock_db: AsyncMock,
             schedule_create_example: ScheduleCreate,
+            instrument_model_example: InstrumentModel,
             mock_scalar_one_or_none: MagicMock,
             mock_result: AsyncMock,
         ) -> None:
@@ -54,7 +82,7 @@ class TestScheduleService:
             service = ScheduleService(mock_db)
             await service.create(
                 schedule_create_example,
-                instruments=[InstrumentModel()],
+                instruments=[instrument_model_example],
                 created_by_id=uuid4(),
             )
 
