@@ -100,7 +100,7 @@ OBSERVATORY = {
                     "footprint": [],
                     "is_operational": True,
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html",
-                    "type": InstrumentType.CALORIMETER.value,
+                    "type": InstrumentType.SCINTILLATOR.value,
                     "filters": [
                         {
                             "name": "Fermi GBM Bandpass",
@@ -193,7 +193,7 @@ def upgrade() -> None:
                 filter_insert.instrument_id = instrument_id
                 session.add(filter_insert)
 
-    # Add TLEParameters for IXPE
+    # Add TLEParameters for Fermi
     ephemeris_type = ObservatoryEphemerisType(
         observatory_id=observatory_id,
         ephemeris_type=EphemerisType.TLE,
@@ -205,7 +205,7 @@ def upgrade() -> None:
     tle_parameters = TLEParameters(
         observatory_id=observatory_id,
         norad_id=33053,
-        norad_satellite_name="FGRST",
+        norad_satellite_name="FGRST (GLAST)",
     )
     session.add(tle_parameters)
 

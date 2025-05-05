@@ -7,3 +7,4 @@ class InstrumentType(str, Enum):
     PHOTOMETRIC = "photometric"
     CALORIMETER = "calorimeter"
     POLARIMETER = "polarimeter"
+    SCINTILLATOR = "scintillator"
