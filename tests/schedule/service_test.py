@@ -49,7 +49,7 @@ class TestScheduleService:
             instrument_model_example: InstrumentModel,
             mock_result: AsyncMock,
         ) -> None:
-            """Should raise duplicate schedule"""
+            """Should raise invalid instrument"""
             # sets the checksum query to a value so it raises
             mock_scalar_one_or_none.return_value = None
             mock_result.scalar_one_or_none = mock_scalar_one_or_none

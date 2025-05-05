@@ -308,13 +308,16 @@ class ScheduleService:
         if existing:
             raise DuplicateScheduleException(existing.id)
 
-        telescope_instrument_ids = [
-            instrument.id for instrument in instruments if instrument.telescope_id
-        ]
+        telescope_instrument_ids = [instrument.id for instrument in instruments]
 
-        schedule_instrument_ids = [
-            observation.instrument_id for observation in schedule_create.observations
-        ]
+        schedule_instrument_ids = list(
+            set(
+                [
+                    observation.instrument_id
+                    for observation in schedule_create.observations
+                ]
+            )
+        )
 
         for schedule_instrument_id in schedule_instrument_ids:
             if schedule_instrument_id not in telescope_instrument_ids:
