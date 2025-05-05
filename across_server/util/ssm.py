@@ -1,7 +1,10 @@
 import os
+from typing import TYPE_CHECKING
 
 import boto3
-from types_boto3_ssm import SSMClient
+
+if TYPE_CHECKING:
+    from types_boto3_ssm import SSMClient
 
 from ..core.config import config
 
@@ -9,10 +12,10 @@ from ..core.config import config
 class SSM:
     """Utility class to interact with AWS Systems Manager Parameter Store"""
 
-    _client: SSMClient | None = None
+    _client: "SSMClient | None" = None
 
     @classmethod
-    def _get_client(cls) -> SSMClient:
+    def _get_client(cls) -> "SSMClient":
         if cls._client is None:
             if not config.AWS_REGION:
                 raise ValueError("AWS_REGION must be set in non-local environments")

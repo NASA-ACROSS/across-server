@@ -22,6 +22,18 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
 CREATE USER developer;
 CREATE USER ci;
-GRANT rds_iam TO developer,ci;
-GRANT ALL PRIVILEGES ON DATABASE across TO developer,ci;
+CREATE USER core_server;
+
+-- RDS auth privileges
+GRANT rds_iam TO developer,ci,core_server;
+
+-- general DB privileges.
+GRANT ALL PRIVILEGES ON DATABASE across TO developer,ci,core_server;
+GRANT USAGE ON SCHEMA across TO developer,ci,core_server;
+
+-- current tables
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA across TO developer, ci, core_server;
+
+-- future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA across GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO developer, ci, core_server;
 ```

@@ -2,6 +2,7 @@ FROM python:3.12-bookworm AS build
 
 # install make
 RUN apt-get update && apt-get install -y make
+
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -25,7 +26,7 @@ COPY ./requirements/${APP_ENV}.txt ./requirements/
 # Copy over the file holding the version for hatch build
 COPY ./across_server/__about__.py ./across_server/
 
-# RUN make venv ENV=${APP_ENV}
+# Install dependencies
 RUN --mount=type=ssh make install ENV=${APP_ENV}
 
 
@@ -68,3 +69,5 @@ EXPOSE 8000
 # Create a non-root user with a UID of 5678 and no password, then change ownership of /app
 RUN useradd -m -u 5678 appuser && chown -R appuser /app
 USER appuser
+
+CMD ["uvicorn", "across_server.main:app", "--host", "0.0.0.0", "--port", "8000"]

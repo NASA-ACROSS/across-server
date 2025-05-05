@@ -21,7 +21,7 @@ services:
     volumes:
       - across-pg-data:/var/lib/postgresql/data
     environment:
-      APP_ENV: local
+      APP_ENV: prod
       POSTGRES_USER: ${ACROSS_DB_USER}
       POSTGRES_PASSWORD: ${ACROSS_DB_PWD}
       POSTGRES_DB: ${ACROSS_DB_NAME}
