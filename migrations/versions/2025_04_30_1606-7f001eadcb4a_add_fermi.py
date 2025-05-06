@@ -42,6 +42,8 @@ ras = radius * np.cos(thetas)
 decs = radius * np.sin(thetas)
 LAT_FOOTPRINT = [[{"x": ras[i], "y": decs[i]} for i in range(len((ras)))]]
 
+# Info about LAT and GBM bandpasses found here:
+# https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html
 LAT_ENERGY_BANDPASS = EnergyBandpass(
     min=0.02,
     max=300,
