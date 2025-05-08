@@ -17,13 +17,13 @@ from ...core.enums import (
     ObservationType,
 )
 from ...core.enums.instrument_fov import InstrumentFOV
+from ...core.exceptions import RequiredFieldException
 from ...core.schemas import Coordinate, DateRange, UnitValue
 from ...core.schemas.bandpass import bandpass_converter
 from ...core.schemas.base import (
     BaseSchema,
 )
 from ...db.models import Observation as ObservationModel
-from .exceptions import ObservationPointingPositionRequired
 
 
 class ObservationBase(
@@ -141,7 +141,11 @@ class ObservationCreate(ObservationBase):
             instrument_fov in [InstrumentFOV.POINT, InstrumentFOV.POLYGON]
             and not self.pointing_position
         ):
-            raise ObservationPointingPositionRequired()
+            raise RequiredFieldException(
+                entity="observation",
+                field="pointing_position",
+                message=f"A pointing position is required for {InstrumentFOV.POINT.value}, and {InstrumentFOV.POLYGON.value} FOVs.",
+            )
 
         if self.pointing_position:
             pointing_coords = self.pointing_position.model_dump_with_prefix(

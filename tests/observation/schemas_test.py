@@ -1,10 +1,10 @@
 import pytest
 
 from across_server.core.enums import InstrumentFOV
-from across_server.db.models import Observation as ObservationModel
-from across_server.routes.observation.exceptions import (
-    ObservationPointingPositionRequired,
+from across_server.core.exceptions import (
+    RequiredFieldException,
 )
+from across_server.db.models import Observation as ObservationModel
 from across_server.routes.observation.schemas import Observation, ObservationCreate
 
 
@@ -31,7 +31,7 @@ class TestObservationSchemas:
     ) -> None:
         """Should raise exception when FOV is POINT or POLYGON and pointing position is None"""
         mock_observation_create.pointing_position = None
-        with pytest.raises(ObservationPointingPositionRequired):
+        with pytest.raises(RequiredFieldException):
             mock_observation_create.to_orm(InstrumentFOV.POLYGON)
 
     @pytest.mark.asyncio

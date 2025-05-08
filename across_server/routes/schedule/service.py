@@ -308,8 +308,6 @@ class ScheduleService:
         if existing:
             raise DuplicateScheduleException(existing.id)
 
-        telescope_instrument_ids = [instrument.id for instrument in instruments]
-
         schedule_instrument_ids = list(
             set(
                 [
@@ -320,7 +318,7 @@ class ScheduleService:
         )
 
         for schedule_instrument_id in schedule_instrument_ids:
-            if schedule_instrument_id not in telescope_instrument_ids:
+            if not instrument_dict.get(schedule_instrument_id):
                 raise InvalidScheduleInstrument(
                     instrument_id=schedule_instrument_id,
                     telescope_id=schedule.telescope_id,
