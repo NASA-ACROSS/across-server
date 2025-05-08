@@ -16,7 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...db import models
 from ...db.database import get_session
-from .exceptions import ObservationNotFoundException
+from .exceptions import (
+    InvalidObservationReadParametersException,
+    ObservationNotFoundException,
+)
 from .schemas import ObservationRead
 
 
@@ -122,40 +125,48 @@ class ObservationService:
                 )
             )
 
-        if data.date_range:
-            if data.date_range.begin:
-                data_filter.append(
-                    models.Observation.date_range_begin >= data.date_range.begin
-                )
-            if data.date_range.end:
-                data_filter.append(
-                    models.Observation.date_range_end <= data.date_range.end
-                )
+        if data.date_range_begin:
+            data_filter.append(
+                models.Observation.date_range_begin >= data.date_range_begin
+            )
+        if data.date_range_end:
+            data_filter.append(models.Observation.date_range_end <= data.date_range_end)
 
-        if data.bandpass:
-            if data.bandpass.type in tools_enums.WavelengthUnit:
-                wavelength_bandpass = WavelengthBandpass(
-                    min=data.bandpass.min,
-                    max=data.bandpass.max,
-                    unit=tools_enums.WavelengthUnit(data.bandpass.type.value),
-                )
+        bandpass_params = [data.bandpass_min, data.bandpass_max, data.bandpass_type]
+        if any(bandpass_params) and not all(bandpass_params):
+            raise InvalidObservationReadParametersException(
+                message="Bandpass parameters are not complete. Please provide all bandpass parameters."
+            )
 
-            elif data.bandpass.type in tools_enums.EnergyUnit:
-                energy_bandpass = EnergyBandpass(
-                    min=data.bandpass.min,
-                    max=data.bandpass.max,
-                    unit=tools_enums.EnergyUnit(data.bandpass.type.value),
-                )
-                wavelength_bandpass = convert_to_wave(energy_bandpass)
+        elif all(bandpass_params):
+            try:
+                if data.bandpass_type in tools_enums.WavelengthUnit:
+                    wavelength_bandpass = WavelengthBandpass(
+                        min=data.bandpass_min,
+                        max=data.bandpass_max,
+                        unit=tools_enums.WavelengthUnit(data.bandpass_type.value),  # type: ignore
+                    )
 
-            elif data.bandpass.type in tools_enums.FrequencyUnit:
-                frequency_bandpass = FrequencyBandpass(
-                    min=data.bandpass.min,
-                    max=data.bandpass.max,
-                    unit=tools_enums.FrequencyUnit(data.bandpass.type.value),
-                )
-                wavelength_bandpass = convert_to_wave(frequency_bandpass)
+                elif data.bandpass_type in tools_enums.EnergyUnit:
+                    energy_bandpass = EnergyBandpass(
+                        min=data.bandpass_min,
+                        max=data.bandpass_max,
+                        unit=tools_enums.EnergyUnit(data.bandpass_type.value),  # type: ignore
+                    )
+                    wavelength_bandpass = convert_to_wave(energy_bandpass)
 
+                elif data.bandpass_type in tools_enums.FrequencyUnit:
+                    frequency_bandpass = FrequencyBandpass(
+                        min=data.bandpass_min,
+                        max=data.bandpass_max,
+                        unit=tools_enums.FrequencyUnit(data.bandpass_type.value),  # type: ignore
+                    )
+                    wavelength_bandpass = convert_to_wave(frequency_bandpass)
+
+            except Exception as e:
+                raise InvalidObservationReadParametersException(
+                    message=f"Invalid bandpass parameters: {e}"
+                )
             data_filter.append(
                 models.Observation.min_wavelength >= wavelength_bandpass.min
             )
@@ -164,10 +175,20 @@ class ObservationService:
                 models.Observation.max_wavelength <= wavelength_bandpass.max
             )
 
-        if data.cone_search:
+        cone_search_params = [
+            data.cone_search_ra,
+            data.cone_search_dec,
+            data.cone_search_radius,
+        ]
+        if any(cone_search_params) and not all(cone_search_params):
+            raise InvalidObservationReadParametersException(
+                message="Cone search parameters are not complete. Please provide all cone search parameters."
+            )
+            pass
+        elif all(cone_search_params):
             # Convert to radians
-            dec_rad = radians(data.cone_search.dec)
-            cos_radius = cos(radians(data.cone_search.radius))
+            dec_rad = radians(data.cone_search_dec)  # type: ignore
+            cos_radius = cos(radians(data.cone_search_radius))  # type: ignore
 
             # SQL expression for angular distance
             cos_angular_distance = func.sin(
@@ -175,7 +196,7 @@ class ObservationService:
             ) * sin(dec_rad) + func.cos(
                 func.radians(models.Observation.pointing_ra)
             ) * cos(dec_rad) * func.cos(
-                func.radians(models.Observation.pointing_ra - data.cone_search.ra)
+                func.radians(models.Observation.pointing_ra - data.cone_search_ra)
             )
 
             data_filter.append(cos_angular_distance >= cos_radius)
@@ -183,9 +204,14 @@ class ObservationService:
         if data.type:
             data_filter.append(models.Observation.type == data.type.value)
 
-        if data.depth:
-            data_filter.append(models.Observation.depth_unit == data.depth.unit.value)
-            data_filter.append(models.Observation.depth_value >= data.depth.value)
+        depth_params = [data.depth_value, data.depth_unit]
+        if any(depth_params) and not all(depth_params):
+            raise InvalidObservationReadParametersException(
+                message="Depth parameters are not complete. Please provide all depth parameters."
+            )
+        elif all(depth_params):
+            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
+            data_filter.append(models.Observation.depth_value <= data.depth_value)
 
         return data_filter
 
