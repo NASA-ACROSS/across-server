@@ -19,3 +19,12 @@ class DateRange(BaseModel, PrefixMixin):
         Timezone-naive datetime is needed for sqlalchemy
         """
         return convert_to_utc(value)
+
+
+class OptionalDateRange(BaseModel):
+    """
+    A Pydantic model class representing an optional date range.
+    """
+
+    begin: datetime | None = None
+    end: datetime | None = None
