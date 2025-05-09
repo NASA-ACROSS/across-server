@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 
 from across_server.db.models import Observation
 
-from .instruments import sandy_instrument
+from .instruments import sandy_instrument_calorimeter
 from .schedules import sandy_schedule
 
 sandy_observation = Observation(
-    id=uuid.uuid4(),
-    instrument=sandy_instrument,
+    id=uuid.UUID("9ec854d3-6746-4282-94e7-c96d53251dda"),
+    instrument=sandy_instrument_calorimeter,
     schedule=sandy_schedule,
     object_name="Krusty Krab",
     pointing_ra=123.456,

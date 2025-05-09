@@ -6,7 +6,7 @@ Create Date: 2025-05-06 11:29:32.046897
 
 """
 
-from typing import Sequence, Type, TypeVar, Union
+from typing import Sequence, Type, TypedDict, TypeVar, Union
 from uuid import UUID
 
 from alembic import op
@@ -21,7 +21,19 @@ down_revision: Union[str, None] = "0f2036717762"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-permission_data = {
+
+class PermissionData(TypedDict):
+    id: UUID
+    name: str
+
+
+class RoleData(TypedDict):
+    id: UUID
+    name: str
+    permissions: list[str]
+
+
+permission_data: dict[str, PermissionData] = {
     "all_write": {
         "id": UUID("399425fc-fcd4-4e3c-828b-2e65827d9293"),
         "name": "all:write",
@@ -72,7 +84,7 @@ permission_data = {
     },
 }
 
-role_data = {
+role_data: dict[str, RoleData] = {
     "system_role": {
         "id": UUID("ed6a2440-79c8-454a-8284-f826a27f6e04"),
         "name": "System Role",
@@ -83,7 +95,7 @@ role_data = {
 T = TypeVar("T", bound="DeclarativeBase")
 
 
-def build_role(data: dict, role_cls: Type[T], permission_cls: Type[T]):
+def build_role(data: RoleData, role_cls: Type[T], permission_cls: Type[T]) -> T:
     perms = [permission_cls(**permission_data[name]) for name in data["permissions"]]
 
     return role_cls(

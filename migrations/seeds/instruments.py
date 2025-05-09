@@ -5,8 +5,8 @@ from across_server.db.models import Instrument
 
 from .telescopes import sandy_smaller_telescope, sandy_telescope
 
-sandy_instrument = Instrument(
-    id=uuid.UUID("511d9ab3-6d0a-4471-bb41-937dd608c6f4"),
+sandy_instrument_calorimeter = Instrument(
+    id=uuid.UUID("a4cf7691-8d3c-4fea-899c-9bcc33d23a5e"),
     name="SANDY'S X-RAY",
     short_name="SANDY_XRAY",
     telescope=sandy_telescope,
@@ -14,8 +14,8 @@ sandy_instrument = Instrument(
     is_operational=True,
 )
 
-sandy_instrument = Instrument(
-    id=uuid.UUID("c31dc89c-d2f0-4335-9d6f-e42e7a7d86af"),
+sandy_instrument_photometric = Instrument(
+    id=uuid.UUID("27493a8d-38e2-45cf-ac1e-1fa3bb0ffca3"),
     name="SANDY'S OPTICAL",
     short_name="SANDOPT",
     telescope=sandy_smaller_telescope,
@@ -23,4 +23,4 @@ sandy_instrument = Instrument(
     is_operational=True,
 )
 
-instruments = [sandy_instrument]
+instruments = [sandy_instrument_calorimeter, sandy_instrument_photometric]

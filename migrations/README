@@ -1,6 +1,24 @@
 # ACROSS Database
 
-## Initial Setup
+## Development Considerations
+
+### Migration Version File Naming Convention
+
+All migration filenames have a `_` prefix. This is enforced within [`alembic.ini`](../alembic.ini). This allows seed files to import from the migration modules since python does not allow imports to start with integers.
+
+### Data Migrations and Seeds
+
+#### Hardcoded Data
+
+All data migrations and seeds must have all data hardcoded _including_ the UUIDs. For seeding, this allows `session.merge` to properly find the existing record and only "upsert". When developing locally, devs do not have to reset their entire db when seeding new data; they are simply able to run make seed consecutively.
+
+#### Sharing Data From Migrations to Seeds
+
+Migrations and seeds use snapshot and application models, respectively. This adds complexity to how data migrations is used a source of truth in seeding. Seeds must create all their own respective records using the application models. As a good example, this complexity is shown with roles. A `build_role` function was created to make it easier to supply the necessary role data and associated permissions without having to duplicate creating all the associated relationship models.
+
+**A note about this complexity:** I don't love the current implementation, but for now it is good enough. If this sort of requirement appears in the future, where seed data needs to use other migrational data, it would be nice to implement a more generic `build_model` fn.
+
+## Initial Setup In Deployed Envs
 
 The ACROSS DB must go through a few initial manual steps for any new environment in AWS. This must be completed prior to migrations, and cannot be part of migrations since these are prerequisites for migrations to run successfully. See the [AWS docs for IAM auth](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.Connecting.html) and enabling [POSTGIS extension](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Appendix.PostgreSQL.CommonDBATasks.PostGIS.html)for more context.
 
