@@ -5,7 +5,7 @@ from shapely.geometry import Polygon
 
 from across_server.db.models import Footprint
 
-from .instruments import sandy_optical_instrument, sandy_instrument_calorimeter
+from .instruments import sandy_instrument_calorimeter, sandy_optical_instrument
 
 
 # Function to create a WKT polygon from a Shapely Polygon
@@ -24,10 +24,14 @@ def create_polygon(vertices: list[tuple]) -> WKTElement:
 vertices = [(0.5, 0.5), (0.5, -0.5), (-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)]
 
 simple_optical_footprint = Footprint(
-    instrument=sandy_optical_instrument, polygon=create_polygon(vertices)
+    id=uuid.UUID("e0214a61-7c90-497e-aa69-e1cf58e8c81d"),
+    instrument=sandy_optical_instrument,
+    polygon=create_polygon(vertices),
 )
 simple_xray_footprint = Footprint(
-    instrument=sandy_instrument_calorimeter, polygon=create_polygon(vertices)
+    id=uuid.UUID("843a2d54-a503-4c4a-acb8-f03fae3cf2f0"),
+    instrument=sandy_instrument_calorimeter,
+    polygon=create_polygon(vertices),
 )
 
 footprints = [simple_optical_footprint, simple_xray_footprint]
