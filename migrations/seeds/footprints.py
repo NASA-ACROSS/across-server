@@ -1,9 +1,11 @@
+import uuid
+
 from geoalchemy2 import WKTElement
 from shapely.geometry import Polygon
 
 from across_server.db.models import Footprint
 
-from .instruments import sandy_instrument
+from .instruments import sandy_instrument_calorimeter
 
 
 # Function to create a WKT polygon from a Shapely Polygon
@@ -22,7 +24,9 @@ def create_polygon(vertices: list[tuple]) -> WKTElement:
 vertices = [(0.5, 0.5), (0.5, -0.5), (-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5)]
 
 simple_footprint = Footprint(
-    instrument=sandy_instrument, polygon=create_polygon(vertices)
+    id=uuid.UUID("843a2d54-a503-4c4a-acb8-f03fae3cf2f0"),
+    instrument=sandy_instrument_calorimeter,
+    polygon=create_polygon(vertices),
 )
 
 footprints = [simple_footprint]

@@ -4,7 +4,7 @@ from across_server.db.models import User
 
 from .group_roles import treedome_group_admin, treedome_schedule_operations
 from .groups import treedome_space_group
-from .roles import across_admin_role
+from .roles import across_admin_role, system_role
 
 dev = User(
     id=uuid.UUID("173e35fa-9544-49e8-b5b9-d04ea884defb"),
@@ -14,7 +14,7 @@ dev = User(
     last_name="dev",
     created_by_id=None,
     modified_by_id=None,
-    roles=[across_admin_role],
+    roles=[across_admin_role, system_role],
 )
 
 sandy = User(

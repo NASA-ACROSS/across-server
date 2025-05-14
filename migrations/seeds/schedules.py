@@ -9,7 +9,7 @@ from .telescopes import sandy_telescope
 from .users import sandy
 
 sandy_schedule = Schedule(
-    id=uuid.uuid4(),
+    id=uuid.UUID("3f8a9900-158d-4227-b689-546a37e458ba"),
     telescope=sandy_telescope,
     date_range_begin=datetime.datetime.now(),
     date_range_end=datetime.datetime.now() + datetime.timedelta(days=1),
