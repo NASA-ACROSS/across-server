@@ -290,7 +290,7 @@ class ScheduleService:
         ------
         DuplicateScheduleException
             If a Schedule with the same metadata, and observational metadata already exists in the database.
-        InvalidScheduleInstrument
+        ScheduleInstrumentNotFoundException
             If an instrument in the Schedule does not belong to the telescope associated with the Schedule.
 
         Notes
