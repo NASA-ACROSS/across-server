@@ -16,6 +16,8 @@ from ...core.enums import (
     ObservationStatus,
     ObservationType,
 )
+from ...core.enums.instrument_fov import InstrumentFOV
+from ...core.exceptions import RequiredFieldException
 from ...core.schemas import Coordinate, DateRange, UnitValue
 from ...core.schemas.bandpass import bandpass_converter
 from ...core.schemas.base import (
@@ -29,7 +31,7 @@ class ObservationBase(
 ):
     instrument_id: uuid.UUID
     object_name: str
-    pointing_position: Coordinate
+    pointing_position: Coordinate | None = None
     date_range: DateRange
     external_observation_id: str
     type: ObservationType
@@ -128,24 +130,38 @@ class ObservationCreate(ObservationBase):
 
     return_schema: ClassVar = Observation
 
-    def to_orm(self) -> ObservationModel:
+    def to_orm(self, instrument_fov: InstrumentFOV) -> ObservationModel:
         """
         Converts Pydantic schema to ORM representation
         Translates field names and flattens nested Pydantic schemas
         """
         data = self.model_dump(exclude_unset=True)
 
-        pointing_coords = self.pointing_position.model_dump_with_prefix(
-            prefix="pointing", data=self.pointing_position.model_dump()
-        )
-        pointing_position_element = self.pointing_position.create_gis_point()
+        if (
+            instrument_fov in [InstrumentFOV.POINT, InstrumentFOV.POLYGON]
+            and not self.pointing_position
+        ):
+            raise RequiredFieldException(
+                entity="observation",
+                field="pointing_position",
+                message=f"A pointing position is required for {InstrumentFOV.POINT.value}, and {InstrumentFOV.POLYGON.value} FOVs.",
+            )
+
+        if self.pointing_position:
+            pointing_coords = self.pointing_position.model_dump_with_prefix(
+                prefix="pointing", data=self.pointing_position.model_dump()
+            )
+            data.update(pointing_coords)
+
+            data["pointing_position"] = self.pointing_position.create_gis_point()
 
         if self.object_position:
             object_coords = self.object_position.model_dump_with_prefix(
                 prefix="object", data=self.object_position.model_dump()
             )
-            object_position_element = self.object_position.create_gis_point()
             data.update(object_coords)
+
+            data["object_position"] = self.object_position.create_gis_point()
 
         if self.depth:
             depth_data = self.depth.model_dump_with_prefix(
@@ -158,13 +174,7 @@ class ObservationCreate(ObservationBase):
             prefix="date_range", data=self.date_range.model_dump()
         )
         del data["date_range"]
-
-        for obj in [pointing_coords, date_range_data]:
-            data.update(obj)
-
-        data["pointing_position"] = pointing_position_element
-        if self.object_position:
-            data["object_position"] = object_position_element
+        data.update(date_range_data)
 
         bandpass = bandpass_converter(self.bandpass)
         data["filter_name"] = bandpass.filter_name

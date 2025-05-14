@@ -5,10 +5,16 @@ from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from across_server.core.enums.instrument_fov import InstrumentFOV
+
 from ...db import models
 from ...db.database import get_session
 from . import schemas
-from .exceptions import DuplicateScheduleException, ScheduleNotFoundException
+from .exceptions import (
+    DuplicateScheduleException,
+    ScheduleInstrumentNotFoundException,
+    ScheduleNotFoundException,
+)
 
 
 class ScheduleService:
@@ -261,6 +267,7 @@ class ScheduleService:
     async def create(
         self,
         schedule_create: schemas.ScheduleCreate,
+        instruments: list[models.Instrument],
         created_by_id: UUID,
     ) -> UUID:
         """
@@ -270,7 +277,10 @@ class ScheduleService:
         ----------
         schedule_create : schemas.ScheduleCreate
             The Schedule data to be created, following the ScheduleCreate schema format.
-
+        instruments : list[models.Instrument]
+            The list of instruments associated with the Schedule.
+        created_by_id : UUID
+            The ID of the user creating the Schedule.
         Returns
         -------
         models.Schedule
@@ -280,6 +290,8 @@ class ScheduleService:
         ------
         DuplicateScheduleException
             If a Schedule with the same metadata, and observational metadata already exists in the database.
+        ScheduleInstrumentNotFoundException
+            If an instrument in the Schedule does not belong to the telescope associated with the Schedule.
 
         Notes
         -----
@@ -288,16 +300,38 @@ class ScheduleService:
         """
         schedule = schedule_create.to_orm(created_by_id=created_by_id)
 
+        instrument_dict = {instrument.id: instrument for instrument in instruments}
+
+        # schedule validation
         existing = await self._exists(schedule.checksum)
 
         if existing:
             raise DuplicateScheduleException(existing.id)
 
+        schedule_instrument_ids = list(
+            set(
+                [
+                    observation.instrument_id
+                    for observation in schedule_create.observations
+                ]
+            )
+        )
+
+        for schedule_instrument_id in schedule_instrument_ids:
+            if not instrument_dict.get(schedule_instrument_id):
+                raise ScheduleInstrumentNotFoundException(
+                    instrument_id=schedule_instrument_id,
+                    telescope_id=schedule.telescope_id,
+                )
+
+        # schedule creation
         schedule.id = uuid4()
         self.db.add(schedule)
 
         for observation_create in schedule_create.observations:
-            observation = observation_create.to_orm()
+            instrument = instrument_dict[observation_create.instrument_id]
+            fov = InstrumentFOV(instrument.field_of_view)
+            observation = observation_create.to_orm(instrument_fov=fov)
             observation.schedule_id = schedule.id
             observation.created_by_id = created_by_id
             self.db.add(observation)

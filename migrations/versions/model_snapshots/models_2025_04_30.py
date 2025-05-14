@@ -24,7 +24,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from .config import config
+from across_server.db import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
