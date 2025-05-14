@@ -1,13 +1,13 @@
 """add fermi
 
 Revision ID: 7f001eadcb4a
-Revises: 0f2036717762
-Create Date: 2025-04-30 16:06:20.099908
+Revises: 043885e1cd78
+Create Date: 2025-05-14 15:15:20.099908
 
 """
 
+import uuid
 from typing import Sequence, Union
-from uuid import uuid4
 
 import numpy as np
 from across.tools import EnergyBandpass, convert_to_wave
@@ -18,20 +18,22 @@ from sqlalchemy import orm, select
 from across_server.core.enums.ephemeris_type import EphemerisType
 from across_server.core.enums.instrument_type import InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
-from migrations.versions.model_snapshots.models_2025_04_28 import (
+from migrations.versions.model_snapshots.models_2025_05_06 import (
     Filter,
     Footprint,
     Group,
+    GroupRole,
     Instrument,
     Observatory,
     ObservatoryEphemerisType,
+    Permission,
     Telescope,
     TLEParameters,
 )
 
 # revision identifiers, used by Alembic.
 revision: str = "7f001eadcb4a"
-down_revision: Union[str, None] = "0f2036717762"
+down_revision: Union[str, None] = "043885e1cd78"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -68,12 +70,14 @@ OBSERVATORY = {
         {
             "name": "Large Area Telescope",
             "short_name": "LAT",
+            "id": "86f6849d-f634-4769-9aff-88907c6d455c",
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Large Area Telescope",
                     "short_name": "LAT",
+                    "id": "43d8dab5-0b79-45b5-8719-f301b1bd573d",
                     "footprint": LAT_FOOTPRINT,
                     "is_operational": True,
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html",
@@ -93,12 +97,14 @@ OBSERVATORY = {
         {
             "name": "Gamma-ray Burst Monitor",
             "short_name": "GBM",
+            "id": "327836f4-c0bf-45a1-be4c-9e94bf9f495d",
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Gamma-ray Burst Monitor",
                     "short_name": "GBM",
+                    "id": "3e56b7e0-a020-4c8d-8d85-07435b2b36c1",
                     "footprint": [],
                     "is_operational": True,
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html",
@@ -126,13 +132,41 @@ def upgrade() -> None:
 
     # create group based off the observatory
     group = Group(
-        id=uuid4(), name=OBSERVATORY["name"], short_name=OBSERVATORY["short_name"]
+        id=uuid.UUID("2d1919c9-728b-4d8c-8afb-ad60c63eab4e"),
+        name=OBSERVATORY["name"],
+        short_name=OBSERVATORY["short_name"],
     )
     session.add(group)
 
-    # # create observatory
+    # create group admin
+    permissions = (
+        session.query(Permission)
+        .filter(
+            Permission.name.in_(
+                [
+                    "group:user:write",
+                    "group:role:write",
+                    "group:write",
+                    "group:read",
+                    "group:observatory:write",
+                    "group:telescope:write",
+                    "group:schedule:write",
+                ]
+            )
+        )
+        .all()
+    )
+    fermi_group_admin = GroupRole(
+        id=uuid.UUID("449c19ee-7b09-4b4d-ae52-99885a37f7be"),
+        name="Fermi Group Admin",
+        permissions=permissions,
+        group=group,
+    )
+    session.add(fermi_group_admin)
+
+    # create observatory
     observatory_insert = Observatory(
-        id=uuid4(),
+        id=uuid.UUID("ac071adf-bdc1-4fd7-9bf6-3918d9f65498"),
         name=OBSERVATORY["name"],
         short_name=OBSERVATORY["short_name"],
         type=OBSERVATORY["observatory_type"],
@@ -148,7 +182,7 @@ def upgrade() -> None:
     for telescope in telescopes:  #  type:ignore
         # create the telescope record
         telescope_insert = Telescope(
-            id=uuid4(),
+            id=telescope["id"],
             name=telescope["name"],
             short_name=telescope["short_name"],
             reference_url=telescope["reference_url"],
@@ -163,7 +197,7 @@ def upgrade() -> None:
         for instrument in instruments:
             # create the instrument record
             instrument_insert = Instrument(
-                id=uuid4(),
+                id=instrument["id"],
                 name=instrument["name"],
                 short_name=instrument["short_name"],
                 type=instrument["type"],
