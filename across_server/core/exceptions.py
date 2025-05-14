@@ -36,3 +36,15 @@ class NotFoundException(AcrossHTTPException):
                 f"{entity_name}": entity_id,
             },
         )
+
+
+class RequiredFieldException(AcrossHTTPException):
+    def __init__(self, entity: str, field: str, message: str | None) -> None:
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            message=message if message else f"{entity}.{field} is required.",
+            log_data={
+                "entity": f"{entity}.{field}",
+                "message": "Required field is missing.",
+            },
+        )

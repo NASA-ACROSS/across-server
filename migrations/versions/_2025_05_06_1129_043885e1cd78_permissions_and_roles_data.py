@@ -1,7 +1,7 @@
 """add permissions and roles data
 
 Revision ID: 043885e1cd78
-Revises: 0f2036717762
+Revises: 80ed2c402962
 Create Date: 2025-05-06 11:29:32.046897
 
 """
@@ -17,7 +17,7 @@ from migrations.versions.model_snapshots import models_2025_05_06 as snapshot_mo
 
 # revision identifiers, used by Alembic.
 revision: str = "043885e1cd78"
-down_revision: Union[str, None] = "0f2036717762"
+down_revision: Union[str, None] = "80ed2c402962"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
