@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from math import cos, radians, sin
 from typing import Annotated
 from uuid import UUID
 
@@ -11,6 +10,9 @@ from across.tools import (
 )
 from across.tools import enums as tools_enums
 from fastapi import Depends
+from geoalchemy2.functions import ST_DWithin
+from geoalchemy2.shape import from_shape
+from shapely.geometry import Point
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -184,22 +186,22 @@ class ObservationService:
             raise InvalidObservationReadParametersException(
                 message="Cone search parameters are not complete. Please provide all cone search parameters."
             )
-            pass
         elif all(cone_search_params):
-            # Convert to radians
-            dec_rad = radians(data.cone_search_dec)  # type: ignore
-            cos_radius = cos(radians(data.cone_search_radius))  # type: ignore
-
-            # SQL expression for angular distance
-            cos_angular_distance = func.sin(
-                func.radians(models.Observation.pointing_dec)
-            ) * sin(dec_rad) + func.cos(
-                func.radians(models.Observation.pointing_ra)
-            ) * cos(dec_rad) * func.cos(
-                func.radians(models.Observation.pointing_ra - data.cone_search_ra)
+            cone_search_point = from_shape(
+                Point(data.cone_search_ra, data.cone_search_dec),  # type: ignore
+                srid=4326,
             )
 
-            data_filter.append(cos_angular_distance >= cos_radius)
+            # Convert degrees to meters
+            cone_search_radius = data.cone_search_radius * 111655.7628808  # type: ignore
+
+            data_filter.append(
+                ST_DWithin(
+                    models.Observation.pointing_position,
+                    cone_search_point,
+                    cone_search_radius,
+                )
+            )
 
         if data.type:
             data_filter.append(models.Observation.type == data.type.value)
