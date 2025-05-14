@@ -1,5 +1,6 @@
 from collections.abc import Callable, Generator
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -64,3 +65,18 @@ def dep_override(
         }
     ):
         yield overrider
+
+
+@pytest.fixture(
+    params=[
+        {"cone_search_ra": 123.456, "cone_search_dec": -87.65},
+        {"cone_search_radius": 0.5},
+        {"bandpass_min": 2000},
+        {"depth_value": 20},
+    ]
+)
+def bad_observation_filter(request: pytest.FixtureRequest) -> Any:
+    """
+    Parameters pop in the get_many routine to trigger 422
+    """
+    return request.param
