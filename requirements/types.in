@@ -1,7 +1,7 @@
 # type dependencies
 
 mypy
-types-boto3[essential,ssm,sts]
+types-boto3[rds,ssm,sts]
 types-cachetools
 types-python-jose
 types-requests
