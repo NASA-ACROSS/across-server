@@ -7,7 +7,7 @@ from across_server.db.models import Instrument as InstrumentModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.routes.schedule.exceptions import (
     DuplicateScheduleException,
-    InvalidScheduleInstrument,
+    ScheduleInstrumentNotFoundException,
     ScheduleNotFoundException,
 )
 from across_server.routes.schedule.schemas import ScheduleCreate
@@ -58,7 +58,7 @@ class TestScheduleService:
 
             instrument_model_example.id = uuid4()
 
-            with pytest.raises(InvalidScheduleInstrument):
+            with pytest.raises(ScheduleInstrumentNotFoundException):
                 await service.create(
                     schedule_create_example,
                     instruments=[instrument_model_example],

@@ -12,7 +12,7 @@ from ...db.database import get_session
 from . import schemas
 from .exceptions import (
     DuplicateScheduleException,
-    InvalidScheduleInstrument,
+    ScheduleInstrumentNotFoundException,
     ScheduleNotFoundException,
 )
 
@@ -319,7 +319,7 @@ class ScheduleService:
 
         for schedule_instrument_id in schedule_instrument_ids:
             if not instrument_dict.get(schedule_instrument_id):
-                raise InvalidScheduleInstrument(
+                raise ScheduleInstrumentNotFoundException(
                     instrument_id=schedule_instrument_id,
                     telescope_id=schedule.telescope_id,
                 )
