@@ -35,8 +35,4 @@ sandy_optical_instrument = Instrument(
     is_operational=True,
 )
 
-instruments = [
-    sandy_instrument_calorimeter,
-    sandy_all_sky_instrument,
-    sandy_optical_instrument,
-]
+instruments = [sandy_instrument_calorimeter, sandy_all_sky_instrument, sandy_optical_instrument]
