@@ -1,7 +1,7 @@
 """add permissions and roles data
 
 Revision ID: 043885e1cd78
-Revises: 0f2036717762
+Revises: 80ed2c402962
 Create Date: 2025-05-06 11:29:32.046897
 
 """
