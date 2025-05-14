@@ -6,6 +6,7 @@ IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 # Docker
 DOCKER_COMPOSE_FILE = containers/docker-compose.$(ENV).yml
 DOCKER_COMPOSE = docker compose -f ${DOCKER_COMPOSE_FILE} --env-file=.env
+IMAGE_TAG = $(shell git rev-parse --short HEAD)
 
 # define directories
 VENV_DIR = .venv
@@ -133,7 +134,7 @@ check_env: ### Check if the passed in ENV is valid
 check_prod: ### Check if the env is prod
 	@if [ $(ENV) == prod ]; then \
 		echo "This can only be run on non-production environments."; \
-		exit 0; \
+		exit 1; \
 	fi
 
 install_deps: ### Install dependencies
@@ -155,8 +156,8 @@ stop: check_prod ## Stop the server container
 stop_all: check_prod ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
-build: check_prod ## Build the containers (does not run)
-	@$(DOCKER_COMPOSE) build
+build: check_prod ## Build the containers (does not run them)
+	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --ssh default --build-arg APP_ENV=$(ENV)
 
 restart: ## Restarts the app container
 	@$(DOCKER_COMPOSE) restart
@@ -202,7 +203,7 @@ rev: ## Create a new database revision (migration). Usage: `make rev REV_TITLE="
 	fi
 
 seed: check_prod ## Seed the database with initial data (only used on local and dev environments)
-	@if [ -n "$(filter $(ENV), local)" ]; then \
+	@if [ -n "$(filter $(ENV), local dev)" ]; then \
 		$(VENV_BIN)/python -m migrations.seed; \
 	else \
 		echo "Seeding is only allowed in ENVs: local, dev."; \
@@ -214,6 +215,17 @@ migrate: ## Run the migrations for the database
 # Group: Running
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
+
+# Group: Production
+build_prod: ## Build the containers for production -- does not use docker-compose
+	@DOCKER_BUILDKIT=1 docker build \
+		-t across-server:$(IMAGE_TAG) \
+		--no-cache \
+		--platform linux/amd64 \
+		--provenance false \
+		--ssh default \
+		--build-arg APP_ENV=prod \
+		-f./containers/Dockerfile .
 
 # Group: Cleaning
 clean: ## Clean virtual env
