@@ -18,7 +18,7 @@ from sqlalchemy import orm, select
 from across_server.core.enums.ephemeris_type import EphemerisType
 from across_server.core.enums.instrument_type import InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
-from migrations.versions.model_snapshots.models_2025_05_06 import (
+from migrations.versions.model_snapshots.models_2025_05_15 import (
     Filter,
     Footprint,
     Group,
@@ -78,6 +78,7 @@ OBSERVATORY = {
                     "name": "Large Area Telescope",
                     "short_name": "LAT",
                     "id": "43d8dab5-0b79-45b5-8719-f301b1bd573d",
+                    "field_of_view": "polygon",
                     "footprint": LAT_FOOTPRINT,
                     "is_operational": True,
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html",
@@ -105,6 +106,7 @@ OBSERVATORY = {
                     "name": "Gamma-ray Burst Monitor",
                     "short_name": "GBM",
                     "id": "3e56b7e0-a020-4c8d-8d85-07435b2b36c1",
+                    "field_of_view": "all_sky",
                     "footprint": [],
                     "is_operational": True,
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/fermi.html",
@@ -201,6 +203,7 @@ def upgrade() -> None:
                 name=instrument["name"],
                 short_name=instrument["short_name"],
                 type=instrument["type"],
+                field_of_view=instrument["field_of_view"],
                 reference_url=instrument["reference_url"],
                 is_operational=instrument["is_operational"],
                 telescope_id=telescope_id,
