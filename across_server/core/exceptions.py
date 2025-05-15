@@ -59,26 +59,3 @@ class InvalidEntityException(AcrossHTTPException):
                 f"{entity_name}": message,
             },
         )
-
-
-class RequiredFieldException(AcrossHTTPException):
-    def __init__(self, entity: str, field: str, message: str | None) -> None:
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            message=message if message else f"{entity}.{field} is required.",
-            log_data={
-                "entity": f"{entity}.{field}",
-                "message": "Required field is missing.",
-            },
-        )
-
-
-class InvalidEntityException(AcrossHTTPException):
-    def __init__(self, entity_name: str, message: str):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            message=f"Invalid {entity_name}: {message}",
-            log_data={
-                f"{entity_name}": message,
-            },
-        )
