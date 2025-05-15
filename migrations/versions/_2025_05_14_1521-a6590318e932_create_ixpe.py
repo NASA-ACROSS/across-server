@@ -1,13 +1,14 @@
 """create ixpe
 
 Revision ID: a6590318e932
-Revises: 0f2036717762
-Create Date: 2025-04-24 15:21:03.729061
+Revises: 043885e1cd78
+Create Date: 2025-05-14 15:21:03.729061
 
 """
 
 from __future__ import annotations
 
+import uuid
 from typing import Sequence, Union
 from uuid import uuid4
 
@@ -16,23 +17,24 @@ from across.tools import enums as tools_enums
 from alembic import op
 from sqlalchemy import orm, select
 
-from across_server.core.enums.ephemeris_type import EphemerisType
-from across_server.core.enums.instrument_type import InstrumentType
+from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
-from migrations.versions.model_snapshots.models_2025_04_28 import (
+from migrations.versions.model_snapshots.models_2025_05_15 import (
     Filter,
     Footprint,
     Group,
+    GroupRole,
     Instrument,
     Observatory,
     ObservatoryEphemerisType,
+    Permission,
     Telescope,
     TLEParameters,
 )
 
 # revision identifiers, used by Alembic.
 revision: str = "a6590318e932"
-down_revision: Union[str, None] = "0f2036717762"
+down_revision: Union[str, None] = "043885e1cd78"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -78,6 +80,7 @@ OBSERVATORY = {
                     "short_name": "IXPE",
                     "reference_url": "https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/ixpe.html",
                     "footprint": footprint,
+                    "field_of_view": InstrumentFOV.POLYGON.value,
                     "is_operational": True,
                     "type": InstrumentType.POLARIMETER.value,
                     "filters": [
@@ -105,6 +108,32 @@ def upgrade() -> None:
         id=uuid4(), name=OBSERVATORY["name"], short_name=OBSERVATORY["short_name"]
     )
     session.add(group)
+
+    # create group admin
+    permissions = (
+        session.query(Permission)
+        .filter(
+            Permission.name.in_(
+                [
+                    "group:user:write",
+                    "group:role:write",
+                    "group:write",
+                    "group:read",
+                    "group:observatory:write",
+                    "group:telescope:write",
+                    "group:schedule:write",
+                ]
+            )
+        )
+        .all()
+    )
+    group_admin = GroupRole(
+        id=uuid.UUID("ae1af917-093b-4b2b-a11d-cb1097470e90"),
+        name="IXPE Group Admin",
+        permissions=permissions,
+        group=group,
+    )
+    session.add(group_admin)
 
     # # create observatory
     observatory_insert = Observatory(
@@ -145,6 +174,7 @@ def upgrade() -> None:
                 type=instrument["type"],
                 reference_url=instrument["reference_url"],
                 is_operational=instrument["is_operational"],
+                field_of_view=instrument["field_of_view"],
                 telescope_id=telescope_id,
             )
             session.add(instrument_insert)
@@ -177,7 +207,6 @@ def upgrade() -> None:
         ephemeris_type=EphemerisType.TLE,
         priority=1,
     )
-
     session.add(ephemeris_type)
 
     tle_parameters = TLEParameters(
@@ -198,9 +227,13 @@ def downgrade() -> None:
     observatory = session.scalar(
         select(Observatory).filter_by(name=OBSERVATORY["name"])
     )
+    tle_parameters = session.scalar(
+        select(TLEParameters).filter_by(observatory_id=observatory.id)  # type:ignore
+    )
 
     session.delete(group)
     session.delete(observatory)
+    session.delete(tle_parameters)
 
     session.commit()
     # fin
