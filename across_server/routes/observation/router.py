@@ -26,7 +26,7 @@ router = APIRouter(
     responses={
         status.HTTP_200_OK: {
             "model": list[schemas.Observation],
-            "description": "Return a schedule",
+            "description": "Return a list of observations",
         },
     },
 )

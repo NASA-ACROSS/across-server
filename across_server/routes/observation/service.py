@@ -16,6 +16,7 @@ from shapely.geometry import Point
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from ...db import models
 from ...db.database import get_session
 from .exceptions import (
@@ -193,7 +194,9 @@ class ObservationService:
             )
 
             # Convert degrees to meters
-            cone_search_radius = data.cone_search_radius * 111655.7628808  # type: ignore
+            cone_search_radius = (
+                data.cone_search_radius * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
+            )  # type: ignore
 
             data_filter.append(
                 ST_DWithin(

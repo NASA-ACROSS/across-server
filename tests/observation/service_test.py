@@ -18,7 +18,7 @@ class TestObservationService:
         async def test_should_return_not_found_exception_when_does_not_exist(
             self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
-            """Should return False when the observation does not exist"""
+            """Should raise ObservationNotFoundException when the observation does not exist"""
             mock_result.scalar_one_or_none.return_value = None
 
             service = ObservationService(mock_db)
@@ -42,7 +42,7 @@ class TestObservationService:
         async def test_should_raise_422_with_bad_params(
             self, bad_observation_filter: Any, mock_db: AsyncMock
         ) -> None:
-            """Should raise 422 with bad params"""
+            """Should raise InvalidObservationReadParametersException with bad params"""
 
             service = ObservationService(mock_db)
             params = ObservationRead(**bad_observation_filter)
