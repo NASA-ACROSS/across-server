@@ -15,7 +15,7 @@ from alembic import op
 from sqlalchemy import orm, select
 
 import migrations.versions.model_snapshots.models_2025_05_15 as model_snapshots
-from across_server.core.enums.ephemeris_type import EphemerisType
+from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
 
 # revision identifiers, used by Alembic.
@@ -400,6 +400,7 @@ OBSERVATORY: dict = {
     "name": "Transiting Exoplanet Survey Satellite",
     "short_name": "TESS",
     "type": "SPACE_BASED",
+    "reference_url": "https://science.nasa.gov/mission/tess/",
     "telescopes": [
         {
             "name": "Transiting Exoplanet Survey Satellite",
@@ -408,7 +409,18 @@ OBSERVATORY: dict = {
                 {
                     "name": "Transiting Exoplanet Survey Satellite",
                     "short_name": "TESS",
+                    "type": InstrumentType.PHOTOMETRIC.value,
+                    "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": footprint,
+                    "filters": [
+                        {
+                            "name": "TESS red",
+                            "min_wavelength": 6000,
+                            "max_wavelength": 10000,
+                            "peak_wavelength": 7865,
+                            "is_operational": True,
+                        }
+                    ],
                 }
             ],
         }
@@ -459,7 +471,10 @@ def upgrade() -> None:
 
     # observatory preparation
     telescopes: dict = OBSERVATORY.pop("telescopes")
-    ephemeris_types = OBSERVATORY.pop("ephemeris_types")
+
+    ephemeris_types = []
+    if "ephemeris_types" in OBSERVATORY.keys():
+        ephemeris_types = OBSERVATORY.pop("ephemeris_types")
 
     # create the observatory
     observatory_insert = model_snapshots.Observatory(
@@ -485,8 +500,13 @@ def upgrade() -> None:
 
         # get the instruments
         for instrument in instruments:
-            footprints = instrument.pop("footprint")
-            filters = instrument.pop("filters")
+            footprints = []
+            if "footprint" in instrument.keys():
+                footprints = instrument.pop("footprint")
+
+            filters = []
+            if "filters" in instrument.keys():
+                filters = instrument.pop("filters")
 
             # create the instrument record
             instrument_insert = model_snapshots.Instrument(

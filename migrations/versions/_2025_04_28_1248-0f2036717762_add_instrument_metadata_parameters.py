@@ -10,38 +10,12 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy import orm, select
-
-from across_server.core.enums import InstrumentType
-from migrations.versions.model_snapshots.models_2025_04_28 import (
-    Observatory,
-)
 
 # revision identifiers, used by Alembic.
 revision: str = "0f2036717762"
 down_revision: Union[str, None] = "e4ec21aebc19"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
-OBSERVATORY = {
-    "name": "Transiting Exoplanet Survey Satellite",
-    "short_name": "TESS",
-    "observatory_type": "SPACE_BASED",
-    "reference_url": "https://science.nasa.gov/mission/tess/",
-    "telescopes": [
-        {
-            "name": "Transiting Exoplanet Survey Satellite",
-            "short_name": "TESS",
-            "instruments": [
-                {
-                    "name": "Transiting Exoplanet Survey Satellite",
-                    "short_name": "TESS",
-                    "type": InstrumentType.PHOTOMETRIC.value,
-                }
-            ],
-        }
-    ],
-}
 
 
 def upgrade() -> None:
@@ -74,7 +48,7 @@ def upgrade() -> None:
     )
     op.add_column(
         "instrument",
-        sa.Column("type", sa.String(length=50), nullable=True),
+        sa.Column("type", sa.String(length=50), nullable=False),
         schema="across",
     )
     op.add_column(
@@ -114,26 +88,6 @@ def upgrade() -> None:
         schema="across",
     )
     # ### end Alembic commands ###
-
-    # Add additional metadata to TESS observatory package
-    bind = op.get_bind()
-    session = orm.Session(bind=bind, expire_on_commit=False)
-    stmt = select(Observatory).where(Observatory.short_name == "TESS")
-    tess = session.execute(stmt).scalar_one_or_none()
-
-    if tess is None:
-        raise ValueError("TESS observatory not found")
-
-    tess.reference_url = OBSERVATORY["reference_url"]  # type: ignore
-    tess.telescopes[0].instruments[0].type = OBSERVATORY["telescopes"][0][
-        "instruments"
-    ][0]["type"]  # type: ignore
-
-    # Commit the changes
-    session.commit()
-    session.close()
-
-    op.alter_column("instrument", "type", nullable=False, schema="across")
 
 
 def downgrade() -> None:
