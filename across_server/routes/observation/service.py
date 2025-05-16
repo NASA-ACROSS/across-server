@@ -195,8 +195,8 @@ class ObservationService:
 
             # Convert degrees to meters
             cone_search_radius = (
-                data.cone_search_radius * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
-            )  # type: ignore
+                data.cone_search_radius * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE  # type: ignore
+            )
 
             data_filter.append(
                 ST_DWithin(
