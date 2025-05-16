@@ -11,3 +11,8 @@ class ACROSSFootprintPoint(BaseModel):
 # this is sort of duplicated in seeds/footprints.py, the one in the seed should be replaced with this.
 def create_geography(polygon: list[ACROSSFootprintPoint]) -> WKBElement:
     return shape.from_shape(Polygon([[point.x, point.y] for point in polygon]))
+
+
+def arcmin_to_deg(arcmin: float) -> float:
+    """Convert arcminute to degrees."""
+    return arcmin / 60.0
