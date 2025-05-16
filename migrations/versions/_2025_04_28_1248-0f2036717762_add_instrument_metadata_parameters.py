@@ -1,7 +1,7 @@
 """add instrument metadata parameters
 
 Revision ID: 0f2036717762
-Revises: 2b00546497c1
+Revises: e4ec21aebc19
 Create Date: 2025-04-23 12:48:30.301710
 
 """
@@ -19,7 +19,7 @@ from migrations.versions.model_snapshots.models_2025_04_28 import (
 
 # revision identifiers, used by Alembic.
 revision: str = "0f2036717762"
-down_revision: Union[str, None] = "2b00546497c1"
+down_revision: Union[str, None] = "e4ec21aebc19"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
