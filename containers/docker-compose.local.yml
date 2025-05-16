@@ -6,6 +6,8 @@ services:
       context: ..
       dockerfile: containers/Dockerfile
       target: local
+      ssh:
+        - default
     volumes:
       - ../across_server/main.py:/app/across_server/main.py
       - ../across_server:/app/across_server
@@ -20,6 +22,7 @@ services:
 
   db:
     image: postgis/postgis
+    platform: linux/amd64
     ports:
       - 5432:5432
     volumes:
