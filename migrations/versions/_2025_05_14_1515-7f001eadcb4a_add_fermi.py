@@ -1,7 +1,7 @@
 """add fermi
 
 Revision ID: 7f001eadcb4a
-Revises: 043885e1cd78
+Revises: a6590318e932
 Create Date: 2025-05-14 15:15:20.099908
 
 """
@@ -37,7 +37,7 @@ from migrations.versions.model_snapshots.models_2025_05_15 import (
 
 # revision identifiers, used by Alembic.
 revision: str = "7f001eadcb4a"
-down_revision: Union[str, None] = "043885e1cd78"
+down_revision: Union[str, None] = "a6590318e932"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
