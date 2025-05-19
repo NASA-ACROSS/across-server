@@ -6,3 +6,4 @@ class InstrumentType(str, Enum):
     SPECTROSCOPIC_HIGH_RES = "spectroscopic_high_res"
     PHOTOMETRIC = "photometric"
     CALORIMETER = "calorimeter"
+    POLARIMETER = "polarimeter"

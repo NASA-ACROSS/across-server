@@ -1,7 +1,7 @@
 """add instrument metadata parameters
 
 Revision ID: 0f2036717762
-Revises: 438a1fe7c75c
+Revises: 2b00546497c1
 Create Date: 2025-04-23 12:48:30.301710
 
 """
