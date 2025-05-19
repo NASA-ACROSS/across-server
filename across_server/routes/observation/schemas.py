@@ -65,8 +65,8 @@ class Observation(ObservationBase):
 
     @staticmethod
     def from_orm(observation: ObservationModel) -> Observation:
-        if observation.depth_unit:
-            depth = UnitValue(
+        if observation.depth_unit and observation.depth_value:
+            depth = UnitValue[DepthUnit](
                 unit=DepthUnit(observation.depth_unit), value=observation.depth_value
             )
         else:
@@ -186,3 +186,30 @@ class ObservationCreate(ObservationBase):
             del data["bandpass"]
 
         return self.orm_model(**data)
+
+
+class ObservationRead(BaseSchema):
+    external_id: str | None = None
+    schedule_ids: list[uuid.UUID] | None = None
+    observatory_ids: list[uuid.UUID] | None = None
+    telescope_ids: list[uuid.UUID] | None = None
+    instrument_ids: list[uuid.UUID] | None = None
+    status: ObservationStatus | None = None
+    proposal: str | None = None
+    object_name: str | None = None
+    date_range_begin: datetime | None = None
+    date_range_end: datetime | None = None
+    bandpass_min: float | None = None
+    bandpass_max: float | None = None
+    bandpass_type: (
+        tools_enums.WavelengthUnit
+        | tools_enums.EnergyUnit
+        | tools_enums.FrequencyUnit
+        | None
+    ) = None
+    cone_search_ra: float | None = None
+    cone_search_dec: float | None = None
+    cone_search_radius: float | None = None
+    type: ObservationType | None = None
+    depth_value: float | None = None
+    depth_unit: DepthUnit | None = None

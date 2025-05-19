@@ -1,11 +1,14 @@
+from typing import Generic, TypeVar
+
 from pydantic import BaseModel, ConfigDict
 
-from ..enums import DepthUnit
 from .base import PrefixMixin
 
+T = TypeVar("T")
 
-class UnitValue(BaseModel, PrefixMixin):
+
+class UnitValue(BaseModel, PrefixMixin, Generic[T]):
     model_config = ConfigDict(use_enum_values=True)
 
-    value: float | None
-    unit: DepthUnit | None
+    value: float
+    unit: T

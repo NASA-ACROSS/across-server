@@ -12,6 +12,7 @@ from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
     instrument,
+    observation,
     observatory,
     permission,
     role,
@@ -75,3 +76,4 @@ app.include_router(tle.router)
 app.include_router(observatory.router)
 app.include_router(telescope.router)
 app.include_router(instrument.router)
+app.include_router(observation.router)
