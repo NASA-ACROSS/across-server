@@ -20,14 +20,17 @@ from across_server.core.enums.instrument_fov import InstrumentFOV
 from across_server.core.enums.instrument_type import InstrumentType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
 from migrations.versions.model_snapshots.models_2025_05_15 import (
+    EarthLocationParameters,
     Filter,
     Footprint,
     Group,
     GroupRole,
     Instrument,
+    JPLEphemerisParameters,
     Observatory,
     ObservatoryEphemerisType,
     Permission,
+    SpiceKernelParameters,
     Telescope,
     TLEParameters,
 )
@@ -64,21 +67,19 @@ GBM_WAVELENGTH_BANDPASS = convert_to_wave(GBM_ENERGY_BANDPASS)
 OBSERVATORY = {
     "name": "Fermi Gamma-ray Space Telescope",
     "short_name": "Fermi",
-    "observatory_type": "SPACE_BASED",
+    "type": "SPACE_BASED",
     "reference_url": "https://fermi.gsfc.nasa.gov",
     "is_operational": True,
     "telescopes": [
         {
             "name": "Large Area Telescope",
             "short_name": "LAT",
-            "id": "86f6849d-f634-4769-9aff-88907c6d455c",
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Large Area Telescope",
                     "short_name": "LAT",
-                    "id": "43d8dab5-0b79-45b5-8719-f301b1bd573d",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": LAT_FOOTPRINT,
                     "is_operational": True,
@@ -99,14 +100,12 @@ OBSERVATORY = {
         {
             "name": "Gamma-ray Burst Monitor",
             "short_name": "GBM",
-            "id": "327836f4-c0bf-45a1-be4c-9e94bf9f495d",
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Gamma-ray Burst Monitor",
                     "short_name": "GBM",
-                    "id": "3e56b7e0-a020-4c8d-8d85-07435b2b36c1",
                     "field_of_view": InstrumentFOV.ALL_SKY.value,
                     "footprint": [],
                     "is_operational": True,
@@ -124,6 +123,16 @@ OBSERVATORY = {
                 }
             ],
         },
+    ],
+    "ephemeris_types": [
+        {
+            "ephemeris_type": EphemerisType.TLE,
+            "priority": 1,
+            "parameters": {
+                "norad_id": 33053,
+                "norad_satellite_name": "FGRST (GLAST)",
+            },
+        }
     ],
 }
 
@@ -143,21 +152,7 @@ def upgrade() -> None:
 
     # create group admin
     permissions = (
-        session.query(Permission)
-        .filter(
-            Permission.name.in_(
-                [
-                    "group:user:write",
-                    "group:role:write",
-                    "group:write",
-                    "group:read",
-                    "group:observatory:write",
-                    "group:telescope:write",
-                    "group:schedule:write",
-                ]
-            )
-        )
-        .all()
+        session.query(Permission).filter(Permission.name.contains("group")).all()
     )
     fermi_group_admin = GroupRole(
         id=uuid.UUID("449c19ee-7b09-4b4d-ae52-99885a37f7be"),
@@ -167,52 +162,36 @@ def upgrade() -> None:
     )
     session.add(fermi_group_admin)
 
+    telescopes = OBSERVATORY.pop("telescopes")
+    ephemeris_types = OBSERVATORY.pop("ephemeris_types")
+
     # create observatory
-    observatory_insert = Observatory(
-        id=uuid.UUID("ac071adf-bdc1-4fd7-9bf6-3918d9f65498"),
-        name=OBSERVATORY["name"],
-        short_name=OBSERVATORY["short_name"],
-        type=OBSERVATORY["observatory_type"],
-        reference_url=OBSERVATORY["reference_url"],
-        is_operational=OBSERVATORY["is_operational"],
-        group=group,
-    )
+    observatory_insert = Observatory(id=uuid.uuid4(), group=group, **OBSERVATORY)
     session.add(observatory_insert)
     observatory_id = observatory_insert.id
 
     # get the telescopes
-    telescopes = OBSERVATORY["telescopes"]
     for telescope in telescopes:  #  type:ignore
+        instruments = telescope.pop("instruments")
         # create the telescope record
         telescope_insert = Telescope(
-            id=telescope["id"],
-            name=telescope["name"],
-            short_name=telescope["short_name"],
-            reference_url=telescope["reference_url"],
-            is_operational=telescope["is_operational"],
-            observatory_id=observatory_id,
+            id=uuid.uuid4(), observatory_id=observatory_id, **telescope
         )
         session.add(telescope_insert)
         telescope_id = telescope_insert.id
 
         # get the instruments
-        instruments = telescope["instruments"]  #  type:ignore
         for instrument in instruments:
+            footprints = instrument.pop("footprint")
+            filters = instrument.pop("filters")
+
             # create the instrument record
             instrument_insert = Instrument(
-                id=instrument["id"],
-                name=instrument["name"],
-                short_name=instrument["short_name"],
-                type=instrument["type"],
-                field_of_view=instrument["field_of_view"],
-                reference_url=instrument["reference_url"],
-                is_operational=instrument["is_operational"],
-                telescope_id=telescope_id,
+                id=uuid.uuid4(), telescope_id=telescope_id, **instrument
             )
             session.add(instrument_insert)
             instrument_id = instrument_insert.id
 
-            footprints = instrument["footprint"]
             for footprint in footprints:
                 # convert the input footprint to the string polygon
                 vertices = []
@@ -227,27 +206,44 @@ def upgrade() -> None:
                 )
                 session.add(footprint_insert)
 
-            filters = instrument["filters"]
             for filter in filters:
-                filter_insert = Filter(**filter)
-                filter_insert.instrument_id = instrument_id
+                filter_insert = Filter(instrument_id=instrument_id, **filter)
                 session.add(filter_insert)
 
-    # Add TLEParameters for Fermi
-    ephemeris_type = ObservatoryEphemerisType(
-        observatory_id=observatory_id,
-        ephemeris_type=EphemerisType.TLE,
-        priority=1,
-    )
+    # Add Ephemeris Parameters for Fermi
+    for ephemeris_type in ephemeris_types:  # type:ignore
+        # create the ephemeris type record
+        parameters = ephemeris_type.pop("parameters")
+        ephemeris_type_insert = ObservatoryEphemerisType(
+            id=uuid.uuid4(),
+            observatory_id=observatory_id,
+            **ephemeris_type,
+        )
+        session.add(ephemeris_type_insert)
 
-    session.add(ephemeris_type)
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.TLE:
+            tle_parameters = TLEParameters(
+                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+            )
+            session.add(tle_parameters)
 
-    tle_parameters = TLEParameters(
-        observatory_id=observatory_id,
-        norad_id=33053,
-        norad_satellite_name="FGRST (GLAST)",
-    )
-    session.add(tle_parameters)
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.JPL:
+            jpl_parameters = JPLEphemerisParameters(
+                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+            )
+            session.add(jpl_parameters)
+
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.SPICE:
+            spice_parameters = SpiceKernelParameters(
+                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+            )
+            session.add(spice_parameters)
+
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.GROUND:
+            ground_parameters = EarthLocationParameters(
+                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+            )
+            session.add(ground_parameters)
 
     session.commit()
     # ### end Alembic commands ###
@@ -262,14 +258,38 @@ def downgrade() -> None:
     observatory = session.scalar(
         select(Observatory).filter_by(name=OBSERVATORY["name"])
     )
-    observatory_id = observatory.id  # type: ignore
-    tle_parameters = session.scalar(
-        select(TLEParameters).filter_by(observatory_id=observatory_id)
-    )
-
     session.delete(group)
     session.delete(observatory)
-    session.delete(tle_parameters)
+
+    tle_parameters = session.scalar(
+        select(TLEParameters).filter_by(observatory_id=observatory.id)  # type:ignore
+    )
+    if tle_parameters:
+        session.delete(tle_parameters)
+
+    jpl_parameters = session.scalar(
+        select(JPLEphemerisParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if jpl_parameters:
+        session.delete(jpl_parameters)
+
+    spice_parameters = session.scalar(
+        select(SpiceKernelParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if spice_parameters:
+        session.delete(spice_parameters)
+
+    ground_parameters = session.scalar(
+        select(EarthLocationParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if ground_parameters:
+        session.delete(ground_parameters)
 
     session.commit()
     # ### end Alembic commands ###
