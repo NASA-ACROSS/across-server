@@ -50,8 +50,8 @@ class Instrument(InstrumentBase):
         Static method that instantiates this class from a Instrument database record
     """
 
-    @staticmethod
-    def from_orm(instrument: InstrumentModel) -> Instrument:
+    @classmethod
+    def from_orm(cls, instrument: InstrumentModel) -> Instrument:
         """
         Method that converts a models.Instrument record to a schemas.Instrument
         Parameters
@@ -66,7 +66,7 @@ class Instrument(InstrumentBase):
             Footprint.from_orm(footprint) for footprint in instrument.footprints
         ]
 
-        return Instrument(
+        return cls(
             id=instrument.id,
             name=instrument.name,
             short_name=instrument.short_name,

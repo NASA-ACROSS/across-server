@@ -63,8 +63,8 @@ class Observation(ObservationBase):
     created_on: datetime
     created_by_id: uuid.UUID | None = None
 
-    @staticmethod
-    def from_orm(observation: ObservationModel) -> Observation:
+    @classmethod
+    def from_orm(cls, observation: ObservationModel) -> Observation:
         if observation.depth_unit and observation.depth_value:
             depth = UnitValue[DepthUnit](
                 unit=DepthUnit(observation.depth_unit), value=observation.depth_value
@@ -82,7 +82,7 @@ class Observation(ObservationBase):
         else:
             tracking_type = None
 
-        return Observation(
+        return cls(
             id=observation.id,
             instrument_id=observation.instrument_id,
             schedule_id=observation.schedule_id,

@@ -47,8 +47,8 @@ class Telescope(TelescopeBase):
         Static method that instantiates this class from a telescope database record
     """
 
-    @staticmethod
-    def from_orm(telescope: TelescopeModel) -> Telescope:
+    @classmethod
+    def from_orm(cls, telescope: TelescopeModel) -> Telescope:
         """
         Method that converts a models.Telescope record to a schemas.Telescope
         Parameters
@@ -59,7 +59,7 @@ class Telescope(TelescopeBase):
         -------
             schemas.Telescope
         """
-        return Telescope(
+        return cls(
             id=telescope.id,
             name=telescope.name,
             short_name=telescope.short_name,
