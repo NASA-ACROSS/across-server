@@ -67,6 +67,7 @@ GBM_WAVELENGTH_BANDPASS = convert_to_wave(GBM_ENERGY_BANDPASS)
 OBSERVATORY = {
     "name": "Fermi Gamma-ray Space Telescope",
     "short_name": "Fermi",
+    "id": uuid.UUID("3417942b-7cc9-4e91-a9ab-fbc800871ef5"),
     "type": "SPACE_BASED",
     "reference_url": "https://fermi.gsfc.nasa.gov",
     "is_operational": True,
@@ -74,12 +75,14 @@ OBSERVATORY = {
         {
             "name": "Large Area Telescope",
             "short_name": "LAT",
+            "id": uuid.UUID("222d5f4a-8fd6-4299-a696-b3a6cb13d7bc"),
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Large Area Telescope",
                     "short_name": "LAT",
+                    "id": uuid.UUID("7f7b97ed-e341-476f-908b-7bad8740b31b"),
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": LAT_FOOTPRINT,
                     "is_operational": True,
@@ -88,6 +91,7 @@ OBSERVATORY = {
                     "filters": [
                         {
                             "name": "Fermi LAT Bandpass",
+                            "id": uuid.UUID("415f0c75-111e-4970-b89d-b55cc5975a81"),
                             "min_wavelength": LAT_WAVELENGTH_BANDPASS.min,
                             "max_wavelength": LAT_WAVELENGTH_BANDPASS.max,
                             "is_operational": True,
@@ -100,12 +104,14 @@ OBSERVATORY = {
         {
             "name": "Gamma-ray Burst Monitor",
             "short_name": "GBM",
+            "id": uuid.UUID("6fd90826-c3c9-4ad0-be01-63ed88a8f484"),
             "is_operational": True,
             "reference_url": "https://fermi.gsfc.nasa.gov",
             "instruments": [
                 {
                     "name": "Gamma-ray Burst Monitor",
                     "short_name": "GBM",
+                    "id": uuid.UUID("1c80c356-dc44-404f-aeba-060097a7a59d"),
                     "field_of_view": InstrumentFOV.ALL_SKY.value,
                     "footprint": [],
                     "is_operational": True,
@@ -114,6 +120,7 @@ OBSERVATORY = {
                     "filters": [
                         {
                             "name": "Fermi GBM Bandpass",
+                            "id": uuid.UUID("81f8bd53-49f6-4a17-9395-86b87c2ac9e8"),
                             "min_wavelength": GBM_WAVELENGTH_BANDPASS.min,
                             "max_wavelength": GBM_WAVELENGTH_BANDPASS.max,
                             "is_operational": True,
@@ -126,14 +133,25 @@ OBSERVATORY = {
     ],
     "ephemeris_types": [
         {
+            "id": uuid.UUID("ad78414a-1643-4ff0-9ab0-403ea51b1067"),
             "ephemeris_type": EphemerisType.TLE,
             "priority": 1,
             "parameters": {
+                "id": uuid.UUID("817a374a-5e60-4168-bb27-79a0df006c05"),
                 "norad_id": 33053,
                 "norad_satellite_name": "FGRST (GLAST)",
             },
         }
     ],
+    "group": {
+        "id": uuid.UUID("2d1919c9-728b-4d8c-8afb-ad60c63eab4e"),
+        "name": "Fermi Gamma-ray Space Telescope",
+        "short_name": "Fermi",
+        "group_admin": {
+            "id": uuid.UUID("449c19ee-7b09-4b4d-ae52-99885a37f7be"),
+            "name": "Fermi Group Admin",
+        },
+    },
 }
 
 
@@ -143,30 +161,25 @@ def upgrade() -> None:
     session = orm.Session(bind=bind, expire_on_commit=False)
 
     # create group based off the observatory
-    group = Group(
-        id=uuid.UUID("2d1919c9-728b-4d8c-8afb-ad60c63eab4e"),
-        name=OBSERVATORY["name"],
-        short_name=OBSERVATORY["short_name"],
-    )
-    session.add(group)
+    group = OBSERVATORY.pop("group")
+    group_admin = group.pop("group_admin")  # type: ignore
+    group_insert = Group(**group)  # type: ignore
+    session.add(group_insert)
 
     # create group admin
     permissions = (
         session.query(Permission).filter(Permission.name.contains("group")).all()
     )
-    fermi_group_admin = GroupRole(
-        id=uuid.UUID("449c19ee-7b09-4b4d-ae52-99885a37f7be"),
-        name="Fermi Group Admin",
-        permissions=permissions,
-        group=group,
+    group_admin_insert = GroupRole(
+        permissions=permissions, group=group_insert, **group_admin
     )
-    session.add(fermi_group_admin)
+    session.add(group_admin_insert)
 
     telescopes = OBSERVATORY.pop("telescopes")
     ephemeris_types = OBSERVATORY.pop("ephemeris_types")
 
     # create observatory
-    observatory_insert = Observatory(id=uuid.uuid4(), group=group, **OBSERVATORY)
+    observatory_insert = Observatory(group=group_insert, **OBSERVATORY)
     session.add(observatory_insert)
     observatory_id = observatory_insert.id
 
@@ -174,9 +187,7 @@ def upgrade() -> None:
     for telescope in telescopes:  #  type:ignore
         instruments = telescope.pop("instruments")
         # create the telescope record
-        telescope_insert = Telescope(
-            id=uuid.uuid4(), observatory_id=observatory_id, **telescope
-        )
+        telescope_insert = Telescope(observatory_id=observatory_id, **telescope)
         session.add(telescope_insert)
         telescope_id = telescope_insert.id
 
@@ -186,9 +197,7 @@ def upgrade() -> None:
             filters = instrument.pop("filters")
 
             # create the instrument record
-            instrument_insert = Instrument(
-                id=uuid.uuid4(), telescope_id=telescope_id, **instrument
-            )
+            instrument_insert = Instrument(telescope_id=telescope_id, **instrument)
             session.add(instrument_insert)
             instrument_id = instrument_insert.id
 
@@ -215,33 +224,30 @@ def upgrade() -> None:
         # create the ephemeris type record
         parameters = ephemeris_type.pop("parameters")
         ephemeris_type_insert = ObservatoryEphemerisType(
-            id=uuid.uuid4(),
             observatory_id=observatory_id,
             **ephemeris_type,
         )
         session.add(ephemeris_type_insert)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.TLE:
-            tle_parameters = TLEParameters(
-                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
-            )
+            tle_parameters = TLEParameters(observatory_id=observatory_id, **parameters)
             session.add(tle_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.JPL:
             jpl_parameters = JPLEphemerisParameters(
-                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(jpl_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.SPICE:
             spice_parameters = SpiceKernelParameters(
-                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(spice_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.GROUND:
             ground_parameters = EarthLocationParameters(
-                id=uuid.uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(ground_parameters)
 
