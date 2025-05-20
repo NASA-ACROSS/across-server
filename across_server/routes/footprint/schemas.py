@@ -42,18 +42,18 @@ class Footprint(FootprintBase):
 
     Methods
     -------
-    from_orm(footprint: FootprintModel) -> Footprint
+    from_orm(obj: FootprintModel) -> Footprint
         Static method that instantiates this class from a footprint database record
     """
 
     @classmethod
-    def from_orm(cls, footprint: FootprintModel) -> Footprint:
+    def from_orm(cls, obj: FootprintModel) -> Footprint:
         """
         Method that converts a models.Footprint record to a schemas.Footprint
 
         Parameters
         ----------
-        footprint: FootprintModel
+        obj: FootprintModel
             the models.Footprint record
 
         Returns
@@ -61,7 +61,7 @@ class Footprint(FootprintBase):
             schemas.Footprint
         """
 
-        poly = shape.to_shape(footprint.polygon)
+        poly = shape.to_shape(obj.polygon)
         x, y = poly.exterior.coords.xy  # type: ignore
         polygon = [Point(x=x[i], y=y[i]) for i in range(len(x))]
 

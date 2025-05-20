@@ -64,62 +64,56 @@ class Observation(ObservationBase):
     created_by_id: uuid.UUID | None = None
 
     @classmethod
-    def from_orm(cls, observation: ObservationModel) -> Observation:
-        if observation.depth_unit and observation.depth_value:
+    def from_orm(cls, obj: ObservationModel) -> Observation:
+        if obj.depth_unit and obj.depth_value:
             depth = UnitValue[DepthUnit](
-                unit=DepthUnit(observation.depth_unit), value=observation.depth_value
+                unit=DepthUnit(obj.depth_unit), value=obj.depth_value
             )
         else:
             depth = None
 
-        if observation.category:
-            category = IVOAObsCategory(observation.category)
+        if obj.category:
+            category = IVOAObsCategory(obj.category)
         else:
             category = None
 
-        if observation.tracking_type:
-            tracking_type = IVOAObsTrackingType(observation.tracking_type)
+        if obj.tracking_type:
+            tracking_type = IVOAObsTrackingType(obj.tracking_type)
         else:
             tracking_type = None
 
         return cls(
-            id=observation.id,
-            instrument_id=observation.instrument_id,
-            schedule_id=observation.schedule_id,
-            object_name=observation.object_name,
-            pointing_position=Coordinate(
-                ra=observation.pointing_ra, dec=observation.pointing_dec
-            ),
-            date_range=DateRange(
-                begin=observation.date_range_begin, end=observation.date_range_end
-            ),
-            exposure_time=observation.exposure_time,
-            external_observation_id=observation.external_observation_id,
-            type=ObservationType(observation.type),
-            status=ObservationStatus(observation.status),
-            pointing_angle=observation.pointing_angle,
-            reason=observation.reason,
-            description=observation.description,
-            proposal_reference=observation.proposal_reference,
-            object_position=Coordinate(
-                ra=observation.object_ra, dec=observation.object_dec
-            ),
+            id=obj.id,
+            instrument_id=obj.instrument_id,
+            schedule_id=obj.schedule_id,
+            object_name=obj.object_name,
+            pointing_position=Coordinate(ra=obj.pointing_ra, dec=obj.pointing_dec),
+            date_range=DateRange(begin=obj.date_range_begin, end=obj.date_range_end),
+            exposure_time=obj.exposure_time,
+            external_observation_id=obj.external_observation_id,
+            type=ObservationType(obj.type),
+            status=ObservationStatus(obj.status),
+            pointing_angle=obj.pointing_angle,
+            reason=obj.reason,
+            description=obj.description,
+            proposal_reference=obj.proposal_reference,
+            object_position=Coordinate(ra=obj.object_ra, dec=obj.object_dec),
             depth=depth,
             bandpass=WavelengthBandpass(
-                min=observation.min_wavelength,
-                max=observation.max_wavelength,
-                peak_wavelength=observation.peak_wavelength,
-                filter_name=observation.filter_name,
+                min=obj.min_wavelength,
+                max=obj.max_wavelength,
+                peak_wavelength=obj.peak_wavelength,
+                filter_name=obj.filter_name,
                 unit=tools_enums.WavelengthUnit.ANGSTROM,
             ),
-            t_resolution=observation.t_resolution,
-            em_res_power=observation.em_res_power,
-            o_ucd=observation.o_ucd,
-            pol_states=observation.pol_states,
-            pol_xel=observation.pol_xel,
+            t_resolution=obj.t_resolution,
+            em_res_power=obj.em_res_power,
+            o_ucd=obj.o_ucd,
+            pol_states=obj.pol_states,
+            pol_xel=obj.pol_xel,
             category=category,
-            priority=observation.priority,
-            created_on=observation.created_on,
+            priority=obj.priority,
+            created_on=obj.created_on,
             tracking_type=tracking_type,
         )
 

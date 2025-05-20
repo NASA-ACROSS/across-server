@@ -48,7 +48,7 @@ class Telescope(TelescopeBase):
     """
 
     @classmethod
-    def from_orm(cls, telescope: TelescopeModel) -> Telescope:
+    def from_orm(cls, obj: TelescopeModel) -> Telescope:
         """
         Method that converts a models.Telescope record to a schemas.Telescope
         Parameters
@@ -60,17 +60,15 @@ class Telescope(TelescopeBase):
             schemas.Telescope
         """
         return cls(
-            id=telescope.id,
-            name=telescope.name,
-            short_name=telescope.short_name,
-            observatory=IDNameSchema(
-                id=telescope.observatory.id, name=telescope.observatory.name
-            ),
+            id=obj.id,
+            name=obj.name,
+            short_name=obj.short_name,
+            observatory=IDNameSchema(id=obj.observatory.id, name=obj.observatory.name),
             instruments=[
                 IDNameSchema(id=instrument.id, name=instrument.name)
-                for instrument in telescope.instruments
+                for instrument in obj.instruments
             ],
-            created_on=telescope.created_on,
+            created_on=obj.created_on,
         )
 
 

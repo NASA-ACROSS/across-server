@@ -49,7 +49,7 @@
         "venv",
         "WEBSERVER"
     ],
-    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.typeCheckingMode": "strict",
     "python.analysis.autoImportCompletions": true,
     "python.testing.pytestArgs": [
         "tests"
