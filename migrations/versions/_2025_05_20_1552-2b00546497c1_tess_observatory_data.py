@@ -454,7 +454,7 @@ OBSERVATORY: dict = {
     "group": {
         "id": uuid.UUID("36d10919-c5e5-4f9d-a11e-dfe934cd488d"),
         "name": "Transiting Exoplanet Survey Satellite",
-        "short_name": "Fermi",
+        "short_name": "TESS",
         "group_admin": {
             "id": uuid.UUID("5c6ac2d9-705a-408b-8a03-93ae228f3b30"),
             "name": "TESS Group Admin",
