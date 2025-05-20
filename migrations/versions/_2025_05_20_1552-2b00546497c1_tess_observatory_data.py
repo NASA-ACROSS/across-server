@@ -1,26 +1,27 @@
 """create TESS
 
 Revision ID: 2b00546497c1
-Revises: 043885e1cd78
-Create Date: 2025-05-016 14:43:06.464266
+Revises: 7f001eadcb4a
+Create Date: 2025-05-020 14:43:06.464266
 
 """
 
 from __future__ import annotations
 
+import uuid
 from typing import Sequence, Union
-from uuid import uuid4
 
 from alembic import op
 from sqlalchemy import orm, select
 
 import migrations.versions.model_snapshots.models_2025_05_15 as model_snapshots
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
+from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
 
 # revision identifiers, used by Alembic.
 revision: str = "2b00546497c1"
-down_revision: Union[str, None] = "043885e1cd78"
+down_revision: Union[str, None] = "7f001eadcb4a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -397,16 +398,19 @@ footprint = [
 
 
 OBSERVATORY: dict = {
+    "id": uuid.UUID("3ae72d8d-f076-4ae2-b72f-7ceff2b547c8"),
     "name": "Transiting Exoplanet Survey Satellite",
     "short_name": "TESS",
-    "type": "SPACE_BASED",
+    "type": ObservatoryType.SPACE_BASED.value,
     "reference_url": "https://science.nasa.gov/mission/tess/",
     "telescopes": [
         {
+            "id": uuid.UUID("653e6456-2cb0-49da-a6be-7c7ed69c0cb5"),
             "name": "Transiting Exoplanet Survey Satellite",
             "short_name": "TESS",
             "instruments": [
                 {
+                    "id": uuid.UUID("77cd205f-9062-4a66-8a9e-19eb77f831c1"),
                     "name": "Transiting Exoplanet Survey Satellite",
                     "short_name": "TESS",
                     "type": InstrumentType.PHOTOMETRIC.value,
@@ -414,6 +418,7 @@ OBSERVATORY: dict = {
                     "footprint": footprint,
                     "filters": [
                         {
+                            "id": uuid.UUID("e274378b-a6ed-426b-a8ad-7363c1c9257a"),
                             "name": "TESS red",
                             "min_wavelength": 6000,
                             "max_wavelength": 10000,
@@ -427,21 +432,34 @@ OBSERVATORY: dict = {
     ],
     "ephemeris_types": [
         {
+            "id": uuid.UUID("c2c9d882-1238-4cd9-8241-3f97bc218293"),
             "ephemeris_type": EphemerisType.JPL,
             "priority": 1,
             "parameters": {
+                "id": uuid.UUID("309cffca-011f-433d-aa62-172d9c16bba6"),
                 "naif_id": -95,
             },
         },
         {
+            "id": uuid.UUID("8b3e7bd6-71f4-4549-8128-e97025927a88"),
             "ephemeris_type": EphemerisType.TLE,
             "priority": 2,
             "parameters": {
+                "id": uuid.UUID("ad813d6b-20fc-4a6c-a997-0a71324ead08"),
                 "norad_id": 43435,
                 "norad_satellite_name": "TESS",
             },
         },
     ],
+    "group": {
+        "id": uuid.UUID("36d10919-c5e5-4f9d-a11e-dfe934cd488d"),
+        "name": "Transiting Exoplanet Survey Satellite",
+        "short_name": "Fermi",
+        "group_admin": {
+            "id": uuid.UUID("5c6ac2d9-705a-408b-8a03-93ae228f3b30"),
+            "name": "TESS Group Admin",
+        },
+    },
 }
 
 
@@ -449,25 +467,23 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind, expire_on_commit=False)
 
-    group_permissions = (
+    # create group based off the observatory
+    group = OBSERVATORY.pop("group")
+    group_admin = group.pop("group_admin")  # type: ignore
+
+    group_insert = model_snapshots.Group(**group)  # type: ignore
+    session.add(group_insert)
+
+    # create group admin
+    permissions = (
         session.query(model_snapshots.Permission)
         .filter(model_snapshots.Permission.name.contains("group"))
         .all()
     )
-    # create the group
-    group = model_snapshots.Group(
-        id=uuid4(), name=OBSERVATORY["name"], short_name=OBSERVATORY["short_name"]
+    group_admin_insert = model_snapshots.GroupRole(
+        permissions=permissions, group=group_insert, **group_admin
     )
-    session.add(group)
-
-    # create group admin
-    group_admin = model_snapshots.GroupRole(
-        id=uuid4(),
-        name=f"{group.short_name} Group Admin",
-        permissions=group_permissions,
-        group=group,
-    )
-    session.add(group_admin)
+    session.add(group_admin_insert)
 
     # observatory preparation
     telescopes: dict = OBSERVATORY.pop("telescopes")
@@ -478,8 +494,7 @@ def upgrade() -> None:
 
     # create the observatory
     observatory_insert = model_snapshots.Observatory(
-        id=uuid4(),
-        group=group,
+        group=group_insert,
         **OBSERVATORY,
     )
     session.add(observatory_insert)
@@ -491,7 +506,6 @@ def upgrade() -> None:
 
         # create the telescope record
         telescope_insert = model_snapshots.Telescope(
-            id=uuid4(),
             observatory_id=observatory_id,
             **telescope,
         )
@@ -510,7 +524,6 @@ def upgrade() -> None:
 
             # create the instrument record
             instrument_insert = model_snapshots.Instrument(
-                id=uuid4(),
                 telescope_id=telescope_id,
                 **instrument,
             )
@@ -542,7 +555,6 @@ def upgrade() -> None:
         # create the ephemeris type record
         parameters = ephemeris_type.pop("parameters")
         ephemeris_type_insert = model_snapshots.ObservatoryEphemerisType(
-            id=uuid4(),
             observatory_id=observatory_id,
             **ephemeris_type,
         )
@@ -550,25 +562,25 @@ def upgrade() -> None:
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.TLE:
             tle_parameters = model_snapshots.TLEParameters(
-                id=uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(tle_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.JPL:
             jpl_parameters = model_snapshots.JPLEphemerisParameters(
-                id=uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(jpl_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.SPICE:
             spice_parameters = model_snapshots.SpiceKernelParameters(
-                id=uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(spice_parameters)
 
         if ephemeris_type_insert.ephemeris_type == EphemerisType.GROUND:
             ground_parameters = model_snapshots.EarthLocationParameters(
-                id=uuid4(), observatory_id=observatory_id, **parameters
+                observatory_id=observatory_id, **parameters
             )
             session.add(ground_parameters)
 
