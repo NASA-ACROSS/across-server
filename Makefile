@@ -157,7 +157,7 @@ stop_all: check_prod ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
 build: check_prod ## Build the containers (does not run them)
-	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --ssh default --build-arg APP_ENV=$(ENV)
+	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --build-arg APP_ENV=$(ENV)
 
 restart: ## Restarts the app container
 	@$(DOCKER_COMPOSE) restart
