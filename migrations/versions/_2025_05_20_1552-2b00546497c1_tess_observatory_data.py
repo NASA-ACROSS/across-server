@@ -1,35 +1,27 @@
 """create TESS
 
 Revision ID: 2b00546497c1
-Revises: e4ec21aebc19
-Create Date: 2025-03-07 14:43:06.464266
+Revises: 7f001eadcb4a
+Create Date: 2025-05-020 14:43:06.464266
 
 """
 
 from __future__ import annotations
 
+import uuid
 from typing import Sequence, Union
-from uuid import uuid4
 
 from alembic import op
 from sqlalchemy import orm, select
 
-from across_server.core.enums.ephemeris_type import EphemerisType
+import migrations.versions.model_snapshots.models_2025_05_15 as model_snapshots
+from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
+from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.db_util import ACROSSFootprintPoint, create_geography
-from migrations.versions.model_snapshots.models_2025_04_23 import (
-    Footprint,
-    Group,
-    Instrument,
-    JPLEphemerisParameters,
-    Observatory,
-    ObservatoryEphemerisType,
-    Telescope,
-    TLEParameters,
-)
 
 # revision identifiers, used by Alembic.
 revision: str = "2b00546497c1"
-down_revision: Union[str, None] = "e4ec21aebc19"
+down_revision: Union[str, None] = "7f001eadcb4a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -405,23 +397,69 @@ footprint = [
 ]
 
 
-OBSERVATORY = {
+OBSERVATORY: dict = {
+    "id": uuid.UUID("3ae72d8d-f076-4ae2-b72f-7ceff2b547c8"),
     "name": "Transiting Exoplanet Survey Satellite",
     "short_name": "TESS",
-    "type": "SPACE_BASED",
+    "type": ObservatoryType.SPACE_BASED.value,
+    "reference_url": "https://science.nasa.gov/mission/tess/",
     "telescopes": [
         {
+            "id": uuid.UUID("653e6456-2cb0-49da-a6be-7c7ed69c0cb5"),
             "name": "Transiting Exoplanet Survey Satellite",
             "short_name": "TESS",
             "instruments": [
                 {
+                    "id": uuid.UUID("77cd205f-9062-4a66-8a9e-19eb77f831c1"),
                     "name": "Transiting Exoplanet Survey Satellite",
                     "short_name": "TESS",
+                    "type": InstrumentType.PHOTOMETRIC.value,
+                    "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": footprint,
+                    "filters": [
+                        {
+                            "id": uuid.UUID("e274378b-a6ed-426b-a8ad-7363c1c9257a"),
+                            "name": "TESS red",
+                            "min_wavelength": 6000,
+                            "max_wavelength": 10000,
+                            "peak_wavelength": 7865,
+                            "is_operational": True,
+                        }
+                    ],
                 }
             ],
         }
     ],
+    "ephemeris_types": [
+        {
+            "id": uuid.UUID("c2c9d882-1238-4cd9-8241-3f97bc218293"),
+            "ephemeris_type": EphemerisType.JPL,
+            "priority": 1,
+            "parameters": {
+                "id": uuid.UUID("309cffca-011f-433d-aa62-172d9c16bba6"),
+                "naif_id": -95,
+            },
+        },
+        {
+            "id": uuid.UUID("8b3e7bd6-71f4-4549-8128-e97025927a88"),
+            "ephemeris_type": EphemerisType.TLE,
+            "priority": 2,
+            "parameters": {
+                "id": uuid.UUID("ad813d6b-20fc-4a6c-a997-0a71324ead08"),
+                "norad_id": 43435,
+                "norad_satellite_name": "TESS",
+            },
+        },
+    ],
+    "group": {
+        "id": uuid.UUID("36d10919-c5e5-4f9d-a11e-dfe934cd488d"),
+        "name": "Transiting Exoplanet Survey Satellite",
+        "short_name": "TESS",
+        "group_admin": {
+            "id": uuid.UUID("5c6ac2d9-705a-408b-8a03-93ae228f3b30"),
+            "name": "TESS Group Admin",
+        },
+    },
 }
 
 
@@ -430,49 +468,68 @@ def upgrade() -> None:
     session = orm.Session(bind=bind, expire_on_commit=False)
 
     # create group based off the observatory
-    group = Group(
-        id=uuid4(), name=OBSERVATORY["name"], short_name=OBSERVATORY["short_name"]
-    )
-    session.add(group)
+    group = OBSERVATORY.pop("group")
+    group_admin = group.pop("group_admin")  # type: ignore
 
-    # # create observatory
-    observatory_insert = Observatory(
-        id=uuid4(),
-        name=OBSERVATORY["name"],
-        short_name=OBSERVATORY["short_name"],
-        type=OBSERVATORY["type"],
-        group=group,
+    group_insert = model_snapshots.Group(**group)  # type: ignore
+    session.add(group_insert)
+
+    # create group admin
+    permissions = (
+        session.query(model_snapshots.Permission)
+        .filter(model_snapshots.Permission.name.contains("group"))
+        .all()
+    )
+    group_admin_insert = model_snapshots.GroupRole(
+        permissions=permissions, group=group_insert, **group_admin
+    )
+    session.add(group_admin_insert)
+
+    # observatory preparation
+    telescopes: dict = OBSERVATORY.pop("telescopes")
+
+    ephemeris_types = []
+    if "ephemeris_types" in OBSERVATORY.keys():
+        ephemeris_types = OBSERVATORY.pop("ephemeris_types")
+
+    # create the observatory
+    observatory_insert = model_snapshots.Observatory(
+        group=group_insert,
+        **OBSERVATORY,
     )
     session.add(observatory_insert)
     observatory_id = observatory_insert.id
 
-    # get the telescopes
-    telescopes = OBSERVATORY["telescopes"]
-    for telescope in telescopes:
+    # iterate over the telescopes
+    for telescope in telescopes:  #  type:ignore
+        instruments = telescope.pop("instruments")
+
         # create the telescope record
-        telescope_insert = Telescope(
-            id=uuid4(),
-            name=telescope["name"],  #  type:ignore
-            short_name=telescope["short_name"],  #  type:ignore
+        telescope_insert = model_snapshots.Telescope(
             observatory_id=observatory_id,
+            **telescope,
         )
         session.add(telescope_insert)
         telescope_id = telescope_insert.id
 
         # get the instruments
-        instruments = telescope["instruments"]  #  type:ignore
         for instrument in instruments:
+            footprints = []
+            if "footprint" in instrument.keys():
+                footprints = instrument.pop("footprint")
+
+            filters = []
+            if "filters" in instrument.keys():
+                filters = instrument.pop("filters")
+
             # create the instrument record
-            instrument_insert = Instrument(
-                id=uuid4(),
-                name=instrument["name"],  #  type:ignore
-                short_name=instrument["short_name"],  #  type:ignore
+            instrument_insert = model_snapshots.Instrument(
                 telescope_id=telescope_id,
+                **instrument,
             )
             session.add(instrument_insert)
             instrument_id = instrument_insert.id
 
-            footprints = instrument["footprint"]
             for footprint in footprints:
                 # convert the input footprint to the string polygon
                 vertices = []
@@ -482,39 +539,50 @@ def upgrade() -> None:
                 polygon = create_geography(polygon=vertices)
 
                 # create the footprint model record
-                footprint_insert = Footprint(
-                    polygon=polygon, instrument_id=instrument_id
+                footprint_insert = model_snapshots.Footprint(
+                    instrument_id=instrument_id, polygon=polygon
                 )
                 session.add(footprint_insert)
 
-    ephemeris_types = [
-        ObservatoryEphemerisType(
-            observatory_id=observatory_id,
-            ephemeris_type=EphemerisType.JPL,
-            priority=1,
-        ),
-        ObservatoryEphemerisType(
-            observatory_id=observatory_id,
-            ephemeris_type=EphemerisType.TLE,
-            priority=2,
-        ),
-    ]
-    session.add_all(ephemeris_types)
+            for filter in filters:
+                # create the filters
+                filter_insert = model_snapshots.Filter(
+                    instrument_id=instrument_id, **filter
+                )
+                session.add(filter_insert)
 
-    # Add TLEParameters for TESS
-    tle_parameters = TLEParameters(
-        observatory_id=observatory_id,
-        norad_id=43435,
-        norad_satellite_name="TESS",
-    )
-    session.add(tle_parameters)
+    for ephemeris_type in ephemeris_types:  # type:ignore
+        # create the ephemeris type record
+        parameters = ephemeris_type.pop("parameters")
+        ephemeris_type_insert = model_snapshots.ObservatoryEphemerisType(
+            observatory_id=observatory_id,
+            **ephemeris_type,
+        )
+        session.add(ephemeris_type_insert)
 
-    # Add JPLEphemerisParameters for TESS
-    jpl_parameters = JPLEphemerisParameters(
-        observatory_id=observatory_id,
-        naif_id=-95,
-    )
-    session.add(jpl_parameters)
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.TLE:
+            tle_parameters = model_snapshots.TLEParameters(
+                observatory_id=observatory_id, **parameters
+            )
+            session.add(tle_parameters)
+
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.JPL:
+            jpl_parameters = model_snapshots.JPLEphemerisParameters(
+                observatory_id=observatory_id, **parameters
+            )
+            session.add(jpl_parameters)
+
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.SPICE:
+            spice_parameters = model_snapshots.SpiceKernelParameters(
+                observatory_id=observatory_id, **parameters
+            )
+            session.add(spice_parameters)
+
+        if ephemeris_type_insert.ephemeris_type == EphemerisType.GROUND:
+            ground_parameters = model_snapshots.EarthLocationParameters(
+                observatory_id=observatory_id, **parameters
+            )
+            session.add(ground_parameters)
 
     session.commit()
 
@@ -523,13 +591,46 @@ def downgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
-    group = session.scalar(select(Group).filter_by(name=OBSERVATORY["name"]))
     observatory = session.scalar(
-        select(Observatory).filter_by(name=OBSERVATORY["name"])
+        select(model_snapshots.Observatory).filter_by(name=OBSERVATORY["name"])  # type:ignore
     )
 
-    session.delete(group)
+    group = session.scalar(
+        select(model_snapshots.Group).filter_by(name=observatory.name)  # type:ignore
+    )
+
     session.delete(observatory)
+    session.delete(group)
+
+    tle_parameters = session.scalar(
+        select(model_snapshots.TLEParameters).filter_by(observatory_id=observatory.id)  # type:ignore
+    )
+    if tle_parameters:
+        session.delete(tle_parameters)
+
+    jpl_parameters = session.scalar(
+        select(model_snapshots.JPLEphemerisParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if jpl_parameters:
+        session.delete(jpl_parameters)
+
+    spice_parameters = session.scalar(
+        select(model_snapshots.SpiceKernelParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if spice_parameters:
+        session.delete(spice_parameters)
+
+    ground_parameters = session.scalar(
+        select(model_snapshots.EarthLocationParameters).filter_by(
+            observatory_id=observatory.id  # type:ignore
+        )
+    )
+    if ground_parameters:
+        session.delete(ground_parameters)
 
     session.commit()
     # fin
