@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     String,
@@ -501,6 +502,10 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
 
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="schedule", lazy="selectin", cascade="all,delete"
+    )
+
+    __table_args__ = (
+        Index("ix_schedule_date_range", "date_range_begin", "date_range_end"),
     )
 
 

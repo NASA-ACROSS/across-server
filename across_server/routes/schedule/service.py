@@ -113,12 +113,18 @@ class ScheduleService:
         data_filter = []
 
         if data.date_range_begin:
-            data_filter.append(
-                models.Schedule.date_range_begin >= data.date_range_begin
-            )
+            date_range_begin_or = [
+                models.Schedule.date_range_begin >= data.date_range_begin,
+                models.Schedule.date_range_end > data.date_range_begin,
+            ]
+            data_filter.append(or_(*date_range_begin_or))
 
         if data.date_range_end:
-            data_filter.append(models.Schedule.date_range_end <= data.date_range_end)
+            date_range_end_or = [
+                models.Schedule.date_range_end <= data.date_range_end,
+                models.Schedule.date_range_begin < data.date_range_end,
+            ]
+            data_filter.append(or_(*date_range_end_or))
 
         if data.status:
             data_filter.append(models.Schedule.status == data.status)
@@ -132,7 +138,7 @@ class ScheduleService:
 
         if data.created_on:
             data_filter.append(
-                models.Schedule.created_on > data.created_on
+                models.Schedule.created_on >= data.created_on
             )  # this should/could be a date-range parameter
 
         if data.observatory_ids and len(data.observatory_ids):
@@ -223,8 +229,20 @@ class ScheduleService:
         schedule_query = (
             select(models.Schedule)
             .filter(*schedule_filter)
-            .distinct(models.Schedule.telescope_id)
-            .order_by(models.Schedule.telescope_id, models.Schedule.created_on.desc())
+            .distinct(
+                models.Schedule.date_range_begin,
+                models.Schedule.date_range_end,
+                models.Schedule.status,
+                models.Schedule.fidelity,
+            )
+            .order_by(
+                models.Schedule.date_range_begin,
+                models.Schedule.date_range_end,
+                models.Schedule.status,
+                models.Schedule.fidelity,
+                models.Schedule.created_on.desc(),
+                models.Schedule.telescope_id,
+            )
         )
 
         result = await self.db.execute(schedule_query)
