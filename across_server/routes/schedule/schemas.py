@@ -75,8 +75,8 @@ class Schedule(ScheduleBase):
     created_by_id: uuid.UUID | None
     checksum: str = ""
 
-    @staticmethod
-    def from_orm(schedule: ScheduleModel) -> Schedule:
+    @classmethod
+    def from_orm(cls, obj: ScheduleModel) -> Schedule:
         """
         Method that converts a models.Schedule record to a schemas.Schedule
 
@@ -89,23 +89,20 @@ class Schedule(ScheduleBase):
         -------
             schemas.Schedule
         """
-        return Schedule(
-            id=schedule.id,
-            telescope_id=schedule.telescope_id,
-            date_range=DateRange(
-                begin=schedule.date_range_begin, end=schedule.date_range_end
-            ),
-            status=ScheduleStatus(schedule.status),
-            name=schedule.name,
-            external_id=schedule.external_id,
-            fidelity=ScheduleFidelity(schedule.fidelity),
-            created_on=schedule.created_on,
-            created_by_id=schedule.created_by_id,
+        return cls(
+            id=obj.id,
+            telescope_id=obj.telescope_id,
+            date_range=DateRange(begin=obj.date_range_begin, end=obj.date_range_end),
+            status=ScheduleStatus(obj.status),
+            name=obj.name,
+            external_id=obj.external_id,
+            fidelity=ScheduleFidelity(obj.fidelity),
+            created_on=obj.created_on,
+            created_by_id=obj.created_by_id,
             observations=[
-                Observation.from_orm(observation)
-                for observation in schedule.observations
+                Observation.from_orm(observation) for observation in obj.observations
             ],
-            checksum=schedule.checksum,
+            checksum=obj.checksum,
         )
 
 
