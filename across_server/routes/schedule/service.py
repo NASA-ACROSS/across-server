@@ -234,14 +234,15 @@ class ScheduleService:
                 models.Schedule.date_range_end,
                 models.Schedule.status,
                 models.Schedule.fidelity,
+                models.Schedule.telescope_id,
             )
             .order_by(
                 models.Schedule.date_range_begin,
                 models.Schedule.date_range_end,
                 models.Schedule.status,
                 models.Schedule.fidelity,
-                models.Schedule.created_on.desc(),
                 models.Schedule.telescope_id,
+                models.Schedule.created_on.desc(),
             )
         )
 
