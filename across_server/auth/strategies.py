@@ -15,7 +15,14 @@ async def authenticate(
     service: Annotated[AuthService, Depends(AuthService)],
     token: Annotated[str, Depends(extract_creds)],
 ) -> AuthUser:
-    return await service.authenticate(token)
+    return await service.authenticate_user(token)
+
+
+async def authenticate_jwt(
+    service: Annotated[AuthService, Depends(AuthService)],
+    token: Annotated[str, Depends(extract_creds)],
+) -> AuthUser:
+    return await service.authenticate_jwt(token)
 
 
 async def global_access(
@@ -41,7 +48,7 @@ async def global_access(
 async def group_access(
     security_scopes: SecurityScopes,
     group_id: Annotated[UUID, Path(title="UUID of the group")],
-    auth_user: Annotated[AuthUser, Depends(authenticate)],
+    auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
 ) -> AuthUser:
     if "all:write" in auth_user.scopes:
         return auth_user

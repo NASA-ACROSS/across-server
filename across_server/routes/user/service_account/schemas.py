@@ -12,8 +12,11 @@ class ServiceAccount(BaseSchema):
     description: str | None
     expiration: datetime.datetime
     expiration_duration: int
-    secret_key: str
     group_roles: list[GroupRole]
+
+
+class ServiceAccountSecret(ServiceAccount):
+    secret_key: str
 
 
 class ServiceAccountCreate(BaseSchema):

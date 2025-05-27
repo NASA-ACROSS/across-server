@@ -2,13 +2,14 @@ from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Form, Response, status
+from fastapi.security import HTTPBasic
 from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
 from ..util.email import EmailService
 from . import magic_link, schemas, strategies, tokens
-from .security import extract_creds
+from .security import authenticate_grant_type, extract_creds
 from .service import AuthService
 
 router = APIRouter(
@@ -20,6 +21,8 @@ router = APIRouter(
         },
     },
 )
+
+client_credentials_security = HTTPBasic()
 
 
 def setRefreshTokenCookie(response: Response, token: str) -> Response:
@@ -109,5 +112,20 @@ async def refresh_token(
     auth_tokens = service.get_auth_tokens(user)
 
     setRefreshTokenCookie(response, auth_tokens["refresh"])
+
+    return schemas.AccessTokenResponse(access_token=auth_tokens["access"])
+
+
+@router.post("/token")
+async def token(
+    auth_user: Annotated[schemas.AuthUser, Depends(authenticate_grant_type)],
+    grant_type: Annotated[str, Form()],
+    response: Response,
+    service: Annotated[AuthService, Depends(AuthService)],
+) -> schemas.AccessTokenResponse:
+    auth_tokens = service.get_auth_tokens(auth_user)
+
+    if grant_type == schemas.GrantType.JWT:
+        setRefreshTokenCookie(response, auth_tokens["refresh"])
 
     return schemas.AccessTokenResponse(access_token=auth_tokens["access"])

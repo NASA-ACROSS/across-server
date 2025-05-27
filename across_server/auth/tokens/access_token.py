@@ -18,6 +18,7 @@ class AccessTokenData(TokenData[str]):
 
     scopes: list[str]
     groups: list[Group]
+    type: str
 
 
 class AccessToken(Token[AccessTokenData, AuthUser]):

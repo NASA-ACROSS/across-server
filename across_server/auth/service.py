@@ -1,11 +1,15 @@
+import secrets
 from typing import Annotated, TypedDict
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBasicCredentials
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+
+from across_server.core.exceptions import AcrossHTTPException
 
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
@@ -23,12 +27,54 @@ class AuthService:
     def generate_magic_link(self, email: str) -> str:
         return magic_link.generate(email)
 
-    async def authenticate(
+    async def authenticate_user(
         self,
         token: str,
     ) -> schemas.AuthUser:
         token_data = tokens.AccessToken().decode(token)
         auth_user = await self.get_authenticated_user(user_id=UUID(token_data.sub))
+
+        return auth_user
+
+    async def authenticate_service_account(
+        self, credentials: HTTPBasicCredentials
+    ) -> schemas.AuthUser:
+        query = select(models.ServiceAccount).where(
+            (models.ServiceAccount.id == credentials.username)
+        )
+
+        result = await self.db.execute(query)
+        service_account = result.unique().scalar_one_or_none()
+
+        if service_account is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        # !!!! COMPARE PASSWORD HERE !!!!!
+        if not secrets.compare_digest(service_account.secret_key, credentials.password):
+            raise AcrossHTTPException(
+                400,
+                "invalid_grant",
+                {"reason": f"invalid password for user [{credentials.username}]"},
+            )
+
+        auth_user = await self.get_authenticated_service_account(
+            username=UUID(credentials.username)
+        )
+
+        return auth_user
+
+    async def authenticate_jwt(
+        self,
+        token: str,
+    ) -> schemas.AuthUser:
+        token_data = tokens.AccessToken().decode(token)
+
+        if token_data.type == "user":
+            auth_user = await self.get_authenticated_user(user_id=UUID(token_data.sub))
+        elif token_data.type == "service_account":
+            auth_user = await self.get_authenticated_service_account(
+                username=UUID(token_data.sub)
+            )
 
         return auth_user
 
@@ -80,6 +126,7 @@ class AuthService:
             first_name=user.first_name,
             last_name=user.last_name,
             username=user.username,
+            type="user",
         )
 
         if user.groups:
@@ -95,5 +142,57 @@ class AuthService:
                 auth_user.groups.append(
                     schemas.Group(id=group.id, scopes=unique_group_perms)
                 )
+
+        return auth_user
+
+    async def get_authenticated_service_account(
+        self,
+        username: UUID,
+    ) -> schemas.AuthUser:
+        query = (
+            select(models.ServiceAccount)
+            .where((models.ServiceAccount.id == username))
+            .options(
+                joinedload(models.ServiceAccount.group_roles).joinedload(
+                    models.GroupRole.permissions
+                )
+            )
+            .options(joinedload(models.ServiceAccount.user))
+        )
+
+        result = await self.db.execute(query)
+        service_account = result.unique().scalar_one_or_none()
+
+        if service_account is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        groups = []
+        # Extract group_ids from group_roles into a deduplicated set
+        group_ids = set(
+            {group_role.group.id for group_role in service_account.group_roles}
+        )
+        for id in group_ids:
+            groups.append(
+                schemas.Group(
+                    id=id,
+                    # aggregate all permissions for a group_id
+                    scopes=[
+                        perm.name
+                        for group_role in service_account.group_roles
+                        for perm in group_role.permissions
+                        if group_role.group.id == id
+                    ],
+                )
+            )
+
+        auth_user = schemas.AuthUser(
+            id=service_account.id,
+            groups=groups,
+            scopes=[],
+            first_name=service_account.user.first_name,
+            last_name=service_account.user.last_name,
+            username=service_account.user.username,
+            type="service_account",
+        )
 
         return auth_user

@@ -74,9 +74,9 @@ async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
-) -> schemas.ServiceAccount:
+) -> schemas.ServiceAccountSecret:
     service_account = await service.create(data, created_by_id=auth_user.id)
-    return schemas.ServiceAccount.model_validate(service_account)
+    return schemas.ServiceAccountSecret.model_validate(service_account)
 
 
 @router.patch(
@@ -135,8 +135,8 @@ async def rotate(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-) -> schemas.ServiceAccount:
+) -> schemas.ServiceAccountSecret:
     service_account = await service.rotate_key(
         service_account_id, modified_by_id=auth_user.id
     )
-    return schemas.ServiceAccount.model_validate(service_account)
+    return schemas.ServiceAccountSecret.model_validate(service_account)
