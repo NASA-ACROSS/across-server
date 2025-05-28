@@ -1,0 +1,73 @@
+name: "Environments"
+description: "Get information about cluster"
+inputs:
+  environment:
+    description: "Environment name"
+    required: true
+  namespace:
+    description: "Namespace name"
+    required: true
+  repository:
+    description: "Repository name"
+    required: false
+  application:
+    description: "Application name"
+    required: false
+  attributes:
+    description: "Comma separated attributes"
+    required: false
+outputs:
+  name:
+    description: "Environment name"
+    value: ${{ steps.result.outputs.name }}
+  region:
+    description: "AWS Region"
+    value: ${{ steps.result.outputs.region }}
+  role:
+    description: "IAM Role"
+    value: ${{ steps.result.outputs.role }}
+  cluster:
+    description: "Cluster"
+    value: ${{ steps.result.outputs.cluster }}
+  namespace:
+    description: "Namespace"
+    value: ${{ steps.result.outputs.namespace }}
+  ssm-path:
+    description: "SSM path"
+    value: ${{ steps.result.outputs.ssm-path }}
+  s3-bucket:
+    description: "S3 Bucket name"
+    value: ${{ steps.result.outputs.s3-bucket }}
+  account-id:
+    description: "AWS account id"
+    value: ${{ steps.result.outputs.aws-account-id }}
+  stage:
+    description: "Stage name"
+    value: ${{ steps.result.outputs.stage }}
+runs:
+  using: "composite"
+  steps:
+    - uses: cloudposse/github-action-yaml-config-query@0.1.0
+      id: suffix
+      with:
+        query: .${{ inputs.application == '' }}
+        config: |
+          true:
+            suffix: ${{ inputs.repository }}
+          false:
+            suffix: ${{ inputs.repository }}-${{ inputs.application }}
+
+    - uses: cloudposse/github-action-yaml-config-query@0.1.0
+      id: result
+      with:
+        query: .${{ inputs.environment }}
+        config: |
+          dev:
+            cluster: across-plat-ue2-dev-ecs
+            name: across-plat-ue2-dev-${{ steps.suffix.outputs.suffix }}
+            role: arn:aws:iam::905418122838:role/across-core-gbl-identity-${{ steps.suffix.outputs.suffix }}
+            ssm-path: /ecs-service/${{ steps.suffix.outputs.suffix }}/url/0
+            region: us-east-2
+            s3-bucket: across-plat-ue2-dev-ecs-tasks-mirror
+            aws-account-id: 905418122838
+            stage: dev

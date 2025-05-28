@@ -30,10 +30,15 @@ class Config(BaseSettings):
                 database=self.ACROSS_DB_NAME,
             )
 
-        ssm_db_path = f"/aurora-postgres/across-ue2-{core_config.APP_ENV.value.lower()}-core-server-db"
+        cluster_name = f"across-plat-ue2-{core_config.APP_ENV.value.lower()}-aurora-postgres-core-server-db"
+        ssm_db_path = f"/aurora-postgres/{cluster_name}"
+        cluster_domain = SSM.get_parameter("cluster_domain", ssm_db_path)
 
-        host = SSM.get_parameter("cluster_endpoint", ssm_db_path)
+        # host = "-".join([cluster_name, "db.cluster", cluster_domain])
+        host = cluster_domain
         port = int(SSM.get_parameter("db_port", ssm_db_path))
+
+        logger.info("Connecting to aurora", host=host, port=port)
 
         token = self._get_rds_token(host, port)
 

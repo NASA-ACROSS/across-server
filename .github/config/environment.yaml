@@ -1,0 +1,7 @@
+## file: .github/configs/environment.yaml
+
+# assumes the same organization
+environment-info-repo: ACROSS-team/across-infrastructure
+implementation_path: .github/environments
+implementation_file: ecspresso.yaml
+implementation_ref: main
