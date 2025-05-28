@@ -16,7 +16,7 @@ class ServiceAccount(BaseSchema):
 
 
 class ServiceAccountSecret(ServiceAccount):
-    secret_key: str
+    secret_key: str | None = None
 
 
 class ServiceAccountCreate(BaseSchema):

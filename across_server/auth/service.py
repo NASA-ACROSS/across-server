@@ -9,8 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from across_server.core.exceptions import AcrossHTTPException
-
+from ..auth.hashing import hash_secret_key
+from ..core.exceptions import AcrossHTTPException
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
 
@@ -50,7 +50,10 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         # !!!! COMPARE PASSWORD HERE !!!!!
-        if not secrets.compare_digest(service_account.secret_key, credentials.password):
+        if not secrets.compare_digest(
+            service_account.hashed_key,
+            hash_secret_key(credentials.password, service_account.salt),
+        ):
             raise AcrossHTTPException(
                 400,
                 "invalid_grant",

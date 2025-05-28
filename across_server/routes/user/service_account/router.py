@@ -23,7 +23,6 @@ router = APIRouter(
     summary="Read service accounts",
     description="Read many service accounts",
     status_code=status.HTTP_200_OK,
-    response_model=list[schemas.ServiceAccount],
 )
 async def get_many(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
@@ -40,7 +39,6 @@ async def get_many(
     summary="Read a service account",
     description="Read a service account by an ID.",
     status_code=status.HTTP_200_OK,
-    response_model=schemas.ServiceAccount,
     responses={
         status.HTTP_200_OK: {
             "model": schemas.ServiceAccount,
@@ -62,10 +60,9 @@ async def get(
     summary="Create a service account",
     description="Create a new service account for an ACROSS user.",
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.ServiceAccount,
     responses={
         status.HTTP_201_CREATED: {
-            "model": schemas.ServiceAccount,
+            "model": schemas.ServiceAccountSecret,
             "description": "The newly created service account",
         },
     },
@@ -75,8 +72,15 @@ async def create(
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
 ) -> schemas.ServiceAccountSecret:
-    service_account = await service.create(data, created_by_id=auth_user.id)
-    return schemas.ServiceAccountSecret.model_validate(service_account)
+    service_account, secret_key = await service.create(data, created_by_id=auth_user.id)
+
+    # return the generated secret key to the user one time
+    # once the response is sent we will no longer know this value
+    service_account_with_secret = schemas.ServiceAccountSecret.model_validate(
+        service_account
+    )
+    service_account_with_secret.secret_key = secret_key
+    return service_account_with_secret
 
 
 @router.patch(
@@ -84,7 +88,6 @@ async def create(
     summary="Update a service account",
     description="Update a service account's information.",
     status_code=status.HTTP_200_OK,
-    response_model=schemas.ServiceAccount,
     responses={
         status.HTTP_200_OK: {
             "model": schemas.ServiceAccount,
@@ -123,7 +126,6 @@ async def delete(
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration_duration",
     status_code=status.HTTP_200_OK,
-    response_model=schemas.ServiceAccount,
     responses={
         status.HTTP_200_OK: {
             "model": schemas.ServiceAccount,
@@ -136,7 +138,14 @@ async def rotate(
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccountSecret:
-    service_account = await service.rotate_key(
+    service_account, secret_key = await service.rotate_key(
         service_account_id, modified_by_id=auth_user.id
     )
-    return schemas.ServiceAccountSecret.model_validate(service_account)
+
+    # return the generated secret key to the user one time
+    # once the response is sent we will no longer know this value
+    service_account_with_secret = schemas.ServiceAccountSecret.model_validate(
+        service_account
+    )
+    service_account_with_secret.secret_key = secret_key
+    return service_account_with_secret

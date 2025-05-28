@@ -7,7 +7,8 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....auth.security import generate_secret_key, hash_secret_key
+from ....auth.hashing import hash_secret_key
+from ....auth.security import generate_secret_key
 from ....core import config
 from ....db import models
 from ....db.database import get_session
@@ -50,7 +51,7 @@ class ServiceAccountService:
 
     async def create(
         self, service_account_create: schemas.ServiceAccountCreate, created_by_id: UUID
-    ) -> models.ServiceAccount:
+    ) -> tuple[models.ServiceAccount, str]:
         service_account_create.expiration_duration = (
             service_account_create.expiration_duration
             if service_account_create.expiration_duration
@@ -72,7 +73,7 @@ class ServiceAccountService:
             user_id=created_by_id,
             name=service_account_create.name,
             description=service_account_create.description,
-            secret_key=hashed_secret_key,
+            hashed_key=hashed_secret_key,
             salt=secret_key_information.salt,
             expiration_duration=service_account_create.expiration_duration,
             expiration=secret_key_information.expiration,
@@ -85,8 +86,7 @@ class ServiceAccountService:
 
         # return the generated secret key to the user one time
         # once the response is sent we will no longer know this value
-        service_account.secret_key = secret_key_information.key
-        return service_account
+        return service_account, secret_key_information.key
 
     async def update(
         self,
@@ -116,7 +116,9 @@ class ServiceAccountService:
 
         return service_account
 
-    async def rotate_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
+    async def rotate_key(
+        self, id: UUID, modified_by_id: UUID
+    ) -> tuple[models.ServiceAccount, str]:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
         # generate a secret key for the service account that will be sent to the user
@@ -129,7 +131,7 @@ class ServiceAccountService:
             secret_key_information.key, secret_key_information.salt
         )
 
-        service_account.secret_key = hashed_secret_key
+        service_account.hashed_key = hashed_secret_key
         service_account.salt = secret_key_information.salt
         service_account.expiration = secret_key_information.expiration
 
@@ -138,8 +140,9 @@ class ServiceAccountService:
         await self.db.commit()
         await self.db.refresh(service_account)
 
-        service_account.secret_key = secret_key_information.key
-        return service_account
+        # return the generated secret key to the user one time
+        # once the response is sent we will no longer know this value
+        return service_account, secret_key_information.key
 
     async def expire_key(self, id: UUID, modified_by_id: UUID) -> models.ServiceAccount:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
