@@ -113,18 +113,10 @@ class ScheduleService:
         data_filter = []
 
         if data.date_range_begin:
-            date_range_begin_or = [
-                models.Schedule.date_range_begin >= data.date_range_begin,
-                models.Schedule.date_range_end > data.date_range_begin,
-            ]
-            data_filter.append(or_(*date_range_begin_or))
+            data_filter.append(models.Schedule.date_range_end > data.date_range_begin)
 
         if data.date_range_end:
-            date_range_end_or = [
-                models.Schedule.date_range_end <= data.date_range_end,
-                models.Schedule.date_range_begin < data.date_range_end,
-            ]
-            data_filter.append(or_(*date_range_end_or))
+            data_filter.append(models.Schedule.date_range_begin < data.date_range_end)
 
         if data.status:
             data_filter.append(models.Schedule.status == data.status)
