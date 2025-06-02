@@ -39,6 +39,11 @@ on:
         type: boolean
         default: true
         required: false
+      image-name:
+        description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
+        required: false
+        type: string
+        default: ''
       build-args:
         description: "Build args for Docker build."
         type: string
@@ -108,6 +113,7 @@ jobs:
           organization: ${{ steps.lowercase.outputs.output-string }}
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
+          image_name: ${{inputs.image-name}}
           build-args: ${{inputs.build-args}}
           ssh: default
 

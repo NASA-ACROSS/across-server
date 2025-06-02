@@ -69,6 +69,11 @@ on:
         type: boolean
         required: false
         default: false
+      image-name:
+        description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
+        required: false
+        type: string
+        default: ''
       app:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
@@ -98,6 +103,7 @@ jobs:
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
+      image-name: ${{inputs.image-name}}
       build-args: "APP_ENV=prod"
     secrets:
       ecr-region: ${{ secrets.ecr-region }}

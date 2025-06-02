@@ -222,7 +222,6 @@ build_prod: ## Build the containers for production -- does not use docker-compos
 		-t across-server:$(IMAGE_TAG) \
 		--no-cache \
 		--platform linux/amd64 \
-		--provenance false \
 		--ssh default \
 		--build-arg APP_ENV=prod .
 
