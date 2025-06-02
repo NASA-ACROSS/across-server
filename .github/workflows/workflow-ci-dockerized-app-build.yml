@@ -39,6 +39,10 @@ on:
         type: boolean
         default: true
         required: false
+      build-args:
+        description: "Build args for Docker build."
+        type: string
+        required: false
     secrets:
       ecr-region:
         description: "ECR AWS region"
@@ -79,10 +83,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Debug region output
-        run: |
-          echo "Region is: ${{ secrets.ecr-region }}"
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.2.0
         with:
@@ -99,7 +99,7 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.ssh_private_key }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Build
         id: build
@@ -108,7 +108,7 @@ jobs:
           organization: ${{ steps.lowercase.outputs.output-string }}
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
-          build-args: APP_ENV=prod
+          build-args: ${{inputs.build-args}}
           ssh: default
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1

@@ -98,6 +98,7 @@ jobs:
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
+      build-args: "APP_ENV=prod"
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
