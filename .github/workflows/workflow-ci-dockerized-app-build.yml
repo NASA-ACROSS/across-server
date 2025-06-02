@@ -96,6 +96,8 @@ jobs:
           organization: ${{ steps.lowercase.outputs.output-string }}
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
+          build-args: APP_ENV=prod
+          ssh: default
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
