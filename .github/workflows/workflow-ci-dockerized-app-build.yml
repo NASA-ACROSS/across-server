@@ -52,6 +52,9 @@ on:
       registry:
         description: "ECR Docker registry"
         required: true
+      ssh:
+        description: "List of SSH agent socket or keys to expose to the build"
+        required: false
     outputs:
       image:
         description: "Docker Image"
@@ -97,7 +100,7 @@ jobs:
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
           build-args: APP_ENV=prod
-          ssh: default
+          ssh: ${{secrets.ssh}}
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
