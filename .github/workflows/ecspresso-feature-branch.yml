@@ -103,6 +103,7 @@ jobs:
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
       registry: ${{ secrets.registry }}
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      ssh-private-key: ${{secrets.ssh-private-key}}
 
   cd:
     uses: ./.github/workflows/workflow-cd-preview-ecspresso.yml
