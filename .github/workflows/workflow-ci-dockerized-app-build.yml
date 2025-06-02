@@ -55,6 +55,10 @@ on:
       ssh:
         description: "List of SSH agent socket or keys to expose to the build"
         required: false
+
+      ssh-private-key:
+        required: false
+
     outputs:
       image:
         description: "Docker Image"
@@ -92,6 +96,11 @@ jobs:
           operation: 'lowercase'
           input-string: ${{ inputs.organization }}
 
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ssh_private_key }}
+
       - name: Build
         id: build
         uses: cloudposse/github-action-docker-build-push@1.13.0
@@ -100,7 +109,7 @@ jobs:
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
           build-args: APP_ENV=prod
-          ssh: ${{secrets.ssh}}
+          ssh: default
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image

@@ -89,8 +89,7 @@ on:
       ecr-iam-role:
         description: "IAM Role ARN provide ECR write/read access"
         required: true
-      ssh:
-        description: "List of SSH agent socket or keys to expose to the build"
+      ssh-private-key:
         required: false
 
 jobs:

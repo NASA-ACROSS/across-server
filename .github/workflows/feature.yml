@@ -31,4 +31,4 @@ jobs:
       secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
       ecr-region: "${{ secrets.ECR_REGION }}"
       ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
-      ssh: "${{ secrets.ACROSS_TOOLS_SSH_KEY }}"
+      ssh-private-key: ${{ secrets.ACROSS_TOOLS_SSH_KEY }}
