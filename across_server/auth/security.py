@@ -61,12 +61,12 @@ async def authenticate_grant_type(
             headers={"WWW-Authenticate": "Bearer"},
         )
     if (
-        bearer_credentials
+        bearer_credentials is not None
         and grant_type == "urn:ietf:params:oauth:grant-type:jwt-bearer"
     ):
         auth_user = await auth_service.authenticate_user(bearer_credentials)
         return auth_user
-    elif client_credentials and grant_type == "client_credentials":
+    elif client_credentials is not None and grant_type == "client_credentials":
         auth_user = await auth_service.authenticate_service_account(client_credentials)
         return auth_user
     raise HTTPException(

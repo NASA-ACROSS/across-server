@@ -1,6 +1,8 @@
 import datetime
+import itertools
 from collections.abc import Generator
-from typing import Any, Self
+from typing import Any, Iterable, Self
+from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -20,23 +22,37 @@ def mock_service_account_data() -> dict:
         "user_id": str(uuid4()),
         "name": "test service account",
         "description": "test service account description",
-        "secret_key": "very secret key",
         "expiration": "2025-01-30 00:00:00",
         "expiration_duration": "30",
         "group_roles": [],
     }
 
 
+@pytest.fixture
+def mock_service_account_data_with_secret() -> tuple[dict, str]:
+    return {
+        "id": str(uuid4()),
+        "user_id": str(uuid4()),
+        "name": "test service account",
+        "description": "test service account description",
+        "expiration": "2025-01-30 00:00:00",
+        "expiration_duration": "30",
+        "group_roles": [],
+    }, "very secret key"
+
+
 @pytest.fixture(scope="function")
 def mock_service_account_service(
     mock_service_account_data: dict,
+    mock_service_account_data_with_secret: tuple[dict, str],
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ServiceAccountService)
 
-    mock.create = AsyncMock(return_value=mock_service_account_data)
+    mock.create = AsyncMock(return_value=mock_service_account_data_with_secret)
     mock.get = AsyncMock(return_value=mock_service_account_data)
     mock.get_many = AsyncMock(return_value=[mock_service_account_data])
     mock.update = AsyncMock(return_value=mock_service_account_data)
+    mock.rotate_key = AsyncMock(return_value=mock_service_account_data_with_secret)
     mock.expire_key = AsyncMock(return_value={})
 
     yield mock
@@ -68,15 +84,20 @@ def fake_time() -> datetime.datetime:
 
 
 @pytest.fixture
-def baked_secret() -> str:
-    """
-    The actual generated secret key from the patched datetime.now() and patched config.SERVICE_ACCOUNT_SECRET_KEY
-    """
-    return "de0c80b7c38a01c4dc35e698960e4553b6b87e9ea8ce6f5ce03bcb6d7bdd7324537e60a9397e5cb9f21b8857011ac55940a7e32e43a86391a13666916e6e7443"
+def mock_secrets_token_hex() -> Iterable[str]:
+    return ["1", "2"]
+
+
+@pytest.fixture()
+def patch_secrets_token_hex(mock_secrets_token_hex: Iterable[str]) -> Any:
+    with mock.patch(
+        "secrets.token_hex", side_effect=itertools.cycle(mock_secrets_token_hex)
+    ):
+        yield
 
 
 @pytest.fixture
-def baked_expiration(fake_time: datetime.datetime) -> datetime.datetime:
+def fixed_expiration(fake_time: datetime.datetime) -> datetime.datetime:
     return fake_time + datetime.timedelta(days=30)
 
 

@@ -19,7 +19,6 @@ def mock_service_account_data() -> models.ServiceAccount:
             "user_id": UUID("e2c834a4-232c-420a-985e-eb5bc59aba24"),
             "name": "test service account",
             "description": "test service account description",
-            "secret_key": "very secret key",
             "expiration": "2025-03-13 00:00:00",
             "expiration_duration": "30",
             "group_roles": [],

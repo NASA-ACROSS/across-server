@@ -37,8 +37,9 @@ async def async_client(app: FastAPI) -> AsyncGenerator[httpx.AsyncClient]:
 
 
 @pytest.fixture
-def mock_scalar_one_or_none() -> MagicMock:
-    return MagicMock(return_value="default mocked scalar result")
+def mock_scalar_one_or_none() -> Generator[MagicMock]:
+    mock_result = MagicMock()
+    yield mock_result
 
 
 @pytest.fixture
@@ -48,10 +49,18 @@ def mock_scalars() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_unique(mock_scalar_one_or_none: MagicMock) -> Generator[MagicMock]:
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none = mock_scalar_one_or_none
+    yield mock_result
+
+
+@pytest.fixture
 def mock_result(
-    mock_scalar_one_or_none: MagicMock, mock_scalars: MagicMock
+    mock_scalar_one_or_none: MagicMock, mock_scalars: MagicMock, mock_unique: MagicMock
 ) -> Generator[AsyncMock]:
     mock_result = AsyncMock(return_value="default result")
+    mock_result.unique = MagicMock(return_value=mock_unique)
     mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
     mock_result.scalars = MagicMock(return_value=mock_scalars)
 

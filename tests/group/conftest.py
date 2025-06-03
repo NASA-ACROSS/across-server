@@ -18,11 +18,14 @@ def mock_group_data(mock_group_role_data: models.GroupRole) -> models.Group:
 
 
 @pytest.fixture
-def mock_group_role_data() -> models.GroupRole:
+def mock_group_role_data(
+    mock_permissions_data: list[models.Permission],
+) -> models.GroupRole:
     return models.GroupRole(
         **{
             "id": "12aa89d2-1b77-4a34-9504-063236b58782",
             "name": "Schedule Operations",
+            "permissions": mock_permissions_data,
         }
     )
 
@@ -59,7 +62,6 @@ def mock_service_account_data(
             "user_id": UUID("e2c834a4-232c-420a-985e-eb5bc59aba24"),
             "name": "test service account",
             "description": "test service account description",
-            "secret_key": "very secret key",
             "expiration": "2025-03-13 00:00:00",
             "expiration_duration": "30",
             "group_roles": [mock_group_role_data],
