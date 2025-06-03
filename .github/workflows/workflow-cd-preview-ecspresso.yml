@@ -340,6 +340,10 @@ jobs:
           output_properties: true
           patterns: |
             - .github/configs/environment.yaml
+      - run: |
+          echo "implementation_repository: ${{ steps.config.outputs.environment-info-org || github.event.repository.owner.login }}"
+          echo "environment-info-repo: ${{ steps.config.outputs.environment-info-repo }}"
+          echo "implementation_path: ${{ steps.config.outputs.implementation_path }}"
 
       - name: Environment Info
         uses: cloudposse/github-action-interface-environment@0.3.0
