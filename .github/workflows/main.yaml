@@ -7,6 +7,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  id-token: write
+  deployments: write
+  pull-requests: write
+  contents: read
+
 jobs:
   do:
     uses: ./.github/workflows/ecspresso-main-branch.yml
@@ -19,3 +25,4 @@ jobs:
       secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
       ecr-region: "${{ secrets.ECR_REGION }}"
       ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
+      ssh-private-key: "${{ secrets.ACROSS_TOOLS_SSH_KEY }}"

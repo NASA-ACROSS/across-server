@@ -50,6 +50,13 @@ on:
         type: boolean
         required: false
         default: false
+
+      image-name:
+        description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
+        required: false
+        type: string
+        default: ''
+
       app:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
@@ -70,6 +77,8 @@ on:
       ecr-iam-role:
         description: "IAM Role ARN provide ECR write/read access"
         required: true
+      ssh-private-key:
+        required: false
 
 jobs:
   ci:
@@ -77,11 +86,15 @@ jobs:
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
+      image-name: ${{ inputs.image-name }}
+      build-args: "APP_ENV=prod"
+      tests_enabled: false
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
       registry: ${{ secrets.registry }}
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
+      ssh-private-key: ${{ secrets.ssh-private-key }}
 
   cd:
     uses: ./.github/workflows/workflow-cd-ecspresso.yml

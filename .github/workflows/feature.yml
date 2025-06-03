@@ -25,6 +25,7 @@ jobs:
       ref: ${{ github.event.pull_request.head.ref  }}
       enable-migration: true
       image-name: core-server
+      app: core-server
 
     secrets:
       github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"

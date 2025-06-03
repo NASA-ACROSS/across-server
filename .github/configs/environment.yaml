@@ -2,5 +2,4 @@
 environment-info-repo: across-infrastructure
 implementation_path: .github/environments
 implementation_file: ecspresso.yaml
-# implementation_ref: main
-implementation_ref: 86a33252e8776d6554a8f9fc1331a058844aad10
+implementation_ref: main
