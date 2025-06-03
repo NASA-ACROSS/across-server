@@ -123,6 +123,8 @@ jobs:
           labels: ${{ inputs.labels }}
           open: ${{ inputs.open }}
           env-label: ${{ inputs.env-label }}
+      - run: |
+          echo "labels: ${{inputs.labels}}, open: ${{ inputs.open }},  env-label: ${{ inputs.env-label }}"
 
     outputs:
       namespace: ${{ inputs.ref }}

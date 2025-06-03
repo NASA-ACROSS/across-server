@@ -116,6 +116,8 @@ jobs:
           image_name: ${{inputs.image-name}}
           build-args: ${{inputs.build-args}}
           ssh: default
+          # provenance is needed so there's not 'blank' entries in ecr as `-`
+          # AWS handles metadata as a separate image entry.
           provenance: false
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
