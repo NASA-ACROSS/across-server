@@ -14,12 +14,12 @@ class Group(BaseModel):
         return {"id": str(self.id), "scopes": self.scopes}
 
 
-class AuthUserType(Enum):
+class AuthUserType(str, Enum):
     USER = "user"
     SERVICE_ACCOUNT = "service_account"
 
 
-class GrantType(Enum):
+class GrantType(str, Enum):
     CLIENT_CREDENTIALS = "client_credentials"
     JWT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
@@ -28,7 +28,7 @@ class AuthUser(BaseModel):
     id: UUID
     scopes: list[str]
     groups: list[Group]
-    type: str
+    type: AuthUserType
     first_name: str | None = None
     last_name: str | None = None
     username: str | None = None

@@ -4,6 +4,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 
+from across_server.auth.schemas import GrantType
 from across_server.auth.security import authenticate_grant_type
 
 
@@ -20,7 +21,7 @@ class TestSecurity:
                     HTTPBasicCredentials(
                         username="testUsername", password="testPassword"
                     ),
-                    "",
+                    None,  # type: ignore
                 )
 
         @pytest.mark.asyncio
@@ -38,7 +39,7 @@ class TestSecurity:
                 mock_auth_service,
                 "testBearerCredentials",
                 HTTPBasicCredentials(username="testUsername", password="testPassword"),
-                "client_credentials",
+                GrantType.CLIENT_CREDENTIALS,
             )
             mock_auth_service.authenticate_service_account.assert_called_once()
 
@@ -50,6 +51,6 @@ class TestSecurity:
                 mock_auth_service,
                 "testBearerCredentials",
                 HTTPBasicCredentials(username="testUsername", password="testPassword"),
-                "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                GrantType.JWT,
             )
             mock_auth_service.authenticate_user.assert_called_once()

@@ -129,7 +129,7 @@ class AuthService:
             first_name=user.first_name,
             last_name=user.last_name,
             username=user.username,
-            type="user",
+            type=schemas.AuthUserType.USER,
         )
 
         if user.groups:
@@ -195,7 +195,7 @@ class AuthService:
             first_name=service_account.user.first_name,
             last_name=service_account.user.last_name,
             username=service_account.user.username,
-            type="service_account",
+            type=schemas.AuthUserType.SERVICE_ACCOUNT,
         )
 
         return auth_user

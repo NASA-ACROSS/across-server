@@ -1,5 +1,5 @@
 from ..config import auth_config
-from ..schemas import AuthUser, Group
+from ..schemas import AuthUser, AuthUserType, Group
 from .base_token import Token, TokenData
 
 
@@ -14,11 +14,12 @@ class AccessTokenData(TokenData[str]):
         exp: expiration of the token.
         scopes: scopes from the user's roles.
         groups: groups the user belongs to and their associated scopes.
+        type: either "user" or "service_account" AuthUserType enum
     """
 
     scopes: list[str]
     groups: list[Group]
-    type: str
+    type: AuthUserType
 
 
 class AccessToken(Token[AccessTokenData, AuthUser]):

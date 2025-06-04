@@ -3,7 +3,6 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, Response, status
-from fastapi.security import HTTPBasic
 from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
@@ -21,8 +20,6 @@ router = APIRouter(
         },
     },
 )
-
-client_credentials_security = HTTPBasic()
 
 
 def setRefreshTokenCookie(response: Response, token: str) -> Response:

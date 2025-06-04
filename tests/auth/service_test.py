@@ -45,7 +45,6 @@ class TestAuthService:
                 uuid.uuid4(), "testEmail@example.com"
             )
             assert isinstance(authUser, schemas.AuthUser)
-            assert authUser.type == "user"
 
         @pytest.mark.asyncio
         async def test_get_authenticated_user_should_return_type_user(
@@ -59,7 +58,7 @@ class TestAuthService:
             authUser = await service.get_authenticated_user(
                 uuid.uuid4(), "testEmail@example.com"
             )
-            assert authUser.type == "user"
+            assert authUser.type == schemas.AuthUserType.USER
 
     class TestGetAuthenticatedServiceAccount:
         @pytest.mark.asyncio
@@ -84,4 +83,4 @@ class TestAuthService:
             mock_scalar_one_or_none.return_value = mock_service_account_data
             service = AuthService(mock_db)
             authUser = await service.get_authenticated_service_account(uuid.uuid4())
-            assert authUser.type == "service_account"
+            assert authUser.type == schemas.AuthUserType.SERVICE_ACCOUNT

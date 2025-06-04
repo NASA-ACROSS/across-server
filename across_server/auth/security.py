@@ -10,7 +10,7 @@ from fastapi.security import (
     HTTPBearer,
 )
 
-from .schemas import AuthUser, SecretKeySchema
+from .schemas import AuthUser, GrantType, SecretKeySchema
 from .service import AuthService
 
 bearer_dependency = HTTPBearer(
@@ -52,7 +52,7 @@ async def authenticate_grant_type(
     client_credentials: Annotated[
         HTTPBasicCredentials, Depends(client_credentials_security)
     ],
-    grant_type: Annotated[str, Form()],
+    grant_type: Annotated[GrantType, Form()],
 ) -> AuthUser | None:
     if not (bearer_credentials or client_credentials) or grant_type is None:
         raise HTTPException(
@@ -60,13 +60,10 @@ async def authenticate_grant_type(
             detail="Not Authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    if (
-        bearer_credentials is not None
-        and grant_type == "urn:ietf:params:oauth:grant-type:jwt-bearer"
-    ):
+    if bearer_credentials is not None and grant_type == GrantType.JWT:
         auth_user = await auth_service.authenticate_user(bearer_credentials)
         return auth_user
-    elif client_credentials is not None and grant_type == "client_credentials":
+    elif client_credentials is not None and grant_type == GrantType.CLIENT_CREDENTIALS:
         auth_user = await auth_service.authenticate_service_account(client_credentials)
         return auth_user
     raise HTTPException(
