@@ -73,12 +73,6 @@ async def authenticate_grant_type(
     )
 
 
-def extract_creds(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_dependency)],
-) -> str:
-    return credentials.credentials
-
-
 def generate_secret_key(expiration_duration: int = 30) -> SecretKeySchema:
     now = datetime.datetime.now()
 

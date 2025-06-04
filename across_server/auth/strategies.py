@@ -7,20 +7,20 @@ from fastapi.security import SecurityScopes
 
 from .config import auth_config
 from .schemas import AuthUser
-from .security import extract_creds
+from .security import bearer_security
 from .service import AuthService
 
 
 async def authenticate(
     service: Annotated[AuthService, Depends(AuthService)],
-    token: Annotated[str, Depends(extract_creds)],
+    token: Annotated[str, Depends(bearer_security)],
 ) -> AuthUser:
     return await service.authenticate_user(token)
 
 
 async def authenticate_jwt(
     service: Annotated[AuthService, Depends(AuthService)],
-    token: Annotated[str, Depends(extract_creds)],
+    token: Annotated[str, Depends(bearer_security)],
 ) -> AuthUser:
     return await service.authenticate_jwt(token)
 
@@ -79,7 +79,7 @@ async def self_access(
 
 async def webserver_access(
     request: Request,
-    token: Annotated[str, Depends(extract_creds)],
+    token: Annotated[str, Depends(bearer_security)],
 ) -> None:
     is_webserver = secrets.compare_digest(token, auth_config.WEBSERVER_SECRET)
 

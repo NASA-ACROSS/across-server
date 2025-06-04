@@ -8,7 +8,7 @@ from pydantic import EmailStr
 from ..util.decorators import local_only_route
 from ..util.email import EmailService
 from . import magic_link, schemas, strategies, tokens
-from .security import authenticate_grant_type, extract_creds
+from .security import authenticate_grant_type, bearer_security
 from .service import AuthService
 
 router = APIRouter(
@@ -101,7 +101,7 @@ async def verify(
 async def refresh_token(
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],
-    refresh_token: Annotated[str, Depends(extract_creds)],
+    refresh_token: Annotated[str, Depends(bearer_security)],
 ) -> schemas.AccessTokenResponse:
     token_data = tokens.RefreshToken().decode(refresh_token)
 
