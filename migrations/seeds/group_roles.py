@@ -9,7 +9,7 @@ from .groups import treedome_space_group
 
 treedome_group_admin = GroupRole(
     id=uuid.UUID("6e53bc64-830a-4daa-a159-bdf2097a8516"),
-    name="Group Admin",
+    name="Treedome Group Admin",
     permissions=[
         Permission(**data.permission_data["group_user_write"]),
         Permission(**data.permission_data["group_role_write"]),
