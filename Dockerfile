@@ -62,7 +62,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
 COPY ./across_server ./across_server
-# Copy alembic.ini for migrations
+
+# Copy files needed for migrations
 COPY ./alembic.ini ./
 COPY ./migrations/ ./migrations/
 
