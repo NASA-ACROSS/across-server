@@ -194,9 +194,6 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
-      - run: |
-          echo "DEBUG:: s3-bucket: ${{ steps.environment.outputs.s3-bucket }}"
-
       - name: Run DB Migration
         uses: cloudposse/github-action-run-ecspresso@0.2.0
         continue-on-error: true
@@ -216,7 +213,7 @@ jobs:
             {
               "containerOverrides":[
                 {
-                  "name": ${{ inputs.app }},
+                  "name": "${{ inputs.app }}",
                   "command": ["make migrate"]
                 }
               ]
