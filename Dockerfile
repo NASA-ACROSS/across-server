@@ -51,7 +51,7 @@ COPY --from=build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
-COPY ../across_server ./across_server
+COPY ./across_server ./across_server
 
 
 FROM python:3.12-slim AS prod
@@ -61,7 +61,10 @@ COPY --from=build /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
-COPY ../across_server ./across_server
+COPY ./across_server ./across_server
+# Copy alembic.ini for migrations
+COPY ./alembic.ini ./
+COPY ./migrations/ ./migrations/
 
 EXPOSE 8000
 
