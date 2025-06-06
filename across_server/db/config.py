@@ -15,7 +15,7 @@ class Config(BaseSettings):
     ACROSS_DB_NAME: str = "across"
     ACROSS_DB_HOST: str = "localhost"
     ACROSS_DB_PORT: int = 5432
-    ACROSS_DB_ROLE_NAME: str = "across-ue2-dev-DeveloperRole"
+    ACROSS_DB_ROLE_NAME: str = "across-plat-ue2-dev-DBAccessRole"
 
     DRIVER_NAME: str = "postgresql+asyncpg"
 
@@ -34,10 +34,8 @@ class Config(BaseSettings):
         ssm_db_path = f"/aurora-postgres/{cluster_name}"
         cluster_domain = SSM.get_parameter("cluster_domain", ssm_db_path)
 
-        # host = "-".join([cluster_name, "db.cluster", cluster_domain])
-        host = cluster_domain
+        host = "-".join([cluster_name, "cluster", cluster_domain])
         port = int(SSM.get_parameter("db_port", ssm_db_path))
-
         logger.info("Connecting to aurora", host=host, port=port)
 
         token = self._get_rds_token(host, port)
