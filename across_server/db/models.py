@@ -414,7 +414,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
         back_populates="telescope", lazy="selectin", cascade="all,delete"
     )
     schedules: Mapped[list["Schedule"]] = relationship(
-        back_populates="telescope", lazy="selectin"
+        back_populates="telescope", lazy="noload"
     )
 
 
@@ -439,7 +439,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
 
     observations: Mapped[list["Observation"]] = relationship(
-        back_populates="instrument", lazy="selectin"
+        back_populates="instrument", lazy="noload"
     )
     filters: Mapped[list["Filter"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
@@ -506,6 +506,9 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
 
     __table_args__ = (
         Index("ix_schedule_date_range", "date_range_begin", "date_range_end"),
+        Index("ix_schedule_date_range_begin", "date_range_begin"),
+        Index("ix_schedule_date_range_end", "date_range_end"),
+        Index("ix_schedule_checksum", "checksum"),
     )
 
 
