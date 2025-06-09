@@ -1,10 +1,10 @@
 from unittest.mock import MagicMock
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from fastapi.security import HTTPBasicCredentials
 
-from across_server.auth.schemas import GrantType
+from across_server.auth.enums import GrantType
 from across_server.auth.security import authenticate_grant_type
 
 
@@ -25,11 +25,12 @@ class TestSecurity:
                 )
 
         @pytest.mark.asyncio
-        async def test_should_raise_exception(
+        async def test_should_raise_401_unauthorized_exception(
             self, mock_auth_service: MagicMock
         ) -> None:
-            with pytest.raises(HTTPException):
+            with pytest.raises(HTTPException) as exception:
                 await authenticate_grant_type(mock_auth_service, None, None, None)  # type: ignore
+            assert exception.value.status_code == status.HTTP_401_UNAUTHORIZED
 
         @pytest.mark.asyncio
         async def test_should_call_authenticate_service_account_when_client_credentials(
@@ -38,7 +39,9 @@ class TestSecurity:
             await authenticate_grant_type(
                 mock_auth_service,
                 "testBearerCredentials",
-                HTTPBasicCredentials(username="testUsername", password="testPassword"),
+                HTTPBasicCredentials(
+                    username="eugenekrabs", password="g!v3_m3-the-S3CR37-f0r|\/|uL4!!!"
+                ),
                 GrantType.CLIENT_CREDENTIALS,
             )
             mock_auth_service.authenticate_service_account.assert_called_once()
@@ -50,7 +53,9 @@ class TestSecurity:
             await authenticate_grant_type(
                 mock_auth_service,
                 "testBearerCredentials",
-                HTTPBasicCredentials(username="testUsername", password="testPassword"),
+                HTTPBasicCredentials(
+                    username="eugenekrabs", password="g!v3_m3-the-S3CR37-f0r|\/|uL4!!!"
+                ),
                 GrantType.JWT,
             )
             mock_auth_service.authenticate_user.assert_called_once()

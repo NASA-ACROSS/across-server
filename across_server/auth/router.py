@@ -7,8 +7,8 @@ from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
 from ..util.email import EmailService
-from . import magic_link, schemas, strategies, tokens
-from .security import authenticate_grant_type, bearer_security
+from . import enums, magic_link, schemas, strategies, tokens
+from .security import authenticate_grant_type, get_bearer_credentials
 from .service import AuthService
 
 router = APIRouter(
@@ -101,7 +101,7 @@ async def verify(
 async def refresh_token(
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],
-    refresh_token: Annotated[str, Depends(bearer_security)],
+    refresh_token: Annotated[str, Depends(get_bearer_credentials)],
 ) -> schemas.AccessTokenResponse:
     token_data = tokens.RefreshToken().decode(refresh_token)
 
@@ -122,7 +122,7 @@ async def token(
 ) -> schemas.AccessTokenResponse:
     auth_tokens = service.get_auth_tokens(auth_user)
 
-    if grant_type == schemas.GrantType.JWT:
+    if grant_type == enums.GrantType.JWT:
         setRefreshTokenCookie(response, auth_tokens["refresh"])
 
     return schemas.AccessTokenResponse(access_token=auth_tokens["access"])

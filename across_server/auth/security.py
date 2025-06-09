@@ -10,60 +10,49 @@ from fastapi.security import (
     HTTPBearer,
 )
 
-from .schemas import AuthUser, GrantType, SecretKeySchema
+from .enums import GrantType
+from .schemas import AuthUser, SecretKeySchema
 from .service import AuthService
 
-bearer_dependency = HTTPBearer(
+http_bearer = HTTPBearer(
     scheme_name="Authorization",
     description="Enter your access token.",
     auto_error=False,
 )
 
-client_credentials_dependency = HTTPBasic(
+http_basic = HTTPBasic(
     scheme_name="Service Account Authorization",
     description="Enter your client credentials.",
     auto_error=False,
 )
 
 
-def bearer_security(
-    bearer_credentials: Annotated[
-        HTTPAuthorizationCredentials, Depends(bearer_dependency)
-    ],
+def get_bearer_credentials(
+    bearer: Annotated[HTTPAuthorizationCredentials, Depends(http_bearer)],
 ) -> str | None:
-    if not bearer_credentials:
+    if not bearer:
         return None
-    return bearer_credentials.credentials
+    return bearer.credentials
 
 
-def client_credentials_security(
-    client_credentials: Annotated[
-        HTTPBasicCredentials, Depends(client_credentials_dependency)
-    ],
+def get_basic_credentials(
+    basic_credentials: Annotated[HTTPBasicCredentials, Depends(http_basic)],
 ) -> HTTPBasicCredentials | None:
-    if not client_credentials:
+    if not basic_credentials:
         return None
-    return client_credentials
+    return basic_credentials
 
 
 async def authenticate_grant_type(
     auth_service: Annotated[AuthService, Depends(AuthService)],
-    bearer_credentials: Annotated[str, Depends(bearer_security)],
-    client_credentials: Annotated[
-        HTTPBasicCredentials, Depends(client_credentials_security)
-    ],
+    bearer_credentials: Annotated[str, Depends(get_bearer_credentials)],
+    client_credentials: Annotated[HTTPBasicCredentials, Depends(get_basic_credentials)],
     grant_type: Annotated[GrantType, Form()],
 ) -> AuthUser | None:
-    if not (bearer_credentials or client_credentials) or grant_type is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not Authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if bearer_credentials is not None and grant_type == GrantType.JWT:
+    if bearer_credentials and grant_type == GrantType.JWT:
         auth_user = await auth_service.authenticate_user(bearer_credentials)
         return auth_user
-    elif client_credentials is not None and grant_type == GrantType.CLIENT_CREDENTIALS:
+    elif client_credentials and grant_type == GrantType.CLIENT_CREDENTIALS:
         auth_user = await auth_service.authenticate_service_account(client_credentials)
         return auth_user
     raise HTTPException(

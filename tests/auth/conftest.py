@@ -44,7 +44,7 @@ def dep_override(
         {
             EmailService: lambda: mock_email_service,
             AuthService: lambda: mock_auth_service,
-            security.bearer_security: lambda: "credentials boyo",
+            security.get_bearer_credentials: lambda: "credentials boyo",
             strategies.webserver_access: lambda: mock_webserver_access,
         }
     ):

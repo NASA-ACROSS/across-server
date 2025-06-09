@@ -1,8 +1,9 @@
 import datetime
-from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, model_serializer
+
+from .enums import AuthUserType
 
 
 class Group(BaseModel):
@@ -12,16 +13,6 @@ class Group(BaseModel):
     @model_serializer
     def serialize(self) -> dict:
         return {"id": str(self.id), "scopes": self.scopes}
-
-
-class AuthUserType(str, Enum):
-    USER = "user"
-    SERVICE_ACCOUNT = "service_account"
-
-
-class GrantType(str, Enum):
-    CLIENT_CREDENTIALS = "client_credentials"
-    JWT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 
 class AuthUser(BaseModel):
