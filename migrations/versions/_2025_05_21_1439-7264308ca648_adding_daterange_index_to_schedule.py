@@ -1,7 +1,7 @@
 """adding daterange index to schedule
 
 Revision ID: 7264308ca648
-Revises: 7f001eadcb4a
+Revises: 2b00546497c1
 Create Date: 2025-05-21 14:39:01.709574
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "7264308ca648"
-down_revision: Union[str, None] = "7f001eadcb4a"
+down_revision: Union[str, None] = "2b00546497c1"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
