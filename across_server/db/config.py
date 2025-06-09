@@ -19,25 +19,35 @@ class Config(BaseSettings):
 
     DRIVER_NAME: str = "postgresql+asyncpg"
 
+    _cluster_name: str = (
+        f"across-plat-ue2-{core_config.APP_ENV.value.lower()}-core-server-db"
+    )
+
     def DB_URI(self) -> URL:
         if core_config.is_local():
-            return URL.create(
-                drivername=self.DRIVER_NAME,
-                username=self.ACROSS_DB_USER,
-                password=self.ACROSS_DB_PWD,
-                host=self.ACROSS_DB_HOST,
-                port=self.ACROSS_DB_PORT,
-                database=self.ACROSS_DB_NAME,
-            )
+            return self._get_local_uri()
+        else:
+            return self._get_aurora_uri()
 
-        cluster_name = f"across-plat-ue2-{core_config.APP_ENV.value.lower()}-aurora-postgres-core-server-db"
-        ssm_db_path = f"/aurora-postgres/{cluster_name}"
+    def _get_ssm_path(self) -> str:
+        return f"/aurora-postgres/{self._cluster_name}"
+
+    def _get_local_uri(self) -> URL:
+        return URL.create(
+            drivername=self.DRIVER_NAME,
+            username=self.ACROSS_DB_USER,
+            password=self.ACROSS_DB_PWD,
+            host=self.ACROSS_DB_HOST,
+            port=self.ACROSS_DB_PORT,
+            database=self.ACROSS_DB_NAME,
+        )
+
+    def _get_aurora_uri(self) -> URL:
+        ssm_db_path = self._get_ssm_path()
         cluster_domain = SSM.get_parameter("cluster_domain", ssm_db_path)
 
-        host = "-".join([cluster_name, "cluster", cluster_domain])
+        host = "".join([self._cluster_name, ".cluster-", cluster_domain])
         port = int(SSM.get_parameter("db_port", ssm_db_path))
-        logger.info("Connecting to aurora", host=host, port=port)
-
         token = self._get_rds_token(host, port)
 
         return URL.create(

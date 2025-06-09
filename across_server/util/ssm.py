@@ -8,6 +8,8 @@ if TYPE_CHECKING:
 
 from ..core.config import config
 
+session = boto3.Session(profile_name=config.AWS_PROFILE)
+
 
 class SSM:
     """Utility class to interact with AWS Systems Manager Parameter Store"""
@@ -20,7 +22,7 @@ class SSM:
             if not config.AWS_REGION:
                 raise ValueError("AWS_REGION must be set in non-local environments")
 
-            cls._client = boto3.client("ssm", region_name=config.AWS_REGION)
+            cls._client = session.client("ssm", region_name=config.AWS_REGION)
 
         return cls._client
 

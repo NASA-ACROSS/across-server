@@ -7,7 +7,6 @@ from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.schema import CreateSchema
 
 from across_server.core import config as core_config
 from across_server.db import config, models
@@ -44,9 +43,8 @@ def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
-DATABASE_URL = config.DB_URI()
 logger.info(f"Running migration for '{core_config.APP_ENV.value}' environment.")
+DATABASE_URL = config.DB_URI()
 
 
 def run_migrations_offline() -> None:
@@ -85,11 +83,6 @@ def do_run_migrations(connection: Connection) -> None:
     )
 
     with context.begin_transaction():
-        if target_metadata.schema:
-            # The schema must be created separately outside of the actual migration
-            # because the migration context will not have the schema created yet.
-            context.execute(CreateSchema(target_metadata.schema, if_not_exists=True))
-
         context.run_migrations()
 
 
@@ -98,7 +91,11 @@ async def run_async_migrations() -> None:
     and associate a connection with the context.
     """
 
-    engine = create_async_engine(DATABASE_URL)
+    engine = create_async_engine(
+        url=DATABASE_URL,
+        pool_pre_ping=True,
+        connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
+    )
 
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)

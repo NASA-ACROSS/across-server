@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "appuser",
         "ASGI",
         "astropy",
         "asyncer",
@@ -42,6 +43,8 @@
         "pyjwt",
         "pyproject",
         "pytest",
+        "PYTHONDONTWRITEBYTECODE",
+        "PYTHONUNBUFFERED",
         "selectin",
         "sessionmaker",
         "skyfield",

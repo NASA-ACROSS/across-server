@@ -1,5 +1,5 @@
 from . import models
 from .config import config
-from .database import get_session
+from .database import get_session, init
 
-__all__ = ["get_session", "models", "config"]
+__all__ = ["init", "get_session", "models", "config"]

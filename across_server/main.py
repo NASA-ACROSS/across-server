@@ -1,10 +1,14 @@
 import os
 import time
 import uuid
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
+
+from across_server import db
 
 from . import auth
 from .core import config, logging
@@ -26,14 +30,23 @@ from .routes import (
 os.environ["TZ"] = "UTC"
 time.tzset()
 
-logging.setup(json_logs=config.LOG_JSON_FORMAT, log_level=config.LOG_LEVEL)
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    logging.setup(json_logs=config.LOG_JSON_FORMAT, log_level=config.LOG_LEVEL)
+    db.init()
+
+    yield
+
 
 app = FastAPI(
     title="ACROSS Server",
     summary="Astrophysics Cross-Observatory Science Support (ACROSS)",
     description="Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts.",
     root_path=config.ROOT_PATH,
+    lifespan=lifespan,
 )
 
 

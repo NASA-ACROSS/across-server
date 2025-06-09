@@ -35,7 +35,9 @@
                 "-Xfrozen_modules=off"
             ],
             "env": {
-                "APP_ENV": "dev"
+                "APP_ENV": "dev",
+                "AWS_PROFILE": "default-mfa",
+                "ACROSS_DB_USER": "core_server"
             },
             "module": "uvicorn",
             "args": [
@@ -47,6 +49,26 @@
                 "8000"
             ],
             "jinja": true
+        },
+        {
+            "name": "dev: Migrations",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "dev",
+                "AWS_PROFILE": "default-mfa",
+                "ACROSS_DB_USER": "core_server"
+            },
+            "module": "alembic",
+            "args": [
+                "upgrade",
+                "head"
+            ],
         },
     ]
 }
