@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: action
+      ssh:
+        - default
+    command: make test
+    environment:
+      APP_ENV: test

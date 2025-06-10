@@ -3,6 +3,7 @@ name: across-server
 services:
   app:
     build:
+      context: ..
       dockerfile: Dockerfile
       target: local
       ssh:

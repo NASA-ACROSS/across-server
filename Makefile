@@ -4,7 +4,7 @@ ENVS = local test action prod
 IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 
 # Docker
-DOCKER_COMPOSE_FILE = docker-compose.$(ENV).yml
+DOCKER_COMPOSE_FILE = docker/compose.$(ENV).yml
 DOCKER_COMPOSE = docker compose -f ${DOCKER_COMPOSE_FILE} --env-file=.env
 IMAGE_TAG = $(shell git rev-parse --short HEAD)
 

@@ -43,8 +43,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-
-FROM python:3.12-slim AS test
+# For GHA like test, lint, types
+FROM python:3.12-slim AS action
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv
@@ -52,6 +52,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy source code
 COPY ./across_server ./across_server
+COPY ./Makefile ./
 
 
 FROM python:3.12-slim AS prod
