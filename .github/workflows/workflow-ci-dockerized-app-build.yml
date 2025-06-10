@@ -152,7 +152,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Run linting
         run: make lint
@@ -166,7 +166,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Run Unit Tests
         run: make test
@@ -180,7 +180,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Run Type Checking
         run: make types
