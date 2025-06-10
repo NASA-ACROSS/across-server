@@ -102,7 +102,12 @@ on:
         required: false
 
 jobs:
-  ci:
+  ci-checks:
+    uses: ./.github/workflows/ci-checks.yml
+    secrets:
+      ssh-private-key: ${{secrets.ssh-private-key}}
+
+  ci-build:
     uses: ./.github/workflows/workflow-ci-dockerized-app-build.yml
     with:
       organization: ${{ inputs.organization }}
@@ -119,7 +124,7 @@ jobs:
 
   cd:
     uses: ./.github/workflows/workflow-cd-preview-ecspresso.yml
-    needs: [ ci ]
+    needs: [ ci-build ]
     if: ${{ always() }}
     with:
       image: ${{ needs.ci.outputs.image }}

@@ -1,0 +1,66 @@
+name: |-
+  CI Checks
+
+  Runs format, lint, and types.
+
+on:
+  workflow_call:
+      secrets:
+        ssh-private-key:
+          required: false
+
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Formatting
+        uses: astral-sh/ruff-action@v1
+        with:
+          args: format --check
+          changed-files: true
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ssh-private-key }}
+
+      - name: Run linting
+        run: make lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ssh-private-key }}
+
+      - name: Run Unit Tests
+        run: make test
+
+  types:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ssh-private-key }}
+
+      - name: Run Type Checking
+        run: make types
