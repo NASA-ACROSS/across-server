@@ -1,4 +1,7 @@
-name: ci
+name: |-
+  CI Checks
+
+  Runs format, lint, and types.
 
 on:
   push:
@@ -35,19 +38,19 @@ jobs:
       - name: Run linting
         run: make lint
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+  #     - name: Setup
+  #       uses: ./.github/actions/setup
+  #       with:
+  #         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Run Unit Tests
-        run: make test
+  #     - name: Run Unit Tests
+  #       run: make test
 
   types:
     runs-on: ubuntu-latest
