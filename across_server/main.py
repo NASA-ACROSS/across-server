@@ -65,7 +65,7 @@ app.add_middleware(
 
 
 @app.get(
-    "/",
+    "/health",
     summary="Health Check",
     description="Health Check Route",
     status_code=status.HTTP_200_OK,

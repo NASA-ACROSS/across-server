@@ -78,6 +78,10 @@ on:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
         type: string
+      output-web-url:
+        description: "Display web url after deployment"
+        default: true
+        type: boolean
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -130,6 +134,7 @@ jobs:
         dev: deploy/dev
       enable-migration: ${{ inputs.enable-migration }}
       support-rollback: ${{ inputs.support-rollback }}
+      output-web-url: ${{ inputs.output-web-url }}
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}

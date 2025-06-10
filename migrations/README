@@ -33,17 +33,7 @@ will access the dev db.
 Below is the sql to run once logged in. You may run into an error creating the `postgis_tiger_geocoder` extension that says a function `soundex` doesn't exist, but it does. You can search for it and it exists under the `public` schema. I do not understand why the next extension sometimes fails to find it. You will have to disconnect and reconnect from the db and continue.
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
-CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
-CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
-CREATE USER developer;
-CREATE USER ci;
-CREATE USER core_server;
-
--- RDS auth privileges
-GRANT rds_iam TO developer,ci,core_server;
 
 -- general DB privileges.
 GRANT ALL PRIVILEGES ON DATABASE across TO developer,ci,core_server;

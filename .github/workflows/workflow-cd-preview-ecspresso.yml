@@ -97,6 +97,10 @@ on:
         description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
+      output-web-url:
+        description: "Display web url after deployment"
+        default: true
+        type: boolean
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -104,7 +108,6 @@ on:
       github-private-actions-pat:
         description: "Github PAT allow to pull private repos"
         required: true
-
 permissions:
   pull-requests: write
   deployments: write
@@ -287,13 +290,15 @@ jobs:
         if: ${{ steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure' }}
         uses: cutenode/action-always-fail@v1.0.0
 
-      - uses: Produce8/actions-aws-ssm-params-to-env@1.1.0
+      - if: ${{ inputs.output-web-url }}
+        uses: Produce8/actions-aws-ssm-params-to-env@1.1.0
         with:
           ssm-path: ${{ steps.environment.outputs.ssm-path }}
           prefix: SSM_URL_
           decryption: true
 
       - name: Output web app url
+        if: ${{ inputs.output-web-url }}
         id: result
         run: |
           echo "webapp-url=${SSM_URL_0}" >> $GITHUB_OUTPUT
