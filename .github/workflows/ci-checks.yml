@@ -1,5 +1,5 @@
 name: |-
-  CI Checks
+  CI Checks Workflow
 
   Runs format, lint, and types.
 
