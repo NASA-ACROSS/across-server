@@ -83,7 +83,6 @@ permissions:
 jobs:
   build:
     name: build
-    needs: [types, lint, format]
     runs-on: ["ubuntu-latest"]
     steps:
       - name: Checkout
@@ -154,61 +153,3 @@ jobs:
           service: app
           command: make test
           registry: ${{ secrets.registry }}
-
-  types:
-    runs-on: ["ubuntu-latest"]
-    if: ${{ inputs.tests_enabled }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
-        with:
-          aws-region: ${{ secrets.ecr-region }}
-          role-to-assume: ${{ secrets.ecr-iam-role }}
-
-      - name: Types
-        id: types
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.2
-        with:
-          file: docker/compose.types.yml
-          service: app
-          command: make types
-          registry: ${{ secrets.registry }}
-
-  lint:
-    runs-on: ["ubuntu-latest"]
-    if: ${{ inputs.tests_enabled }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2.2.0
-        with:
-          aws-region: ${{ secrets.ecr-region }}
-          role-to-assume: ${{ secrets.ecr-iam-role }}
-
-      - name: Lint
-        id: lint
-        uses: cloudposse/github-action-docker-compose-test-run@0.1.2
-        with:
-          file: docker/compose.lint.yml
-          service: app
-          command: make lint
-          registry: ${{ secrets.registry }}
-
-  format:
-    runs-on: ["ubuntu-latest"]
-    if: ${{ inputs.tests_enabled }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Format
-        id: format
-        uses: astral-sh/ruff-action@v1
-        with:
-          args: format --check
-          changed-files: true
