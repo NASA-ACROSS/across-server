@@ -7,6 +7,7 @@ from alembic import context
 from geoalchemy2 import alembic_helpers
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.schema import CreateSchema
 
 from across_server.core import config as core_config
 from across_server.db import config, models
@@ -83,6 +84,11 @@ def do_run_migrations(connection: Connection) -> None:
     )
 
     with context.begin_transaction():
+        if target_metadata.schema:
+            # This is only relevant for local development...the schema must be
+            # created separately outside of the actual migration because the
+            # migration context will not have the schema created yet.
+            context.execute(CreateSchema(target_metadata.schema, if_not_exists=True))
         context.run_migrations()
 
 

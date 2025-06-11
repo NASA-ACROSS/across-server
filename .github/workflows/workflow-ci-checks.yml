@@ -1,13 +1,13 @@
 name: |-
   CI Checks Workflow
 
-  Runs format, lint, and types.
+  Runs format, lint, types and tests.
 
 on:
   workflow_call:
       secrets:
         ssh-private-key:
-          required: false
+          required: true
 
 
 jobs:

@@ -11,7 +11,7 @@ class TestTopLevelRoute:
         async_client: AsyncClient,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/"
+        self.endpoint = "/health"
 
     @pytest.mark.asyncio
     async def test_should_return_200(self) -> None:

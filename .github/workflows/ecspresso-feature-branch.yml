@@ -103,7 +103,7 @@ on:
 
 jobs:
   ci-checks:
-    uses: ./.github/workflows/ci-checks.yml
+    uses: ./.github/workflows/workflow-ci-checks.yml
     secrets:
       ssh-private-key: ${{secrets.ssh-private-key}}
 
@@ -114,7 +114,6 @@ jobs:
       repository: ${{ inputs.repository }}
       image-name: ${{inputs.image-name}}
       build-args: "APP_ENV=prod"
-      tests_enabled: true
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}

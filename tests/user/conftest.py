@@ -71,6 +71,7 @@ def dep_override(
         {
             EmailService: lambda: mock_email_service,
             UserService: lambda: mock_user_service,
+            AuthService: lambda: mock_auth_service,
             auth.strategies.self_access: lambda: mock_auth_service,
             auth.strategies.webserver_access: lambda: mock_webserver_access,
         }
