@@ -311,7 +311,9 @@ jobs:
         env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
     needs: [ preview ]
     steps:
-      - run: echo "${{ inputs.image }}"
+      - run: |
+          echo "${{ inputs.image }}"
+          echo "secret: ${{ secrets.secret-outputs-passphrase }}"
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
         with:
