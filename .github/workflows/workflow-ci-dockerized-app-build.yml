@@ -122,9 +122,6 @@ jobs:
           op: encode
           in: ${{ steps.build.outputs.image }}
 
-      - run: |
-          echo "DEBUG::image ${{ steps.image.outputs.out }}"
-
     outputs:
       image: ${{ steps.image.outputs.out }}
       tag: ${{ steps.build.outputs.tag }}

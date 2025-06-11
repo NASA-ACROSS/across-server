@@ -88,7 +88,6 @@ jobs:
       repository: ${{ inputs.repository }}
       image-name: ${{ inputs.image-name }}
       build-args: "APP_ENV=prod"
-      tests_enabled: false
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
