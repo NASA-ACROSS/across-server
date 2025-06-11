@@ -50,12 +50,6 @@ class AuthService:
         if service_account is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-        invalid_grant_exception = AcrossHTTPException(
-            400,
-            "invalid_grant",
-            {"reason": f"invalid password for user [{credentials.username}]"},
-        )
-
         # !!! COMPARE PASSWORD HERE USING ARGON2 !!!
         try:
             password_hasher.verify(
@@ -71,7 +65,11 @@ class AuthService:
             argon2.exceptions.VerificationError,
             argon2.exceptions.InvalidHashError,
         ):
-            raise invalid_grant_exception
+            raise AcrossHTTPException(
+                400,
+                "invalid_grant",
+                {"reason": f"invalid password for user [{credentials.username}]"},
+            )
 
     async def authenticate_jwt(
         self,
