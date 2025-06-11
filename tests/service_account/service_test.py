@@ -26,7 +26,6 @@ class TestServiceAccountService:
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
         assert generated_secret.key == mock_secrets_token_hex[0]
-        assert generated_secret.salt == mock_secrets_token_hex[1]
         assert (
             generated_secret.expiration.replace(tzinfo=timezone.utc) == fixed_expiration
         )

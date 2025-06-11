@@ -1,6 +1,6 @@
 from collections.abc import Callable, Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -49,12 +49,6 @@ def dep_override(
         }
     ):
         yield overrider
-
-
-@pytest.fixture
-def mock_hashlib_sha512_client() -> Generator[MagicMock]:
-    with patch("hashlib.sha512") as mock_hashlib_sha512:
-        yield mock_hashlib_sha512
 
 
 @pytest.fixture
@@ -124,6 +118,7 @@ def mock_service_account_data(
             "description": "test service account description",
             "expiration": "2025-03-13 00:00:00",
             "expiration_duration": "30",
+            "hashed_key": "$argon2id$v=19$m=65536,t=3,p=4$53llA+9HngFYh3nXsN/nGo5dNJreaAUrA4O40W+5zvC/upNn0Ki7dRZhS+LuuTXhPH9uPNHRIBjCXlw9ARKc4g$d45wZkITtSxq0izpj2WmAHt1Y1YtB5P8KOg1AOzj8qpiwVtiZgxhVnH7CTyxFCX5HVKEhpoe/LPu25XCGrZDDA",
             "group_roles": [mock_group_role_data],
             "user": mock_user_data,
         }

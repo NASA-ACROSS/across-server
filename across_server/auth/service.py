@@ -1,7 +1,7 @@
-import secrets
 from typing import Annotated, TypedDict
 from uuid import UUID
 
+import argon2
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasicCredentials
 from pydantic import EmailStr
@@ -9,10 +9,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from ..auth.hashing import hash_secret_key
+from ..auth.hashing import password_hasher
 from ..core.exceptions import AcrossHTTPException
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
+from .config import auth_config
 
 
 class Tokens(TypedDict):
@@ -49,22 +50,28 @@ class AuthService:
         if service_account is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-        # !!!! COMPARE PASSWORD HERE !!!!!
-        if not secrets.compare_digest(
-            service_account.hashed_key,
-            hash_secret_key(credentials.password, service_account.salt),
-        ):
-            raise AcrossHTTPException(
-                400,
-                "invalid_grant",
-                {"reason": f"invalid password for user [{credentials.username}]"},
-            )
-
-        auth_user = await self.get_authenticated_service_account(
-            username=UUID(credentials.username)
+        invalid_grant_exception = AcrossHTTPException(
+            400,
+            "invalid_grant",
+            {"reason": f"invalid password for user [{credentials.username}]"},
         )
 
-        return auth_user
+        # !!! COMPARE PASSWORD HERE USING ARGON2 !!!
+        try:
+            password_hasher.verify(
+                service_account.hashed_key,
+                credentials.password + auth_config.SERVICE_ACCOUNT_SECRET_KEY,
+            )
+            auth_user = await self.get_authenticated_service_account(
+                username=UUID(credentials.username)
+            )
+            return auth_user
+        except (
+            argon2.exceptions.VerifyMismatchError,
+            argon2.exceptions.VerificationError,
+            argon2.exceptions.InvalidHashError,
+        ):
+            raise invalid_grant_exception
 
     async def authenticate_jwt(
         self,

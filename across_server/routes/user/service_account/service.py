@@ -63,10 +63,8 @@ class ServiceAccountService:
             expiration_duration=service_account_create.expiration_duration
         )
 
-        # hash the salted secret key for storage in database
-        hashed_secret_key = hash_secret_key(
-            secret_key_information.key, secret_key_information.salt
-        )
+        # hash the secret key for storage in database
+        hashed_secret_key = hash_secret_key(secret_key_information.key)
 
         # store the hashed secret key and the salt used before hashing
         service_account = models.ServiceAccount(
@@ -74,7 +72,6 @@ class ServiceAccountService:
             name=service_account_create.name,
             description=service_account_create.description,
             hashed_key=hashed_secret_key,
-            salt=secret_key_information.salt,
             expiration_duration=service_account_create.expiration_duration,
             expiration=secret_key_information.expiration,
             created_by_id=created_by_id,
@@ -126,13 +123,10 @@ class ServiceAccountService:
             expiration_duration=service_account.expiration_duration
         )
 
-        # hash the salted secret key for storage in database
-        hashed_secret_key = hash_secret_key(
-            secret_key_information.key, secret_key_information.salt
-        )
+        # hash the secret key for storage in database
+        hashed_secret_key = hash_secret_key(secret_key_information.key)
 
         service_account.hashed_key = hashed_secret_key
-        service_account.salt = secret_key_information.salt
         service_account.expiration = secret_key_information.expiration
 
         service_account.modified_by_id = modified_by_id

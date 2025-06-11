@@ -1,15 +1,25 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from across_server.auth.hashing import hash_secret_key
 
 
 class TestHashing:
-    def test_hash_secret_key_should_generate_the_same_hash_deterministically(
+    def test_hash_secret_key_should_call_argon_password_hasher_hash(
+        self,
+    ) -> None:
+        with patch(
+            "across_server.auth.hashing.password_hasher"
+        ) as mock_password_hasher:
+            hash_secret_key("PASSWORD")
+            mock_password_hasher.hash.assert_called_once()
+
+    def test_hash_secret_key_should_call_argon_password_hasher_hash_with_peppered_arg(
         self, patch_config_secret: MagicMock
     ) -> None:
         # patch_config_secret fixes the pepper in hash_secret_key() to TEST_SECRET
-        hashed_secret = hash_secret_key("PASSWORD", "SALT")
-        assert (
-            hashed_secret
-            == "ad47942fc24671df80afc83b459ae79e26f097e9b4b1c7374f9b63dc6b590f57205cb69d4309a250ceeca9e0f4c5b1a74a40dcabf8163af34c2ccc13d7de9e09"
-        )
+        with patch(
+            "across_server.auth.hashing.password_hasher"
+        ) as mock_password_hasher:
+            hash_secret_key("PASSWORD")
+
+        assert mock_password_hasher.hash.call_args[0][0] == "PASSWORDTEST_SECRET"

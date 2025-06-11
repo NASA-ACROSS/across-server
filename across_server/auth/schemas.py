@@ -32,5 +32,4 @@ class AccessTokenResponse(BaseModel):
 
 class SecretKeySchema(BaseModel):
     key: str
-    salt: str
     expiration: datetime.datetime

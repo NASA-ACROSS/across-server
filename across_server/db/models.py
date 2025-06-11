@@ -300,7 +300,6 @@ class ServiceAccount(Base, CreatableMixin, ModifiableMixin):
     expiration: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     expiration_duration: Mapped[int] = mapped_column(Integer, nullable=False)
     hashed_key: Mapped[str] = mapped_column(String, nullable=False)
-    salt: Mapped[str] = mapped_column(String, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=True)
 

@@ -67,6 +67,5 @@ def generate_secret_key(expiration_duration: int = 30) -> SecretKeySchema:
 
     return SecretKeySchema(
         key=secrets.token_hex(64),
-        salt=secrets.token_hex(64),
         expiration=now + datetime.timedelta(days=expiration_duration),
     )
