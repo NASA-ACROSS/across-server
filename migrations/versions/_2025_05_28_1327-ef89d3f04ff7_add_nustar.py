@@ -1,7 +1,7 @@
 """add NuSTAR
 
 Revision ID: ef89d3f04ff7
-Revises: 2b00546497c1
+Revises: 7264308ca648
 Create Date: 2025-05-28 13:27:59.884336
 
 """
@@ -12,18 +12,17 @@ from typing import Sequence, Union
 from across.tools import EnergyBandpass, convert_to_wave
 from across.tools.core import enums as tools_enums
 from alembic import op
-from sqlalchemy import orm, select
+from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2025_05_15 as model_snapshots
+import migrations.versions.model_snapshots.models_2025_05_15 as snapshot_models
+from across_server.core.enums import InstrumentFOV, InstrumentType, ObservatoryType
 from across_server.core.enums.ephemeris_type import EphemerisType
-from across_server.core.enums.instrument_fov import InstrumentFOV
-from across_server.core.enums.instrument_type import InstrumentType
-from across_server.core.enums.observatory_type import ObservatoryType
-from migrations.db_util import ACROSSFootprintPoint, arcmin_to_deg, create_geography
+from migrations.build_records import ssa_records
+from migrations.db_util import arcmin_to_deg
 
 # revision identifiers, used by Alembic.
 revision: str = "ef89d3f04ff7"
-down_revision: Union[str, None] = "2b00546497c1"
+down_revision: Union[str, None] = "7264308ca648"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -111,107 +110,9 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind, expire_on_commit=False)
 
-    # create group based off the observatory
-    group = OBSERVATORY.pop("group")
-    group_admin = group.pop("group_admin")  # type: ignore
-    group_insert = model_snapshots.Group(**group)  # type: ignore
-    session.add(group_insert)
+    records = ssa_records.build(session, OBSERVATORY, snapshot_models)
 
-    # create group admin
-    permissions = (
-        session.query(model_snapshots.Permission)
-        .filter(model_snapshots.Permission.name.contains("group"))
-        .all()
-    )
-    group_admin_insert = model_snapshots.GroupRole(
-        permissions=permissions, group=group_insert, **group_admin
-    )
-    session.add(group_admin_insert)
-
-    telescopes = OBSERVATORY.pop("telescopes")
-    ephemeris_types = OBSERVATORY.pop("ephemeris_types")
-
-    # create observatory
-    observatory_insert = model_snapshots.Observatory(group=group_insert, **OBSERVATORY)
-    session.add(observatory_insert)
-    observatory_id = observatory_insert.id
-
-    # get the telescopes
-    for telescope in telescopes:  #  type:ignore
-        instruments = telescope.pop("instruments")
-        # create the telescope record
-        telescope_insert = model_snapshots.Telescope(
-            observatory_id=observatory_id, **telescope
-        )
-        session.add(telescope_insert)
-        telescope_id = telescope_insert.id
-
-        # get the instruments
-        for instrument in instruments:
-            footprints = instrument.pop("footprint")
-            filters = instrument.pop("filters")
-
-            # create the instrument record
-            instrument_insert = model_snapshots.Instrument(
-                telescope_id=telescope_id, **instrument
-            )
-            session.add(instrument_insert)
-            instrument_id = instrument_insert.id
-
-            for footprint in footprints:
-                # convert the input footprint to the string polygon
-                vertices = []
-                for point in footprint:
-                    vertices.append(ACROSSFootprintPoint(x=point["x"], y=point["y"]))
-
-                polygon = create_geography(polygon=vertices)
-
-                # create the footprint model record
-                footprint_insert = model_snapshots.Footprint(
-                    polygon=polygon, instrument_id=instrument_id
-                )
-                session.add(footprint_insert)
-
-            for filter in filters:
-                filter_insert = model_snapshots.Filter(
-                    instrument_id=instrument_id, **filter
-                )
-                session.add(filter_insert)
-
-    # Add Ephemeris Parameters for Fermi
-    for ephemeris_type in ephemeris_types:  # type:ignore
-        # create the ephemeris type record
-        parameters = ephemeris_type.pop("parameters")
-        ephemeris_type_insert = model_snapshots.ObservatoryEphemerisType(
-            observatory_id=observatory_id,
-            **ephemeris_type,
-        )
-        session.add(ephemeris_type_insert)
-
-        if ephemeris_type_insert.ephemeris_type == EphemerisType.TLE:
-            tle_parameters = model_snapshots.TLEParameters(
-                observatory_id=observatory_id, **parameters
-            )
-            session.add(tle_parameters)
-
-        if ephemeris_type_insert.ephemeris_type == EphemerisType.JPL:
-            jpl_parameters = model_snapshots.JPLEphemerisParameters(
-                observatory_id=observatory_id, **parameters
-            )
-            session.add(jpl_parameters)
-
-        if ephemeris_type_insert.ephemeris_type == EphemerisType.SPICE:
-            spice_parameters = model_snapshots.SpiceKernelParameters(
-                observatory_id=observatory_id, **parameters
-            )
-            session.add(spice_parameters)
-
-        if ephemeris_type_insert.ephemeris_type == EphemerisType.GROUND:
-            ground_parameters = model_snapshots.EarthLocationParameters(
-                observatory_id=observatory_id, **parameters
-            )
-            session.add(ground_parameters)
-
+    session.add_all(records)
     session.commit()
     # ### end Alembic commands ###
 
@@ -220,44 +121,7 @@ def downgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind)
 
-    group = session.scalar(
-        select(model_snapshots.Group).filter_by(name=OBSERVATORY["name"])
-    )
-    observatory = session.scalar(
-        select(model_snapshots.Observatory).filter_by(name=OBSERVATORY["name"])
-    )
-    session.delete(group)
-    session.delete(observatory)
-
-    tle_parameters = session.scalar(
-        select(model_snapshots.TLEParameters).filter_by(observatory_id=observatory.id)  # type:ignore
-    )
-    if tle_parameters:
-        session.delete(tle_parameters)
-
-    jpl_parameters = session.scalar(
-        select(model_snapshots.JPLEphemerisParameters).filter_by(
-            observatory_id=observatory.id  # type:ignore
-        )
-    )
-    if jpl_parameters:
-        session.delete(jpl_parameters)
-
-    spice_parameters = session.scalar(
-        select(model_snapshots.SpiceKernelParameters).filter_by(
-            observatory_id=observatory.id  # type:ignore
-        )
-    )
-    if spice_parameters:
-        session.delete(spice_parameters)
-
-    ground_parameters = session.scalar(
-        select(model_snapshots.EarthLocationParameters).filter_by(
-            observatory_id=observatory.id  # type:ignore
-        )
-    )
-    if ground_parameters:
-        session.delete(ground_parameters)
+    ssa_records.delete(session, OBSERVATORY, snapshot_models)
 
     session.commit()
     # ### end Alembic commands ###
