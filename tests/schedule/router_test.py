@@ -66,8 +66,8 @@ class TestScheduleRouter:
         async def test_many_should_return_many(self) -> None:
             """GET many should return multiple schedules when successful"""
             res = await self.client.get(self.endpoint)
-            assert len(res.json())
-            assert res.json()[0]["name"] == "Test Schedule"
+            assert len(res.json()["schedules"])
+            assert res.json()["schedules"][0]["name"] == "Test Schedule"
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self) -> None:
@@ -79,8 +79,8 @@ class TestScheduleRouter:
         async def test_history_should_return_many(self) -> None:
             """GET history should return multiple schedules when successful"""
             res = await self.client.get(self.endpoint + "history")
-            assert len(res.json())
-            assert res.json()[0]["name"] == "Test Schedule"
+            assert len(res.json()["schedules"])
+            assert res.json()["schedules"][0]["name"] == "Test Schedule"
 
         @pytest.mark.asyncio
         async def test_history_should_return_200(self) -> None:

@@ -25,10 +25,10 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
-    response_model=list[schemas.Schedule],
+    response_model=schemas.SchedulePaginate,
     responses={
         status.HTTP_200_OK: {
-            "model": list[schemas.Schedule],
+            "model": schemas.SchedulePaginate,
             "description": "Return a schedule",
         },
     },
@@ -36,9 +36,18 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> list[schemas.Schedule]:
+) -> schemas.SchedulePaginate:
     schedules = await service.get_many(data=data)
-    return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
+    return schemas.SchedulePaginate.model_validate(
+        {
+            "number": len(schedules),
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "schedules": [
+                schemas.Schedule.from_orm(schedule) for schedule in schedules
+            ],
+        }
+    )
 
 
 @router.get(
@@ -46,10 +55,10 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
-    response_model=list[schemas.Schedule],
+    response_model=schemas.SchedulePaginate,
     responses={
         status.HTTP_200_OK: {
-            "model": list[schemas.Schedule],
+            "model": schemas.SchedulePaginate,
             "description": "",
         },
     },
@@ -57,9 +66,18 @@ async def get_many(
 async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> list[schemas.Schedule]:
+) -> schemas.SchedulePaginate:
     schedules = await service.get_history(data=data)
-    return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
+    return schemas.SchedulePaginate.model_validate(
+        {
+            "number": len(schedules),
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "schedules": [
+                schemas.Schedule.from_orm(schedule) for schedule in schedules
+            ],
+        }
+    )
 
 
 @router.get(

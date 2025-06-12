@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 from ...core.enums import ScheduleFidelity, ScheduleStatus
-from ...core.schemas import DateRange
+from ...core.schemas import DateRange, PaginationParams
 from ...core.schemas.base import BaseSchema
 from ...db.models import Schedule as ScheduleModel
 from ..observation.schemas import Observation, ObservationCreate
@@ -144,7 +144,7 @@ class ScheduleCreate(ScheduleBase):
         )
 
 
-class ScheduleRead(BaseSchema):
+class ScheduleRead(PaginationParams):
     """
     A Pydantic model class representing the query parameters for the schedule GET methods
 
@@ -190,3 +190,25 @@ class ScheduleRead(BaseSchema):
     telescope_ids: list[uuid.UUID] = []
     telescope_names: list[str] = []
     name: str | None = None
+
+
+class SchedulePaginate(BaseSchema):
+    """
+    A Pydantic model class representing a returned, paginated list of Schedules
+
+    Parameters
+    ----------
+    number: int
+        the number of entries returned by the query
+    page: int
+        the page number
+    page_limit: int
+        the maximum number of entries per page
+    schedules: list[Schedule]
+        the queried Schedule objects
+    """
+
+    number: int | None
+    page: int | None
+    page_limit: int | None
+    schedules: list[Schedule]

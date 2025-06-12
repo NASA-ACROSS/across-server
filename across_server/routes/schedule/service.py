@@ -236,6 +236,8 @@ class ScheduleService:
                 models.Schedule.telescope_id,
                 models.Schedule.created_on.desc(),
             )
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(schedule_query)
@@ -267,6 +269,8 @@ class ScheduleService:
             select(models.Schedule)
             .filter(*schedule_filter)
             .order_by(models.Schedule.created_on.desc())
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(schedule_query)

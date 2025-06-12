@@ -10,7 +10,7 @@ from across_server.routes.schedule.exceptions import (
     ScheduleInstrumentNotFoundException,
     ScheduleNotFoundException,
 )
-from across_server.routes.schedule.schemas import ScheduleCreate
+from across_server.routes.schedule.schemas import ScheduleCreate, ScheduleRead
 from across_server.routes.schedule.service import ScheduleService
 
 
@@ -104,3 +104,39 @@ class TestScheduleService:
             service = ScheduleService(mock_db)
             with pytest.raises(ScheduleNotFoundException):
                 await service.get(uuid4())
+
+    class TestGetMany:
+        @pytest.mark.asyncio
+        async def test_should_return_list_when_successful(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_schedule_data: ScheduleModel,
+        ) -> None:
+            """Should return a list of Schedule models when get_many is successful"""
+            mock_result.scalars.return_value.all.return_value = [
+                mock_schedule_data,
+                mock_schedule_data,
+            ]
+            service = ScheduleService(mock_db)
+            params = ScheduleRead()
+            schedules = await service.get_many(params)
+            assert isinstance(schedules, list)
+
+    class TestGetHistory:
+        @pytest.mark.asyncio
+        async def test_should_return_list_when_successful(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_schedule_data: ScheduleModel,
+        ) -> None:
+            """Should return a list of Schedule models when get_history is successful"""
+            mock_result.scalars.return_value.all.return_value = [
+                mock_schedule_data,
+                mock_schedule_data,
+            ]
+            service = ScheduleService(mock_db)
+            params = ScheduleRead()
+            schedules = await service.get_history(params)
+            assert isinstance(schedules, list)
