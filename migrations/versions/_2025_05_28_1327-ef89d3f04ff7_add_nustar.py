@@ -26,14 +26,15 @@ down_revision: Union[str, None] = "7264308ca648"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-# Table 2 of the NuSTAR observatory guide
+# NuSTAR has an effective FoV of 10' at 10 keV:
+# https://heasarc.gsfc.nasa.gov/docs/nustar/nustar_tech_desc.html
 NUSTAR_FOOTPRINT: list[list[dict]] = [
     [
-        {"x": arcmin_to_deg(-6.1), "y": arcmin_to_deg(-6.1)},
-        {"x": arcmin_to_deg(6.1), "y": arcmin_to_deg(-6.1)},
-        {"x": arcmin_to_deg(6.1), "y": arcmin_to_deg(6.1)},
-        {"x": arcmin_to_deg(-6.1), "y": arcmin_to_deg(6.1)},
-        {"x": arcmin_to_deg(-6.1), "y": arcmin_to_deg(-6.1)},
+        {"x": arcmin_to_deg(-5.0), "y": arcmin_to_deg(-5.0)},
+        {"x": arcmin_to_deg(5.0), "y": arcmin_to_deg(-5.0)},
+        {"x": arcmin_to_deg(5.0), "y": arcmin_to_deg(5.0)},
+        {"x": arcmin_to_deg(-5.0), "y": arcmin_to_deg(5.0)},
+        {"x": arcmin_to_deg(-5.0), "y": arcmin_to_deg(-5.0)},
     ]
 ]
 
@@ -61,8 +62,8 @@ OBSERVATORY = {
             "is_operational": True,
             "instruments": [
                 {
-                    "name": "Nuclear Spectroscopic Telescope Array",
-                    "short_name": "NuSTAR",
+                    "name": "Focal Plane Module A/B",
+                    "short_name": "FPM A/B",
                     "id": uuid.UUID("8e3f11f7-c943-4b45-b55e-59d475a4114f"),
                     "reference_url": "https://nustar.caltech.edu",
                     "field_of_view": InstrumentFOV.POLYGON.value,
