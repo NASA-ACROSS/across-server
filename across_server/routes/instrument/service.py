@@ -95,11 +95,7 @@ class InstrumentService:
             )
 
         if data.telescope_id:
-            data_filter.append(
-                models.Instrument.telescope.has(
-                    models.Telescope.id == data.telescope_id
-                )
-            )
+            data_filter.append(models.Instrument.telescope_id == data.telescope_id)
 
         if data.telescope_name:
             data_filter.append(
