@@ -198,8 +198,8 @@ class SchedulePaginate(BaseSchema):
 
     Parameters
     ----------
-    number: int
-        the number of entries returned by the query
+    total_number: int
+        the total number of entries before pagination
     page: int
         the page number
     page_limit: int
@@ -208,7 +208,7 @@ class SchedulePaginate(BaseSchema):
         the queried Schedule objects
     """
 
-    number: int | None
+    total_number: int | None
     page: int | None
     page_limit: int | None
     schedules: list[Schedule]

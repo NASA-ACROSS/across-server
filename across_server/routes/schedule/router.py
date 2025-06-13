@@ -40,11 +40,11 @@ async def get_many(
     schedules = await service.get_many(data=data)
     return schemas.SchedulePaginate.model_validate(
         {
-            "number": len(schedules),
+            "total_number": schedules[0][1],
             "page": data.page,
             "page_limit": data.page_limit,
             "schedules": [
-                schemas.Schedule.from_orm(schedule) for schedule in schedules
+                schemas.Schedule.from_orm(schedule[0]) for schedule in schedules
             ],
         }
     )
@@ -70,11 +70,11 @@ async def get_history(
     schedules = await service.get_history(data=data)
     return schemas.SchedulePaginate.model_validate(
         {
-            "number": len(schedules),
+            "total_number": schedules[0][1],
             "page": data.page,
             "page_limit": data.page_limit,
             "schedules": [
-                schemas.Schedule.from_orm(schedule) for schedule in schedules
+                schemas.Schedule.from_orm(schedule[0]) for schedule in schedules
             ],
         }
     )

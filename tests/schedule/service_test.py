@@ -114,7 +114,7 @@ class TestScheduleService:
             mock_schedule_data: ScheduleModel,
         ) -> None:
             """Should return a list of Schedule models when get_many is successful"""
-            mock_result.scalars.return_value.all.return_value = [
+            mock_result.tuples.return_value.all.return_value = [
                 mock_schedule_data,
                 mock_schedule_data,
             ]
@@ -132,7 +132,7 @@ class TestScheduleService:
             mock_schedule_data: ScheduleModel,
         ) -> None:
             """Should return a list of Schedule models when get_history is successful"""
-            mock_result.scalars.return_value.all.return_value = [
+            mock_result.tuples.return_value.all.return_value = [
                 mock_schedule_data,
                 mock_schedule_data,
             ]

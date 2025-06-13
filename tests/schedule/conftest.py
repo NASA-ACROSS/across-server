@@ -103,8 +103,8 @@ def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncM
 
     mock.create = AsyncMock(return_value=uuid4())
     mock.get = AsyncMock(return_value=mock_schedule_data)
-    mock.get_many = AsyncMock(return_value=[mock_schedule_data])
-    mock.get_history = AsyncMock(return_value=[mock_schedule_data])
+    mock.get_many = AsyncMock(return_value=[(mock_schedule_data, 1)])
+    mock.get_history = AsyncMock(return_value=[(mock_schedule_data, 1)])
 
     yield mock
 
