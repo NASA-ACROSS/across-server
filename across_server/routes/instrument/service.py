@@ -88,11 +88,10 @@ class InstrumentService:
             )  # this should/could be a date-range parameter
 
         if data.name:
+            name_lower = str.lower(data.name)
             data_filter.append(
-                func.lower(models.Instrument.name).contains(str.lower(data.name))
-                | func.lower(models.Instrument.short_name).contains(
-                    str.lower(data.name)
-                )
+                func.lower(models.Instrument.name).contains(name_lower)
+                | func.lower(models.Instrument.short_name).contains(name_lower)
             )
 
         if data.telescope_id:
