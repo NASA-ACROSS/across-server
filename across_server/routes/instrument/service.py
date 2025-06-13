@@ -96,15 +96,21 @@ class InstrumentService:
             )
 
         if data.telescope_id:
-            data_filter.append(models.Instrument.telescope.id == data.telescope_id)
+            data_filter.append(
+                models.Instrument.telescope.has(
+                    models.Telescope.id == data.telescope_id
+                )
+            )
 
         if data.telescope_name:
             data_filter.append(
-                func.lower(models.Instrument.telescope.name).contains(
-                    str.lower(data.telescope_name)
-                )
-                | func.lower(models.Instrument.telescope.short_name).contains(
-                    str.lower(data.telescope_name)
+                models.Instrument.telescope.has(
+                    func.lower(models.Telescope.name).contains(
+                        str.lower(data.telescope_name)
+                    )
+                    | func.lower(models.Telescope.short_name).contains(
+                        str.lower(data.telescope_name)
+                    )
                 )
             )
 
