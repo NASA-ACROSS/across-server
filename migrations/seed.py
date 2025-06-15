@@ -1,6 +1,8 @@
 import asyncio
+from sqlite3 import IntegrityError
 from typing import Sequence, Type
 
+from asyncpg import UniqueViolationError
 import structlog
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -40,11 +42,11 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.Footprint, footprints),
     (models.Schedule, schedules),
     (models.Observation, observations),
-    (models.TLE, tles),
-    (models.TLEParameters, tle_parameters),
-    (models.JPLEphemerisParameters, jpl_parameters),
-    (models.SpiceKernelParameters, spice_kernel_parameters),
-    (models.EarthLocationParameters, earth_location_parameters),
+    #(models.TLE, tles),
+    #(models.TLEParameters, tle_parameters),
+    #(models.JPLEphemerisParameters, jpl_parameters),
+    #(models.SpiceKernelParameters, spice_kernel_parameters),
+    #(models.EarthLocationParameters, earth_location_parameters),
 ]
 
 
@@ -56,16 +58,18 @@ async def seed() -> None:
     async with async_session() as session:
         try:
             for [model, records] in seed_order:
-                for record in records:
-                    await session.merge(record)
+                session.add_all(records)
 
-                    logger.info(f"Seeded {model.__tablename__} in txn.")
+                logger.info(f"Seeded {model.__tablename__} in txn.")
 
             await session.commit()
             logger.info("Seeding commit successful.")
         except Exception as err:
-            logger.error("Seeding failed, rolling back.", err=err)
-            await session.rollback()
+            if "already exists" in err.__str__():
+                pass
+            else:
+                logger.error("Seeding failed, rolling back.", err=err)
+                await session.rollback()
 
     await engine.dispose()
 
