@@ -1,5 +1,4 @@
 from collections.abc import Callable, Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
@@ -7,7 +6,6 @@ import pytest
 from fastapi import FastAPI
 
 from across_server.auth import security, strategies
-from across_server.auth.config import Config
 from across_server.auth.service import AuthService
 from across_server.db import models
 from across_server.util.email.service import EmailService
@@ -49,19 +47,6 @@ def dep_override(
         }
     ):
         yield overrider
-
-
-@pytest.fixture
-def patch_config_secret(monkeypatch: Any) -> None:
-    def patch_config_secret_fn(self: Any) -> str:
-        return "TEST_SECRET"
-
-    monkeypatch.setattr(
-        Config,
-        "SERVICE_ACCOUNT_SECRET_KEY",
-        property(patch_config_secret_fn),
-        raising=False,
-    )
 
 
 @pytest.fixture(scope="function")
@@ -118,7 +103,7 @@ def mock_service_account_data(
             "description": "test service account description",
             "expiration": "2025-03-13 00:00:00",
             "expiration_duration": "30",
-            "hashed_key": "$argon2id$v=19$m=65536,t=3,p=4$53llA+9HngFYh3nXsN/nGo5dNJreaAUrA4O40W+5zvC/upNn0Ki7dRZhS+LuuTXhPH9uPNHRIBjCXlw9ARKc4g$d45wZkITtSxq0izpj2WmAHt1Y1YtB5P8KOg1AOzj8qpiwVtiZgxhVnH7CTyxFCX5HVKEhpoe/LPu25XCGrZDDA",
+            "hashed_key": "$argon2id$v=19$m=65536,t=3,p=4$VDXb907Omm4z5LVJi0Ow21ZKb4/sX7pLlYcoFLlQzkBAJI9DVrhj4qViprBpNbGo1IHGLkBZJf2Ebstgpmr6ZQ$wcj2P9nYETGGunkhokRvD4v3lW6+i5tLPiL5EwDscC5kEIQTXJAfmcJCwGo6RsVGkLTR/gf5ppR/XxrFTZm6mw",
             "group_roles": [mock_group_role_data],
             "user": mock_user_data,
         }

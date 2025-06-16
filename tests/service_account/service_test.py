@@ -19,7 +19,6 @@ class TestServiceAccountService:
         self: Any,
         patch_secrets_token_hex: Any,
         mock_secrets_token_hex: Any,
-        patch_config_secret: Any,
         patch_datetime_now: Any,
         fixed_expiration: datetime,
     ) -> None:

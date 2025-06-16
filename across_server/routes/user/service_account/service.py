@@ -7,7 +7,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ....auth.hashing import hash_secret_key
+from ....auth.hashing import password_hasher
 from ....auth.security import generate_secret_key
 from ....core import config
 from ....db import models
@@ -64,7 +64,7 @@ class ServiceAccountService:
         )
 
         # hash the secret key for storage in database
-        hashed_secret_key = hash_secret_key(secret_key_information.key)
+        hashed_secret_key = password_hasher.hash(secret_key_information.key)
 
         # store the hashed secret key and the salt used before hashing
         service_account = models.ServiceAccount(
@@ -124,7 +124,7 @@ class ServiceAccountService:
         )
 
         # hash the secret key for storage in database
-        hashed_secret_key = hash_secret_key(secret_key_information.key)
+        hashed_secret_key = password_hasher.hash(secret_key_information.key)
 
         service_account.hashed_key = hashed_secret_key
         service_account.expiration = secret_key_information.expiration

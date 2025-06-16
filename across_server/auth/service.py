@@ -13,7 +13,6 @@ from ..auth.hashing import password_hasher
 from ..core.exceptions import AcrossHTTPException
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
-from .config import auth_config
 
 
 class Tokens(TypedDict):
@@ -52,10 +51,7 @@ class AuthService:
 
         # !!! COMPARE PASSWORD HERE USING ARGON2 !!!
         try:
-            password_hasher.verify(
-                service_account.hashed_key,
-                credentials.password + auth_config.SERVICE_ACCOUNT_SECRET_KEY,
-            )
+            password_hasher.verify(service_account.hashed_key, credentials.password)
             auth_user = await self.get_authenticated_service_account(
                 username=UUID(credentials.username)
             )

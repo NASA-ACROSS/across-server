@@ -10,7 +10,6 @@ import pytest
 from fastapi import FastAPI
 
 from across_server.auth import strategies
-from across_server.auth.config import Config
 from across_server.routes.user.service_account.schemas import ServiceAccountCreate
 from across_server.routes.user.service_account.service import ServiceAccountService
 
@@ -110,19 +109,6 @@ def patch_datetime_now(monkeypatch: Any, fake_time: datetime.datetime) -> None:
             return cls.fromtimestamp(dt.timestamp(), tz=dt.tzinfo)
 
     monkeypatch.setattr(datetime, "datetime", mydatetime)
-
-
-@pytest.fixture
-def patch_config_secret(monkeypatch: Any) -> None:
-    def patch_config_secret_fn(self: Any) -> str:
-        return "TEST_SECRET"
-
-    monkeypatch.setattr(
-        Config,
-        "SERVICE_ACCOUNT_SECRET_KEY",
-        property(patch_config_secret_fn),
-        raising=False,
-    )
 
 
 @pytest.fixture

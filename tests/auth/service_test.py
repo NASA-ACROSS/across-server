@@ -94,7 +94,6 @@ class TestAuthService:
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
             mock_service_account_data: User,
-            patch_config_secret: MagicMock,
         ) -> None:
             mock_scalar_one_or_none.return_value = mock_service_account_data
             service = AuthService(mock_db)
@@ -112,7 +111,6 @@ class TestAuthService:
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
             mock_service_account_data: User,
-            patch_config_secret: MagicMock,
         ) -> None:
             mock_scalar_one_or_none.return_value = mock_service_account_data
             service = AuthService(mock_db)
