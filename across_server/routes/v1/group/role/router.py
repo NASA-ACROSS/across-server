@@ -25,6 +25,7 @@ router = APIRouter(
     "/role",
     summary="Read group roles",
     description="Read many group roles.",
+    operation_id="get_group_roles",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.GroupRoleRead],
     responses={
@@ -49,6 +50,7 @@ async def get_many(
     "/role/{group_role_id}",
     summary="Read a group role",
     description="Read a group role by role ID.",
+    operation_id="get_group_role",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -71,6 +73,7 @@ async def get(
     "/user/{user_id}/role/{group_role_id}",
     summary="Assign a group role to a user",
     description="Assign a group role by id to a user id within that group.",
+    operation_id="assign_to_user",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
@@ -97,6 +100,7 @@ async def assign(
     "/user/{user_id}/role/{group_role_id}",
     summary="Remove a group role from a user",
     description="Remove a group role by id from a user id within that group.",
+    operation_id="remove_from_user",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
@@ -123,6 +127,7 @@ async def remove(
     "/role",
     summary="Create a group role",
     description="Create a group role with a set of permissions in a group that you control",
+    operation_id="create_group_role",
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {
@@ -149,6 +154,7 @@ async def create(
     "/role/{group_role_id}",
     summary="Update a group role",
     description="Update a group role and its permissions in a group that you control",
+    operation_id="update_group_role",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -158,7 +164,7 @@ async def create(
     },
     dependencies=[Security(group_access, scopes=["group:role:write"])],
 )
-async def update_role(
+async def update(
     group_role_service: Annotated[GroupRoleService, Depends(GroupRoleService)],
     group_service: Annotated[GroupService, Depends(GroupService)],
     permission_service: Annotated[PermissionService, Depends(PermissionService)],
@@ -180,6 +186,7 @@ async def update_role(
     "/role/{group_role_id}",
     summary="Delete a group role",
     description="Delete a group role by role ID.",
+    operation_id="delete_group_role",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {

@@ -22,6 +22,7 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read observations(s)",
     description="Read the observations based on query params",
+    operation_id="get_observations",
     response_model=list[schemas.Observation],
     responses={
         status.HTTP_200_OK: {
@@ -42,6 +43,7 @@ async def get_many(
     "/{observation_id}",
     summary="Read an observation",
     description="Read an observation by an observation ID.",
+    operation_id="get_observation",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Observation,
     responses={

@@ -21,6 +21,7 @@ router = APIRouter(
     "/{observatory_id}",
     summary="Read an observatory",
     description="Read a observatory by a observatory ID.",
+    operation_id="get_observatory",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Observatory,
     responses={
@@ -45,6 +46,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     summary="Read observatory(s)",
     description="Read many observatories based on query params",
+    operation_id="get_observatories",
     response_model=list[schemas.Observatory],
     responses={
         status.HTTP_200_OK: {

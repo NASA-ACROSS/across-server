@@ -21,6 +21,7 @@ router = APIRouter(
     "/",
     summary="Create a TLE",
     description="Create a new TLE for ACROSS.",
+    operation_id="create_tle",
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {},

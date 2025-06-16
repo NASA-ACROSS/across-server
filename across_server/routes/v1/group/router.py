@@ -23,6 +23,7 @@ router = APIRouter(
     "/",
     summary="Read groups",
     description="Read many groups.",
+    operation_id="get_groups",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.Group],
     responses={
@@ -44,6 +45,7 @@ async def get_many(
     "/{group_id}",
     summary="Read a group",
     description="Read a group by role ID.",
+    operation_id="get_group",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Group,
     responses={
@@ -66,6 +68,7 @@ async def get(
     "/{group_id}/user/{user_id}",
     summary="Remove a user from a group",
     description="Remove a user from a group by ID",
+    operation_id="remove_user",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Security(group_access, scopes=["group:user:write"])],
 )

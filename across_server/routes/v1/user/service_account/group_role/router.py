@@ -26,6 +26,7 @@ router = APIRouter(
     "/{group_role_id}",
     summary="Assign group role",
     description="Assign a group role to a service account.",
+    operation_id="assign_to_service_account",
     status_code=status.HTTP_200_OK,
     response_model=schemas.ServiceAccount,
     responses={
@@ -62,6 +63,7 @@ async def assign(
     "/{group_role_id}",
     summary="Remove group role",
     description="Remove a group role from a service account.",
+    operation_id="remove_from_service_account",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {

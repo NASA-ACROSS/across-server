@@ -31,6 +31,9 @@ class Config(BaseConfig):
     # Request Headers
     REQUEST_ID_HEADER: str = "X-Request-ID"
 
+    # Always hide local only routes -- mainly used for client generation locally.
+    HIDE_LOCAL_ROUTE: bool = True
+
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 

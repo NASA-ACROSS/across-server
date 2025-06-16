@@ -30,6 +30,7 @@ router = APIRouter(
     "/invite",
     summary="Read group invites",
     description="Read all group invites for a group",
+    operation_id="get_invites",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -54,6 +55,7 @@ async def get_many(
     "/invite/{invite_id}",
     summary="Read a group invite",
     description="Read a single group invite by ID",
+    operation_id="get_invite",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -76,6 +78,7 @@ async def get(
     "/invite",
     summary="Create and send a group invite",
     description="Create and send a group invite to a user",
+    operation_id="send_invite",
     status_code=status.HTTP_201_CREATED,
     response_model=schemas.GroupInvite,
     responses={
@@ -124,10 +127,11 @@ async def create(
     "/invite/{invite_id}",
     summary="Delete a group invite",
     description="Delete a group invite by ID",
+    operation_id="delete_invite",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Security(group_access, scopes=["group:user:write"])],
 )
-async def delete_invite(
+async def delete(
     group_invite_service: Annotated[GroupInviteService, Depends(GroupInviteService)],
     invite_id: uuid.UUID,
     group_id: uuid.UUID,
