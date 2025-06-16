@@ -5,6 +5,8 @@ import uuid
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
+from out.python import across_server_sdk as across
+from out.python.across_server_sdk import models
 
 from . import auth
 from .core import config, logging
@@ -21,6 +23,26 @@ from .routes import (
     tle,
     user,
 )
+
+# 1) Boot‑strap your client config (no token yet)
+across_sdk_config = across.Configuration(host="https://api.across-server.com")
+
+with across.ApiClient(across_sdk_config) as client:
+    # 2) Get a token
+    auth_api = across.AuthApi(client)
+    token_res = auth_api.token(
+        _headers={"Authorization": "Basic <client_id:client_secret>"}
+    )
+    access_token = token_res.data.access_token
+
+    # 3) Inject the token into the same Configuration
+    client.configuration.access_token = access_token
+
+    observatory_api = across.ObservatoryApi(client)
+    res = observatory_api.get_observatories()
+
+    schedule_api = across.ScheduleApi(client)
+    schedule_res = schedule_api.create_schedule(across.ScheduleCreate(...))
 
 # Configure UTC system time
 os.environ["TZ"] = "UTC"

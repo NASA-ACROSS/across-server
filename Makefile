@@ -227,6 +227,22 @@ build_prod: ## Build the containers for production -- does not use docker-compos
 		--build-arg APP_ENV=prod \
 		-f./containers/Dockerfile .
 
+client: ## Generate client
+	@docker run --rm \
+		-v ${PWD}:/local \
+			openapitools/openapi-generator-cli generate \
+		-i /local/openapi.json \
+		-g python \
+		-o /local/out/python \
+		-c /local/openapi-config.json
+
+client_templates:
+	docker run --rm \
+		-v ${PWD}:/local \
+			openapitools/openapi-generator-cli author template \
+		-g python \
+		-o /local/templates/python
+
 # Group: Cleaning
 clean: ## Clean virtual env
 	@rm -rf $(VENV_DIR)

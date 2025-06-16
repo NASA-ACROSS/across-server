@@ -21,6 +21,7 @@ router = APIRouter(
     "/{telescope_id}",
     summary="Read an telescope",
     description="Read a telescope by a telescope ID.",
+    operation_id="get_telescope",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Telescope,
     responses={
@@ -45,6 +46,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     summary="Read telescopes(s)",
     description="Read most recent telescopes based on query params",
+    operation_id="get_telescopes",
     response_model=list[schemas.Telescope],
     responses={
         status.HTTP_200_OK: {

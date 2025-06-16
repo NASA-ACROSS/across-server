@@ -22,6 +22,7 @@ router = APIRouter(
     "/",
     summary="Read service accounts",
     description="Read many service accounts",
+    operation_id="get_service_accounts",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.ServiceAccount],
 )
@@ -39,6 +40,7 @@ async def get_many(
     "/{service_account_id}",
     summary="Read a service account",
     description="Read a service account by an ID.",
+    operation_id="get_service_account",
     status_code=status.HTTP_200_OK,
     response_model=schemas.ServiceAccount,
     responses={
@@ -61,6 +63,7 @@ async def get(
     "/",
     summary="Create a service account",
     description="Create a new service account for an ACROSS user.",
+    operation_id="create_service_account",
     status_code=status.HTTP_201_CREATED,
     response_model=schemas.ServiceAccount,
     responses={
@@ -83,6 +86,7 @@ async def create(
     "/{service_account_id}",
     summary="Update a service account",
     description="Update a service account's information.",
+    operation_id="update_service_account",
     status_code=status.HTTP_200_OK,
     response_model=schemas.ServiceAccount,
     responses={
@@ -107,6 +111,7 @@ async def update(
 @router.delete(
     "/{service_account_id}",
     summary="Delete a service_account",
+    operation_id="delete_service_account",
     description="Expire a service account",
     status_code=status.HTTP_204_NO_CONTENT,
 )
@@ -122,6 +127,7 @@ async def delete(
     "/{service_account_id}/rotate_key",
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration_duration",
+    operation_id="rotate_key",
     status_code=status.HTTP_200_OK,
     response_model=schemas.ServiceAccount,
     responses={
@@ -131,7 +137,7 @@ async def delete(
         },
     },
 )
-async def rotate(
+async def rotate_key(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,

@@ -1,0 +1,10 @@
+{
+    "generateAliasAsModel": false,
+    "packageName": "across_server_sdk",
+    "generateSourceCodeOnly": false,
+    "useOneOfDiscriminatorLookup": true,
+    "enumPropertyNaming": "UPPERCASE",
+    "modelPropertyNaming": "snake_case",
+    "hideGenerationTimestamp": true,
+    "enablePostProcessFile": true
+}

@@ -59,7 +59,11 @@ async def local_token(
     return token
 
 
-@router.post("/login", dependencies=[Depends(strategies.webserver_access)])
+@router.post(
+    "/login",
+    operation_id="login",
+    dependencies=[Depends(strategies.webserver_access)],
+)
 async def login(
     email: EmailStr,
     email_service: Annotated[EmailService, Depends(EmailService)],
@@ -81,7 +85,7 @@ async def login(
     return {"message": "Magic link sent", "magic_link": link, "user": user}
 
 
-@router.get("/verify")
+@router.get("/verify", operation_id="verify")
 async def verify(
     token: str,
     response: Response,
@@ -97,7 +101,7 @@ async def verify(
     return schemas.AccessTokenResponse(access_token=all_tokens["access"])
 
 
-@router.post("/refresh")
+@router.post("/refresh", operation_id="refresh")
 async def refresh_token(
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],

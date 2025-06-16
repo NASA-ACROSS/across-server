@@ -25,6 +25,7 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
+    operation_id="get_schedules",
     response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
@@ -46,6 +47,7 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
+    operation_id="get_history",
     response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
@@ -66,6 +68,7 @@ async def get_history(
     "/{schedule_id}",
     summary="Read a schedule",
     description="Read a schedule by a schedule ID.",
+    operation_id="get_schedule",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Schedule,
     responses={
@@ -89,6 +92,7 @@ async def get(
     "/",
     summary="Create a Schedule",
     description="Create a new observing schedule for ACROSS.",
+    operation_id="create_schedule",
     status_code=status.HTTP_201_CREATED,
     response_model=uuid.UUID,
     responses={
