@@ -1,8 +1,8 @@
 """service_account_hashed_key_and_salt
 
 Revision ID: 3809d4ab4e06
-Revises: 7264308ca648
-Create Date: 2025-06-11 11:55:55.891252
+Revises: ef89d3f04ff7
+Create Date: 2025-06-17 11:55:55.891252
 
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3809d4ab4e06"
-down_revision: Union[str, None] = "7264308ca648"
+down_revision: Union[str, None] = "ef89d3f04ff7"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
