@@ -7,11 +7,14 @@ from typing import AsyncGenerator
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
+from ratelimit import RateLimitMiddleware
+from ratelimit.backends.simple import MemoryBackend
 
 from across_server import db
 
 from . import auth
 from .core import config, logging
+from .core.limiter import authenticate_limit, limit_config
 from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
@@ -49,9 +52,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 app.add_middleware(LoggingMiddleware)
-
+app.add_middleware(
+    RateLimitMiddleware,
+    authenticate=authenticate_limit,
+    backend=MemoryBackend(),
+    config=limit_config,
+)
 # This middleware must be placed after the logging, to populate the context with the request ID
 # NOTE: Why last??
 # Answer: middlewares are applied in the reverse order of when they are added (you can verify this

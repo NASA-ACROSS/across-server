@@ -19,6 +19,8 @@ argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 asgi-correlation-id==4.3.4
     # via -r requirements/base.in
+asgi-ratelimit==0.10.0
+    # via -r requirements/base.in
 astropy==7.0.0
     # via
     #   -r requirements/base.in
