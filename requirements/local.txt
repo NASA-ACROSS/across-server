@@ -221,8 +221,10 @@ python-dotenv==1.0.1
     # via
     #   pydantic-settings
     #   uvicorn
-python-multipart==0.0.19
-    # via fastapi
+python-multipart==0.0.20
+    # via
+    #   -r requirements/base.in
+    #   fastapi
 pyvo==1.6.1
     # via astroquery
 pyyaml==6.0.2
