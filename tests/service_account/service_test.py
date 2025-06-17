@@ -17,28 +17,31 @@ from across_server.routes.user.service_account.service import ServiceAccountServ
 class TestServiceAccountService:
     def test_service_account_secret_key_should_match(
         self: Any,
+        patch_secrets_token_hex: Any,
+        mock_secrets_token_hex: Any,
         patch_datetime_now: Any,
-        patch_config_secret: Any,
-        baked_secret: str,
-        baked_expiration: datetime,
+        fixed_expiration: datetime,
     ) -> None:
         """Service Account secret key generation test"""
         generated_secret = generate_secret_key()
-        assert generated_secret.key == baked_secret
+        assert generated_secret.key == mock_secrets_token_hex[0]
         assert (
-            generated_secret.expiration.replace(tzinfo=timezone.utc) == baked_expiration
+            generated_secret.expiration.replace(tzinfo=timezone.utc) == fixed_expiration
         )
 
     @pytest.mark.asyncio
     async def test_create_should_return_service_account_when_successful(
-        self, mock_db: AsyncMock, service_account_create_example: ServiceAccountCreate
+        self,
+        mock_db: AsyncMock,
+        service_account_create_example: ServiceAccountCreate,
     ) -> None:
         """Should return the service_account when creation successful"""
         service = ServiceAccountService(mock_db)
-        service_account = await service.create(
+        service_account, secret_key = await service.create(
             service_account_create_example, created_by_id=uuid4()
         )
         assert isinstance(service_account, models.ServiceAccount)
+        assert isinstance(secret_key, str)
 
     @pytest.mark.asyncio
     async def test_create_should_save_service_account_to_database(

@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_serializer
 
+from .enums import AuthUserType
+
 
 class Group(BaseModel):
     id: UUID
@@ -17,6 +19,7 @@ class AuthUser(BaseModel):
     id: UUID
     scopes: list[str]
     groups: list[Group]
+    type: AuthUserType
     first_name: str | None = None
     last_name: str | None = None
     username: str | None = None

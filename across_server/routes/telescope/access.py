@@ -6,7 +6,7 @@ from fastapi.security import SecurityScopes
 from pydantic import BaseModel
 
 from ...auth.schemas import AuthUser
-from ...auth.strategies import authenticate, group_access
+from ...auth.strategies import authenticate_jwt, group_access
 from .service import TelescopeService
 
 
@@ -26,7 +26,7 @@ class TelescopeAccess(BaseModel):
 
 async def telescope_access(
     security_scopes: SecurityScopes,
-    auth_user: Annotated[AuthUser, Depends(authenticate)],
+    auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
     service: Annotated[TelescopeService, Depends(TelescopeService)],
     data: Annotated[TelescopeAccess, Body(title="UUID of the telescope")],
 ) -> AuthUser:
