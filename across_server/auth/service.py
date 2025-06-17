@@ -64,7 +64,10 @@ class AuthService:
             raise AcrossHTTPException(
                 400,
                 "invalid_grant",
-                {"reason": f"invalid password for user [{credentials.username}]"},
+                {
+                    "reason": "Invalid password for user.",
+                    "username": credentials.username,
+                },
             )
 
     async def authenticate_jwt(
