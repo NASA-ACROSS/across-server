@@ -41,21 +41,21 @@ async def authenticate_limit(scope: Scope) -> Tuple[str, str]:
     except EmptyInformation:
         ip = "unknown"
 
-    user: str  # uuid
+    user_id: str  # uuid
     group: str  # "user" or "service_account" if jwt, else "default"
 
     try:
-        user, group = await jwt_auth(scope)
+        user_id, group = await jwt_auth(scope)
     except (
         EmptyInformation,
         InvalidSignatureError,
         ExpiredSignatureError,
         DecodeError,
     ):
-        user = "anonymous"
+        user_id = "anonymous"
         group = "default"
 
-    user_limit_key = f"{ip} {user}"
+    user_limit_key = f"{ip} {user_id}"
 
     return user_limit_key, group
 
