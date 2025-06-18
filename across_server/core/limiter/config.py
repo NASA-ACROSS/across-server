@@ -3,7 +3,7 @@ from ...core.config import BaseConfig
 
 class Config(BaseConfig):
     # limit /token route
-    LIMIT_TOKEN_REQUESTS_PER_MINUTE: int = 6
+    LIMIT_TOKEN_REQUESTS_PER_MINUTE: int = 1
 
     # limit everything else by access type
     LIMIT_DEFAULT_REQUESTS_PER_MINUTE: int = 20
