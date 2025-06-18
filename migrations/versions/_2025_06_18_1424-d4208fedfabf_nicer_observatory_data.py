@@ -16,7 +16,7 @@ from across.tools import enums as tools_enums
 from alembic import op
 from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2025_05_15 as snapshot_models
+import migrations.versions.model_snapshots.models_2025_06_18 as snapshot_models
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.build_records import ssa_records
