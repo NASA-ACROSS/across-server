@@ -190,3 +190,19 @@ class ScheduleRead(PaginationParams):
     telescope_ids: list[uuid.UUID] = []
     telescope_names: list[str] = []
     name: str | None = None
+
+
+class ScheduleCreateMany(BaseSchema):
+    """
+    A Pydantic model class representing bulk schedule creation
+
+    Parameters
+    --------------
+    schedules: list[ScheduleCreate]
+        A list of ScheduleCreate objects to be added in bulk
+    telescope_id: uuid
+        The ID of the telescope belonging to the schedules
+    """
+
+    schedules: list[ScheduleCreate]
+    telescope_id: uuid.UUID

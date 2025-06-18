@@ -129,3 +129,34 @@ async def create(
     return await service.create(
         schedule_create=data, instruments=instruments, created_by_id=auth_user.id
     )
+
+
+@router.post(
+    "/many",
+    summary="Create many Schedules",
+    description="Create many new observing schedules for ACROSS.",
+    status_code=status.HTTP_201_CREATED,
+    response_model=list[uuid.UUID],
+    responses={
+        status.HTTP_201_CREATED: {
+            "model": list[uuid.UUID],
+            "description": "Created schedule ids",
+        },
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+            "description": "Incorrect schedule parameters"
+        },
+    },
+)
+async def create_many(
+    auth_user: Annotated[
+        AuthUser, Security(telescope_access, scopes=["group:schedule:write"])
+    ],
+    service: Annotated[ScheduleService, Depends(ScheduleService)],
+    telescope_service: Annotated[TelescopeService, Depends(TelescopeService)],
+    data: schemas.ScheduleCreateMany,
+) -> list[uuid.UUID]:
+    telescope = await telescope_service.get(data.telescope_id)
+    instruments = telescope.instruments
+    return await service.create_many(
+        schedule_create_many=data, instruments=instruments, created_by_id=auth_user.id
+    )

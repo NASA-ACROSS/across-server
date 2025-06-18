@@ -19,7 +19,7 @@ from across_server.db.models import Schedule as ScheduleModel
 from across_server.db.models import Telescope as TelescopeModel
 from across_server.routes.observation.schemas import ObservationCreate
 from across_server.routes.schedule import service
-from across_server.routes.schedule.schemas import ScheduleCreate
+from across_server.routes.schedule.schemas import ScheduleCreate, ScheduleCreateMany
 from across_server.routes.schedule.service import ScheduleService
 from across_server.routes.telescope.access import telescope_access
 from across_server.routes.telescope.service import TelescopeService
@@ -66,6 +66,89 @@ def mock_schedule_post_data() -> dict:
     }
 
 
+@pytest.fixture
+def mock_schedule_post_many_data() -> dict:
+    return {
+        "schedules": [
+            {
+                "telescope_id": str(uuid4()),
+                "date_range": {
+                    "begin": str(datetime.now()),
+                    "end": str(datetime.now() + timedelta(days=1)),
+                },
+                "status": "planned",
+                "name": "Test Schedule",
+                "external_id": "test_schedule_external_id",
+                "fidelity": "low",
+                "observations": [
+                    {
+                        "instrument_id": str(uuid4()),
+                        "object_name": "test observation",
+                        "pointing_position": {"ra": 42, "dec": 42},
+                        "date_range": {
+                            "begin": str(datetime.now()),
+                            "end": str(datetime.now() + timedelta(seconds=45)),
+                        },
+                        "external_observation_id": "external",
+                        "type": "imaging",
+                        "status": "planned",
+                        "pointing_angle": 0,
+                        "exposure_time": 45,
+                        "reason": "test reasons",
+                        "description": "testing",
+                        "object_position": {"ra": 42, "dec": 42},
+                        "depth": {"value": 21, "unit": "ab_mag"},
+                        "bandpass": {
+                            "filter_name": "g",
+                            "central_wavelength": 5500,
+                            "bandwidth": 1000,
+                            "unit": "angstrom",
+                        },
+                    }
+                ],
+            },
+            {
+                "telescope_id": str(uuid4()),
+                "date_range": {
+                    "begin": str(datetime.now()),
+                    "end": str(datetime.now() + timedelta(days=1)),
+                },
+                "status": "scheduled",
+                "name": "Test Schedule 2",
+                "external_id": "test_schedule_external_id_2",
+                "fidelity": "low",
+                "observations": [
+                    {
+                        "instrument_id": str(uuid4()),
+                        "object_name": "test observation",
+                        "pointing_position": {"ra": 42, "dec": 42},
+                        "date_range": {
+                            "begin": str(datetime.now()),
+                            "end": str(datetime.now() + timedelta(seconds=45)),
+                        },
+                        "external_observation_id": "external",
+                        "type": "imaging",
+                        "status": "planned",
+                        "pointing_angle": 0,
+                        "exposure_time": 45,
+                        "reason": "test reasons",
+                        "description": "testing",
+                        "object_position": {"ra": 42, "dec": 42},
+                        "depth": {"value": 21, "unit": "ab_mag"},
+                        "bandpass": {
+                            "filter_name": "g",
+                            "central_wavelength": 5500,
+                            "bandwidth": 1000,
+                            "unit": "angstrom",
+                        },
+                    }
+                ],
+            },
+        ],
+        "telescope_id": str(uuid4()),
+    }
+
+
 @pytest.fixture()
 def mock_schedule_data(mock_schedule_post_data: dict) -> ScheduleModel:
     return ScheduleModel(
@@ -105,6 +188,7 @@ def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncM
     mock.get = AsyncMock(return_value=mock_schedule_data)
     mock.get_many = AsyncMock(return_value=[(mock_schedule_data, 1)])
     mock.get_history = AsyncMock(return_value=[(mock_schedule_data, 1)])
+    mock.create_many = AsyncMock(return_value=[uuid4(), uuid4()])
 
     yield mock
 
@@ -192,6 +276,18 @@ def schedule_create_example() -> ScheduleCreate:
         external_id="external_id",
         fidelity=ScheduleFidelity.LOW,
         observations=[observation_create],
+    )
+
+
+@pytest.fixture
+def schedule_create_many_example(
+    schedule_create_example: ScheduleCreate,
+) -> ScheduleCreateMany:
+    return ScheduleCreateMany(
+        **{
+            "schedules": [schedule_create_example, schedule_create_example],
+            "telescope_id": uuid4(),
+        }
     )
 
 
