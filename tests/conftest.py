@@ -64,7 +64,7 @@ def mock_tuples() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_result(
     mock_scalar_one_or_none: MagicMock,
-    mock_scalars: MagicMock, 
+    mock_scalars: MagicMock,
     mock_unique: MagicMock,
     mock_tuples: MagicMock,
 ) -> Generator[AsyncMock]:
