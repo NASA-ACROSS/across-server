@@ -14,7 +14,7 @@ from across_server import db
 
 from . import auth
 from .core import config, logging
-from .core.limiter import authenticate_limit, limit_config
+from .core.limiter import limiter
 from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
@@ -55,9 +55,10 @@ app = FastAPI(
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(
     RateLimitMiddleware,
-    authenticate=authenticate_limit,
+    authenticate=limiter.authenticate_limit,
     backend=MemoryBackend(),
-    config=limit_config,
+    config=limiter.rules,
+    on_blocked=limiter.on_limit_exceeded,
 )
 # This middleware must be placed after the logging, to populate the context with the request ID
 # NOTE: Why last??
