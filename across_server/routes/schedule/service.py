@@ -2,7 +2,7 @@ from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
 from fastapi import Depends
-from sqlalchemy import distinct, func, or_, select, tuple_
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.core.enums.instrument_fov import InstrumentFOV
@@ -220,26 +220,8 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
-        count_subquery = (
-            select(
-                func.count(
-                    distinct(
-                        tuple_(
-                            models.Schedule.date_range_begin,
-                            models.Schedule.date_range_end,
-                            models.Schedule.status,
-                            models.Schedule.fidelity,
-                            models.Schedule.telescope_id,
-                        )
-                    )
-                ).label("count")
-            )
-            .filter(*schedule_filter)
-            .subquery()
-        )
-
         schedule_query = (
-            select(models.Schedule, count_subquery.c.count)
+            select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
             .distinct(
                 models.Schedule.date_range_begin,
@@ -285,14 +267,8 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
-        count_subquery = (
-            select(func.count(models.Schedule.id).label("count"))
-            .filter(*schedule_filter)
-            .subquery()
-        )
-
         schedule_query = (
-            select(models.Schedule, count_subquery.c.count)
+            select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
             .order_by(models.Schedule.created_on.desc())
             .limit(data.page_limit)

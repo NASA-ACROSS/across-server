@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Generic, Self, TypeVar
 
 from pydantic import Field, computed_field, model_validator
 
@@ -17,7 +17,7 @@ class PaginationParams(BaseSchema):
         return (
             (self.page - 1) * self.page_limit
             if self.page is not None and self.page_limit is not None
-            else None
+            else 0
         )
 
     @model_validator(mode="after")
@@ -27,3 +27,28 @@ class PaginationParams(BaseSchema):
         ):
             raise ValueError("Provide both a page and a page limit or neither")
         return self
+
+
+T = TypeVar("T")
+
+
+class Page(BaseSchema, Generic[T]):
+    """
+    A Pydantic model class representing a returned, paginated list
+
+    Parameters
+    ----------
+    total_number: int
+        the total number of entries before pagination
+    page: int
+        the page number
+    page_limit: int
+        the maximum number of entries per page
+    items: list[T]
+        the queried objects
+    """
+
+    total_number: int | None
+    page: int | None
+    page_limit: int | None
+    items: list[T]

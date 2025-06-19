@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Security, status
 
 from ...auth.schemas import AuthUser
+from ...core.schemas import Page
 from ..telescope.access import telescope_access
 from ..telescope.service import TelescopeService
 from . import schemas
@@ -25,10 +26,10 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
-    response_model=schemas.SchedulePaginate,
+    response_model=Page,
     responses={
         status.HTTP_200_OK: {
-            "model": schemas.SchedulePaginate,
+            "model": Page,
             "description": "Return a schedule",
         },
     },
@@ -36,16 +37,14 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> schemas.SchedulePaginate:
+) -> Page:
     schedules = await service.get_many(data=data)
-    return schemas.SchedulePaginate.model_validate(
+    return Page[schemas.Schedule].model_validate(
         {
             "total_number": schedules[0][1],
             "page": data.page,
             "page_limit": data.page_limit,
-            "schedules": [
-                schemas.Schedule.from_orm(schedule[0]) for schedule in schedules
-            ],
+            "items": [schemas.Schedule.from_orm(schedule[0]) for schedule in schedules],
         }
     )
 
@@ -55,10 +54,10 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
-    response_model=schemas.SchedulePaginate,
+    response_model=Page,
     responses={
         status.HTTP_200_OK: {
-            "model": schemas.SchedulePaginate,
+            "model": Page,
             "description": "",
         },
     },
@@ -66,16 +65,14 @@ async def get_many(
 async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> schemas.SchedulePaginate:
+) -> Page:
     schedules = await service.get_history(data=data)
-    return schemas.SchedulePaginate.model_validate(
+    return Page[schemas.Schedule].model_validate(
         {
             "total_number": schedules[0][1],
             "page": data.page,
             "page_limit": data.page_limit,
-            "schedules": [
-                schemas.Schedule.from_orm(schedule[0]) for schedule in schedules
-            ],
+            "items": [schemas.Schedule.from_orm(schedule[0]) for schedule in schedules],
         }
     )
 

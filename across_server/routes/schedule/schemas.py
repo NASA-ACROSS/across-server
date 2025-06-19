@@ -190,25 +190,3 @@ class ScheduleRead(PaginationParams):
     telescope_ids: list[uuid.UUID] = []
     telescope_names: list[str] = []
     name: str | None = None
-
-
-class SchedulePaginate(BaseSchema):
-    """
-    A Pydantic model class representing a returned, paginated list of Schedules
-
-    Parameters
-    ----------
-    total_number: int
-        the total number of entries before pagination
-    page: int
-        the page number
-    page_limit: int
-        the maximum number of entries per page
-    schedules: list[Schedule]
-        the queried Schedule objects
-    """
-
-    total_number: int | None
-    page: int | None
-    page_limit: int | None
-    schedules: list[Schedule]
