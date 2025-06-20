@@ -12,21 +12,9 @@ from ratelimit.backends.simple import MemoryBackend
 
 from across_server import db
 
-from . import auth
 from .core import config, limiter, logging
 from .core.middleware import LoggingMiddleware
-from .routes import (
-    group,
-    instrument,
-    observation,
-    observatory,
-    permission,
-    role,
-    schedule,
-    telescope,
-    tle,
-    user,
-)
+from .routes import v1
 
 # Configure UTC system time
 os.environ["TZ"] = "UTC"
@@ -43,12 +31,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
+tags_metadata = [
+    {
+        "name": "v1",
+        "description": "API version 1, check link on the right",
+        "externalDocs": {
+            "description": "V1 docs",
+            "url": f"{config.base_url()}/v1/docs",
+        },
+    },
+]
+
 app = FastAPI(
     title="ACROSS Server",
     summary="Astrophysics Cross-Observatory Science Support (ACROSS)",
     description="Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts.",
     root_path=config.ROOT_PATH,
     lifespan=lifespan,
+    openapi_tags=tags_metadata,
 )
 
 app.add_middleware(LoggingMiddleware)
@@ -82,18 +82,4 @@ async def get() -> str:
     return "ok"
 
 
-app.include_router(auth.router)
-app.include_router(permission.router)
-app.include_router(user.router)
-app.include_router(user.service_account.router)
-app.include_router(user.service_account.group_role.router)
-app.include_router(role.router)
-app.include_router(group.router)
-app.include_router(group.group_role.router)
-app.include_router(group.group_invite.router)
-app.include_router(schedule.router)
-app.include_router(tle.router)
-app.include_router(observatory.router)
-app.include_router(telescope.router)
-app.include_router(instrument.router)
-app.include_router(observation.router)
+app.mount("/v1", v1.api)

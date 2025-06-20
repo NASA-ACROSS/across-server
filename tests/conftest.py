@@ -15,8 +15,18 @@ from across_server.db.models import Instrument, Observatory, Telescope
 from across_server.util.email.service import EmailService
 
 
+@pytest.fixture(scope="session")
+def version() -> str | None:
+    return None
+
+
 @pytest.fixture(scope="module")
-def app() -> FastAPI:
+def app(version: str) -> FastAPI:
+    # add conditional as new API versions are added here
+    if version == "v1":
+        return main.v1.api
+
+    # still needed for health check route tests
     return main.app
 
 
