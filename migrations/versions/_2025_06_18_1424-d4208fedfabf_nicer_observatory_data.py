@@ -75,7 +75,7 @@ OBSERVATORY: dict = {
         {
             "id": uuid.UUID("47eca96a-c64b-4b68-93de-1a2c61cd6244"),
             "ephemeris_type": EphemerisType.TLE,
-            "priority": 2,
+            "priority": 1,
             "parameters": {
                 "id": uuid.UUID("7591f4eb-6ad3-4c8e-86e7-9e051ca2e707"),
                 "norad_id": 25544,
