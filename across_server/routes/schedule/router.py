@@ -132,7 +132,7 @@ async def create(
 
 
 @router.post(
-    "/many",
+    "/bulk",
     summary="Create many Schedules",
     description="Create many new observing schedules for ACROSS.",
     status_code=status.HTTP_201_CREATED,

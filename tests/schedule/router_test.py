@@ -95,7 +95,7 @@ class TestScheduleRouter:
         async def test_should_return_201_when_successful(self) -> None:
             """Post Many should return 201 when successful"""
             res = await self.client.post(
-                self.endpoint + "many", json=self.post_many_data
+                self.endpoint + "bulk", json=self.post_many_data
             )
             assert res.status_code == fastapi.status.HTTP_201_CREATED
 
@@ -103,7 +103,7 @@ class TestScheduleRouter:
         async def test_should_return_list_when_successful(self) -> None:
             """Post Many should return list when successful"""
             res = await self.client.post(
-                self.endpoint + "many", json=self.post_many_data
+                self.endpoint + "bulk", json=self.post_many_data
             )
             assert isinstance(res.json(), list)
 
@@ -111,7 +111,7 @@ class TestScheduleRouter:
         async def test_should_return_ids_when_successful(self) -> None:
             """Post Many should return list of IDs when successful"""
             res = await self.client.post(
-                self.endpoint + "many", json=self.post_many_data
+                self.endpoint + "bulk", json=self.post_many_data
             )
             assert all([UUID(element) for element in res.json()])
 
@@ -122,7 +122,7 @@ class TestScheduleRouter:
             """Should return a 422 when any input schedule is missing a required field"""
             self.post_many_data["schedules"][0].pop(required_fields)
             res = await self.client.post(
-                self.endpoint + "many", json=self.post_many_data
+                self.endpoint + "bulk", json=self.post_many_data
             )
 
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
