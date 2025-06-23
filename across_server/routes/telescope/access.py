@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body, Depends, Request
+from fastapi import Body, Depends
 from fastapi.security import SecurityScopes
 from pydantic import BaseModel
 
@@ -25,7 +25,6 @@ class TelescopeAccess(BaseModel):
 
 
 async def telescope_access(
-    request: Request,
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
     service: Annotated[TelescopeService, Depends(TelescopeService)],
@@ -57,5 +56,4 @@ async def telescope_access(
     auth_user = await group_access(
         security_scopes=security_scopes, group_id=group_id, auth_user=auth_user
     )
-    request.session.update(auth_user=auth_user)
     return auth_user

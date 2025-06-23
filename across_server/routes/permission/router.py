@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, status
 
 from ...core import schemas
 from .service import PermissionService
@@ -30,7 +30,6 @@ router = APIRouter(
     },
 )
 async def get(
-    request: Request,
     service: Annotated[PermissionService, Depends(PermissionService)],
 ) -> list[schemas.Permission]:
     permissions = await service.get_all()
