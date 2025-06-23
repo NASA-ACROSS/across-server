@@ -26,10 +26,9 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
-    response_model=Page,
     responses={
         status.HTTP_200_OK: {
-            "model": Page,
+            "model": Page[schemas.Schedule],
             "description": "Return a schedule",
         },
     },
@@ -37,7 +36,7 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> Page:
+) -> Page[schemas.Schedule]:
     schedules = await service.get_many(data=data)
     return Page[schemas.Schedule].model_validate(
         {
@@ -54,10 +53,9 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
-    response_model=Page,
     responses={
         status.HTTP_200_OK: {
-            "model": Page,
+            "model": Page[schemas.Schedule],
             "description": "",
         },
     },
@@ -65,7 +63,7 @@ async def get_many(
 async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> Page:
+) -> Page[schemas.Schedule]:
     schedules = await service.get_history(data=data)
     return Page[schemas.Schedule].model_validate(
         {
