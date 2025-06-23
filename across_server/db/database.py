@@ -1,22 +1,42 @@
 from collections.abc import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from structlog import get_logger
 
 from ..core.config import config as core_config
 from .config import config
 
-engine = create_async_engine(
-    url=config.DB_URI(),
-    pool_pre_ping=True,
-    connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
-)
+logger = get_logger()
 
-async_session = async_sessionmaker(
-    autocommit=False,
-    expire_on_commit=False,
-    autoflush=False,
-    bind=engine,
-)
+engine: AsyncEngine
+async_session: async_sessionmaker
+
+
+def init() -> None:
+    """
+    Initialize database engine and sessionmaker
+    """
+
+    global engine
+    global async_session
+
+    engine = create_async_engine(
+        url=config.DB_URI(),
+        pool_pre_ping=True,
+        connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
+    )
+
+    async_session = async_sessionmaker(
+        autocommit=False,
+        expire_on_commit=False,
+        autoflush=False,
+        bind=engine,
+    )
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:

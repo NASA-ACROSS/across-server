@@ -1,6 +1,6 @@
 import os
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
@@ -10,10 +10,21 @@ from across_server.core.enums import Environments
 from across_server.util.ssm import SSM
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_ssm_client() -> Generator[MagicMock]:
-    with patch("boto3.client") as mock_client:
-        yield mock_client
+    mock = MagicMock()
+    mock.get_parameter = Mock()
+
+    yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_boto3_session(mock_ssm_client: MagicMock) -> Generator[MagicMock]:
+    mock_session_instance = MagicMock()
+    mock_session_instance.client.return_value = mock_ssm_client
+
+    with patch("boto3.Session", return_value=mock_session_instance):
+        yield mock_session_instance
 
 
 class TestSSM:
@@ -45,40 +56,39 @@ class TestSSM:
 
     def test_get_parameter_non_local_success(self, mock_ssm_client: MagicMock) -> None:
         """Test successful parameter retrieval from AWS Parameter Store"""
-        mock_client = MagicMock()
-        mock_client.get_parameter.return_value = {"Parameter": {"Value": "test_value"}}
-        mock_ssm_client.return_value = mock_client
+
+        mock_ssm_client.get_parameter.return_value = {
+            "Parameter": {"Value": "test_value"}
+        }
 
         with patch.object(config, "APP_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 SSM.get_parameter("TEST_PARAM")
 
-                mock_client.get_parameter.assert_called_once_with(
+                mock_ssm_client.get_parameter.assert_called_once_with(
                     Name="/TEST_PARAM", WithDecryption=True
                 )
 
     def test_get_parameter_custom_path(self, mock_ssm_client: MagicMock) -> None:
         """Test parameter retrieval with custom path"""
-        mock_client = MagicMock()
-        mock_client.get_parameter.return_value = {"Parameter": {"Value": "test_value"}}
-        mock_ssm_client.return_value = mock_client
+        mock_ssm_client.get_parameter.return_value = {
+            "Parameter": {"Value": "test_value"}
+        }
 
         with patch.object(config, "APP_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 SSM.get_parameter("TEST_PARAM", path="/custom/path")
 
-                mock_client.get_parameter.assert_called_once_with(
+                mock_ssm_client.get_parameter.assert_called_once_with(
                     Name="/custom/path/TEST_PARAM", WithDecryption=True
                 )
 
     def test_get_parameter_not_found(self, mock_ssm_client: MagicMock) -> None:
         """Test parameter not found in AWS Parameter Store"""
-        mock_client = MagicMock()
-        mock_client.exceptions.ParameterNotFound = ClientError
-        mock_client.get_parameter.side_effect = ClientError(
+        mock_ssm_client.exceptions.ParameterNotFound = ClientError
+        mock_ssm_client.get_parameter.side_effect = ClientError(
             {"Error": {"Code": "ParameterNotFound"}}, "GetParameter"
         )
-        mock_ssm_client.return_value = mock_client
 
         with patch.object(config, "APP_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
@@ -87,9 +97,7 @@ class TestSSM:
 
     def test_get_parameter_no_value(self, mock_ssm_client: MagicMock) -> None:
         """Test parameter exists but has no value"""
-        mock_client = MagicMock()
-        mock_client.get_parameter.return_value = {"Parameter": {}}  # No Value key
-        mock_ssm_client.return_value = mock_client
+        mock_ssm_client.get_parameter.return_value = {"Parameter": {}}  # No Value key
 
         with patch.object(config, "APP_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):

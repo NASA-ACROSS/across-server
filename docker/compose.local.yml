@@ -4,13 +4,13 @@ services:
   app:
     build:
       context: ..
-      dockerfile: containers/Dockerfile
+      dockerfile: Dockerfile
       target: local
       ssh:
         - default
     volumes:
-      - ../across_server/main.py:/app/across_server/main.py
-      - ../across_server:/app/across_server
+      - ./across_server/main.py:/app/across_server/main.py
+      - ./across_server:/app/across_server
     environment:
       APP_ENV: local
     command: fastapi dev across_server/main.py --host 0.0.0.0 --port 8000

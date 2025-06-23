@@ -15,26 +15,39 @@ class Config(BaseSettings):
     ACROSS_DB_NAME: str = "across"
     ACROSS_DB_HOST: str = "localhost"
     ACROSS_DB_PORT: int = 5432
-    ACROSS_DB_ROLE_NAME: str = "across-ue2-dev-DeveloperRole"
+    ACROSS_DB_ROLE_NAME: str = "across-plat-ue2-dev-DBAccessRole"
 
     DRIVER_NAME: str = "postgresql+asyncpg"
 
+    _cluster_name: str = (
+        f"across-plat-ue2-{core_config.APP_ENV.value.lower()}-core-server-db"
+    )
+
     def DB_URI(self) -> URL:
         if core_config.is_local():
-            return URL.create(
-                drivername=self.DRIVER_NAME,
-                username=self.ACROSS_DB_USER,
-                password=self.ACROSS_DB_PWD,
-                host=self.ACROSS_DB_HOST,
-                port=self.ACROSS_DB_PORT,
-                database=self.ACROSS_DB_NAME,
-            )
+            return self._get_local_uri()
+        else:
+            return self._get_aurora_uri()
 
-        ssm_db_path = f"/aurora-postgres/across-ue2-{core_config.APP_ENV.value.lower()}-core-server-db"
+    def _get_ssm_path(self) -> str:
+        return f"/aurora-postgres/{self._cluster_name}"
 
-        host = SSM.get_parameter("cluster_endpoint", ssm_db_path)
+    def _get_local_uri(self) -> URL:
+        return URL.create(
+            drivername=self.DRIVER_NAME,
+            username=self.ACROSS_DB_USER,
+            password=self.ACROSS_DB_PWD,
+            host=self.ACROSS_DB_HOST,
+            port=self.ACROSS_DB_PORT,
+            database=self.ACROSS_DB_NAME,
+        )
+
+    def _get_aurora_uri(self) -> URL:
+        ssm_db_path = self._get_ssm_path()
+        cluster_domain = SSM.get_parameter("cluster_domain", ssm_db_path)
+
+        host = "".join([self._cluster_name, ".cluster-", cluster_domain])
         port = int(SSM.get_parameter("db_port", ssm_db_path))
-
         token = self._get_rds_token(host, port)
 
         return URL.create(

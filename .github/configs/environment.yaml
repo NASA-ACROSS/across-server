@@ -1,0 +1,5 @@
+# assumes the same organization as this repo
+environment-info-repo: across-infrastructure
+implementation_path: .github/environments
+implementation_file: ecspresso.yaml
+implementation_ref: main

@@ -4,7 +4,7 @@ ENVS = local test action prod
 IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 
 # Docker
-DOCKER_COMPOSE_FILE = containers/docker-compose.$(ENV).yml
+DOCKER_COMPOSE_FILE = docker/compose.$(ENV).yml
 DOCKER_COMPOSE = docker compose -f ${DOCKER_COMPOSE_FILE} --env-file=.env
 IMAGE_TAG = $(shell git rev-parse --short HEAD)
 
@@ -222,10 +222,8 @@ build_prod: ## Build the containers for production -- does not use docker-compos
 		-t across-server:$(IMAGE_TAG) \
 		--no-cache \
 		--platform linux/amd64 \
-		--provenance false \
 		--ssh default \
-		--build-arg APP_ENV=prod \
-		-f./containers/Dockerfile .
+		--build-arg APP_ENV=prod .
 
 # Group: Cleaning
 clean: ## Clean virtual env

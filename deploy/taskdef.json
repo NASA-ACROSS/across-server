@@ -1,0 +1,8 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "core-server",
+            "image": "{{ must_env `IMAGE` }}"
+        }
+    ]
+}

@@ -18,6 +18,7 @@ class Config(BaseConfig):
 
     # AWS Configuration
     AWS_REGION: str = "us-east-2"
+    AWS_PROFILE: str | None = None
 
     # Logging
     LOG_LEVEL: str = "DEBUG"

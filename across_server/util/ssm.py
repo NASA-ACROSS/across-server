@@ -20,7 +20,11 @@ class SSM:
             if not config.AWS_REGION:
                 raise ValueError("AWS_REGION must be set in non-local environments")
 
-            cls._client = boto3.client("ssm", region_name=config.AWS_REGION)
+            session = boto3.Session(
+                profile_name=config.AWS_PROFILE,
+                region_name=config.AWS_REGION,
+            )
+            cls._client = session.client("ssm")
 
         return cls._client
 
