@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 from ratelimit import Rule
 
-from across_server.core.limiter.limiter import (
+from across_server.core.limiter import (
     authenticate_limit,
     on_limit_exceeded,
     rules,
@@ -39,7 +39,7 @@ class TestLimiter:
         ) -> None:
             mock_scope["headers"] = []
 
-            limit_key, group = await authenticate_limit(mock_scope)
+            limit_key, _ = await authenticate_limit(mock_scope)
 
             assert limit_key == "13.13.13.13 anonymous"
 
@@ -49,7 +49,7 @@ class TestLimiter:
         ) -> None:
             mock_scope["client"] = ""
 
-            limit_key, group = await authenticate_limit(mock_scope)
+            limit_key, _ = await authenticate_limit(mock_scope)
 
             assert limit_key == "unknown e2c834a4-232c-420a-985e-eb5bc59aba24"
 
@@ -57,7 +57,7 @@ class TestLimiter:
         async def test_should_return_group_as_jwt_type(
             self, mock_scope: MutableMapping[str, Any]
         ) -> None:
-            limit_key, group = await authenticate_limit(mock_scope)
+            _, group = await authenticate_limit(mock_scope)
 
             assert group == "user"
 

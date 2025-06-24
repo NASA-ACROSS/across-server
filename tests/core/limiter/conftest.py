@@ -2,15 +2,45 @@ from typing import Any, MutableMapping
 
 import pytest
 
+from across_server.auth.config import auth_config
+from across_server.auth.enums import AuthUserType
+from across_server.auth.tokens.access_token import AccessToken, AccessTokenData
+
+
+@pytest.fixture
+def patch_config_secret(monkeypatch: Any) -> None:
+    def patch_config_secret_fn(self: Any) -> str:
+        return "TEST_SECRET"
+
+    monkeypatch.setattr(
+        auth_config,
+        "JWT_SECRET_KEY",
+        property(patch_config_secret_fn),
+        raising=False,
+    )
+
 
 @pytest.fixture(scope="function")
-def mock_scope() -> MutableMapping[str, Any]:
+def mock_jwt(patch_config_secret: None) -> str:
+    return AccessToken().encode(
+        AccessTokenData(
+            sub="e2c834a4-232c-420a-985e-eb5bc59aba24",
+            type=AuthUserType.USER,
+            scopes=[],
+            groups=[],
+        )
+    )
+
+
+@pytest.fixture(scope="function")
+def mock_scope(mock_jwt: str) -> MutableMapping[str, Any]:
+    bearer = f"Bearer {mock_jwt}"
     return {
         "client": ("13.13.13.13", "1234"),
         "headers": [
             (
                 b"authorization",
-                b"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMmM4MzRhNC0yMzJjLTQyMGEtOTg1ZS1lYjViYzU5YWJhMjQiLCJleHAiOjE3NTA3ODIxNjgsInNjb3BlcyI6W10sImdyb3VwcyI6W3siaWQiOiI4MWVhN2FjMS1kYTA3LTQ5ZTMtYjFiNy1mYjA4YjYwMzRjMTUiLCJzY29wZXMiOlsiZ3JvdXA6d3JpdGUiLCJncm91cDpzY2hlZHVsZTp3cml0ZSIsImdyb3VwOnJlYWQiLCJncm91cDpvYnNlcnZhdG9yeTp3cml0ZSIsImdyb3VwOnJvbGU6d3JpdGUiLCJncm91cDp1c2VyOndyaXRlIiwiZ3JvdXA6dGVsZXNjb3BlOndyaXRlIl19XSwidHlwZSI6InVzZXIifQ.cT9Qm0Grvdv1vfzgkNZzLrC845z_dRfvaPIh00P10IA",
+                bearer.encode("ascii"),
             )
         ],
     }

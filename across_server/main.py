@@ -13,8 +13,7 @@ from ratelimit.backends.simple import MemoryBackend
 from across_server import db
 
 from . import auth
-from .core import config, logging
-from .core.limiter import limiter
+from .core import config, limiter, logging
 from .core.middleware import LoggingMiddleware
 from .routes import (
     group,
