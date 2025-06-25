@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 from ...core.enums import ScheduleFidelity, ScheduleStatus
-from ...core.schemas import DateRange
+from ...core.schemas import DateRange, PaginationParams
 from ...core.schemas.base import BaseSchema
 from ...db.models import Schedule as ScheduleModel
 from ..observation.schemas import Observation, ObservationCreate
@@ -144,7 +144,7 @@ class ScheduleCreate(ScheduleBase):
         )
 
 
-class ScheduleRead(BaseSchema):
+class ScheduleRead(PaginationParams):
     """
     A Pydantic model class representing the query parameters for the schedule GET methods
 

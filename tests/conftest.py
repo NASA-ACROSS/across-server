@@ -56,13 +56,23 @@ def mock_unique(mock_scalar_one_or_none: MagicMock) -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_tuples() -> Generator[MagicMock]:
+    mock_result = MagicMock()
+    yield mock_result
+
+
+@pytest.fixture
 def mock_result(
-    mock_scalar_one_or_none: MagicMock, mock_scalars: MagicMock, mock_unique: MagicMock
+    mock_scalar_one_or_none: MagicMock,
+    mock_scalars: MagicMock,
+    mock_unique: MagicMock,
+    mock_tuples: MagicMock,
 ) -> Generator[AsyncMock]:
     mock_result = AsyncMock(return_value="default result")
     mock_result.unique = MagicMock(return_value=mock_unique)
     mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
     mock_result.scalars = MagicMock(return_value=mock_scalars)
+    mock_result.tuples = MagicMock(return_value=mock_tuples)
 
     yield mock_result
 

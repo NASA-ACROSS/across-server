@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Security, status
 
 from ...auth.schemas import AuthUser
+from ...core.schemas import Page
 from ..telescope.access import telescope_access
 from ..telescope.service import TelescopeService
 from . import schemas
@@ -25,10 +26,9 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
-    response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
-            "model": list[schemas.Schedule],
+            "model": Page[schemas.Schedule],
             "description": "Return a schedule",
         },
     },
@@ -36,9 +36,18 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> list[schemas.Schedule]:
-    schedules = await service.get_many(data=data)
-    return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
+) -> Page[schemas.Schedule]:
+    schedule_tuples = await service.get_many(data=data)
+    total_number = schedule_tuples[0][1]
+    schedules = [tuple[0] for tuple in schedule_tuples]
+    return Page[schemas.Schedule].model_validate(
+        {
+            "total_number": total_number,
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
+        }
+    )
 
 
 @router.get(
@@ -46,10 +55,9 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
-    response_model=list[schemas.Schedule],
     responses={
         status.HTTP_200_OK: {
-            "model": list[schemas.Schedule],
+            "model": Page[schemas.Schedule],
             "description": "",
         },
     },
@@ -57,9 +65,18 @@ async def get_many(
 async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
-) -> list[schemas.Schedule]:
-    schedules = await service.get_history(data=data)
-    return [schemas.Schedule.from_orm(schedule) for schedule in schedules]
+) -> Page[schemas.Schedule]:
+    schedule_tuples = await service.get_history(data=data)
+    total_number = schedule_tuples[0][1]
+    schedules = [tuple[0] for tuple in schedule_tuples]
+    return Page[schemas.Schedule].model_validate(
+        {
+            "total_number": total_number,
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
+        }
+    )
 
 
 @router.get(

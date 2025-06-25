@@ -1,4 +1,4 @@
-from typing import Annotated, Sequence
+from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
 from fastapi import Depends
@@ -201,7 +201,9 @@ class ScheduleService:
 
         return data_filter
 
-    async def get_many(self, data: schemas.ScheduleRead) -> Sequence[models.Schedule]:
+    async def get_many(
+        self, data: schemas.ScheduleRead
+    ) -> Sequence[Tuple[models.Schedule, int]]:
         """
         Retrieve a list of the most recent, individual Schedule records for each telescope
         based on the ScheduleRead filter parameters.
@@ -213,13 +215,13 @@ class ScheduleService:
 
         Returns
         -------
-        Sequence[models.Schedule]
-            The list of Schedules
+        Sequence[Tuple[models.Schedule, int]]
+            The list of Schedules and total number of entries passing the filter
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
         schedule_query = (
-            select(models.Schedule)
+            select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
             .distinct(
                 models.Schedule.date_range_begin,
@@ -236,17 +238,19 @@ class ScheduleService:
                 models.Schedule.telescope_id,
                 models.Schedule.created_on.desc(),
             )
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(schedule_query)
 
-        schedules = result.scalars().all()
+        schedules = result.tuples().all()
 
         return schedules
 
     async def get_history(
         self, data: schemas.ScheduleRead
-    ) -> Sequence[models.Schedule]:
+    ) -> Sequence[Tuple[models.Schedule, int]]:
         """
         Retrieve a list of Schedule records for each telescope
         based on the ScheduleRead filter parameters.
@@ -258,20 +262,22 @@ class ScheduleService:
 
         Returns
         -------
-        Sequence[models.Schedule]
-            The list of Schedules
+        Sequence[Tuple[models.Schedule, int]]
+            The list of Schedules and total number of entries passing the filter
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
         schedule_query = (
-            select(models.Schedule)
+            select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
             .order_by(models.Schedule.created_on.desc())
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(schedule_query)
 
-        schedules = result.scalars().all()
+        schedules = result.tuples().all()
 
         return schedules
 
