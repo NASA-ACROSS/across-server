@@ -1,7 +1,7 @@
 import uuid
 
 from across_server.db import models
-from across_server.routes.tle import schemas
+from across_server.routes.v1.tle import schemas
 
 swift_tle_one = models.TLE(
     id=uuid.UUID("90635758-3c36-4603-8806-f4fb0d49a98f"),
