@@ -20,7 +20,7 @@ import migrations.versions.model_snapshots.models_2025_06_18 as snapshot_models
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.build_records import ssa_records
-from migrations.db_util import arcmin_to_deg, square_footprint
+from migrations.db_util import arcmin_to_deg, circular_footprint, square_footprint
 
 # revision identifiers, used by Alembic.
 revision: str = "d41e0c380a1f"
@@ -29,7 +29,7 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 # 23.6 arcmin x 23.6 arcmin square
-SWIFT_XRT_footprint = square_footprint(length_deg=arcmin_to_deg(23.6))
+SWIFT_XRT_footprint = circular_footprint(radius_deg=arcmin_to_deg(11.8))
 # https://treasuremap.space/instrument_info?id=49
 SWIFT_BAT_footprint = [
     [
@@ -194,7 +194,7 @@ SWIFT_BAT_footprint = [
 SWIFT_UVOT_footprint = square_footprint(length_deg=arcmin_to_deg(17.0))
 
 SWIFT_XRT_ENERGY_BANDPASS = EnergyBandpass(
-    min=0.2,
+    min=0.3,
     max=10.0,
     unit=tools_enums.EnergyUnit.keV,
 )
@@ -253,9 +253,10 @@ OBSERVATORY: dict = {
     "telescopes": [
         {
             "id": uuid.UUID("c4249d8b-f5aa-43fb-9c46-aaa9b503c446"),
-            "name": "Neil Gehrels Swift Observatory",
-            "short_name": "Swift",
-            "reference_url": "https://swift.gsfc.nasa.gov/about_swift/",
+            "name": "Burst Alert Telescope",
+            "short_name": "Swift_BAT",
+            "is_operational": True,
+            "reference_url": "https://swift.gsfc.nasa.gov/about_swift/bat_desc.html",
             "instruments": [
                 {
                     "id": uuid.UUID("dbe7c3e5-384f-4a04-a6f8-d7b4625e06d2"),
@@ -274,7 +275,16 @@ OBSERVATORY: dict = {
                             "is_operational": True,
                         }
                     ],
-                },
+                }
+            ],
+        },
+        {
+            "id": uuid.UUID("4994a365-428f-40ce-92ae-64393b8b565a"),
+            "name": "X-ray Telescope",
+            "short_name": "Swift_XRT",
+            "is_operational": True,
+            "reference_url": "https://swift.gsfc.nasa.gov/about_swift/xrt_desc.html",
+            "instruments": [
                 {
                     "id": uuid.UUID("77b85f25-3ce6-4351-a77a-1d793492be88"),
                     "name": "X-ray Telescope",
@@ -293,6 +303,15 @@ OBSERVATORY: dict = {
                         }
                     ],
                 },
+            ],
+        },
+        {
+            "id": uuid.UUID("a17fb486-a194-4354-8c4c-f7582fd790bc"),
+            "name": "UV/Optical Telescope",
+            "short_name": "Swift_UVOT",
+            "is_operational": True,
+            "reference_url": "https://swift.gsfc.nasa.gov/about_swift/uvot_desc.html",
+            "instruments": [
                 {
                     "id": uuid.UUID("1c074192-f6d5-465d-844e-85a0010b2d87"),
                     "name": "UV/Optical Telescope",
@@ -354,7 +373,7 @@ OBSERVATORY: dict = {
                     ],
                 },
             ],
-        }
+        },
     ],
     "ephemeris_types": [
         {
