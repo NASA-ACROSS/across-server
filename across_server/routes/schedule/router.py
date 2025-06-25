@@ -37,13 +37,15 @@ async def get_many(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
 ) -> Page[schemas.Schedule]:
-    schedules = await service.get_many(data=data)
+    schedule_tuples = await service.get_many(data=data)
+    total_number = schedule_tuples[0][1]
+    schedules = [tuple[0] for tuple in schedule_tuples]
     return Page[schemas.Schedule].model_validate(
         {
-            "total_number": schedules[0][1],
+            "total_number": total_number,
             "page": data.page,
             "page_limit": data.page_limit,
-            "items": [schemas.Schedule.from_orm(schedule[0]) for schedule in schedules],
+            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
         }
     )
 
@@ -64,13 +66,15 @@ async def get_history(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     data: Annotated[schemas.ScheduleRead, Query()],
 ) -> Page[schemas.Schedule]:
-    schedules = await service.get_history(data=data)
+    schedule_tuples = await service.get_history(data=data)
+    total_number = schedule_tuples[0][1]
+    schedules = [tuple[0] for tuple in schedule_tuples]
     return Page[schemas.Schedule].model_validate(
         {
-            "total_number": schedules[0][1],
+            "total_number": total_number,
             "page": data.page,
             "page_limit": data.page_limit,
-            "items": [schemas.Schedule.from_orm(schedule[0]) for schedule in schedules],
+            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
         }
     )
 
