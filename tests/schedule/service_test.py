@@ -10,7 +10,11 @@ from across_server.routes.schedule.exceptions import (
     ScheduleInstrumentNotFoundException,
     ScheduleNotFoundException,
 )
-from across_server.routes.schedule.schemas import ScheduleCreate, ScheduleCreateMany, ScheduleRead
+from across_server.routes.schedule.schemas import (
+    ScheduleCreate,
+    ScheduleCreateMany,
+    ScheduleRead,
+)
 from across_server.routes.schedule.service import ScheduleService
 
 
