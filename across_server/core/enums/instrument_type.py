@@ -11,4 +11,3 @@ class InstrumentType(str, Enum):
     XRAY_COUNTING_SPECTROMETER = "xray_counting_spectrometer"
     CODED_APERTURE_IMAGER = "coded_aperture_imager"
     XRAY_IMAGING_SPECTROMETER = "xray_imaging_spectrometer"
-    XRAY_IMAGER = "xray_imager"

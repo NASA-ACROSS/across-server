@@ -1,7 +1,7 @@
 """swift observatory data
 
 Revision ID: d41e0c380a1f
-Revises: d4208fedfabf
+Revises: 457fb787204d
 Create Date: 2025-06-25 12:59:16.210104
 
 """
@@ -24,7 +24,7 @@ from migrations.db_util import arcmin_to_deg, circular_footprint, square_footpri
 
 # revision identifiers, used by Alembic.
 revision: str = "d41e0c380a1f"
-down_revision: Union[str, None] = "d4208fedfabf"
+down_revision: Union[str, None] = "457fb787204d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
