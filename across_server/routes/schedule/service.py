@@ -1,6 +1,7 @@
 from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
+import numpy as np
 from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,25 +75,25 @@ class ScheduleService:
 
         return schedule
 
-    async def _exists(self, checksum: str) -> models.Schedule | None:
+    async def _exists(self, checksums: list[str]) -> Sequence[models.Schedule]:
         """
-        Retrieve the Schedule record with the given checksum.
+        Retrieve the Schedule records with the given checksums.
 
         Parameters
         ----------
-        checksum : str
+        checksum : list[str]
             the Schedule checksum
 
         Returns
         -------
-        models.Schedule | None
-            returns a Schedule record
+        Sequence[models.Schedule]
+            returns an array of Schedule records
 
         """
-        query = select(models.Schedule).filter(models.Schedule.checksum == checksum)
+        query = select(models.Schedule).filter(models.Schedule.checksum.in_(checksums))
         result = await self.db.execute(query)
-        schedule = result.scalar_one_or_none()
-        return schedule
+        schedules = result.scalars().all()
+        return schedules
 
     def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
         """
@@ -320,10 +321,10 @@ class ScheduleService:
         instrument_dict = {instrument.id: instrument for instrument in instruments}
 
         # schedule validation
-        existing = await self._exists(schedule.checksum)
+        existing = await self._exists([schedule.checksum])
 
-        if existing:
-            raise DuplicateScheduleException(existing.id)
+        if len(existing):
+            raise DuplicateScheduleException(existing[0].id)
 
         schedule_instrument_ids = list(
             set(
@@ -355,3 +356,78 @@ class ScheduleService:
 
         await self.db.commit()
         return schedule.id
+
+    async def create_many(
+        self,
+        schedule_create_many: schemas.ScheduleCreateMany,
+        instruments: list[models.Instrument],
+        created_by_id: UUID,
+    ) -> list[UUID]:
+        instrument_dict = {instrument.id: instrument for instrument in instruments}
+
+        # Make list of models.Schedule objects from the data
+        schedules = [
+            schedule_create.to_orm(created_by_id=created_by_id)
+            for schedule_create in schedule_create_many.schedules
+        ]
+
+        # Get the subset of schedules that already exist
+        existing_schedules = await self._exists(
+            [schedule.checksum for schedule in schedules]
+        )
+
+        # Get array of schedule_ids for existing schedules to append to and return
+        schedule_ids = [schedule.id for schedule in np.asarray(existing_schedules)]
+
+        # Get array of checksums of existing schedules to compare against the schedules being added
+        existing_schedules_checksums = [
+            schedule.checksum for schedule in existing_schedules
+        ]
+
+        # Make filter for existing schedules
+        schedule_filter = np.asarray(
+            [
+                schedule.checksum in existing_schedules_checksums
+                for schedule in schedules
+            ]
+        )
+
+        # For the schedules that don't exist yet, iterate over them,
+        # create arrays of schedules and observations to bulk add
+        schedules_to_add = []
+        observations_to_add = []
+        for i, schedule in enumerate(
+            np.asarray(schedules)[np.logical_not(schedule_filter)]
+        ):
+            schedule_create = schedule_create_many.schedules[i]
+            schedule_instrument_ids = list(
+                set(
+                    [
+                        observation.instrument_id
+                        for observation in schedule_create.observations
+                    ]
+                )
+            )
+
+            for schedule_instrument_id in schedule_instrument_ids:
+                if not instrument_dict.get(schedule_instrument_id):
+                    raise ScheduleInstrumentNotFoundException(
+                        instrument_id=schedule_instrument_id,
+                        telescope_id=schedule.telescope_id,
+                    )
+
+            schedule.id = uuid4()
+            schedules_to_add.append(schedule)
+            schedule_ids.append(schedule.id)
+
+            for observation_create in schedule_create.observations:
+                instrument = instrument_dict[observation_create.instrument_id]
+                fov = InstrumentFOV(instrument.field_of_view)
+                observation = observation_create.to_orm(instrument_fov=fov)
+                observation.schedule_id = schedule.id
+                observation.created_by_id = created_by_id
+                observations_to_add.append(observation)
+
+        self.db.add_all(list((*schedules_to_add, *observations_to_add)))
+        await self.db.commit()
+        return schedule_ids

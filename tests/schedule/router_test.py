@@ -16,11 +16,13 @@ class Setup:
         async_client: AsyncClient,
         mock_schedule_post_data: dict,
         mock_schedule_data: ScheduleModel,
+        mock_schedule_post_many_data: dict,
     ) -> None:
         self.client = async_client
         self.endpoint = "/schedule/"
         self.post_data = mock_schedule_post_data
         self.get_data = mock_schedule_data
+        self.post_many_data = mock_schedule_post_many_data
 
 
 class TestScheduleRouter:
@@ -87,3 +89,55 @@ class TestScheduleRouter:
             """GET history should return 200 when successful"""
             res = await self.client.get(self.endpoint + "history")
             assert res.status_code == fastapi.status.HTTP_200_OK
+
+    class TestPostMany(Setup):
+        @pytest.mark.asyncio
+        async def test_should_return_201_when_successful(self) -> None:
+            """Post Many should return 201 when successful"""
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+            assert res.status_code == fastapi.status.HTTP_201_CREATED
+
+        @pytest.mark.asyncio
+        async def test_should_return_list_when_successful(self) -> None:
+            """Post Many should return list when successful"""
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+            assert isinstance(res.json(), list)
+
+        @pytest.mark.asyncio
+        async def test_should_return_ids_when_successful(self) -> None:
+            """Post Many should return list of IDs when successful"""
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+            assert all([UUID(element) for element in res.json()])
+
+        @pytest.mark.asyncio
+        async def test_should_return_422_when_missing_required_fields(
+            self, required_fields: Any
+        ) -> None:
+            """Should return a 422 when any input schedule is missing a required field"""
+            self.post_many_data["schedules"][0].pop(required_fields)
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+
+            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+        @pytest.mark.asyncio
+        async def test_should_return_422_when_provided_multiple_telescope_ids(
+            self,
+        ) -> None:
+            """
+            Should return a 422 when schedules are provided with telescope IDs
+            that don't match the telescope ID in the root of the bulk payload
+            """
+            self.post_many_data["schedules"][0]["telescope_id"] = str(uuid4())
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+
+            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
