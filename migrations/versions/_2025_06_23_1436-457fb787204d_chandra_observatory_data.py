@@ -35,21 +35,22 @@ depends_on: Union[str, Sequence[str], None] = None
 acis_footprint = circular_footprint(radius_deg=arcmin_to_deg(8.5))
 hrc_footprint = circular_footprint(radius_deg=arcmin_to_deg(15.5))
 
-# Bandpass information found here: https://cxc.harvard.edu/cdo/about_chandra/
+# Bandpass information found here:
+# https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/comparison.html
 ACIS_BANDPASS = convert_to_wave(
     EnergyBandpass(min=0.1, max=10, unit=tools_enums.EnergyUnit.keV)
 )
 
 HRC_BANDPASS = convert_to_wave(
-    EnergyBandpass(min=0.08, max=10, unit=tools_enums.EnergyUnit.keV)
+    EnergyBandpass(min=0.1, max=10, unit=tools_enums.EnergyUnit.keV)
 )
 
 HETG_BANDPASS = convert_to_wave(
-    EnergyBandpass(min=0.4, max=10, unit=tools_enums.EnergyUnit.keV)
+    EnergyBandpass(min=0.6, max=10, unit=tools_enums.EnergyUnit.keV)
 )
 
 LETG_BANDPASS = convert_to_wave(
-    EnergyBandpass(min=0.07, max=8.86, unit=tools_enums.EnergyUnit.keV)
+    EnergyBandpass(min=0.1, max=6, unit=tools_enums.EnergyUnit.keV)
 )
 
 # We are also treating each instrument + grating/mode combination
@@ -91,7 +92,7 @@ OBSERVATORY = {
                     "name": "Advanced CCD Imaging Spectrometer - High Energy Transmission Grating",
                     "short_name": "ACIS-HETG",
                     "field_of_view": InstrumentFOV.POLYGON.value,
-                    "footprint": [],
+                    "footprint": acis_footprint,
                     "type": InstrumentType.XRAY_COUNTING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Acis/index.html",
                     "filters": [
@@ -109,7 +110,7 @@ OBSERVATORY = {
                     "name": "Advanced CCD Imaging Spectrometer - Low Energy Transmission Grating",
                     "short_name": "ACIS-LETG",
                     "field_of_view": InstrumentFOV.POLYGON.value,
-                    "footprint": [],
+                    "footprint": acis_footprint,
                     "type": InstrumentType.XRAY_COUNTING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Acis/index.html",
                     "filters": [
@@ -127,7 +128,7 @@ OBSERVATORY = {
                     "name": "Advanced CCD Imaging Spectrometer - Continuous Clocking Mode",
                     "short_name": "ACIS-CC",
                     "field_of_view": InstrumentFOV.POLYGON.value,
-                    "footprint": [],  # CC Mode sacrifices one spatial dimension for rapid CCD readout
+                    "footprint": acis_footprint,  # NOTE: CC Mode sacrifices one spatial dimension for rapid CCD readout
                     "type": InstrumentType.CALORIMETER.value,
                     "reference_url": "https://cxc.harvard.edu/proposer/POG/html/chap6.html",
                     "filters": [
@@ -163,7 +164,7 @@ OBSERVATORY = {
                     "name": "High Resolution Camera - High Energy Transmission Grating",
                     "short_name": "HRC-HETG",
                     "field_of_view": InstrumentFOV.POLYGON.value,
-                    "footprint": [],
+                    "footprint": hrc_footprint,
                     "type": InstrumentType.XRAY_COUNTING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
@@ -181,7 +182,7 @@ OBSERVATORY = {
                     "name": "High Resolution Camera - Low Energy Transmission Grating",
                     "short_name": "HRC-LETG",
                     "field_of_view": InstrumentFOV.POLYGON.value,
-                    "footprint": [],
+                    "footprint": hrc_footprint,
                     "type": InstrumentType.XRAY_COUNTING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
