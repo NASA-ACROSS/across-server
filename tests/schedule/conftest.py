@@ -68,10 +68,12 @@ def mock_schedule_post_data() -> dict:
 
 @pytest.fixture
 def mock_schedule_post_many_data() -> dict:
+    mock_telescope_id = str(uuid4())
+
     return {
         "schedules": [
             {
-                "telescope_id": str(uuid4()),
+                "telescope_id": mock_telescope_id,
                 "date_range": {
                     "begin": str(datetime.now()),
                     "end": str(datetime.now() + timedelta(days=1)),
@@ -108,7 +110,7 @@ def mock_schedule_post_many_data() -> dict:
                 ],
             },
             {
-                "telescope_id": str(uuid4()),
+                "telescope_id": mock_telescope_id,
                 "date_range": {
                     "begin": str(datetime.now()),
                     "end": str(datetime.now() + timedelta(days=1)),
@@ -145,7 +147,7 @@ def mock_schedule_post_many_data() -> dict:
                 ],
             },
         ],
-        "telescope_id": str(uuid4()),
+        "telescope_id": mock_telescope_id,
     }
 
 
@@ -241,7 +243,7 @@ def patch_service_get_from_checksum_none(monkeypatch: Any) -> None:
 
 
 @pytest.fixture()
-def schedule_create_example() -> ScheduleCreate:
+def schedule_create_example(mock_schedule_post_data: dict) -> ScheduleCreate:
     instrument_id = uuid4()
 
     observation_create = ObservationCreate(
@@ -268,7 +270,7 @@ def schedule_create_example() -> ScheduleCreate:
 
     return ScheduleCreate(
         name="test service account",
-        telescope_id=uuid4(),
+        telescope_id=mock_schedule_post_data["telescope_id"],
         date_range=DateRange(
             begin=datetime.now(), end=datetime.now() + timedelta(days=1)
         ),
@@ -282,11 +284,12 @@ def schedule_create_example() -> ScheduleCreate:
 @pytest.fixture
 def schedule_create_many_example(
     schedule_create_example: ScheduleCreate,
+    mock_schedule_post_data: dict,
 ) -> ScheduleCreateMany:
     return ScheduleCreateMany(
         **{
             "schedules": [schedule_create_example, schedule_create_example],
-            "telescope_id": uuid4(),
+            "telescope_id": mock_schedule_post_data["telescope_id"],
         }
     )
 

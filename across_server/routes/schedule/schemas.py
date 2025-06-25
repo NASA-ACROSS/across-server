@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Self
+
+from pydantic import model_validator
 
 from ...core.enums import ScheduleFidelity, ScheduleStatus
 from ...core.schemas import DateRange, PaginationParams
@@ -206,3 +209,13 @@ class ScheduleCreateMany(BaseSchema):
 
     schedules: list[ScheduleCreate]
     telescope_id: uuid.UUID
+
+    @model_validator(mode="after")
+    def check_telescopes_match(self) -> Self:
+        if any(
+            [schedule.telescope_id != self.telescope_id for schedule in self.schedules]
+        ):
+            raise ValueError(
+                "Multiple telescope IDs found. Must only provide schedules for the input telescope ID"
+            )
+        return self

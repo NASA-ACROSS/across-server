@@ -126,3 +126,18 @@ class TestScheduleRouter:
             )
 
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+
+        @pytest.mark.asyncio
+        async def test_should_return_422_when_provided_multiple_telescope_ids(
+            self,
+        ) -> None:
+            """
+            Should return a 422 when schedules are provided with telescope IDs
+            that don't match the telescope ID in the root of the bulk payload
+            """
+            self.post_many_data["schedules"][0]["telescope_id"] = str(uuid4())
+            res = await self.client.post(
+                self.endpoint + "bulk", json=self.post_many_data
+            )
+
+            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
