@@ -23,7 +23,8 @@
                 "--port",
                 "8000"
             ],
-            "jinja": true
+            "jinja": true,
+            "justMyCode": false
         },
         {
             "name": "dev: Start Server",

@@ -26,3 +26,4 @@ across-tools @ git+ssh://git@github.com/ACROSS-Team/across-tools.git@main
 structlog >= 25.1.0
 argon2-cffi >= 25.1.0
 python-multipart >= 0.0.20
+asgi-ratelimit >= 0.10.0
