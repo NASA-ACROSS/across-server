@@ -74,7 +74,7 @@ OBSERVATORY = {
                     "short_name": "ACIS",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": acis_footprint,
-                    "type": InstrumentType.CALORIMETER.value,
+                    "type": InstrumentType.XRAY_IMAGER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Acis/index.html",
                     "filters": [
                         {
@@ -146,7 +146,7 @@ OBSERVATORY = {
                     "short_name": "HRC",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": hrc_footprint,
-                    "type": InstrumentType.CALORIMETER.value,
+                    "type": InstrumentType.XRAY_IMAGER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
                         {
@@ -200,7 +200,7 @@ OBSERVATORY = {
                     "short_name": "HRC-Timing",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": hrc_footprint,
-                    "type": InstrumentType.CALORIMETER.value,
+                    "type": InstrumentType.XRAY_IMAGER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
                         {
@@ -225,7 +225,16 @@ OBSERVATORY = {
                 "norad_id": 25867,
                 "norad_satellite_name": "CXO",
             },
-        }
+        },
+        {
+            "id": uuid.UUID("2feccddb-5c83-40de-b2a2-99ec31de5ae5"),
+            "ephemeris_type": EphemerisType.JPL.value,
+            "priority": 2,
+            "parameters": {
+                "id": uuid.UUID("860c2e8f-a356-41ec-87f1-248704c13345"),
+                "naif_id": -151,
+            },
+        },
     ],
     "group": {
         "id": uuid.UUID("672f1553-81b0-423c-a17e-369139036c57"),
