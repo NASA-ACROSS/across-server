@@ -10,6 +10,7 @@ cachetools >=5.5.0,<6
 email-validator >=2.2.0,<3
 fastapi >=0.115
 healpy >=1.17.3
+healpy >=1.18.0
 httpx >=0.27.2,<0.28
 asyncpg >=0.30.0
 shapely >=2.0.6,<3

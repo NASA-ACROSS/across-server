@@ -97,7 +97,7 @@ h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-healpy==1.17.3
+healpy==1.18.1
     # via
     #   -r requirements/base.in
     #   across-tools
