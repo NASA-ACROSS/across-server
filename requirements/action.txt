@@ -83,7 +83,7 @@ filelock==3.16.1
     # via virtualenv
 geoalchemy2==0.17.0
     # via -r requirements/base.in
-greenlet==3.1.1
+greenlet==3.2.3
     # via sqlalchemy
 h11==0.14.0
     # via
@@ -294,7 +294,7 @@ urllib3==2.2.3
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.30.6
+uvicorn==0.34.0
     # via -r requirements/base.in
 virtualenv==20.28.0
     # via pre-commit
