@@ -9,4 +9,5 @@ class InstrumentType(str, Enum):
     POLARIMETER = "polarimeter"
     SCINTILLATOR = "scintillator"
     XRAY_COUNTING_SPECTROMETER = "xray_counting_spectrometer"
-    XRAY_IMAGER = "xray_imager"
+    CODED_APERTURE_IMAGER = "coded_aperture_imager"
+    XRAY_IMAGING_SPECTROMETER = "xray_imaging_spectrometer"

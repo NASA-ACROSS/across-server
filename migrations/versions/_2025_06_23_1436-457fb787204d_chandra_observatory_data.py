@@ -75,7 +75,7 @@ OBSERVATORY = {
                     "short_name": "ACIS",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": acis_footprint,
-                    "type": InstrumentType.XRAY_IMAGER.value,
+                    "type": InstrumentType.XRAY_IMAGING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Acis/index.html",
                     "filters": [
                         {
@@ -147,7 +147,7 @@ OBSERVATORY = {
                     "short_name": "HRC",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": hrc_footprint,
-                    "type": InstrumentType.XRAY_IMAGER.value,
+                    "type": InstrumentType.XRAY_IMAGING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
                         {
@@ -201,7 +201,7 @@ OBSERVATORY = {
                     "short_name": "HRC-Timing",
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": hrc_footprint,
-                    "type": InstrumentType.XRAY_IMAGER.value,
+                    "type": InstrumentType.XRAY_IMAGING_SPECTROMETER.value,
                     "reference_url": "https://cxc.harvard.edu/cal/Hrc/index.html",
                     "filters": [
                         {
