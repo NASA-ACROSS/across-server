@@ -2,7 +2,7 @@
 #    uv pip compile requirements/local.in -o requirements/local.txt
 across-tools @ git+ssh://git@github.com/ACROSS-Team/across-tools.git@34e5573cae75394ce01ba187693b79f1db5b0985
     # via -r requirements/base.in
-aiosmtplib==3.0.2
+aiosmtplib==4.0.0
     # via -r requirements/base.in
 alembic==1.14.1
     # via -r requirements/base.in
