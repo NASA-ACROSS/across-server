@@ -97,7 +97,7 @@ html5lib==1.1
     # via astroquery
 httpcore==1.0.7
     # via httpx
-httpx==0.27.2
+httpx==0.28.1
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -236,7 +236,6 @@ skyfield==1.49
 sniffio==1.3.1
     # via
     #   anyio
-    #   httpx
     #   spacetrack
 soupsieve==2.6
     # via beautifulsoup4
