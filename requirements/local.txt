@@ -151,11 +151,11 @@ markupsafe==3.0.2
     #   mako
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.14.1
+mypy==1.15.0
     # via -r requirements/types.in
 mypy-extensions==1.0.0
     # via mypy
