@@ -193,13 +193,15 @@ SWIFT_BAT_footprint = [
 # 17 arcmin x 17 arcmin square
 SWIFT_UVOT_footprint = square_footprint(length_deg=arcmin_to_deg(17.0))
 
+# values taken from https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/swift.html
 SWIFT_XRT_ENERGY_BANDPASS = EnergyBandpass(
-    min=0.3,
+    min=0.3,  # Jamie said this anything below 0.3 keV is not useful
     max=10.0,
     unit=tools_enums.EnergyUnit.keV,
 )
 SWIFT_XRT_WAVELENGTH_BANDPASS = convert_to_wave(SWIFT_XRT_ENERGY_BANDPASS)
 
+# values taken from https://heasarc.gsfc.nasa.gov/docs/heasarc/missions/swift.html
 SWIFT_BAT_ENERGY_BANDPASS = EnergyBandpass(
     min=15.0,
     max=150.0,
@@ -207,34 +209,37 @@ SWIFT_BAT_ENERGY_BANDPASS = EnergyBandpass(
 )
 SWIFT_BAT_WAVELENGTH_BANDPASS = convert_to_wave(SWIFT_BAT_ENERGY_BANDPASS)
 
+# UVOT values are obtained by calculating FWHM boundaries of each bandpass
+# The bandpass transmission curves were obtained from the SVO service and utilizing
+# the *fil.dat files for each bandpass
 SWIFT_UVOT_UVW2_WAVELENGTH_BANDPASS = WavelengthBandpass(
     min=160.0,
-    max=350.0,
+    max=225.0,
     unit=tools_enums.WavelengthUnit.NANOMETER,
 )
 SWIFT_UVOT_UVM2_WAVELENGTH_BANDPASS = WavelengthBandpass(
-    min=170.0,
-    max=300.0,
+    min=200.0,
+    max=249.0,
     unit=tools_enums.WavelengthUnit.NANOMETER,
 )
 SWIFT_UVOT_UVW1_WAVELENGTH_BANDPASS = WavelengthBandpass(
-    min=160.0,
-    max=470.0,
+    min=226.0,
+    max=294.0,
     unit=tools_enums.WavelengthUnit.NANOMETER,
 )
 SWIFT_UVOT_U_WAVELENGTH_BANDPASS = WavelengthBandpass(
-    min=300.0,
-    max=400.0,
-    unit=tools_enums.WavelengthUnit.NANOMETER,
-)
-SWIFT_UVOT_V_WAVELENGTH_BANDPASS = WavelengthBandpass(
-    min=400.0,
-    max=500.0,
+    min=308.0,
+    max=385.0,
     unit=tools_enums.WavelengthUnit.NANOMETER,
 )
 SWIFT_UVOT_B_WAVELENGTH_BANDPASS = WavelengthBandpass(
-    min=500.0,
-    max=600.0,
+    min=391.0,
+    max=487.0,
+    unit=tools_enums.WavelengthUnit.NANOMETER,
+)
+SWIFT_UVOT_V_WAVELENGTH_BANDPASS = WavelengthBandpass(
+    min=509.0,
+    max=585.0,
     unit=tools_enums.WavelengthUnit.NANOMETER,
 )
 SWIFT_UVOT_WHITE_WAVELENGTH_BANDPASS = WavelengthBandpass(
