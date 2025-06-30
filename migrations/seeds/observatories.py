@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from across_server.core.enums import EphemerisType, ObservatoryType
 from across_server.db.models import (
@@ -22,6 +23,8 @@ sandy_observatory = Observatory(
     short_name="SANDY",
     group=treedome_space_group,
     is_operational=True,
+    operational_begin_date=datetime(1999, 5, 2, 0, 30, 0),
+    operational_end_date=None,
 )
 
 ephemeris_types = [
@@ -44,7 +47,7 @@ tle_parameters: list[TLEParameters] = [
     TLEParameters(
         id=uuid.UUID("6c817107-1aed-42a3-9f0f-90a1e17c395a"),
         observatory_id=sandy_observatory.id,
-        norad_id=123456,
+        norad_id=28485,
         norad_satellite_name="SANDY",
     )
 ]

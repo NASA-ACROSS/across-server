@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
+    JSON,
     REAL,
     Boolean,
     Column,
@@ -25,6 +26,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+from ..core.enums.visibility_type import VisibilityType
 from .config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
@@ -124,6 +126,14 @@ group_observatory = Table(
     Base.metadata,
     Column("group_id", ForeignKey("group.id"), primary_key=True),
     Column("observatory_id", ForeignKey("observatory.id"), primary_key=True),
+)
+
+
+instrument_constraint = Table(
+    "instrument_constraint",
+    Base.metadata,
+    Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
+    Column("constraint_id", ForeignKey("constraints.id"), primary_key=True),
 )
 
 
@@ -402,6 +412,10 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
+    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    operational_end_date: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
 
 class Telescope(Base, CreatableMixin, ModifiableMixin):
@@ -451,6 +465,13 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     filters: Mapped[list["Filter"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
+    )
+    visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
+    constraints: Mapped[list["Constraints"]] = relationship(
+        secondary=instrument_constraint,
+        back_populates="instruments",
+        lazy="selectin",
+        cascade="all,delete",
     )
 
 
@@ -588,4 +609,17 @@ class TLE(Base):
         UniqueConstraint(
             "epoch", "norad_id", name="uq_epoch_norad_id"
         ),  # Enforce uniqueness
+    )
+
+
+class Constraints(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "constraints"
+
+    constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    constraint_parameters: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+    instruments: Mapped[list["Instrument"]] = relationship(
+        secondary=instrument_constraint,
+        back_populates="constraints",
+        lazy="selectin",
     )
