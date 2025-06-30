@@ -459,7 +459,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     constraints: Mapped[list["Constraints"]] = relationship(
         secondary=instrument_constraint,
-        back_populates="constraints",
+        back_populates="instruments",
         lazy="selectin",
         cascade="all,delete",
     )
@@ -607,3 +607,9 @@ class Constraints(Base, CreatableMixin, ModifiableMixin):
 
     constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
     constraint_parameters: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+    instruments: Mapped[list["Instrument"]] = relationship(
+        secondary=instrument_constraint,
+        back_populates="constraints",
+        lazy="selectin",
+    )

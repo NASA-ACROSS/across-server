@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from across_server.core.enums import EphemerisType, ObservatoryType
 from across_server.db.models import (
@@ -22,6 +23,8 @@ sandy_observatory = Observatory(
     short_name="SANDY",
     group=treedome_space_group,
     is_operational=True,
+    operational_begin_date=datetime(1999, 5, 2, 0, 30, 0),
+    operational_end_date=None,
 )
 
 ephemeris_types = [

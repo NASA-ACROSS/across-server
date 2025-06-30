@@ -1,9 +1,32 @@
 import uuid
 
+from across.tools.core.enums import ConstraintType
+from across.tools.visibility.constraints import (
+    EarthLimbConstraint,
+    MoonAngleConstraint,
+    SunAngleConstraint,
+)
+
 from across_server.core.enums import InstrumentFOV, InstrumentType
-from across_server.db.models import Instrument
+from across_server.db.models import Constraints, Instrument
 
 from .telescopes import sandy_smaller_telescope, sandy_telescope
+
+instrument_constraints = [
+    Constraints(
+        constraint_type=ConstraintType.SUN,
+        constraint_parameters=SunAngleConstraint(min_angle=45).model_dump(),
+    ),
+    Constraints(
+        constraint_type=ConstraintType.EARTH,
+        constraint_parameters=EarthLimbConstraint(min_angle=10).model_dump(),
+    ),
+    Constraints(
+        constraint_type=ConstraintType.MOON,
+        constraint_parameters=MoonAngleConstraint(min_angle=20).model_dump(),
+    ),
+]
+
 
 sandy_instrument_calorimeter = Instrument(
     id=uuid.UUID("a4cf7691-8d3c-4fea-899c-9bcc33d23a5e"),
@@ -13,6 +36,20 @@ sandy_instrument_calorimeter = Instrument(
     type=InstrumentType.CALORIMETER.value,
     field_of_view=InstrumentFOV.POLYGON.value,
     is_operational=True,
+    constraints=[
+        Constraints(
+            constraint_type=ConstraintType.SUN,
+            constraint_parameters=SunAngleConstraint(min_angle=45).model_dump(),
+        ),
+        Constraints(
+            constraint_type=ConstraintType.EARTH,
+            constraint_parameters=EarthLimbConstraint(min_angle=10).model_dump(),
+        ),
+        Constraints(
+            constraint_type=ConstraintType.MOON,
+            constraint_parameters=MoonAngleConstraint(min_angle=20).model_dump(),
+        ),
+    ],
 )
 
 sandy_all_sky_instrument = Instrument(
@@ -23,6 +60,12 @@ sandy_all_sky_instrument = Instrument(
     type=InstrumentType.PHOTOMETRIC.value,
     field_of_view=InstrumentFOV.ALL_SKY.value,
     is_operational=True,
+    constraints=[
+        Constraints(
+            constraint_type=ConstraintType.EARTH,
+            constraint_parameters=EarthLimbConstraint(min_angle=0).model_dump(),
+        ),
+    ],
 )
 
 sandy_optical_instrument = Instrument(
@@ -33,6 +76,7 @@ sandy_optical_instrument = Instrument(
     type=InstrumentType.PHOTOMETRIC.value,
     field_of_view=InstrumentFOV.POLYGON.value,
     is_operational=True,
+    constraints=instrument_constraints,
 )
 
 instruments = [
