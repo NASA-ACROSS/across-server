@@ -81,6 +81,12 @@ async def webserver_access(
     request: Request,
     token: Annotated[str, Depends(get_bearer_credentials)],
 ) -> None:
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     is_webserver = secrets.compare_digest(token, auth_config.WEBSERVER_SECRET)
 
     if request.client:
