@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from across.tools.visibility.constraints import Constraint
+
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
 from ..footprint.schemas import Footprint, Point
@@ -34,6 +36,7 @@ class InstrumentBase(BaseSchema):
     short_name: str
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
+    constraints: list[Constraint] | None = None
 
 
 class Instrument(InstrumentBase):
