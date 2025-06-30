@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 from geoalchemy2 import Geography, WKBElement
 from sqlalchemy import (
+    JSON,
     REAL,
     Boolean,
     Column,
@@ -115,6 +116,14 @@ group_observatory = Table(
     Base.metadata,
     Column("group_id", ForeignKey("group.id"), primary_key=True),
     Column("observatory_id", ForeignKey("observatory.id"), primary_key=True),
+)
+
+
+instrument_constraint = Table(
+    "instrument_constraint",
+    Base.metadata,
+    Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
+    Column("constraint_id", ForeignKey("constraints.id"), primary_key=True),
 )
 
 
@@ -394,6 +403,10 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
+    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    operational_end_date: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
 
 
 class Telescope(Base, CreatableMixin, ModifiableMixin):
@@ -443,6 +456,12 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     filters: Mapped[list["Filter"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
+    )
+    constraints: Mapped[list["Constraints"]] = relationship(
+        secondary=instrument_constraint,
+        back_populates="constraints",
+        lazy="selectin",
+        cascade="all,delete",
     )
 
 
@@ -581,3 +600,10 @@ class TLE(Base):
             "epoch", "norad_id", name="uq_epoch_norad_id"
         ),  # Enforce uniqueness
     )
+
+
+class Constraints(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "constraints"
+
+    constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    constraint_parameters: Mapped[dict] = mapped_column(JSON, nullable=False)
