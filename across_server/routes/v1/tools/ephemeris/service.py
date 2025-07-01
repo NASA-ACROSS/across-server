@@ -1,9 +1,11 @@
 from datetime import datetime
+from functools import partial
 from typing import Annotated
 from uuid import UUID
 
 import anyio
 import anyio.to_thread
+import astropy.units as u  # type: ignore[import-untyped]
 from across.tools.core.schemas import tle as tle_schemas
 from across.tools.ephemeris import (
     Ephemeris,
@@ -12,14 +14,15 @@ from across.tools.ephemeris import (
     compute_spice_ephemeris,
     compute_tle_ephemeris,
 )
+from astropy.coordinates import Latitude, Longitude  # type: ignore[import-untyped]
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.core.enums.ephemeris_type import EphemerisType
-from across_server.db.database import get_session
-from across_server.routes.v1.observatory import schemas as observatory_schemas
-from across_server.routes.v1.observatory.service import ObservatoryService
-from across_server.routes.v1.tle.service import TLEService
+from .....core.enums.ephemeris_type import EphemerisType
+from .....db.database import get_session
+from ...observatory import schemas as observatory_schemas
+from ...observatory.service import ObservatoryService
+from ...tle.service import TLEService
 
 
 class EphemerisService:
@@ -67,7 +70,13 @@ class EphemerisService:
         tle_model = await TLEService(self.db).get(
             norad_id=parameters.norad_id, epoch=date_range_begin
         )
-        tle = tle_schemas.TLE.model_validate(tle_model)
+        if tle_model is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No TLE found for norad_id {parameters.norad_id}",
+            )
+
+        tle = tle_schemas.TLE.model_validate(tle_model.__dict__)
 
         if not tle:
             raise HTTPException(
@@ -76,13 +85,14 @@ class EphemerisService:
             )
 
         # Perform ephemeris computation in a thread to avoid blocking the event loop
-        ephem = await anyio.to_thread.run_sync(
+        eph_func = partial(
             compute_tle_ephemeris,
-            date_range_begin,
-            date_range_end,
-            step_size,
-            tle,
+            begin=date_range_begin,
+            end=date_range_end,
+            step_size=step_size,
+            tle=tle,
         )
+        ephem = await anyio.to_thread.run_sync(eph_func)
 
         return ephem
 
@@ -111,13 +121,14 @@ class EphemerisService:
         JPLEphemeris
             The computed JPL ephemeris for the specified date range.
         """
-        return await anyio.to_thread.run_sync(
+        eph_func = partial(
             compute_jpl_ephemeris,
-            date_range_begin,
-            date_range_end,
-            step_size,
-            parameters.naif_id,
+            begin=date_range_begin,
+            end=date_range_end,
+            step_size=step_size,
+            naif_id=parameters.naif_id,
         )
+        return await anyio.to_thread.run_sync(eph_func)
 
     async def get_spice_ephem(
         self,
@@ -144,14 +155,15 @@ class EphemerisService:
         SPICEEphemeris
             The computed SPICE ephemeris for the specified date range.
         """
-        return await anyio.to_thread.run_sync(
+        eph_func = partial(
             compute_spice_ephemeris,
-            date_range_begin,
-            date_range_end,
-            step_size,
-            parameters.spice_kernel_url,
-            parameters.naif_id,
+            begin=date_range_begin,
+            end=date_range_end,
+            step_size=step_size,
+            spice_kernel_url=parameters.spice_kernel_url,
+            naif_id=parameters.naif_id,
         )
+        return await anyio.to_thread.run_sync(eph_func)
 
     async def get_ground_ephem(
         self,
@@ -178,15 +190,16 @@ class EphemerisService:
         GroundEphemeris
             The computed ground ephemeris for the specified date range.
         """
-        return await anyio.to_thread.run_sync(
+        eph_func = partial(
             compute_ground_ephemeris,
-            date_range_begin,
-            date_range_end,
-            step_size,
-            parameters.longitude,
-            parameters.latitude,
-            parameters.height,
+            begin=date_range_begin,
+            end=date_range_end,
+            step_size=step_size,
+            longitude=Longitude(parameters.longitude * u.deg),
+            latitude=Latitude(parameters.latitude * u.deg),
+            height=parameters.height * u.m,
         )
+        return await anyio.to_thread.run_sync(eph_func)
 
     async def get(
         self,
