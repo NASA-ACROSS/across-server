@@ -1,7 +1,8 @@
-from datetime import datetime
-from uuid import UUID
+from typing import Annotated
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
+
+from across_server.routes.v1.tools.visibility_calculator.schemas import VisibilityRead
 
 router = APIRouter(
     prefix="/visibility-calculator",
@@ -25,7 +26,10 @@ router = APIRouter(
         },
     },
 )
-def visibility_calculator(
-    begin: datetime, end: datetime, ra: float, dec: float, instrument: UUID
+async def visibility_calculator(
+    parameters: Annotated[VisibilityRead, Query()],
 ) -> dict:
-    return {}
+    visibility: dict = {}
+    #    visibility = await service.visibility_calculator(**parameters.model_dump())
+
+    return visibility
