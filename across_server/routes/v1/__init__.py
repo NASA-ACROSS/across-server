@@ -11,6 +11,7 @@ from . import (
     schedule,
     telescope,
     tle,
+    tools,
     user,
 )
 
@@ -31,3 +32,4 @@ api.include_router(observatory.router)
 api.include_router(telescope.router)
 api.include_router(instrument.router)
 api.include_router(observation.router)
+api.include_router(tools.router)
