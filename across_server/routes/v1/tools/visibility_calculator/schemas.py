@@ -33,7 +33,8 @@ class ConstraintReason(BaseSchema):
 
 
 class VisibilityWindow(BaseSchema):
-    """Visibility Window"""
+    """Represents a Visibility Window with max visibility duration and
+    information about the start and end constraints reason."""
 
     window: Window
     max_visibility_duration: int
@@ -73,7 +74,6 @@ class VisibilityResult(VisibilityRead):
     """
     A Pydantic model class representing the visibility calculation parameters.
 
-    Inherits from VisibilityRead and adds no additional fields.
     This class is used for visibility calculations in the ACROSS SSA system.
     """
 
@@ -105,3 +105,26 @@ class JointVisibilityRead(VisibilityRead):
     """
 
     instrument_ids: list[UUID]
+
+
+class JointVisibilityResult(VisibilityRead):
+    """
+    A Pydantic model class representing the joint visibility calculation
+    parameters.
+
+    This class is used for joint visibility calculations in the ACROSS SSA
+    system.
+
+    Parameters
+    ----------
+    instrument_ids: list[UUID]
+        List of instrument IDs to check visibility against
+    visibility_windows: list[VisibilityWindow]
+        List of joint visibility windows for all the instruments
+    observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]
+        Dictionary mapping instrument IDs to their respective visibility windows
+    """
+
+    instrument_ids: list[UUID]
+    visibility_windows: list[VisibilityWindow]
+    observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]

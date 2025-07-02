@@ -26,6 +26,42 @@ from ...tle.service import TLEService
 
 
 class EphemerisService:
+    """
+    Service for computing ephemeris data for various observatory and ephemeris
+    methods.
+
+    This service provides methods to compute ephemeris data for TLE, JPL,
+    SPICE, and ground-based observatories. It retrieves the necessary
+    parameters from the database and computes the ephemeris data for a given
+    date range. The computations are performed in a separate thread to avoid
+    blocking the event loop.
+
+    Methods
+    -------
+    get_tle_ephem(parameters: TLEParameters, date_range_begin: datetime,
+                  date_range_end: datetime, step_size: int = 60) -> Ephemeris
+        Computes a TLE ephemeris for the specified date range.
+
+    get_jpl_ephem(parameters: JPLParameters, date_range_begin: datetime,
+                  date_range_end: datetime, step_size: int = 60) -> Ephemeris
+        Computes a JPL ephemeris for the specified date range.
+
+    get_spice_ephem(parameters: SPICEParameters, date_range_begin: datetime,
+                    date_range_end: datetime, step_size: int = 60) -> Ephemeris
+        Computes a SPICE ephemeris for the specified date range.
+
+    get_ground_ephem(parameters: GroundParameters, date_range_begin: datetime,
+                     date_range_end: datetime, step_size: int = 60) -> Ephemeris
+        Computes a ground ephemeris for the specified date range.
+
+    get(observatory_id: UUID, date_range_begin: datetime,
+        date_range_end: datetime, step_size: int = 60) -> Ephemeris
+        Retrieves the ephemeris data for a given observatory ID and date range.
+        It checks the observatory's ephemeris types and computes the appropriate
+        ephemeris based on the available parameters. If no valid ephemeris
+        type is found, it raises a HTTPException.
+    """
+
     def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
         self.db: AsyncSession = db
 
@@ -37,8 +73,7 @@ class EphemerisService:
         step_size: int = 60,
     ) -> Ephemeris:
         """
-        Retrieve the TLE Ephemeris for a given observatory TLE ephemeris
-        parameters.
+        Computes a TLE ephemeris for the specified date range.
 
         Parameters
         ----------
@@ -274,6 +309,7 @@ class EphemerisService:
                     date_range_end=date_range_end,
                     step_size=step_size,
                 )
-        raise ValueError(
-            f"No valid ephemeris type found for observatory {observatory_id}"
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No valid ephemeris type found for observatory {observatory_id}",
         )
