@@ -10,12 +10,11 @@ from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.routes.v1.telescope.service import TelescopeService
-from across_server.routes.v1.tools.ephemeris.service import EphemerisService
-
 from .....db.database import get_session
 from ...instrument.schemas import Instrument as InstrumentSchema
 from ...instrument.service import InstrumentService
+from ...telescope.service import TelescopeService
+from ...tools.ephemeris.service import EphemerisService
 
 
 class EphemerisVisibilityService:
@@ -75,4 +74,5 @@ class EphemerisVisibilityService:
             observatory_id=telescope.observatory_id,
         )
         visibility = await anyio.to_thread.run_sync(vis_function)
+
         return visibility
