@@ -259,7 +259,27 @@ class EphemerisService:
 
         # Obtain the observatory that hosts this telescope
         observatory_model = await ObservatoryService(self.db).get(observatory_id)
+        if observatory_model is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Observatory with ID {observatory_id} not found",
+            )
         observatory = observatory_schemas.Observatory.model_validate(observatory_model)
+
+        # Check if the requested date range is within the observatory's
+        # operational range (if defined)
+        if observatory.operational is not None and (
+            observatory.operational.begin
+            and observatory.operational.end
+            and (
+                date_range_begin < observatory.operational.begin
+                or date_range_end > observatory.operational.end
+            )
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Date range {date_range_begin} to {date_range_end} is outside the operational range of the observatory {observatory_id}",
+            )
 
         # Compute Ephemeris
         ephemeris_types = observatory.ephemeris_types

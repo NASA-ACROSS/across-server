@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
+
+from pydantic import model_validator
 
 from ....core.enums import ObservatoryType
 from ....core.enums.ephemeris_type import EphemerisType
 from ....core.schemas.base import BaseSchema, IDNameSchema
+from ....core.schemas.date_range import DateRange
 
 
 class TLEParameters(BaseSchema):
@@ -63,6 +67,26 @@ class ObservatoryBase(BaseSchema):
     type: ObservatoryType
     telescopes: list[IDNameSchema] | None = None
     ephemeris_types: list[ObservatoryEphemerisType] | None = None
+    operational: DateRange
+
+    @model_validator(mode="before")
+    def validate_operational_date(cls, values: Any) -> dict:
+        """
+        Validates the operational_date field to ensure it is not None.
+        If it is None, it sets it to an empty DateRange.
+        """
+        if not isinstance(values, dict):
+            values = values.__dict__
+
+        # Fetch operational begin and end dates, if they don't exist, set defaults
+        begin = values.get("operational_begin_date", "1900-01-01T00:00:00")
+        end = values.get("operational_end_date", None) or "2099-12-31T23:59:59"
+        operational_date = DateRange(begin=begin, end=end)
+        values["operational_date"] = operational_date.model_dump()
+        values.pop("operational_begin_date", None)
+        values.pop("operational_end_date", None)
+
+        return values
 
 
 class Observatory(ObservatoryBase):
