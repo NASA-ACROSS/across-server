@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from across_server.routes.v1.tools.visibility_calculator.service import (
-    EphemerisVisibilityService,
+    VisibilityService,
 )
 
 from .schemas import VisibilityRead, VisibilityResult
@@ -34,9 +34,7 @@ router = APIRouter(
 async def visibility_calculator(
     instrument_id: UUID,
     parameters: Annotated[VisibilityRead, Query()],
-    visibility_calculator: Annotated[
-        EphemerisVisibilityService, Depends(EphemerisVisibilityService)
-    ],
+    visibility_calculator: Annotated[VisibilityService, Depends(VisibilityService)],
 ) -> VisibilityResult:
     print(parameters.model_dump())
     visibility = await visibility_calculator.get(

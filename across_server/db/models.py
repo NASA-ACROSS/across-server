@@ -26,6 +26,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
+from ..core.enums.visibility_type import VisibilityType
 from .config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
@@ -457,6 +458,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     filters: Mapped[list["Filter"]] = relationship(
         back_populates="instrument", lazy="selectin", cascade="all,delete"
     )
+    visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     constraints: Mapped[list["Constraints"]] = relationship(
         secondary=instrument_constraint,
         back_populates="instruments",

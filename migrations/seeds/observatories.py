@@ -47,7 +47,7 @@ tle_parameters: list[TLEParameters] = [
     TLEParameters(
         id=uuid.UUID("6c817107-1aed-42a3-9f0f-90a1e17c395a"),
         observatory_id=sandy_observatory.id,
-        norad_id=123456,
+        norad_id=28485,
         norad_satellite_name="SANDY",
     )
 ]

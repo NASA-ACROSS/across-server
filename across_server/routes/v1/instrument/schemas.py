@@ -6,6 +6,7 @@ from datetime import datetime
 from across.tools.visibility.constraints import Constraint
 from pydantic import TypeAdapter
 
+from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
 from ..footprint.schemas import Footprint, Point
@@ -41,6 +42,7 @@ class InstrumentBase(BaseSchema):
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
     constraints: list[Constraint] | None = None
+    visibility_type: VisibilityType | None = None
 
 
 class Instrument(InstrumentBase):
@@ -81,6 +83,7 @@ class Instrument(InstrumentBase):
             constraints=ConstraintsAdaptor.validate_python(
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
+            visibility_type=obj.visibility_type,
         )
 
 
