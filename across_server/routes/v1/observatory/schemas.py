@@ -82,7 +82,7 @@ class ObservatoryBase(BaseSchema):
         begin = values.get("operational_begin_date", "1900-01-01T00:00:00")
         end = values.get("operational_end_date", None) or "2099-12-31T23:59:59"
         operational_date = DateRange(begin=begin, end=end)
-        values["operational_date"] = operational_date.model_dump()
+        values["operational"] = operational_date.model_dump()
         values.pop("operational_begin_date", None)
         values.pop("operational_end_date", None)
 
