@@ -18,6 +18,8 @@ from astropy.coordinates import Latitude, Longitude  # type: ignore[import-untyp
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from across_server.routes.v1.tle.exceptions import TLENotFoundException
+
 from .....core.enums.ephemeris_type import EphemerisType
 from .....db.database import get_session
 from ...observatory import schemas as observatory_schemas
@@ -106,9 +108,8 @@ class EphemerisService:
             norad_id=parameters.norad_id, epoch=date_range_begin
         )
         if tle_model is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No TLE found for norad_id {parameters.norad_id}",
+            raise TLENotFoundException(
+                norad_id=parameters.norad_id, epoch=date_range_begin
             )
 
         tle = tle_schemas.TLE.model_validate(tle_model.__dict__)
