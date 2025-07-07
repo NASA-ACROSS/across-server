@@ -14,13 +14,14 @@ from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from across_server.core.enums.visibility_type import VisibilityType
-
+from .....core.enums.visibility_type import VisibilityType
 from .....db.database import get_session
+from ...instrument.exceptions import InstrumentNotFoundException
 from ...instrument.schemas import Instrument as InstrumentSchema
 from ...instrument.service import InstrumentService
 from ...telescope.service import TelescopeService
 from ...tools.ephemeris.service import EphemerisService
+from .exceptions import VisibilityConstraintsNotFoundException
 
 
 class VisibilityService:
@@ -48,10 +49,7 @@ class VisibilityService:
         # Obtain constraint definitions
         constraints = instrument.constraints
         if constraints is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Instrument {instrument.name} has no constraints defined.",
-            )
+            raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
 
         # Compute Ephemeris
         ephemeris = await EphemerisService(self.db).get(
@@ -90,10 +88,7 @@ class VisibilityService:
         # Read in the instrument from UUID
         instrument_model = await InstrumentService(self.db).get(instrument_id)
         if instrument_model is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Instrument with ID {instrument_id} not found.",
-            )
+            raise InstrumentNotFoundException(instrument_id)
 
         # Convert the instrument model to a schema
         instrument = InstrumentSchema.from_orm(instrument_model)

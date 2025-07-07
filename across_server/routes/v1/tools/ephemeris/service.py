@@ -3,7 +3,6 @@ from functools import partial
 from typing import Annotated
 from uuid import UUID
 
-import anyio
 import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
 from across.tools.core.schemas import tle as tle_schemas
@@ -15,16 +14,20 @@ from across.tools.ephemeris import (
     compute_tle_ephemeris,
 )
 from astropy.coordinates import Latitude, Longitude  # type: ignore[import-untyped]
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from across_server.routes.v1.tle.exceptions import TLENotFoundException
 
 from .....core.enums.ephemeris_type import EphemerisType
 from .....db.database import get_session
 from ...observatory import schemas as observatory_schemas
+from ...observatory.exceptions import ObservatoryNotFoundException
 from ...observatory.service import ObservatoryService
+from ...tle.exceptions import TLENotFoundException
 from ...tle.service import TLEService
+from .exceptions import (
+    EphemerisOutsideOperationalRangeException,
+    NoEphemerisTypesFoundException,
+)
 
 
 class EphemerisService:
@@ -113,12 +116,6 @@ class EphemerisService:
             )
 
         tle = tle_schemas.TLE.model_validate(tle_model.__dict__)
-
-        if not tle:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No TLE found for norad_id {parameters.norad_id}",
-            )
 
         # Perform ephemeris computation in a thread to avoid blocking the event loop
         eph_func = partial(
@@ -261,10 +258,7 @@ class EphemerisService:
         # Obtain the observatory that hosts this telescope
         observatory_model = await ObservatoryService(self.db).get(observatory_id)
         if observatory_model is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Observatory with ID {observatory_id} not found",
-            )
+            raise ObservatoryNotFoundException(observatory_id)
         observatory = observatory_schemas.Observatory.model_validate(observatory_model)
 
         # Check if the requested date range is within the observatory's
@@ -277,18 +271,17 @@ class EphemerisService:
                 or date_range_end > observatory.operational.end
             )
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Date range {date_range_begin} to {date_range_end} is outside the operational range of the observatory {observatory_id}",
+            raise EphemerisOutsideOperationalRangeException(
+                observatory_id=observatory_id,
+                date_range_begin=date_range_begin,
+                date_range_end=date_range_end,
             )
 
         # Compute Ephemeris
         ephemeris_types = observatory.ephemeris_types
         if ephemeris_types is None or len(ephemeris_types) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No ephemeris types found for observatory {observatory_id}",
-            )
+            raise NoEphemerisTypesFoundException(observatory_id=observatory_id)
+
         # Sort ephemeris types by priority
         ephemeris_types.sort(key=lambda x: x.priority)
 
@@ -330,7 +323,4 @@ class EphemerisService:
                     date_range_end=date_range_end,
                     step_size=step_size,
                 )
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No valid ephemeris type found for observatory {observatory_id}",
-        )
+        raise NoEphemerisTypesFoundException(observatory_id=observatory_id)
