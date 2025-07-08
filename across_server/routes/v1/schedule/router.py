@@ -39,10 +39,7 @@ async def get_many(
 ) -> Page[schemas.Schedule]:
     schedule_tuples = await service.get_many(data=data)
 
-    if len(schedule_tuples):
-        total_number = schedule_tuples[0][1]
-    else:
-        total_number = 0
+    total_number = schedule_tuples[0][1] if schedule_tuples else 0
 
     schedules = [tuple[0] for tuple in schedule_tuples]
     return Page[schemas.Schedule].model_validate(
@@ -73,10 +70,7 @@ async def get_history(
 ) -> Page[schemas.Schedule]:
     schedule_tuples = await service.get_history(data=data)
 
-    if len(schedule_tuples):
-        total_number = schedule_tuples[0][1]
-    else:
-        total_number = 0
+    total_number = schedule_tuples[0][1] if schedule_tuples else 0
 
     schedules = [tuple[0] for tuple in schedule_tuples]
     return Page[schemas.Schedule].model_validate(
