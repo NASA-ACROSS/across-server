@@ -83,7 +83,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          # For pushes, github.event.pull_request.head.sha is empty,
+          # so checkout falls back to the default `github.ref`
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.2.0
