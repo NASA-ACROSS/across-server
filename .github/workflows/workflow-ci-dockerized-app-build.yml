@@ -122,6 +122,8 @@ jobs:
           # provenance is needed so there's not 'blank' entries in ecr as `-`
           # AWS handles metadata as a separate image entry.
           provenance: false
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == github.event.repository.default_branch }}
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
