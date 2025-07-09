@@ -50,11 +50,8 @@ NIRISS Footprint is a square footprint 133"x133"
 NIRISS_FOOTPRINT = square_footprint(arcsec_to_degree(133))
 
 """
-NIRCam Footprint is two uniform modules approx 132"x132" separated by 44"
-Each module has 4 ccds that are 64"x64"
-   The ccds have 5" chip gaps in the x direction, and 4" in the y direction
-This can be approximated by creating 2 132"x132" square footprints and shifting one
-   -22" in the x direction and shifting the other 22" in the x direction
+NIRCam Footprint is two uniform modules separated by 44". Each module has 4 ccds that are 64"x64",
+and the ccds have 5" chip gaps in the x direction, and 4" in the y direction
 
      64  5  64    44    64  5  64
     ----- -----        ----- -----
