@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from ... import auth
 from . import (
+    filter,
     group,
     instrument,
     observation,
@@ -31,3 +32,4 @@ api.include_router(observatory.router)
 api.include_router(telescope.router)
 api.include_router(instrument.router)
 api.include_router(observation.router)
+api.include_router(filter.router)
