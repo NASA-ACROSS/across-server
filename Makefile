@@ -1,6 +1,6 @@
 # Define env variables
 ENV ?= local
-ENVS = local test action prod
+ENVS = local test action staging prod
 IS_ENV_VALID := $(filter $(ENV), $(ENVS))
 
 # Docker
@@ -157,7 +157,7 @@ stop_all: check_prod ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
 build: check_prod ## Build the containers (does not run them)
-	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --build-arg APP_ENV=$(ENV)
+	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --build-arg BUILD_ENV=$(ENV)
 
 restart: ## Restarts the app container
 	@$(DOCKER_COMPOSE) restart
@@ -223,7 +223,7 @@ build_prod: ## Build the containers for production -- does not use docker-compos
 		--no-cache \
 		--platform linux/amd64 \
 		--ssh default \
-		--build-arg APP_ENV=prod .
+		--build-arg BUILD_ENV=prod .
 
 # Group: Cleaning
 clean: ## Clean virtual env

@@ -15,13 +15,11 @@ class Config(BaseSettings):
     ACROSS_DB_NAME: str = "across"
     ACROSS_DB_HOST: str = "localhost"
     ACROSS_DB_PORT: int = 5432
-    ACROSS_DB_ROLE_NAME: str = "across-plat-ue2-dev-DBAccessRole"
+    ACROSS_DB_ROLE_NAME: str = "DBAccessRole"
 
     DRIVER_NAME: str = "postgresql+asyncpg"
 
-    _cluster_name: str = (
-        f"across-plat-ue2-{core_config.APP_ENV.value.lower()}-core-server-db"
-    )
+    _cluster_name: str = f"{core_config.APP_ENV}-core-server-db"
 
     def DB_URI(self) -> URL:
         if core_config.is_local():
@@ -65,7 +63,7 @@ class Config(BaseSettings):
         identity = sts.get_caller_identity()
         account_id = identity["Account"]
         username = identity["Arn"].split("/")[-1]
-        role_arn = f"arn:aws:iam::{account_id}:role/{self.ACROSS_DB_ROLE_NAME}"
+        role_arn = f"arn:aws:iam::{account_id}:role/{core_config.APP_ENV}-{self.ACROSS_DB_ROLE_NAME}"
         response = sts.assume_role(RoleArn=role_arn, RoleSessionName=username)
 
         creds = response["Credentials"]

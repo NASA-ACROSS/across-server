@@ -8,4 +8,4 @@ services:
         - default
     command: make types
     environment:
-      APP_ENV: types
+      BUILD_ENV: types

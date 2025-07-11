@@ -8,4 +8,4 @@ services:
         - default
     command: make lint
     environment:
-      APP_ENV: lint
+      BUILD_ENV: lint

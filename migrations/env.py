@@ -44,7 +44,7 @@ def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-logger.info(f"Running migration for '{core_config.APP_ENV.value}' environment.")
+logger.info(f"Running migration for '{core_config.APP_ENV}'.")
 DATABASE_URL = config.DB_URI()
 
 

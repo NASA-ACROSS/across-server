@@ -9,7 +9,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Configure SSH to use the forwarded agent
 RUN echo "Host github.com\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null" >> /etc/ssh/ssh_config
 
-ARG APP_ENV=local
+ARG BUILD_ENV=local
 
 WORKDIR /app
 
@@ -21,13 +21,13 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy only the necessary files for dependency installation first
 COPY ./Makefile ./
-COPY ./requirements/${APP_ENV}.txt ./requirements/
+COPY ./requirements/${BUILD_ENV}.txt ./requirements/
 
 # Copy over the file holding the version for hatch build
 COPY ./across_server/__about__.py ./across_server/
 
 # Install dependencies
-RUN --mount=type=ssh make install ENV=${APP_ENV}
+RUN --mount=type=ssh make install ENV=${BUILD_ENV}
 
 
 FROM python:3.12-slim AS local
