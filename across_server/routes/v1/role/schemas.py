@@ -30,7 +30,3 @@ class User(BaseSchema):
 class Role(RoleBase):
     id: uuid.UUID
     users: list[User]
-
-
-class RoleCreate(RoleBase):
-    permissions: list[str]
