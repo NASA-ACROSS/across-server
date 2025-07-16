@@ -8,4 +8,4 @@ services:
         - default
     command: make test
     environment:
-      APP_ENV: test
+      BUILD_ENV: test

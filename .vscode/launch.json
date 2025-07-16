@@ -36,7 +36,8 @@
                 "-Xfrozen_modules=off"
             ],
             "env": {
-                "APP_ENV": "dev",
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
                 "AWS_PROFILE": "default-mfa",
                 "ACROSS_DB_USER": "core_server"
             },
@@ -61,7 +62,8 @@
                 "-Xfrozen_modules=off"
             ],
             "env": {
-                "APP_ENV": "dev",
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
                 "AWS_PROFILE": "default-mfa",
                 "ACROSS_DB_USER": "core_server"
             },

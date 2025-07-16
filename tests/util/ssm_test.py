@@ -35,21 +35,21 @@ class TestSSM:
 
     def test_get_parameter_local_environment(self) -> None:
         """Test parameter retrieval in local environment using env vars"""
-        with patch.object(config, "APP_ENV", Environments.LOCAL):
+        with patch.object(config, "RUNTIME_ENV", Environments.LOCAL):
             with patch.dict(os.environ, {"TEST_PARAM": "test_value"}):
                 value = SSM.get_parameter("TEST_PARAM")
                 assert value == "test_value"
 
     def test_get_parameter_local_environment_missing(self) -> None:
         """Test parameter retrieval in local environment when env var is missing"""
-        with patch.object(config, "APP_ENV", Environments.LOCAL):
+        with patch.object(config, "RUNTIME_ENV", Environments.LOCAL):
             with patch.dict(os.environ, clear=True):
                 value = SSM.get_parameter("MISSING_PARAM")
                 assert value == ""
 
     def test_get_parameter_non_local_no_region(self) -> None:
         """Test parameter retrieval fails when AWS_REGION is not set in non-local environment"""
-        with patch.object(config, "APP_ENV", Environments.PRODUCTION):
+        with patch.object(config, "RUNTIME_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", None):
                 with pytest.raises(ValueError, match="AWS_REGION must be set"):
                     SSM.get_parameter("TEST_PARAM")
@@ -61,7 +61,7 @@ class TestSSM:
             "Parameter": {"Value": "test_value"}
         }
 
-        with patch.object(config, "APP_ENV", Environments.PRODUCTION):
+        with patch.object(config, "RUNTIME_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 SSM.get_parameter("TEST_PARAM")
 
@@ -75,7 +75,7 @@ class TestSSM:
             "Parameter": {"Value": "test_value"}
         }
 
-        with patch.object(config, "APP_ENV", Environments.PRODUCTION):
+        with patch.object(config, "RUNTIME_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 SSM.get_parameter("TEST_PARAM", path="/custom/path")
 
@@ -90,7 +90,7 @@ class TestSSM:
             {"Error": {"Code": "ParameterNotFound"}}, "GetParameter"
         )
 
-        with patch.object(config, "APP_ENV", Environments.PRODUCTION):
+        with patch.object(config, "RUNTIME_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 with pytest.raises(ValueError, match="Parameter .* not found"):
                     SSM.get_parameter("MISSING_PARAM")
@@ -99,7 +99,7 @@ class TestSSM:
         """Test parameter exists but has no value"""
         mock_ssm_client.get_parameter.return_value = {"Parameter": {}}  # No Value key
 
-        with patch.object(config, "APP_ENV", Environments.PRODUCTION):
+        with patch.object(config, "RUNTIME_ENV", Environments.PRODUCTION):
             with patch.object(config, "AWS_REGION", "us-east-2"):
                 with pytest.raises(ValueError, match="Parameter .* has no value"):
                     SSM.get_parameter("INVALID_PARAM")

@@ -8,7 +8,9 @@ class BaseConfig(BaseSettings):
 
 
 class Config(BaseConfig):
-    APP_ENV: Environments = Environments.LOCAL
+    # this is auto-populated from infrastructure deployments and used to match naming convention for resources.
+    APP_ENV: str = "across-plat-lcl-local"
+    RUNTIME_ENV: Environments = Environments.LOCAL
     # need http:// prefix to prevent href removal in some email clients
     HOST: str = "http://localhost"
     PORT: int = 8000
@@ -29,7 +31,7 @@ class Config(BaseConfig):
     REQUEST_ID_HEADER: str = "X-Request-ID"
 
     def is_local(self) -> bool:
-        return self.APP_ENV == Environments.LOCAL
+        return self.RUNTIME_ENV == Environments.LOCAL
 
     def base_url(self) -> str:
         return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
