@@ -1,9 +1,8 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security, status
+from fastapi import APIRouter, Depends, status
 
-from .... import auth
 from . import schemas
 from .service import RoleService
 
@@ -56,11 +55,3 @@ async def get(
 ) -> schemas.Role:
     role_model = await service.get(role_id)
     return schemas.Role.model_validate(role_model)
-
-
-@router.post("/", dependencies=[Security(auth.global_access, scopes=["all:write"])])
-async def create(
-    service: Annotated[RoleService, Depends(RoleService)],
-    data: schemas.RoleCreate,
-) -> int:
-    return status.HTTP_200_OK
