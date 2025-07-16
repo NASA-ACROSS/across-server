@@ -119,7 +119,7 @@ jobs:
           implementation_ref: ${{ steps.config.outputs.implementation_ref }}
           implementation_github_pat: ${{ secrets.github-private-actions-pat }}
           environment: ${{ inputs.environment }}
-          namespace: ${{ needs.preview.outputs.namespace }}
+          namespace: ${{ inputs.environment }}
           repository: ${{ inputs.repository }}
           application: ${{ inputs.app }}
 
@@ -149,11 +149,8 @@ jobs:
             {
               "containerOverrides":[
                 {
-                  "name": "app",
-                  "environment": [{
-                    "name": "RUN_DB_MIGRATION",
-                    "value": "true"
-                  }]
+                  "name": "${{ inputs.app }}",
+                  "command": ["alembic", "upgrade", "head"]
                 }
               ]
             }

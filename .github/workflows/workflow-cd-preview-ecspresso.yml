@@ -185,11 +185,6 @@ jobs:
           repository: ${{ inputs.repository }}
           application: ${{ inputs.app }}
 
-      - run: |
-          echo "matrix.env: ${{ matrix.env }}"
-          echo "output env: ${{ steps.environment.outputs.stage }}"
-          echo "output account_id: ${{ steps.environment.outputs.account-id }}"
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.2.0
         with:
