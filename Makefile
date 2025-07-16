@@ -216,14 +216,14 @@ migrate: ## Run the migrations for the database
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 
-# Group: Production
-build_prod: ## Build the containers for production -- does not use docker-compose
+# Group: Deployment
+build_deploy: ## Build the containers for deployment -- does not use docker-compose
 	@DOCKER_BUILDKIT=1 docker build \
 		-t across-server:$(IMAGE_TAG) \
 		--no-cache \
 		--platform linux/amd64 \
 		--ssh default \
-		--build-arg BUILD_ENV=prod .
+		--build-arg BUILD_ENV=deploy .
 
 # Group: Cleaning
 clean: ## Clean virtual env
