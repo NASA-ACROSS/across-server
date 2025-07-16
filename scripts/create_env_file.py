@@ -5,7 +5,8 @@ def create_env_file() -> None:
     env_file_path = ".env"
 
     env_vars = {
-        "APP_ENV": "local",
+        "APP_ENV": "across-plat-lcl-local",
+        "RUNTIME_ENV": "local",
         "ACROSS_DB_USER": "admin",
         "HOST": "http://localhost",
         "ACROSS_DB_PWD": "local",

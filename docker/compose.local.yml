@@ -12,7 +12,7 @@ services:
       - ./across_server/main.py:/app/across_server/main.py
       - ./across_server:/app/across_server
     environment:
-      APP_ENV: local
+      BUILD_ENV: local
     command: fastapi dev across_server/main.py --host 0.0.0.0 --port 8000
     ports:
       - 8000:8000
@@ -28,7 +28,7 @@ services:
     volumes:
       - across-pg-data:/var/lib/postgresql/data
     environment:
-      APP_ENV: local
+      BUILD_ENV: local
       POSTGRES_USER: ${ACROSS_DB_USER}
       POSTGRES_PASSWORD: ${ACROSS_DB_PWD}
       POSTGRES_DB: ${ACROSS_DB_NAME}
