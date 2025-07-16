@@ -105,6 +105,8 @@ jobs:
         id: build
         uses: cloudposse/github-action-docker-build-push@1.13.0
         with:
+          cache-to: ''
+          cache-from: ''
           organization: ${{ steps.lowercase.outputs.output-string }}
           repository: ${{ inputs.repository }}
           registry: ${{ secrets.registry }}
@@ -114,6 +116,8 @@ jobs:
           # provenance is needed so there's not 'blank' entries in ecr as `-`
           # AWS handles metadata as a separate image entry.
           provenance: false
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: true
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image

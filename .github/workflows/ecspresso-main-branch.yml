@@ -50,13 +50,11 @@ on:
         type: boolean
         required: false
         default: false
-
       image-name:
         description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
         required: false
         type: string
         default: ''
-
       app:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
@@ -81,7 +79,12 @@ on:
         required: false
 
 jobs:
-  ci:
+  ci-checks:
+    uses: ./.github/workflows/workflow-ci-checks.yml
+    secrets:
+      ssh-private-key: ${{secrets.ssh-private-key}}
+
+  ci-build:
     uses: ./.github/workflows/workflow-ci-dockerized-app-build.yml
     with:
       organization: ${{ inputs.organization }}
@@ -97,10 +100,10 @@ jobs:
 
   cd:
     uses: ./.github/workflows/workflow-cd-ecspresso.yml
-    needs: [ ci ]
+    needs: [ ci-checks, ci-build ]
     with:
-      image: ${{ needs.ci.outputs.image }}
-      tag: ${{ needs.ci.outputs.tag }}
+      image: ${{ needs.ci-build.outputs.image }}
+      tag: ${{ needs.ci-build.outputs.tag }}
       repository: ${{ inputs.repository }}
       environment: dev
       enable-migration: ${{ inputs.enable-migration }}

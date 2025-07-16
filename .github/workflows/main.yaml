@@ -19,8 +19,11 @@ jobs:
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
+      enable-migration: true
+      image-name: core-server
+      app: core-server
     secrets:
-      github-private-actions-pat: "${{ secrets.PUBLIC_AND_PRIVATE_REPO_ACCESS_TOKEN_REPO }}"
+      github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
       registry: "${{ secrets.ECR_REGISTRY }}"
       secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
       ecr-region: "${{ secrets.ECR_REGION }}"
