@@ -15,14 +15,14 @@ permissions:
   contents: read
 
 jobs:
+  is-release-pr:
+    uses: ./.github/workflows/workflow-ci-is-release-pr.yml
+
   do:
     uses: ./.github/workflows/ecspresso-feature-branch.yml
-    if: |-
-      # Run this when it is not a release PR
-      ${{ !contains(
-        github.event.pull_request.labels.*.name,
-        'autorelease: pending'
-      )}}
+    needs: is-release-pr
+    # run when _NOT_ release PR
+    if: ${{!fromJson(needs.is-release-pr.outputs.check)}}
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"

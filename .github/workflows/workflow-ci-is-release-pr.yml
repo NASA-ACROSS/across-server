@@ -1,0 +1,16 @@
+name: |-
+  Check if the PR is a a release PR by the label
+
+on:
+  workflow_call:
+    outputs:
+      check:
+        description: Is the PR a release PR
+        value: |-
+          ${{ contains(github.event.pull_request.labels.*.name, 'autorelease: pending') }}
+
+jobs:
+  is-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Use the output value `check`."
