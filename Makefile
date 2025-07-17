@@ -1,19 +1,21 @@
 # Define env variables
 ENV ?= local
-ENVS = local test action staging prod
-IS_ENV_VALID := $(filter $(ENV), $(ENVS))
+RUNTIME_ENVS = local dev staging prod
+BUILD_ENV ?= local
+BUILD_ENVS = local action deploy test lint format
+IS_BUILD_ENV_VALID := $(filter $(BUILD_ENV), $(BUILD_ENVS))
 
 # Docker
-DOCKER_COMPOSE_FILE = docker/compose.$(ENV).yml
+DOCKER_COMPOSE_FILE = docker/compose.$(BUILD_ENV).yml
 DOCKER_COMPOSE = docker compose -f ${DOCKER_COMPOSE_FILE} --env-file=.env
-IMAGE_TAG = $(shell git rev-parse --short HEAD)
+TAG = $(shell git rev-parse --short HEAD)
 
 # define directories
 VENV_DIR = .venv
 VENV_BIN = $(VENV_DIR)/bin
 REQ_DIR = requirements
-REQ_IN = $(REQ_DIR)/$(ENV).in
-REQ_TXT = $(REQ_DIR)/$(ENV).txt
+REQ_IN = $(REQ_DIR)/$(BUILD_ENV).in
+REQ_TXT = $(REQ_DIR)/$(BUILD_ENV).txt
 UV_INSTALL_SCRIPT = https://astral.sh/uv/install.sh
 
 # Detect installed tools
@@ -105,7 +107,7 @@ install_hooks: ## Install 'pre-commit' git hooks, only for local.
 
 lock: check_env venv ## Create or update the lockfile
 	@echo "Updating lockfile...";
-	@for env in $(ENVS); do \
+	@for env in $(BUILD_ENVS); do \
 		in_file=$(REQ_DIR)/$$env.in; \
 		out_file=$(REQ_DIR)/$$env.txt; \
 		echo "Compiling $$in_file -> $$out_file"; \
@@ -126,14 +128,20 @@ venv: venv_dir ### Create venv within specified env
 	fi;
 
 check_env: ### Check if the passed in ENV is valid
-	@if [ -z $(IS_ENV_VALID) ]; then \
-		echo "Invalid ENV: '$(ENV)'. Allowed values are: $(ENVS)"; \
+	@if [ -z $(IS_BUILD_ENV_VALID) ]; then \
+		echo "Invalid BUILD_ENV: '$(BUILD_ENV)'. Allowed values are: $(BUILD_ENVS)"; \
 		exit 1; \
 	fi
 
 check_prod: ### Check if the env is prod
 	@if [ $(ENV) == prod ]; then \
 		echo "This can only be run on non-production environments."; \
+		exit 1; \
+	fi
+
+local_only: ### Check if the env is prod
+	@if [ $(ENV) != local ]; then \
+		echo "This can only be run on the local environment."; \
 		exit 1; \
 	fi
 
@@ -147,29 +155,29 @@ mfa: ## Auth with AWS through MFA
 # Group: Development
 start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
 
-dev: check_prod ## Start the server in the terminal
+dev: local_only ## Start the server in the terminal
 	@$(VENV_BIN)/fastapi dev across_server/main.py
 
-stop: check_prod ## Stop the server container
+stop: local_only ## Stop the server container
 	@$(DOCKER_COMPOSE) down app
 
-stop_all: check_prod ## Stop all containers
+stop_all: local_only ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
-build: check_prod ## Build the containers (does not run them)
-	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --build-arg BUILD_ENV=$(ENV)
+build: ## Build the containers (does not run them)
+	@DOCKER_BUILDKIT=1 $(DOCKER_COMPOSE) build --build-arg BUILD_ENV=$(BUILD_ENV)
 
-restart: ## Restarts the app container
+restart: local_only ## Restarts the app container
 	@$(DOCKER_COMPOSE) restart
 
-reset: check_prod ## Resets the db containers and volumes
+reset: local_only ## Resets the db containers and volumes
 	@$(call ask,\
 		"Proceeding will reset the db and delete any existing data.", \
 		$(MAKE) stop_all && $(MAKE) start,\
 		"Reset aborted."\
 	);
 
-hard_reset: check_prod ## Hard reset and rebuild everything (basically `rm -rf` for the entire stack)
+hard_reset: local_only ## Hard reset and rebuild everything (basically `rm -rf` for the entire stack)
 	@$(call ask,\
 		"Proceeding will reset everything locally.", \
 		$(MAKE) stop_all && $(MAKE) rm_imgs && $(MAKE) start,\
@@ -179,7 +187,7 @@ hard_reset: check_prod ## Hard reset and rebuild everything (basically `rm -rf` 
 tail_logs: ## Output a tail of logs for the server
 	@$(DOCKER_COMPOSE) logs -ft app
 
-temp_run: check_prod ## Start a temporary container from an image with a bash shell for debugging
+temp_run: ## Start a temporary container from an image with a bash shell for debugging
 	@docker run --rm -it --entrypoint=/bin/bash across-server-app
 
 
@@ -202,28 +210,48 @@ rev: ## Create a new database revision (migration). Usage: `make rev REV_TITLE="
 		$(VENV_BIN)/alembic revision --autogenerate -m "$(REV_TITLE)"; \
 	fi
 
-seed: check_prod ## Seed the database with initial data (only used on local and dev environments)
+seed: ## Seed the database with initial data (only used on local and dev environments)
 	@if [ -n "$(filter $(ENV), local dev)" ]; then \
 		$(VENV_BIN)/python -m migrations.seed; \
 	else \
-		echo "Seeding is only allowed in ENVs: local, dev."; \
+		echo "Seeding is only allowed in runtime ENVs: local, dev."; \
 	fi
 
 migrate: ## Run the migrations for the database
-	@$(VENV_BIN)/alembic upgrade head
+	@if [ -n "$(filter $(ENV), local dev)" ]; then \
+		$(VENV_BIN)/alembic upgrade head
+	else \
+		echo "Migrations are only allowed in runtime ENVs: local, dev."; \
+	fi
 
 # Group: Running
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 
-# Group: Production
-build_prod: ## Build the containers for production -- does not use docker-compose
+# Group: Deployment
+push: ## Build, tag, and push an image to ECR
+	@aws ecr get-login-password \
+    	--region us-east-2 | \
+    	docker login \
+			--username AWS \
+			--password-stdin 905418122838.dkr.ecr.us-east-2.amazonaws.com
+
+	@$(MAKE) build_deploy TAG=$(TAG)
+
+	@docker tag \
+		core-server:$(TAG) \
+		905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server:$(TAG)
+
+	@docker push 905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server:$(TAG)
+
+build_deploy: ## Build the containers for deployment -- does not use docker-compose
 	@DOCKER_BUILDKIT=1 docker build \
-		-t across-server:$(IMAGE_TAG) \
+		-t core-server:$(TAG) \
 		--no-cache \
 		--platform linux/amd64 \
 		--ssh default \
-		--build-arg BUILD_ENV=prod .
+		--provenance false \
+		--build-arg BUILD_ENV=deploy .
 
 # Group: Cleaning
 clean: ## Clean virtual env

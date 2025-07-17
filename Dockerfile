@@ -23,9 +23,6 @@ ENV PYTHONUNBUFFERED=1
 COPY ./Makefile ./
 COPY ./requirements/${BUILD_ENV}.txt ./requirements/
 
-# Copy over the file holding the version for hatch build
-COPY ./across_server/__about__.py ./across_server/
-
 # Install dependencies
 RUN --mount=type=ssh make install ENV=${BUILD_ENV}
 
@@ -55,7 +52,7 @@ COPY ./across_server ./across_server
 COPY ./Makefile ./
 
 
-FROM python:3.12-slim AS prod
+FROM python:3.12-slim AS deploy
 WORKDIR /app
 
 COPY --from=build /app/.venv /app/.venv

@@ -5,9 +5,16 @@ name: |-
 
 on:
   workflow_call:
-      secrets:
-        ssh-private-key:
-          required: true
+    inputs:
+      format-changed-files:
+        description: Only run formatting/linting on changed files.
+        required: false
+        default: true
+        type: boolean
+
+    secrets:
+      ssh-private-key:
+        required: true
 
 
 jobs:
@@ -21,7 +28,7 @@ jobs:
         uses: astral-sh/ruff-action@v1
         with:
           args: format --check
-          changed-files: true
+          changed-files: ${{inputs.format-changed-files}}
 
   lint:
     runs-on: ubuntu-latest

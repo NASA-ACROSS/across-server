@@ -113,7 +113,7 @@ jobs:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
       image-name: ${{inputs.image-name}}
-      build-args: "BUILD_ENV=prod"
+      build-args: "BUILD_ENV=deploy"
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}

@@ -16,18 +16,6 @@ maintainers = [
 ]
 requires-python = ">=3.12"
 
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["across_server"]
-[tool.hatch.version]
-path = "across_server/__about__.py"
-
-[tool.pytest]
-asyncio_mode = "auto"
-
 [tool.mypy]
 files = ["."]
 plugins = ['pydantic.mypy']
