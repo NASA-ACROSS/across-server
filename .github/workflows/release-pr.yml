@@ -1,0 +1,29 @@
+name: Release PR
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  deployments: write
+  pull-requests: write
+  contents: read
+
+jobs:
+    ci-checks:
+      uses: ./.github/workflows/workflow-ci-checks.yml
+      if: |-
+        # Run this only when it is a release PR
+        ${{ contains(
+          github.event.pull_request.labels.*.name,
+          'autorelease: pending'
+        )}}
+      with:
+        format-changed-files: true
+      secrets:
+        ssh-private-key: ${{ secrets.ACROSS_TOOLS_SSH_KEY }}

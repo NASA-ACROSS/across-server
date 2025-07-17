@@ -3,11 +3,6 @@ on:
   release:
     types: [published]
 
-  # TODO: remove this once tests are done
-  pull_request:
-    branches: [ 'main' ]
-    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
-
 
 permissions:
   id-token: write
@@ -23,9 +18,8 @@ jobs:
     uses: ./.github/workflows/ecspresso-release.yml
     with:
       organization: "${{ github.event.repository.owner.login }}"
-      #version: ${{ github.event.release.tag_name }}
-      version: "v0.0.1"
-      # ECR repository downstream
+      version: ${{ github.event.release.tag_name }}
+      # ECR repository name used downstream
       repository: core-server
       app: core-server
       enable-migration: true

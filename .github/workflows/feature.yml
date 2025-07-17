@@ -17,6 +17,12 @@ permissions:
 jobs:
   do:
     uses: ./.github/workflows/ecspresso-feature-branch.yml
+    if: |-
+      # Run this when it is not a release PR
+      ${{ !contains(
+        github.event.pull_request.labels.*.name,
+        'autorelease: pending'
+      )}}
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"

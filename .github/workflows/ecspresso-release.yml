@@ -89,7 +89,6 @@ jobs:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
       version: ${{ inputs.version }}
-      test-sha: 23402e130fe09106bdd5b096ba5c64bfb2b4c5bb
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}

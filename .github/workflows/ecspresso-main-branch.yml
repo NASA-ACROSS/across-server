@@ -79,18 +79,13 @@ on:
         required: false
 
 jobs:
-  ci-checks:
-    uses: ./.github/workflows/workflow-ci-checks.yml
-    secrets:
-      ssh-private-key: ${{secrets.ssh-private-key}}
-
-  ci-build:
+  ci:
     uses: ./.github/workflows/workflow-ci-dockerized-app-build.yml
     with:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
       image-name: ${{ inputs.image-name }}
-      build-args: "BUILD_ENV=prod"
+      build-args: "BUILD_ENV=deploy"
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
@@ -100,10 +95,10 @@ jobs:
 
   cd:
     uses: ./.github/workflows/workflow-cd-ecspresso.yml
-    needs: [ ci-checks, ci-build ]
+    needs: [ ci ]
     with:
-      image: ${{ needs.ci-build.outputs.image }}
-      tag: ${{ needs.ci-build.outputs.tag }}
+      image: ${{ needs.ci.outputs.image }}
+      tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
       environment: dev
       enable-migration: ${{ inputs.enable-migration }}
@@ -113,6 +108,12 @@ jobs:
       secret-outputs-passphrase: "${{ secrets.secret-outputs-passphrase }}"
       github-private-actions-pat: "${{ secrets.github-private-actions-pat }}"
 
-  # release:
-  #   uses:  ./.github/workflows/workflow-controller-draft-release.yml
-  #   needs: [ cd ]
+  release-please:
+    runs-on: ubuntu-latest
+    needs: [cd]
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

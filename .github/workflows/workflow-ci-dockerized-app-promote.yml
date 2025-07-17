@@ -58,11 +58,6 @@ on:
         required: false
         type: string
         default: ''
-      # TODO: delete once testing is done
-      test-sha:
-        description: "Override SHA for testing"
-        required: false
-        type: string
     secrets:
       ecr-region:
         description: "ECR AWS region"
