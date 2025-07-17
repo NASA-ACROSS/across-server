@@ -1,0 +1,30 @@
+name: Lint
+
+# Lint should run on all files regardless of PR type e.g. Feature, Release, etc
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ACROSS_TOOLS_SSH_KEY  }}
+
+      - name: Run linting
+        run: make lint
