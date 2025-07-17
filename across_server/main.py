@@ -12,6 +12,7 @@ from ratelimit.backends.simple import MemoryBackend
 
 from across_server import db
 
+from . import __version__
 from .core import config, limiter, logging
 from .core.middleware import LoggingMiddleware
 from .routes import v1
@@ -49,6 +50,7 @@ app = FastAPI(
     root_path=config.ROOT_PATH,
     lifespan=lifespan,
     openapi_tags=tags_metadata,
+    version=__version__,
 )
 
 app.add_middleware(LoggingMiddleware)

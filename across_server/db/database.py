@@ -1,17 +1,17 @@
 from collections.abc import AsyncGenerator
 
+import structlog
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from structlog import get_logger
 
 from ..core.config import config as core_config
 from .config import config
 
-logger = get_logger()
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 engine: AsyncEngine
 async_session: async_sessionmaker
@@ -25,18 +25,21 @@ def init() -> None:
     global engine
     global async_session
 
-    engine = create_async_engine(
-        url=config.DB_URI(),
-        pool_pre_ping=True,
-        connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
-    )
+    try:
+        engine = create_async_engine(
+            url=config.DB_URI(),
+            pool_pre_ping=True,
+            connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
+        )
 
-    async_session = async_sessionmaker(
-        autocommit=False,
-        expire_on_commit=False,
-        autoflush=False,
-        bind=engine,
-    )
+        async_session = async_sessionmaker(
+            autocommit=False,
+            expire_on_commit=False,
+            autoflush=False,
+            bind=engine,
+        )
+    except Exception as err:
+        logger.error("Unknown error while initializing the database.", err=err)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:

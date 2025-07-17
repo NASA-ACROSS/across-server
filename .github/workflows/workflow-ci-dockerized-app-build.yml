@@ -117,6 +117,7 @@ jobs:
           # AWS handles metadata as a separate image entry.
           provenance: false
         env:
+          # this is used as the flag for tagging the container with the latest commit on the branch.
           DOCKER_METADATA_PR_HEAD_SHA: true
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1

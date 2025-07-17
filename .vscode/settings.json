@@ -5,6 +5,8 @@
         "ASGI",
         "asyncio",
         "asyncpg",
+        "autoflush",
+        "autorelease",
         "autouse",
         "Bandpass",
         "blablacar",

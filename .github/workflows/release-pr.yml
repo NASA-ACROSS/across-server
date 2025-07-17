@@ -1,0 +1,29 @@
+name: Release PR
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  deployments: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  is-release-pr:
+    uses: ./.github/workflows/workflow-ci-is-release-pr.yml
+
+  ci-checks:
+    uses: ./.github/workflows/workflow-ci-checks.yml
+    needs: [is-release-pr]
+    # Run when it _IS_ a release PR
+    if: ${{fromJson(needs.is-release-pr.outputs.check)}}
+    with:
+      format-changed-files: false
+    secrets:
+      ssh-private-key: ${{ secrets.ACROSS_TOOLS_SSH_KEY }}
