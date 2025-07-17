@@ -53,6 +53,16 @@ on:
         description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
+      image-name:
+        description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
+        required: false
+        type: string
+        default: ''
+      # TODO: delete once testing is done
+      test-sha:
+        description: "Override SHA for testing"
+        required: false
+        type: string
     secrets:
       ecr-region:
         description: "ECR AWS region"
@@ -82,6 +92,9 @@ jobs:
   promote:
     runs-on: ["ubuntu-latest"]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.2.0
         with:
@@ -106,13 +119,12 @@ jobs:
           operation: 'lowercase'
           input-string: ${{ inputs.organization }}
 
-      - uses: cloudposse/github-action-docker-promote@0.1.1
+      - uses: ./.github/actions/promote
         id: promote
         with:
           registry: ${{ secrets.registry }}
-          organization:  ${{ steps.lowercase.outputs.output-string }}
           repository: ${{ steps.context.outputs.image }}
-          from: sha-${{ github.sha }}
+          from: sha-${{ inputs.test-sha || github.sha }}
           to: ${{ inputs.version }}
           use_metadata: false
 

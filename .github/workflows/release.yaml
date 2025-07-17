@@ -3,6 +3,17 @@ on:
   release:
     types: [published]
 
+  # TODO: remove this once tests are done
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+
+permissions:
+  id-token: write
+  deployments: write
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -12,11 +23,12 @@ jobs:
     uses: ./.github/workflows/ecspresso-release.yml
     with:
       organization: "${{ github.event.repository.owner.login }}"
-      repository: "${{ github.event.repository.name }}"
-      version: ${{ github.event.release.tag_name }}
+      #version: ${{ github.event.release.tag_name }}
+      version: "v0.0.1"
+      # ECR repository downstream
+      repository: core-server
       app: core-server
-      image-name: core-server
-      output-web-url: false
+      enable-migration: true
     secrets:
       github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
       registry: "${{ secrets.ECR_REGISTRY }}"

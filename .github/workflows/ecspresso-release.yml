@@ -56,6 +56,11 @@ on:
         type: boolean
         required: false
         default: false
+      image-name:
+        description: "Image name (excluding registry). Defaults to {{$organization/$repository}}."
+        required: false
+        type: string
+        default: ''
       app:
         description: "Application name. Used with monorepo pattern when there are several applications in the repo"
         required: false
@@ -84,6 +89,7 @@ jobs:
       organization: ${{ inputs.organization }}
       repository: ${{ inputs.repository }}
       version: ${{ inputs.version }}
+      test-sha: 23402e130fe09106bdd5b096ba5c64bfb2b4c5bb
     secrets:
       ecr-region: ${{ secrets.ecr-region }}
       ecr-iam-role: ${{ secrets.ecr-iam-role }}
@@ -114,7 +120,7 @@ jobs:
       image: ${{ needs.ci.outputs.image }}
       tag: ${{ needs.ci.outputs.tag }}
       repository: ${{ inputs.repository }}
-      environment: production
+      environment: prod
       enable-migration: ${{ inputs.enable-migration }}
       support-rollback: ${{ inputs.support-rollback }}
       app: ${{ inputs.app }}
