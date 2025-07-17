@@ -77,6 +77,8 @@ on:
         required: true
       ssh-private-key:
         required: false
+      release-please-token:
+        required: true
 
 jobs:
   ci:
@@ -114,6 +116,6 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          token: ${{ secrets.release-please-token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
