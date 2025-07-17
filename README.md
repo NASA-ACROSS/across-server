@@ -349,6 +349,70 @@ The CI pipeline runs on any PR against `main`. It is initialized through a GitHu
 
 TBD
 
+### Manually pushing an ECR image to the ECR repository
+
+This should generally only be used for testing purposes or emergencies where manual intervention is needed due to issues with the Github Actions deployment pipeline.
+
+The make command for all of these steps is below, but the documentation is included here for reference.
+
+```shell
+make push TAG=<replace-with-image-tag>
+```
+
+**Note:** This is ACROSS's custom docker build command for deployable containers, the `IMAGE_TAG` is optional here and can be whatever your want, but it is commonly a commit sha (e.g. `sha-1234567` or the long format `sha-1234567890abcdefghijklmnopqrstuvwxyz1234`) or a version (e.g. `v1.2.3` or for pre-release `v1.2.3.beta.1`)
+
+Use the following steps to authenticate and push an image to your repository. For additional registry authentication methods, including the Amazon ECR credential helper, see [Registry Authentication](https://docs.aws.amazon.com/AmazonECR/latest/userguide/Registries.html#registry_auth) .
+
+- Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
+
+    ```shell
+    aws ecr get-login-password \
+      --region us-east-2 | \
+    docker login \
+      --username AWS \
+      --password-stdin 905418122838.dkr.ecr.us-east-2.amazonaws.com
+    ```
+
+    **Note:** If you receive an error using the AWS CLI, make sure that you have the latest version of the AWS CLI and Docker installed.
+
+- Build your Docker image using the following command. For information on building a Docker file from scratch see the [instructions here](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html). You can skip this step if your image is already built:
+
+    ```shell
+    make build_deploy IMAGE_TAG=latest
+    ```
+
+    **Note:** This is ACROSS's custom docker build command for deployable containers
+
+- After the build completes, tag your ECR image so you can push the image to this repository:
+
+    ```shell
+    docker tag \
+    core-server:latest \
+    905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server:latest
+    ```
+
+    **Note:** Replace the ECR image tag with whatever tag is being used.
+
+- Run the following command to push this image to your newly created AWS repository:
+
+    ```shell
+    docker push 905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server:latest
+    ```
+
+    **Note:** ensure that the tags are the same. To see a list of tagged images run
+
+    ```shell
+    docker image list
+    ```
+
+    this will output a table similar to the following:
+
+    ```shell
+    REPOSITORY                                                 TAG       IMAGE ID       CREATED         SIZE
+    core-server                                                latest   57a9918e1dfc   40 seconds ago   209MB
+    905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server   latest   cd4c0a5c2b35   20 seconds ago   209MB
+    ```
+
 ### Helpful Docker Commands To Aid in Debugging a Dockerfile
 
 - Build a container separately from docker-compose
