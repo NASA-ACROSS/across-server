@@ -19,7 +19,7 @@ from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentTyp
 from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.build_records import ssa_records
 from migrations.db_util import arcsec_to_deg, parallelogram_footprint
-from migrations.versions.observatory_snapshots.hubble.hubble_filters_2025_07_09 import (
+from migrations.versions.observatory_snapshots.hubble.filters_2025_07_09 import (
     ACS_WFC_FILTERS,
     COS_FILTERS,
     STIS_FILTERS,
