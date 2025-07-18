@@ -358,10 +358,6 @@ jobs:
           repository: ${{ inputs.repository }}
           application: ${{ inputs.app }}
 
-      - run: |
-          echo "role: ${{ steps.environment.outputs.role }}-gha"
-          echo "app: ${{ inputs.app }}"
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2.0.0
         with:
