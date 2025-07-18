@@ -6,7 +6,12 @@ on:
     paths-ignore:
       # release-pr _should_ be the only PR to ever modify this.
       - across_server/__init__.py
-      - .**/**/*
+      - ".*"
+      - "**/.*"
+      - "**/.*/**"
+      - CHANGELOG.md
+      - Makefile
+      - release-please-config.json
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
