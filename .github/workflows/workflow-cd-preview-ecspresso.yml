@@ -239,7 +239,7 @@ jobs:
           taskdef-path: ${{ inputs.path }}
           mirror_to_s3_bucket: ${{ steps.environment.outputs.s3-bucket }}
           use_partial_taskdefinition: 'true'
-          timeout: 15m
+          timeout: 30m
         env:
           STAGE:  ${{ steps.environment.outputs.stage }}
           AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
