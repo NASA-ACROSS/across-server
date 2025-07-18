@@ -3,6 +3,10 @@ on:
   pull_request:
     branches: [ 'main' ]
     types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+    paths-ignore:
+      # release-pr _should_ be the only PR to ever modify this.
+      - across_server/__init__.py
+      - .**/**/*
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,14 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  is-release-pr:
-    uses: ./.github/workflows/workflow-ci-is-release-pr.yml
-
   do:
     uses: ./.github/workflows/ecspresso-feature-branch.yml
-    needs: is-release-pr
-    # run when _NOT_ release PR
-    if: ${{!fromJson(needs.is-release-pr.outputs.check)}}
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
