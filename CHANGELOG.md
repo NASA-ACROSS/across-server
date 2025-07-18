@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ACROSS-Team/across-server/compare/v0.1.0...v0.1.1) (2025-07-18)
+
+
+### Bug Fixes
+
+* **release:** run release-pr on push to main ([#300](https://github.com/ACROSS-Team/across-server/issues/300)) ([e8c5295](https://github.com/ACROSS-Team/across-server/commit/e8c529553c51c1efebaaceea3452d7d8574f4a56))
+
 ## 0.1.0 (2025-07-17)
 
 
