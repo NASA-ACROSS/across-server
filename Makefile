@@ -100,7 +100,7 @@ install: check_env venv ## Install dependencies from the lockfile for the specif
 install_hooks: ## Install 'pre-commit' git hooks, only for local.
 	@if [ $(ENV) == local ]; then \
 		echo "Installing pre-commit git hooks..."; \
-		pre-commit install; \
+		$(VENV_DIR)/pre-commit install; \
 	else \
 		echo "Not a git repository. Skipping pre-commit hooks installation."; \
 	fi

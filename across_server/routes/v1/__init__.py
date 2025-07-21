@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from ... import auth
+from ... import __version__, auth
 from . import (
     group,
     instrument,
@@ -14,7 +14,7 @@ from . import (
     user,
 )
 
-api = FastAPI()
+api = FastAPI(version=__version__)
 
 api.include_router(auth.router)
 api.include_router(permission.router)
