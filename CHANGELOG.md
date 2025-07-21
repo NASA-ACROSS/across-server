@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0](https://github.com/ACROSS-Team/across-server/compare/v0.1.1...v0.2.0) (2025-07-18)
+
+
+### Features
+
+* **lint:** add commitlint on PR titles ([#299](https://github.com/ACROSS-Team/across-server/issues/299)) ([9768191](https://github.com/ACROSS-Team/across-server/commit/976819146d2aba9fc74d45eaeb86db5538aef76f))
+
+
+### Bug Fixes
+
+* **deploy:** increase timeout to 30m ([ffa8311](https://github.com/ACROSS-Team/across-server/commit/ffa83118d70578d1c52f624335c0550574c0b81a))
+* do not cancel in progress for lint, it doesn't restart ([50c3e2b](https://github.com/ACROSS-Team/across-server/commit/50c3e2b27e7d08c864744ab3dbbf0d64262a36ce))
+* **gha:** proper glob matching for feature workflow trigger ([08dfe78](https://github.com/ACROSS-Team/across-server/commit/08dfe78bd3cd4b085d1ae434f882d375841e508d))
+* increase deploymnet timeout ([fc37748](https://github.com/ACROSS-Team/across-server/commit/fc3774855e1f609784a15d96a352132bed8f3a73))
+
 ## [0.1.1](https://github.com/ACROSS-Team/across-server/compare/v0.1.0...v0.1.1) (2025-07-18)
 
 
