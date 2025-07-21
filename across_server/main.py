@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
+from fastapi.responses import RedirectResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
 
@@ -82,6 +83,11 @@ app.add_middleware(
 async def get() -> str:
     logger.debug("health check!")
     return "ok"
+
+
+@app.get("/", include_in_schema=False)
+async def redirect():
+    return RedirectResponse(url="/docs")
 
 
 app.mount("/v1", v1.api)
