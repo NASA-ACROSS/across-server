@@ -219,7 +219,7 @@ seed: ## Seed the database with initial data (only used on local and dev environ
 
 migrate: ## Run the migrations for the database
 	@if [ -n "$(filter $(ENV), local dev)" ]; then \
-		$(VENV_BIN)/alembic upgrade head
+		$(VENV_BIN)/alembic upgrade head; \
 	else \
 		echo "Migrations are only allowed in runtime ENVs: local, dev."; \
 	fi
