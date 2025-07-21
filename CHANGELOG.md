@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1](https://github.com/ACROSS-Team/across-server/compare/v0.2.0...v0.2.1) (2025-07-21)
+
+
+### Bug Fixes
+
+* add missing backslash command for migrate ([#307](https://github.com/ACROSS-Team/across-server/issues/307)) ([b6e9edc](https://github.com/ACROSS-Team/across-server/commit/b6e9edc02425dc2cfdf44902b1c4ab7399bd3f9c))
+* add return type ([#309](https://github.com/ACROSS-Team/across-server/issues/309)) ([be251be](https://github.com/ACROSS-Team/across-server/commit/be251be2682254e7130dd59201d19c4104cb618e))
+* **docs:** display build version on subapps ([#305](https://github.com/ACROSS-Team/across-server/issues/305)) ([b270a68](https://github.com/ACROSS-Team/across-server/commit/b270a68ff5b58127dab8c4f1bfc3ea4b1a7c4b38))
+
 ## [0.2.0](https://github.com/ACROSS-Team/across-server/compare/v0.1.1...v0.2.0) (2025-07-18)
 
 
