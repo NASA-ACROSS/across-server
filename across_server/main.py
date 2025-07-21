@@ -86,7 +86,7 @@ async def get() -> str:
 
 
 @app.get("/", include_in_schema=False)
-async def redirect():
+async def redirect() -> RedirectResponse:
     return RedirectResponse(url="/docs")
 
 
