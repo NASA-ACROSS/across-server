@@ -6,9 +6,7 @@ on:
     paths-ignore:
       # release-pr _should_ be the only PR to ever modify this.
       - across_server/__init__.py
-      - ".*"
-      - "**/.*"
-      - "**/.*/**"
+      - .release-please-manifest.json
       - CHANGELOG.md
       - Makefile
       - release-please-config.json
