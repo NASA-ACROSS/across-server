@@ -5,6 +5,7 @@ from datetime import datetime
 
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
+from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint, Point
 
 
@@ -34,6 +35,7 @@ class InstrumentBase(BaseSchema):
     short_name: str
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
+    filters: list[Filter] = []
 
 
 class Instrument(InstrumentBase):
@@ -63,6 +65,7 @@ class Instrument(InstrumentBase):
             schemas.Telescope
         """
         footprints = [Footprint.from_orm(footprint) for footprint in obj.footprints]
+        filters = [Filter.model_validate(filter) for filter in obj.filters]
 
         return cls(
             id=obj.id,
@@ -70,6 +73,7 @@ class Instrument(InstrumentBase):
             short_name=obj.short_name,
             telescope=IDNameSchema(id=obj.telescope.id, name=obj.telescope.name),
             footprints=[footprint.polygon for footprint in footprints],
+            filters=filters,
             created_on=obj.created_on,
         )
 

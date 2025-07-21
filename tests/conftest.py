@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 from across_server.auth import strategies
-from across_server.db.models import Instrument, Observatory, Telescope
+from across_server.db.models import Filter, Instrument, Observatory, Telescope
 from across_server.util.email.service import EmailService
 
 
@@ -174,4 +174,17 @@ def mock_instrument_data(mock_telescope_data: Telescope) -> Instrument:
         short_name="TI",
         created_on=datetime.now(),
         telescope=mock_telescope_data,
+    )
+
+
+@pytest.fixture()
+def mock_filter_data(mock_instrument_data: Instrument) -> Filter:
+    return Filter(
+        id=uuid4(),
+        name="Test Filter",
+        created_on=datetime.now(),
+        min_wavelength=5000,
+        max_wavelength=6000,
+        instrument_id=mock_instrument_data.id,
+        is_operational=True,
     )
