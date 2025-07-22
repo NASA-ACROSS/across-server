@@ -25,6 +25,7 @@ class BaseSchema(BaseModel):
 class IDNameSchema(BaseSchema):
     id: UUID
     name: str
+    short_name: str | None
 
 
 class PrefixMixin:

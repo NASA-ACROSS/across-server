@@ -63,9 +63,17 @@ class Telescope(TelescopeBase):
             id=obj.id,
             name=obj.name,
             short_name=obj.short_name,
-            observatory=IDNameSchema(id=obj.observatory.id, name=obj.observatory.name),
+            observatory=IDNameSchema(
+                id=obj.observatory.id,
+                name=obj.observatory.name,
+                short_name=obj.observatory.short_name,
+            ),
             instruments=[
-                IDNameSchema(id=instrument.id, name=instrument.name)
+                IDNameSchema(
+                    id=instrument.id,
+                    name=instrument.name,
+                    short_name=instrument.short_name,
+                )
                 for instrument in obj.instruments
             ],
             created_on=obj.created_on,
