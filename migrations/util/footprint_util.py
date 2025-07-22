@@ -1,4 +1,7 @@
 import numpy as np
+from across.tools import Coordinate
+from across.tools import Polygon as AcrossPolygon
+from across.tools.footprint import Footprint
 from geoalchemy2 import WKBElement, shape
 from pydantic import BaseModel
 from shapely import Polygon
@@ -19,10 +22,8 @@ def arcmin_to_deg(arcmin: float) -> float:
     return arcmin / 60.0
 
 
-def arcsec_to_degree(arcsec: float) -> float:
-    """
-    Convert arcseconds to degrees.
-    """
+def arcsec_to_deg(arcsec: float) -> float:
+    """Convert arcseconds to degrees."""
     return arcsec / 3600.0
 
 
@@ -75,53 +76,6 @@ def rectangle_footprint(width_deg: float, height_deg: float) -> list[list[dict]]
     return [corners]
 
 
-def translate_footprint(
-    footprint: list[list[dict]], dx: float, dy: float
-) -> list[list[dict]]:
-    """
-    Translate a footprint by dx in x-direction and dy in y-direction.
-
-    Parameters:
-        footprint (list[list[dict]]): A footprint as a list of polygons, each defined by points with 'x' and 'y'.
-        dx (float): Translation in the x-direction.
-        dy (float): Translation in the y-direction.
-
-    Returns:
-        list[list[dict]]: Translated footprint in the same format.
-    """
-    return [
-        [{"x": point["x"] + dx, "y": point["y"] + dy} for point in polygon]
-        for polygon in footprint
-    ]
-
-
-def rotate_footprint(footprint: list[list[dict]], angle_deg: float) -> list[list[dict]]:
-    """
-    Rotate a footprint counter-clockwise around the origin by a given angle.
-
-    Parameters:
-        footprint (list[list[dict]]): A footprint as a list of polygons, each defined by points with 'x' and 'y'.
-        angle_deg (float): Rotation angle in degrees.
-
-    Returns:
-        list[list[dict]]: Rotated footprint in the same format.
-    """
-    angle_rad = np.radians(angle_deg)
-    cos_a = np.cos(angle_rad)
-    sin_a = np.sin(angle_rad)
-
-    return [
-        [
-            {
-                "x": point["x"] * cos_a - point["y"] * sin_a,
-                "y": point["x"] * sin_a + point["y"] * cos_a,
-            }
-            for point in polygon
-        ]
-        for polygon in footprint
-    ]
-
-
 def parallelogram_footprint(
     length_deg: float, width_deg: float, length_rotation: float, width_rotation: float
 ) -> list[list[dict]]:
@@ -163,75 +117,39 @@ def parallelogram_footprint(
     return [[{"x": coord[0], "y": coord[1]} for coord in rotated_coords.astype(object)]]
 
 
-def rectangle_footprint(width_deg: float, height_deg: float) -> list[list[dict]]:
-    """
-    Create a rectangular footprint with the given length, width.
-
-    Parameters:
-        length_deg (float): Total length of the rectangle
-        width_deg (float): Total width of the rectangle
-
-    Returns:
-        list[list[dict]]: A list of one polygon, each defined by a list of corner points.
-    """
-
-    # Half-dimensions
-    half_width = width_deg / 2.0
-    half_height = height_deg / 2.0
-
-    # Define corners before rotation (start bottom-left and go clockwise)
-    corners = [
-        {"x": -half_width, "y": -half_height},  # bottom-left
-        {"x": half_width, "y": -half_height},  # bottom-right
-        {"x": half_width, "y": half_height},  # top-right
-        {"x": -half_width, "y": half_height},  # top-left
-        {"x": -half_width, "y": -half_height},  # closing the loop
-    ]
-    return [corners]
-
-
-def translate_footprint(
-    footprint: list[list[dict]], dx: float, dy: float
+def project_footprint(
+    footprint: list[list[dict]],
+    ra_deg: float = 0.0,
+    dec_deg: float = 0.0,
+    angle_deg: float = 0.0,
 ) -> list[list[dict]]:
-    """
-    Translate a footprint by dx in x-direction and dy in y-direction.
+    """Project a footprint onto a celestial sphere at a given RA, Dec and angle.
 
     Parameters:
         footprint (list[list[dict]]): A footprint as a list of polygons, each defined by points with 'x' and 'y'.
-        dx (float): Translation in the x-direction.
-        dy (float): Translation in the y-direction.
-
-    Returns:
-        list[list[dict]]: Translated footprint in the same format.
-    """
-    return [
-        [{"x": point["x"] + dx, "y": point["y"] + dy} for point in polygon]
-        for polygon in footprint
-    ]
-
-
-def rotate_footprint(footprint: list[list[dict]], angle_deg: float) -> list[list[dict]]:
-    """
-    Rotate a footprint counter-clockwise around the origin by a given angle.
-
-    Parameters:
-        footprint (list[list[dict]]): A footprint as a list of polygons, each defined by points with 'x' and 'y'.
+        ra_deg (float): Right Ascension in degrees.
+        dec_deg (float): Declination in degrees.
         angle_deg (float): Rotation angle in degrees.
 
     Returns:
-        list[list[dict]]: Rotated footprint in the same format.
+        list[list[dict]]: Projected footprint in the same format.
     """
-    angle_rad = np.radians(angle_deg)
-    cos_a = np.cos(angle_rad)
-    sin_a = np.sin(angle_rad)
+    tools_footprint = Footprint(
+        detectors=[
+            AcrossPolygon(
+                coordinates=[
+                    Coordinate(ra=point["x"], dec=point["y"]) for point in detector
+                ]
+            )
+            for detector in footprint
+        ]
+    )
+
+    projected_footprint = tools_footprint.project(
+        coordinate=Coordinate(ra=ra_deg, dec=dec_deg), roll_angle=angle_deg
+    )
 
     return [
-        [
-            {
-                "x": point["x"] * cos_a - point["y"] * sin_a,
-                "y": point["x"] * sin_a + point["y"] * cos_a,
-            }
-            for point in polygon
-        ]
-        for polygon in footprint
+        [{"x": point.ra, "y": point.dec} for point in detector.coordinates]
+        for detector in projected_footprint.detectors
     ]

@@ -19,7 +19,7 @@ from sqlalchemy import orm
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.build_records import ssa_records
-from migrations.db_util import arcmin_to_deg
+from migrations.util.footprint_util import arcmin_to_deg
 from migrations.versions.model_snapshots import models_2025_05_15 as snapshot_models
 
 # revision identifiers, used by Alembic.

@@ -18,7 +18,7 @@ import migrations.versions.model_snapshots.models_2025_05_15 as snapshot_models
 from across_server.core.enums import InstrumentFOV, InstrumentType, ObservatoryType
 from across_server.core.enums.ephemeris_type import EphemerisType
 from migrations.build_records import ssa_records
-from migrations.db_util import arcmin_to_deg
+from migrations.util.footprint_util import arcmin_to_deg
 
 # revision identifiers, used by Alembic.
 revision: str = "ef89d3f04ff7"

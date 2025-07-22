@@ -1,8 +1,8 @@
 """jwst_observatory_migration
 
 Revision ID: 2c08825167f4
-Revises: d41e0c380a1f
-Create Date: 2025-07-08 13:50:51.430172
+Revises: 5f2fa1ad6811
+Create Date: 2025-07-22 13:50:51.430172
 
 """
 
@@ -18,18 +18,19 @@ import migrations.versions.model_snapshots.models_2025_06_18 as snapshot_models
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from across_server.core.enums.observatory_type import ObservatoryType
 from migrations.build_records import ssa_records
-from migrations.db_util import (
-    arcsec_to_degree,
+from migrations.util.footprint_util import (
+    arcsec_to_deg,
+    project_footprint,
     rectangle_footprint,
-    rotate_footprint,
     square_footprint,
-    translate_footprint,
 )
-from migrations.versions.filters.jwst import filters as JWST_FILTERS
+from migrations.versions.observatory_snapshots.jwst.filters_2025_07_22 import (
+    filters as JWST_FILTERS,
+)
 
 # revision identifiers, used by Alembic.
 revision: str = "2c08825167f4"
-down_revision: Union[str, None] = "d41e0c380a1f"
+down_revision: Union[str, None] = "5f2fa1ad6811"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -37,21 +38,22 @@ depends_on: Union[str, Sequence[str], None] = None
 MIRI Footprint is composed of 5 modules, but the true imaging detector is a rectangle
 of 74"x113" and rotated about 4.7degrees
 """
-MIRI_FOOTPRINT = rotate_footprint(
-    rectangle_footprint(
-        width_deg=arcsec_to_degree(74.0), height_deg=arcsec_to_degree(113.0)
-    ),
-    4.7,
+MIRI_FOOTPRINT = project_footprint(
+    rectangle_footprint(width_deg=arcsec_to_deg(74.0), height_deg=arcsec_to_deg(113.0)),
+    angle_deg=4.7,
 )
 
 """
 NIRISS Footprint is a square footprint 133"x133"
 """
-NIRISS_FOOTPRINT = square_footprint(arcsec_to_degree(133))
+NIRISS_FOOTPRINT = square_footprint(arcsec_to_deg(133))
 
 """
-NIRCam Footprint is two uniform modules separated by 44". Each module has 4 ccds that are 64"x64",
-and the ccds have 5" chip gaps in the x direction, and 4" in the y direction
+NIRCam Footprint is two uniform modules approx 132"x132" separated by 44"
+Each module has 4 ccds that are 64"x64"
+   The ccds have 5" chip gaps in the x direction, and 4" in the y direction
+This can be approximated by creating 2 132"x132" square footprints and shifting one
+   -22" in the x direction and shifting the other 22" in the x direction
 
      64  5  64    44    64  5  64
     ----- -----        ----- -----
@@ -73,41 +75,49 @@ I assume that my reference coordinate is at 0,0. For example, for the top right 
         32" is half the distance of the ccd, corresponding to the center of the desired ccd
 """
 
-nircam_ccd = square_footprint(length_deg=arcsec_to_degree(64))
+nircam_ccd = square_footprint(length_deg=arcsec_to_deg(64))
 NIRCAM_FOOTPRINT = [
     # The left module
     # top left: dx=-(22+64+5+32), dy=(2+32)
-    translate_footprint(
-        nircam_ccd, dx=-arcsec_to_degree(22 + 64 + 5 + 32), dy=arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd,
+        ra_deg=-arcsec_to_deg(22 + 64 + 5 + 32),
+        dec_deg=arcsec_to_deg(2 + 32),
     )[0],
     # top right: dx=-(22+32), dy=(2+32)
-    translate_footprint(
-        nircam_ccd, dx=-arcsec_to_degree(22 + 32), dy=arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd, ra_deg=-arcsec_to_deg(22 + 32), dec_deg=arcsec_to_deg(2 + 32)
     )[0],
     # bottom left: dx=-(22+32), dy=-(2+32)
-    translate_footprint(
-        nircam_ccd, dx=-arcsec_to_degree(22 + 32), dy=-arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd, ra_deg=-arcsec_to_deg(22 + 32), dec_deg=-arcsec_to_deg(2 + 32)
     )[0],
     # bottom right: dx=-(22+64+5+32), dy=-(2+32)
-    translate_footprint(
-        nircam_ccd, dx=-arcsec_to_degree(22 + 64 + 5 + 32), dy=-arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd,
+        ra_deg=-arcsec_to_deg(22 + 64 + 5 + 32),
+        dec_deg=-arcsec_to_deg(2 + 32),
     )[0],
     # The right module
     # top left: dx=(22+32). dy=(2+32)
-    translate_footprint(
-        nircam_ccd, dx=arcsec_to_degree(22 + 32), dy=arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd, ra_deg=arcsec_to_deg(22 + 32), dec_deg=arcsec_to_deg(2 + 32)
     )[0],
     # top right: dx=(22+64+5+32), dy=(2+32)
-    translate_footprint(
-        nircam_ccd, dx=arcsec_to_degree(22 + 64 + 5 + 32), dy=arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd,
+        ra_deg=arcsec_to_deg(22 + 64 + 5 + 32),
+        dec_deg=arcsec_to_deg(2 + 32),
     )[0],
     # bottom left: dx=(22+64+5+32), dy=-(2+32)
-    translate_footprint(
-        nircam_ccd, dx=arcsec_to_degree(22 + 64 + 5 + 32), dy=-arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd,
+        ra_deg=arcsec_to_deg(22 + 64 + 5 + 32),
+        dec_deg=-arcsec_to_deg(2 + 32),
     )[0],
     # bottom right: dx=(22+32), dy=-(2+32)
-    translate_footprint(
-        nircam_ccd, dx=arcsec_to_degree(22 + 32), dy=-arcsec_to_degree(2 + 32)
+    project_footprint(
+        nircam_ccd, ra_deg=arcsec_to_deg(22 + 32), dec_deg=-arcsec_to_deg(2 + 32)
     )[0],
 ]
 
@@ -133,26 +143,26 @@ I assume that my reference coordinate is at 0,0. For example, for the top right 
         18.5" is half the distance of the chip gap (37) in the y direction
         45" is half the distance of the ccd, corresponding to the center of the desired ccd
 """
-nirspec_ccd = square_footprint(arcsec_to_degree(90))
+nirspec_ccd = square_footprint(arcsec_to_deg(90))
 nirspec_footprint_non_rotated = [
     # Top left: dx=-(12+45) dy=(18.5+45)
-    translate_footprint(
-        nirspec_ccd, dx=-arcsec_to_degree(12 + 45), dy=arcsec_to_degree(18.5 + 45)
+    project_footprint(
+        nirspec_ccd, ra_deg=-arcsec_to_deg(12 + 45), dec_deg=arcsec_to_deg(18.5 + 45)
     )[0],
     # Top right: dx=(12+45) dy=(18.5+45)
-    translate_footprint(
-        nirspec_ccd, dx=arcsec_to_degree(12 + 45), dy=arcsec_to_degree(18.5 + 45)
+    project_footprint(
+        nirspec_ccd, ra_deg=arcsec_to_deg(12 + 45), dec_deg=arcsec_to_deg(18.5 + 45)
     )[0],
     # Bottom right: dx=(12+45) dy=-(18.5+45)
-    translate_footprint(
-        nirspec_ccd, dx=arcsec_to_degree(12 + 45), dy=-arcsec_to_degree(18.5 + 45)
+    project_footprint(
+        nirspec_ccd, ra_deg=arcsec_to_deg(12 + 45), dec_deg=-arcsec_to_deg(18.5 + 45)
     )[0],
     # Bottom left: dx=(12+45) dy=-(18.5+45)
-    translate_footprint(
-        nirspec_ccd, dx=-arcsec_to_degree(12 + 45), dy=-arcsec_to_degree(18.5 + 45)
+    project_footprint(
+        nirspec_ccd, ra_deg=-arcsec_to_deg(12 + 45), dec_deg=-arcsec_to_deg(18.5 + 45)
     )[0],
 ]
-NIRSPEC_FOOTPRINT = rotate_footprint(nirspec_footprint_non_rotated, 138.5)
+NIRSPEC_FOOTPRINT = project_footprint(nirspec_footprint_non_rotated, angle_deg=138.5)
 
 OBSERVATORY: dict = {
     "id": uuid.UUID("fefe0ddc-07af-4312-b3a8-051c4e646619"),
