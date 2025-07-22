@@ -8,7 +8,8 @@ from across.tools import enums as tools_enums
 # [filter_name, central_wavelength, bandwidth, uuid]
 # Reference: https://hst-docs.stsci.edu/acsihb/chapter-5-imaging/5-1-imaging-overview
 ACS_WFC_FILTER_INFO: list[tuple[str, float, float, str]] = [
-    ("CLEAR", 6200.0, 5200.0, "904f1562-81d8-4bcd-a5c6-0fc8aeba442a"),
+    ("CLEAR1L", 6200.0, 5200.0, "904f1562-81d8-4bcd-a5c6-0fc8aeba442a"),
+    ("CLEAR2L", 6000.0, 5200.0, "016132f7-ff00-4220-90a2-41ce0b8d2d0d"),
     ("F555W", 5346.0, 1193.0, "998a6260-48c9-4dc4-95fe-ffa9d5cb0bc2"),
     ("F775W", 7764.0, 1528.0, "cf08026b-74fe-4e46-986e-e0866f889120"),
     ("F625W", 6318.0, 1442.0, "b7fa0177-bf24-4fff-b255-c83e92880774"),
