@@ -71,7 +71,11 @@ class Instrument(InstrumentBase):
             id=obj.id,
             name=obj.name,
             short_name=obj.short_name,
-            telescope=IDNameSchema(id=obj.telescope.id, name=obj.telescope.name),
+            telescope=IDNameSchema(
+                id=obj.telescope.id,
+                name=obj.telescope.name,
+                short_name=obj.telescope.short_name,
+            ),
             footprints=[footprint.polygon for footprint in footprints],
             filters=filters,
             created_on=obj.created_on,
