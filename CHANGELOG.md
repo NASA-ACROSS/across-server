@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/ACROSS-Team/across-server/compare/v0.2.1...v0.3.0) (2025-07-24)
+
+
+### Features
+
+* add Hubble observatory data migration ([#283](https://github.com/ACROSS-Team/across-server/issues/283)) ([6a22bf6](https://github.com/ACROSS-Team/across-server/commit/6a22bf625705bd053067ac0e0873ab76b19e4fd9))
+* **api:** add interface for instrument Filter ([#285](https://github.com/ACROSS-Team/across-server/issues/285)) ([ea1f815](https://github.com/ACROSS-Team/across-server/commit/ea1f815b1da9f9f6de36eb08c8e744045e612621))
+
 ## [0.2.1](https://github.com/ACROSS-Team/across-server/compare/v0.2.0...v0.2.1) (2025-07-21)
 
 
