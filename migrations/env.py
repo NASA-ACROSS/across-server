@@ -45,7 +45,7 @@ def include_name(name: Any, type_: Any | None, parent_names: Any) -> bool:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 logger.info(f"Running migration for '{core_config.APP_ENV}'.")
-DATABASE_URL = config.DB_URI()
+DATABASE_URL = config.DB_URI
 
 
 def run_migrations_offline() -> None:

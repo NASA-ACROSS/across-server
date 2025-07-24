@@ -90,6 +90,8 @@ def setup(json_logs: bool = False, log_level: str = "INFO") -> None:
     # hierarchy (effectively rendering them silent).
     logging.getLogger("uvicorn.access").handlers.clear()
     logging.getLogger("uvicorn.access").propagate = False
+    logging.getLogger("boto3").setLevel(logging.INFO)
+    logging.getLogger("botocore").setLevel(logging.INFO)
 
     def handle_exception(
         exc_type: type[BaseException],

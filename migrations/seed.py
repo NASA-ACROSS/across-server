@@ -49,7 +49,7 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
 
 
 async def seed() -> None:
-    engine = create_async_engine(config.DB_URI())
+    engine = create_async_engine(config.DB_URI)
 
     async_session = async_sessionmaker(engine, expire_on_commit=False)
 
