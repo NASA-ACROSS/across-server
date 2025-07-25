@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import DeclarativeBase
 
 from across_server.core.enums.ephemeris_type import EphemerisType
-from migrations import db_util
+from migrations.util import footprint_util
 
 
 def build(
@@ -65,10 +65,10 @@ def build(
                 vertices = []
                 for point in footprint_data:
                     vertices.append(
-                        db_util.ACROSSFootprintPoint(x=point["x"], y=point["y"])
+                        footprint_util.ACROSSFootprintPoint(x=point["x"], y=point["y"])
                     )
 
-                polygon = db_util.create_geography(polygon=vertices)
+                polygon = footprint_util.create_geography(polygon=vertices)
 
                 # create the footprint model record
                 footprint = models.Footprint(

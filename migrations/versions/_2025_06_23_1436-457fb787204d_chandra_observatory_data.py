@@ -22,7 +22,7 @@ from across_server.core.enums import (
     ObservatoryType,
 )
 from migrations.build_records import ssa_records
-from migrations.db_util import arcmin_to_deg, circular_footprint
+from migrations.util.footprint_util import arcmin_to_deg, circular_footprint
 
 # revision identifiers, used by Alembic.
 revision: str = "457fb787204d"
