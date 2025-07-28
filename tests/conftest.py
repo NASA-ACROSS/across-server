@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import httpx
@@ -188,3 +188,17 @@ def mock_filter_data(mock_instrument_data: Instrument) -> Filter:
         instrument_id=mock_instrument_data.id,
         is_operational=True,
     )
+
+
+@pytest.fixture(scope="function")
+def patch_config_is_local_true() -> Generator[AsyncMock]:
+    with patch("across_server.core.config.Config.is_local") as mock_is_local:
+        mock_is_local.return_value = True
+        yield mock_is_local
+
+
+@pytest.fixture(scope="function")
+def patch_config_is_local_false() -> Generator[AsyncMock]:
+    with patch("across_server.core.config.Config.is_local") as mock_is_local:
+        mock_is_local.return_value = False
+        yield mock_is_local

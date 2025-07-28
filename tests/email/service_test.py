@@ -30,14 +30,27 @@ class TestEmailService:
         self.mocksmtp = mocksmtp
 
     @pytest.mark.asyncio
-    async def test_should_send_email_when_required_data_is_provided(self) -> None:
+    async def test_should_not_send_email_when_local(
+        self, patch_config_is_local_true: AsyncMock
+    ) -> None:
+        """Should send an email when the required data is provided"""
+        service = EmailService()
+        await service.send(recipients=[self.recipient], subject=self.subject)
+        self.mocksmtp.sendmail.assert_not_called()  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
+    async def test_should_send_email_when_required_data_is_provided(
+        self, patch_config_is_local_false: AsyncMock
+    ) -> None:
         """Should send an email when the required data is provided"""
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
         self.mocksmtp.sendmail.assert_called_once()  # type: ignore[attr-defined]
 
     @pytest.mark.asyncio
-    async def test_should_throw_error_when_email_fails(self) -> None:
+    async def test_should_throw_error_when_email_fails(
+        self, patch_config_is_local_false: AsyncMock
+    ) -> None:
         """
         Should throw an error when sending an email fails
         """
