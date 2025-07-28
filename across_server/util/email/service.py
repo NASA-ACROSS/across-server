@@ -7,6 +7,7 @@ import aiosmtplib
 from across_server.auth import schemas
 from across_server.db import models
 
+from ...core.config import config as core_config
 from .config import email_config
 
 
@@ -116,8 +117,10 @@ class EmailService:
             # TODO: configure attachments, not sure if we will need this yet
             pass
 
-        async with aiosmtplib.SMTP(
-            hostname=self.smtp_host, port=self.smtp_port, use_tls=True
-        ) as smtp:
-            await smtp.login(self.login_email_user, self.login_email_password)
-            await smtp.sendmail(self.sender_email_addr, recipients, em.as_string())
+        # only send emails in non-local envs
+        if not core_config.is_local():
+            async with aiosmtplib.SMTP(
+                hostname=self.smtp_host, port=self.smtp_port, use_tls=True
+            ) as smtp:
+                await smtp.login(self.login_email_user, self.login_email_password)
+                await smtp.sendmail(self.sender_email_addr, recipients, em.as_string())
