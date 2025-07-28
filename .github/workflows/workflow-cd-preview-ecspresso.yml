@@ -127,6 +127,9 @@ jobs:
           open: ${{ inputs.open }}
           env-label: ${{ inputs.env-label }}
 
+      - run: |
+          echo "${{ inputs.env-label}}"
+
     outputs:
       namespace: ${{ inputs.ref }}
       labels_env: ${{ steps.controller.outputs.labels_env }}

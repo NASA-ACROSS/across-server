@@ -27,6 +27,31 @@
             "justMyCode": false
         },
         {
+            "name": "feat1: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-feat1",
+                "RUNTIME_ENV": "feat1",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "core_server"
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
+        },
+        {
             "name": "dev: Start Server",
             "type": "debugpy",
             "request": "launch",

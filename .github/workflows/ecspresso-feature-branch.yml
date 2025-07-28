@@ -135,7 +135,7 @@ jobs:
       exclusive: true
       app: ${{ inputs.app }}
       env-label: |
-        dev: deploy/dev
+        feat1: deploy/feat1
       enable-migration: ${{ inputs.enable-migration }}
       support-rollback: ${{ inputs.support-rollback }}
       output-web-url: ${{ inputs.output-web-url }}
