@@ -127,9 +127,6 @@ jobs:
           open: ${{ inputs.open }}
           env-label: ${{ inputs.env-label }}
 
-      - run: |
-          echo "${{ inputs.env-label}}"
-
     outputs:
       namespace: ${{ inputs.ref }}
       labels_env: ${{ steps.controller.outputs.labels_env }}
@@ -215,7 +212,11 @@ jobs:
               "containerOverrides":[
                 {
                   "name": "${{ inputs.app }}",
-                  "command": ["alembic", "upgrade", "head"]
+                  "command": ["alembic", "upgrade", "head"],
+                  "environment": [{
+                    "name": "ACROSS_DB_USER",
+                    "value": "ci"
+                  }]
                 }
               ]
             }
