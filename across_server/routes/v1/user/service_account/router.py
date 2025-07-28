@@ -72,15 +72,7 @@ async def create(
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
 ) -> schemas.ServiceAccountSecret:
-    service_account, secret_key = await service.create(data, created_by_id=auth_user.id)
-
-    # return the generated secret key to the user one time
-    # once the response is sent we will no longer know this value
-    service_account_with_secret = schemas.ServiceAccountSecret.model_validate(
-        service_account
-    )
-    service_account_with_secret.secret_key = secret_key
-    return service_account_with_secret
+    return await service.create(data, created_by_id=auth_user.id)
 
 
 @router.patch(
@@ -138,14 +130,4 @@ async def rotate(
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
 ) -> schemas.ServiceAccountSecret:
-    service_account, secret_key = await service.rotate_key(
-        service_account_id, modified_by_id=auth_user.id
-    )
-
-    # return the generated secret key to the user one time
-    # once the response is sent we will no longer know this value
-    service_account_with_secret = schemas.ServiceAccountSecret.model_validate(
-        service_account
-    )
-    service_account_with_secret.secret_key = secret_key
-    return service_account_with_secret
+    return await service.rotate_key(service_account_id, modified_by_id=auth_user.id)
