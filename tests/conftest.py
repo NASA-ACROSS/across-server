@@ -79,7 +79,7 @@ def mock_result(
     mock_tuples: MagicMock,
 ) -> Generator[MagicMock]:
     mock = MagicMock()
-    mock.unique = mock_unique
+    mock.unique = MagicMock(return_value=mock_unique)
     mock.scalar_one_or_none = mock_scalar_one_or_none
     mock.scalars = mock_scalars
     mock.tuples = mock_tuples

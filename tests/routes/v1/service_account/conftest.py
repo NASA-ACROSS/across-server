@@ -1,13 +1,13 @@
 import datetime
 import importlib
-import itertools
 from collections.abc import Generator
+from types import ModuleType
 from typing import Any, Iterable, Self
-from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from argon2 import PasswordHasher
 from fastapi import FastAPI
 
 from across_server.auth import strategies
@@ -32,22 +32,19 @@ def mock_service_account_data() -> dict:
 
 
 @pytest.fixture
-def mock_service_account_record(mock_service_account_data) -> models.ServiceAccount:
+def mock_service_account_record(
+    mock_service_account_data: dict,
+) -> models.ServiceAccount:
     return models.ServiceAccount(**mock_service_account_data)
-
-
-@pytest.fixture()
-def mock_secret_key() -> str:
-    return "very secret key"
 
 
 @pytest.fixture
 def mock_service_account_data_with_secret(
-    mock_service_account_data,
-    mock_secret_key,
+    mock_service_account_data: dict,
+    mock_generated_hex: str,
 ) -> schemas.ServiceAccountSecret:
     return schemas.ServiceAccountSecret.model_validate(
-        {**mock_service_account_data, "secret_key": mock_secret_key}
+        {**mock_service_account_data, "secret_key": mock_generated_hex}
     )
 
 
@@ -93,29 +90,28 @@ def fake_time() -> datetime.datetime:
     return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.UTC)
 
 
-@pytest.fixture
-def mock_secrets_token_hex() -> Iterable[str]:
-    return ["1", "2"]
+@pytest.fixture()
+def mock_generated_hex() -> Iterable[str]:
+    return "somegeneratedhex"
 
 
 @pytest.fixture(autouse=True)
-def patch_secrets_token_hex(mock_secrets_token_hex: Iterable[str]) -> Any:
-    with mock.patch(
-        "secrets.token_hex", side_effect=itertools.cycle(mock_secrets_token_hex)
-    ):
-        yield
+def mock_secrets(
+    svc_mod: ModuleType, mock_generated_hex: str, monkeypatch: pytest.MonkeyPatch
+) -> MagicMock:
+    mock_secrets = MagicMock()
+    mock_secrets.token_hex = MagicMock(return_value=mock_generated_hex)
+
+    monkeypatch.setattr(svc_mod, "secrets", mock_secrets)
+
+    return mock_secrets
 
 
 @pytest.fixture()
-def mock_secret_key_schema(mock_secret_key, fixed_expiration):
-    return SecretKeySchema(key=mock_secret_key, expiration=fixed_expiration)
-
-
-@pytest.fixture()
-def mock_generate_secret_key(mock_secret_key_schema: SecretKeySchema) -> MagicMock:
-    mock = MagicMock(return_value=mock_secret_key_schema)
-
-    return mock
+def mock_secret_key_schema(
+    mock_generated_hex: str, fixed_expiration: datetime.datetime
+) -> SecretKeySchema:
+    return SecretKeySchema(key=mock_generated_hex, expiration=fixed_expiration)
 
 
 @pytest.fixture
@@ -137,7 +133,7 @@ def mock_refresh_sa(
 
 
 @pytest.fixture(autouse=True)
-def svc_mod() -> Any:
+def svc_mod() -> ModuleType:
     svc = importlib.import_module(
         "across_server.routes.v1.user.service_account.service"
     )
@@ -146,20 +142,12 @@ def svc_mod() -> Any:
 
 
 @pytest.fixture(autouse=True)
-def patch_password_hasher(svc_mod, mock_password_hasher, monkeypatch) -> Any:
+def monkeypatch_password_hasher(
+    svc_mod: ModuleType,
+    mock_password_hasher: PasswordHasher,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(svc_mod, "password_hasher", mock_password_hasher)
-
-
-@pytest.fixture(autouse=True)
-def monkeypatch_generate_secret_key(
-    monkeypatch: pytest.MonkeyPatch, mock_generate_secret_key, svc_mod
-) -> Any:
-    """
-    Monkey‑patch the exact symbol that your ServiceAccountService.create()
-    calls: the name `generate_secret_key` in the service module’s globals.
-    """
-
-    monkeypatch.setattr(svc_mod, "generate_secret_key", mock_generate_secret_key)
 
 
 @pytest.fixture
