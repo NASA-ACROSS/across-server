@@ -190,15 +190,9 @@ def mock_filter_data(mock_instrument_data: Instrument) -> Filter:
     )
 
 
-@pytest.fixture(scope="function")
-def patch_config_is_local_true() -> Generator[AsyncMock]:
-    with patch("across_server.core.config.Config.is_local") as mock_is_local:
-        mock_is_local.return_value = True
-        yield mock_is_local
-
-
-@pytest.fixture(scope="function")
-def patch_config_is_local_false() -> Generator[AsyncMock]:
+@pytest.fixture(autouse=True, scope="function")
+def mock_config_runtime_env_is_local() -> Generator[AsyncMock]:
+    """`False` by default, override with `mock_config_runtime_env_is_local.return_value = True`"""
     with patch("across_server.core.config.Config.is_local") as mock_is_local:
         mock_is_local.return_value = False
         yield mock_is_local
