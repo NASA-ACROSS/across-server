@@ -38,8 +38,8 @@
             "env": {
                 "APP_ENV": "across-plat-ue2-dev",
                 "RUNTIME_ENV": "dev",
-                "AWS_PROFILE": "default-mfa",
-                "ACROSS_DB_USER": "core_server"
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "developer"
             },
             "module": "uvicorn",
             "args": [
@@ -50,7 +50,6 @@
                 "--port",
                 "8000"
             ],
-            "jinja": true
         },
         {
             "name": "dev: Migrations",
@@ -64,14 +63,39 @@
             "env": {
                 "APP_ENV": "across-plat-ue2-dev",
                 "RUNTIME_ENV": "dev",
-                "AWS_PROFILE": "default-mfa",
-                "ACROSS_DB_USER": "core_server"
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "developer"
             },
             "module": "alembic",
             "args": [
                 "upgrade",
                 "head"
             ],
+        },
+        {
+            "name": "staging: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-staging",
+                "RUNTIME_ENV": "staging",
+                "ACROSS_DB_USER": "developer",
+                "AWS_PROFILE": "Project-Admin",
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
         },
     ]
 }

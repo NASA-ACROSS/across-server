@@ -1,4 +1,4 @@
-name: across-server
+name: core-server
 
 services:
   app:
@@ -9,10 +9,11 @@ services:
       ssh:
         - default
     volumes:
-      - ./across_server/main.py:/app/across_server/main.py
-      - ./across_server:/app/across_server
+      - ../across_server/main.py:/app/across_server/main.py
+      - ../across_server:/app/across_server
     environment:
       BUILD_ENV: local
+      ACROSS_DB_HOST: db
     command: fastapi dev across_server/main.py --host 0.0.0.0 --port 8000
     ports:
       - 8000:8000

@@ -2,7 +2,7 @@
 ENV ?= local
 RUNTIME_ENVS = local dev staging prod
 BUILD_ENV ?= local
-BUILD_ENVS = local action deploy test lint format
+BUILD_ENVS = local action deploy
 IS_BUILD_ENV_VALID := $(filter $(BUILD_ENV), $(BUILD_ENVS))
 
 # Docker
