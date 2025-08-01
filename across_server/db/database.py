@@ -54,7 +54,8 @@ def init() -> None:
     )
     logger.debug("Created async db session")
 
-    event.listen(engine.sync_engine, "do_connect", refresh_token)
+    if not core_config.is_local():
+        event.listen(engine.sync_engine, "do_connect", refresh_token)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession]:
