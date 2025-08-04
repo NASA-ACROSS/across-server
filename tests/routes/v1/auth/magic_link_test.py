@@ -41,7 +41,7 @@ class TestGenerateMagicLink:
     def test_should_generate_magic_link(self, mock_token_data: MockTokenData) -> None:
         """Should generate a magic link"""
         assert generate(mock_token_data.sub).__contains__(
-            f"/auth/verify?token={mock_token_data.token}"
+            f"login-verify?token={mock_token_data.token}"
         )
 
     def test_should_verify_magic_link(self, mock_token_data: MockTokenData) -> None:

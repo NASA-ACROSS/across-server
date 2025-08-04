@@ -1,6 +1,6 @@
 import os
 from collections.abc import Generator
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
@@ -33,15 +33,21 @@ class TestSSM:
         # Reset the client before each test
         SSM._client = None
 
-    def test_get_parameter_local_environment(self) -> None:
+    def test_get_parameter_local_environment(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
         """Test parameter retrieval in local environment using env vars"""
+        mock_config_runtime_env_is_local.return_value = True
         with patch.object(config, "RUNTIME_ENV", Environments.LOCAL):
             with patch.dict(os.environ, {"TEST_PARAM": "test_value"}):
                 value = SSM.get_parameter("TEST_PARAM")
                 assert value == "test_value"
 
-    def test_get_parameter_local_environment_missing(self) -> None:
+    def test_get_parameter_local_environment_missing(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
         """Test parameter retrieval in local environment when env var is missing"""
+        mock_config_runtime_env_is_local.return_value = True
         with patch.object(config, "RUNTIME_ENV", Environments.LOCAL):
             with patch.dict(os.environ, clear=True):
                 value = SSM.get_parameter("MISSING_PARAM")

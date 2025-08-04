@@ -23,7 +23,7 @@ def mock_auth_service() -> Generator[AsyncMock]:
 @pytest.fixture(autouse=True)
 def mock_magic_link_generate() -> Generator[AsyncMock]:
     with patch("across_server.auth.magic_link.generate") as mock:
-        mock.return_value = "http://test/auth/verify?token=mock_token"
+        mock.return_value = "http://frontend-test/user/login-verify?token=mock_token"
 
         yield mock
 

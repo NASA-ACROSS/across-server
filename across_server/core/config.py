@@ -13,6 +13,7 @@ class Config(BaseConfig):
     RUNTIME_ENV: Environments = Environments.LOCAL
     # need http:// prefix to prevent href removal in some email clients
     HOST: str = "http://localhost"
+    FRONTEND_HOST: str = "http://localhost:5173"
     PORT: int = 8000
     ROOT_PATH: str = "/api"
 

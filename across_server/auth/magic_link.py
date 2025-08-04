@@ -10,10 +10,11 @@ def generate(email: EmailStr) -> str:
     """
     token = MagicLinkToken()
     encoded_token = token.encode(data=token.to_encode(email))
+    magic_link = f"{core_config.FRONTEND_HOST}/user/login-verify?token={encoded_token}"
 
     if core_config.is_local():
-        print(f"Magic Link Token: {encoded_token}")
-    return f"{core_config.base_url()}/auth/verify?token={encoded_token}"
+        print(f"Magic Link: {magic_link}")
+    return magic_link
 
 
 def verify(token: str) -> EmailStr:

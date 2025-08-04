@@ -22,7 +22,7 @@ class TestAuthService:
         """Should return a new link when calling generate_magic_link"""
         service = AuthService(mock_db)
         link = service.generate_magic_link(self.email)
-        assert link.__contains__("/auth/verify?token=mock_token")
+        assert link.__contains__("login-verify?token=mock_token")
 
     def test_should_throw_error_when_magic_link_generation_fails(
         self, mock_db: AsyncMock, mock_magic_link_generate: MagicMock
