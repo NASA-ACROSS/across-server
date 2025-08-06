@@ -37,7 +37,7 @@ class TestServiceAccountService:
             service_account_create_example: ServiceAccountCreate,
             mock_db: AsyncMock,
         ) -> None:
-            """should generate a secret key as hex with 64 bytes"""
+            """should return the expiration date of the key"""
             service = ServiceAccountService(mock_db)
             sa = await service.create(
                 service_account_create_example, created_by_id=uuid4()
