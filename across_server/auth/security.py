@@ -1,5 +1,3 @@
-import datetime
-import secrets
 from typing import Annotated
 
 from fastapi import Depends, Form, HTTPException, status
@@ -11,7 +9,7 @@ from fastapi.security import (
 )
 
 from .enums import GrantType
-from .schemas import AuthUser, SecretKeySchema
+from .schemas import AuthUser
 from .service import AuthService
 
 http_bearer = HTTPBearer(
@@ -59,13 +57,4 @@ async def authenticate_grant_type(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not Authenticated",
         headers={"WWW-Authenticate": "Bearer"},
-    )
-
-
-def generate_secret_key(expiration_duration: int = 30) -> SecretKeySchema:
-    now = datetime.datetime.now()
-
-    return SecretKeySchema(
-        key=secrets.token_hex(64),
-        expiration=now + datetime.timedelta(days=expiration_duration),
     )

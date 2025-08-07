@@ -48,27 +48,27 @@ async def async_client(app: FastAPI) -> AsyncGenerator[httpx.AsyncClient]:
 
 @pytest.fixture
 def mock_scalar_one_or_none() -> Generator[MagicMock]:
-    mock_result = MagicMock()
-    yield mock_result
+    mock = MagicMock()
+    yield mock
 
 
 @pytest.fixture
 def mock_scalars() -> Generator[MagicMock]:
-    mock_result = MagicMock()
-    yield mock_result
+    mock = MagicMock()
+    yield mock
 
 
 @pytest.fixture
 def mock_unique(mock_scalar_one_or_none: MagicMock) -> Generator[MagicMock]:
-    mock_result = MagicMock()
-    mock_result.scalar_one_or_none = mock_scalar_one_or_none
-    yield mock_result
+    mock = MagicMock()
+    mock.scalar_one_or_none = mock_scalar_one_or_none
+    yield mock
 
 
 @pytest.fixture
 def mock_tuples() -> Generator[MagicMock]:
-    mock_result = MagicMock()
-    yield mock_result
+    mock = MagicMock()
+    yield mock
 
 
 @pytest.fixture
@@ -77,38 +77,46 @@ def mock_result(
     mock_scalars: MagicMock,
     mock_unique: MagicMock,
     mock_tuples: MagicMock,
-) -> Generator[AsyncMock]:
-    mock_result = AsyncMock(return_value="default result")
-    mock_result.unique = MagicMock(return_value=mock_unique)
-    mock_result.scalar_one_or_none = MagicMock(return_value=mock_scalar_one_or_none)
-    mock_result.scalars = MagicMock(return_value=mock_scalars)
-    mock_result.tuples = MagicMock(return_value=mock_tuples)
+) -> Generator[MagicMock]:
+    mock = MagicMock()
+    mock.unique = MagicMock(return_value=mock_unique)
+    mock.scalar_one_or_none = mock_scalar_one_or_none
+    mock.scalars = mock_scalars
+    mock.tuples = mock_tuples
 
-    yield mock_result
+    yield mock
 
 
 @pytest.fixture
 def mock_scalar_result() -> Generator[AsyncMock]:
-    mock_result = AsyncMock()
-    mock_result.all = MagicMock()
-    mock_result.one = MagicMock()
-    mock_result.one_or_none = MagicMock()
+    mock = AsyncMock()
+    mock.all = MagicMock()
+    mock.one = MagicMock()
+    mock.one_or_none = MagicMock()
 
-    yield mock_result
+    yield mock
+
+
+@pytest.fixture
+def mock_refresh() -> AsyncMock:
+    mock = AsyncMock()
+    return mock
 
 
 @pytest.fixture
 def mock_db(
-    mock_result: AsyncMock, mock_scalar_result: AsyncMock
+    mock_result: AsyncMock,
+    mock_scalar_result: AsyncMock,
+    mock_refresh: AsyncMock,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(AsyncSession)
 
     # Mock the Result object that `execute` returns
     mock.execute = AsyncMock(return_value=mock_result)
+    mock.scalars = AsyncMock(return_value=mock_scalar_result)
     mock.add = Mock()
     mock.commit = AsyncMock()
-    mock.refresh = AsyncMock()
-    mock.scalars = AsyncMock(return_value=mock_scalar_result)
+    mock.refresh = mock_refresh
     mock.delete = AsyncMock()
 
     yield mock

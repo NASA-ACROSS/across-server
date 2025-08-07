@@ -35,6 +35,7 @@ async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
         InvalidSignatureError,
         ExpiredSignatureError,
         DecodeError,
+        AssertionError,
     ):
         user_id = "anonymous"
         limit_group = "default"
