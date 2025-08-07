@@ -114,6 +114,10 @@ async def update(
     data: schemas.UserUpdate,
 ) -> schemas.User:
     user_model = await service.update(user_id, data, modified_by=auth_user)
+
+    for invite in user_model.received_invites:
+        await invite.awaitable_attrs.sender
+
     return schemas.User.model_validate(user_model)
 
 
