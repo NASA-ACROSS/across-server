@@ -203,11 +203,11 @@ types: ## Run type checks
 
 
 # Group: Database
-rev: ## Create a new database revision (migration). Usage: `make rev REV_TITLE="Migration title"`
-	@if [ -z $(REV_TITLE) ]; then \
-		echo "The REV_TITLE is missing for the revision."; \
+rev: ## Create a new database revision (migration). Usage: `make rev TITLE="Migration title"`
+	@if [ -z "$(TITLE)" ]; then \
+		echo "The TITLE is missing for the revision."; \
 	else \
-		$(VENV_BIN)/alembic revision --autogenerate -m "$(REV_TITLE)"; \
+		$(VENV_BIN)/alembic revision --autogenerate -m "$(TITLE)"; \
 	fi
 
 seed: ## Seed the database with initial data (only used on local and dev environments)
