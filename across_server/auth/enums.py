@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class AuthUserType(str, Enum):
+class PrincipalType(str, Enum):
     USER = "user"
     SERVICE_ACCOUNT = "service_account"
 

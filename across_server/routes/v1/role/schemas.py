@@ -6,6 +6,7 @@ from ....core.schemas.base import BaseSchema
 
 
 class RoleBase(BaseSchema):
+    id: uuid.UUID
     name: str
 
 

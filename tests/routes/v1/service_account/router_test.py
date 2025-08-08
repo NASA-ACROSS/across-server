@@ -1,10 +1,11 @@
 import uuid
-from unittest.mock import AsyncMock
 
 import fastapi
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+
+from across_server.db import models
 
 
 class Setup:
@@ -79,16 +80,16 @@ class TestServiceAccountRouter:
     class TestUpdate(Setup):
         @pytest.mark.asyncio
         async def test_should_return_updated_service_account_on_patch(
-            self, mock_service_account_service: AsyncMock
+            self, fake_service_account: models.ServiceAccount
         ) -> None:
             """Patch should return updated service account"""
-            mock_service_account_service.update.return_value["name"] = (
-                "update_service_account_name"
-            )
+            fake_service_account.name = "update_service_account_name"
+
             endpoint = self.endpoint + f"{uuid.uuid4()}"
             res = await self.client.patch(
                 endpoint, json={"name": "update_service_account_name"}
             )
+
             assert res.json()["name"] == "update_service_account_name"
 
         @pytest.mark.asyncio

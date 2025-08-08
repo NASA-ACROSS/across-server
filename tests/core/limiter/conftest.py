@@ -3,7 +3,7 @@ from typing import Any, MutableMapping
 import pytest
 
 from across_server.auth.config import auth_config
-from across_server.auth.enums import AuthUserType
+from across_server.auth.enums import PrincipalType
 from across_server.auth.tokens.access_token import AccessToken, AccessTokenData
 
 
@@ -25,7 +25,7 @@ def mock_jwt(patch_config_secret: None) -> str:
     return AccessToken().encode(
         AccessTokenData(
             sub="e2c834a4-232c-420a-985e-eb5bc59aba24",
-            type=AuthUserType.USER,
+            type=PrincipalType.USER,
             scopes=[],
             groups=[],
         )

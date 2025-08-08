@@ -7,7 +7,7 @@ from fastapi.security import HTTPBasicCredentials
 from across_server.auth import schemas
 from across_server.auth.service import AuthService
 from across_server.core.exceptions import AcrossHTTPException
-from across_server.db.models import User
+from across_server.db.models import Group, GroupRole, ServiceAccount, User
 
 
 class TestAuthService:
@@ -39,9 +39,9 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_user_data: User,
+            fake_user: User,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_user_data
+            mock_scalar_one_or_none.return_value = fake_user
             service = AuthService(mock_db)
             auth_user = await service.get_authenticated_user(
                 uuid.uuid4(), "testEmail@example.com"
@@ -53,14 +53,14 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_user_data: User,
+            fake_user: User,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_user_data
+            mock_scalar_one_or_none.return_value = fake_user
             service = AuthService(mock_db)
             auth_user = await service.get_authenticated_user(
                 uuid.uuid4(), "testEmail@example.com"
             )
-            assert auth_user.type == schemas.AuthUserType.USER
+            assert auth_user.type == schemas.PrincipalType.USER
 
     class TestGetAuthenticatedServiceAccount:
         @pytest.mark.asyncio
@@ -68,9 +68,12 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_data: User,
+            fake_service_account: User,
+            fake_group_role: GroupRole,
+            fake_group: Group,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_service_account_data
+            mock_scalar_one_or_none.return_value = fake_service_account
+            fake_group_role.group = fake_group
             service = AuthService(mock_db)
             auth_user = await service.get_authenticated_service_account(uuid.uuid4())
             assert isinstance(auth_user, schemas.AuthUser)
@@ -80,12 +83,15 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_data: User,
+            fake_service_account: User,
+            fake_group_role: GroupRole,
+            fake_group: Group,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_service_account_data
+            mock_scalar_one_or_none.return_value = fake_service_account
+            fake_group_role.group = fake_group
             service = AuthService(mock_db)
             authUser = await service.get_authenticated_service_account(uuid.uuid4())
-            assert authUser.type == schemas.AuthUserType.SERVICE_ACCOUNT
+            assert authUser.type == schemas.PrincipalType.SERVICE_ACCOUNT
 
     class TestAuthenticateServiceAccount:
         @pytest.mark.asyncio
@@ -93,14 +99,15 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_data: User,
+            fake_service_account: ServiceAccount,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_service_account_data
+            mock_scalar_one_or_none.return_value = fake_service_account
             service = AuthService(mock_db)
+
             with pytest.raises(AcrossHTTPException):
                 await service.authenticate_service_account(
                     HTTPBasicCredentials(
-                        username=str(mock_service_account_data.id),
+                        username=str(fake_service_account.id),
                         password="WRONG!PASSWORD",
                     )
                 )
@@ -110,13 +117,16 @@ class TestAuthService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_data: User,
+            fake_service_account: User,
+            fake_group: Group,
+            fake_group_role: GroupRole,
         ) -> None:
-            mock_scalar_one_or_none.return_value = mock_service_account_data
+            mock_scalar_one_or_none.return_value = fake_service_account
+            fake_group_role.group = fake_group
             service = AuthService(mock_db)
             auth_user = await service.authenticate_service_account(
                 HTTPBasicCredentials(
-                    username=str(mock_service_account_data.id), password="PASSWORD"
+                    username=str(fake_service_account.id), password="PASSWORD"
                 )
             )
             assert isinstance(auth_user, schemas.AuthUser)

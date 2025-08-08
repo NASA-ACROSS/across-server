@@ -133,7 +133,7 @@ class AuthService:
             first_name=user.first_name,
             last_name=user.last_name,
             username=user.username,
-            type=schemas.AuthUserType.USER,
+            type=schemas.PrincipalType.USER,
         )
 
         if user.groups:
@@ -165,6 +165,7 @@ class AuthService:
                 )
             )
             .options(joinedload(models.ServiceAccount.user))
+            .options(joinedload(models.ServiceAccount.roles))
         )
 
         result = await self.db.execute(query)
@@ -195,11 +196,18 @@ class AuthService:
         auth_user = schemas.AuthUser(
             id=service_account.id,
             groups=groups,
-            scopes=[],
-            first_name=service_account.user.first_name,
-            last_name=service_account.user.last_name,
-            username=service_account.user.username,
-            type=schemas.AuthUserType.SERVICE_ACCOUNT,
+            scopes=[
+                permission.name
+                for role in service_account.roles or []
+                for permission in role.permissions
+            ],
+            type=schemas.PrincipalType.SERVICE_ACCOUNT,
         )
+
+        # Add the service account's user if it is not a SYSTEM level service account
+        if len(service_account.user):
+            auth_user.first_name = service_account.user[0].first_name
+            auth_user.last_name = service_account.user[0].last_name
+            auth_user.username = service_account.user[0].username
 
         return auth_user

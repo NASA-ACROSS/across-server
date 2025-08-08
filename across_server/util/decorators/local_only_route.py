@@ -2,8 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import false
+from fastapi import APIRouter
 
 from ...core.config import config
 

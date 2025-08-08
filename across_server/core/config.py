@@ -34,6 +34,11 @@ class Config(BaseConfig):
     # Always hide local only routes -- mainly used for client generation locally.
     HIDE_LOCAL_ROUTE: bool = True
 
+    DATA_INGESTION_SERVICE_ACCOUNT_ID_PATH: str = "data-ingestion/core-server/client_id"
+    DATA_INGESTION_INGESTION_SERVICE_ACCOUNT_SECRET_PATH: str = (
+        "data-ingestion/core-server/client_secret"
+    )
+
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 

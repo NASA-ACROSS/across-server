@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Security, status
 
 from ....auth.schemas import AuthUser
-from ....core.schemas import Page
+from ....core.schemas import ListResponse, Page
 from ..telescope.access import telescope_access
 from ..telescope.service import TelescopeService
 from . import schemas
@@ -145,10 +145,10 @@ async def create(
     description="Create many new observing schedules for ACROSS.",
     operation_id="create_many_schedules",
     status_code=status.HTTP_201_CREATED,
-    response_model=list[uuid.UUID],
+    response_model=ListResponse[uuid.UUID],
     responses={
         status.HTTP_201_CREATED: {
-            "model": list[uuid.UUID],
+            "model": ListResponse[uuid.UUID],
             "description": "Created schedule ids",
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
@@ -166,6 +166,9 @@ async def create_many(
 ) -> list[uuid.UUID]:
     telescope = await telescope_service.get(data.telescope_id)
     instruments = telescope.instruments
+
     return await service.create_many(
-        schedule_create_many=data, instruments=instruments, created_by_id=auth_user.id
+        schedule_create_many=data,
+        instruments=instruments,
+        created_by_id=auth_user.id,
     )

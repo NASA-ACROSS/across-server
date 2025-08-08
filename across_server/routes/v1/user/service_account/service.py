@@ -24,12 +24,26 @@ class ServiceAccountService:
     ) -> None:
         self.db = db
 
+    @staticmethod
+    def generate_secret_key(expiration_duration: int = 30) -> SecretKeySchema:
+        """Generate a secret key for a service account which includes the expiration date of the key."""
+        now = datetime.datetime.now()
+
+        return SecretKeySchema(
+            key=secrets.token_hex(64),
+            expiration=now + datetime.timedelta(days=expiration_duration),
+        )
+
     async def get(
         self, service_account_id: UUID, user_id: UUID
     ) -> models.ServiceAccount:
-        query = select(models.ServiceAccount).where(
-            models.ServiceAccount.id == service_account_id,
-            models.ServiceAccount.user_id == user_id,
+        query = (
+            select(models.ServiceAccount)
+            .join(models.ServiceAccount.user)
+            .where(
+                models.ServiceAccount.id == service_account_id,
+                models.User.id == user_id,
+            )
         )
 
         result = await self.db.execute(query)
@@ -40,11 +54,22 @@ class ServiceAccountService:
 
         return service_account
 
+    async def get_system(self, id: UUID) -> models.ServiceAccount:
+        query = select(models.ServiceAccount).where(models.ServiceAccount.id == id)
+
+        result = await self.db.execute(query)
+        service_account = result.scalar_one_or_none()
+
+        if service_account is None:
+            raise ServiceAccountNotFoundException(id)
+
+        return service_account
+
     async def get_many(self, user_id: UUID) -> Sequence[models.ServiceAccount]:
         result = await self.db.scalars(
-            select(models.ServiceAccount).filter(
-                models.ServiceAccount.user_id == user_id
-            )
+            select(models.ServiceAccount)
+            .join(models.ServiceAccount.user)
+            .filter(models.User.id == user_id)
         )
         service_accounts = result.all()
 
@@ -60,16 +85,23 @@ class ServiceAccountService:
         )
 
         # generate a secret key for the service account that will be sent to the user
-        secret_key_information = self._generate_secret_key(
+        secret_key_information = self.generate_secret_key(
             expiration_duration=service_account_create.expiration_duration
         )
 
         # hash the secret key for storage in database
         hashed_secret_key = password_hasher.hash(secret_key_information.key)
 
+        user_query = select(models.User).where(
+            models.User.id == created_by_id,
+        )
+
+        res = await self.db.scalars(user_query)
+        user = res.one()
+
         # store the hashed secret key
         service_account = models.ServiceAccount(
-            user_id=created_by_id,
+            user=[user],
             name=service_account_create.name,
             description=service_account_create.description,
             hashed_key=hashed_secret_key,
@@ -118,7 +150,7 @@ class ServiceAccountService:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
         # generate a secret key for the service account that will be sent to the user
-        secret_key_information = self._generate_secret_key(
+        secret_key_information = self.generate_secret_key(
             expiration_duration=service_account.expiration_duration
         )
 
@@ -156,11 +188,3 @@ class ServiceAccountService:
         sa_secret.secret_key = secret_key
 
         return sa_secret
-
-    def _generate_secret_key(self, expiration_duration: int = 30) -> SecretKeySchema:
-        now = datetime.datetime.now()
-
-        return SecretKeySchema(
-            key=secrets.token_hex(64),
-            expiration=now + datetime.timedelta(days=expiration_duration),
-        )

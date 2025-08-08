@@ -17,6 +17,12 @@ from across_server.routes.v1.user.service_account.service import ServiceAccountS
 
 class TestServiceAccountService:
     class TestCreate:
+        @pytest.fixture(autouse=True)
+        def find_db_user(
+            self, mock_scalar_result: MagicMock, fake_user: models.User
+        ) -> None:
+            mock_scalar_result.one.return_value(fake_user)
+
         @pytest.mark.asyncio
         async def should_generate_secret_key_hex_with_64_bytes(
             self: Any,
@@ -49,12 +55,12 @@ class TestServiceAccountService:
         async def test_create_should_return_service_account_when_successful(
             self,
             mock_db: AsyncMock,
-            service_account_create_example: ServiceAccountCreate,
+            fake_service_account_create: ServiceAccountCreate,
         ) -> None:
             """Should return the service_account when creation successful"""
             service = ServiceAccountService(mock_db)
             service_account_secret = await service.create(
-                service_account_create_example, created_by_id=uuid4()
+                fake_service_account_create, created_by_id=uuid4()
             )
             assert isinstance(service_account_secret, schemas.ServiceAccountSecret)
 
@@ -62,11 +68,11 @@ class TestServiceAccountService:
         async def test_create_should_save_service_account_to_database(
             self,
             mock_db: AsyncMock,
-            service_account_create_example: ServiceAccountCreate,
+            fake_service_account_create: ServiceAccountCreate,
         ) -> None:
             """Should save the service_account to the database when successful"""
             service = ServiceAccountService(mock_db)
-            await service.create(service_account_create_example, created_by_id=uuid4())
+            await service.create(fake_service_account_create, created_by_id=uuid4())
 
             mock_db.commit.assert_called_once()
 
@@ -76,11 +82,11 @@ class TestServiceAccountService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_record: models.ServiceAccount,
+            fake_service_account: models.ServiceAccount,
             mock_secrets: MagicMock,
         ) -> None:
             """Should generate a new secret key when rotating"""
-            mock_scalar_one_or_none.return_value = mock_service_account_record
+            mock_scalar_one_or_none.return_value = fake_service_account
 
             service = ServiceAccountService(mock_db)
 
@@ -93,19 +99,19 @@ class TestServiceAccountService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_record: models.ServiceAccount,
+            fake_service_account: models.ServiceAccount,
             mock_password_hasher: MagicMock,
-            mock_secret_key_schema: SecretKeySchema,
+            fake_secret_key_schema: SecretKeySchema,
         ) -> None:
             """Should hash a new secret key when rotating"""
-            mock_scalar_one_or_none.return_value = mock_service_account_record
+            mock_scalar_one_or_none.return_value = fake_service_account
 
             service = ServiceAccountService(mock_db)
 
             await service.rotate_key(uuid4(), uuid4())
 
             mock_password_hasher.hash.assert_called_once_with(
-                mock_secret_key_schema.key
+                fake_secret_key_schema.key
             )
 
         @pytest.mark.asyncio
@@ -113,11 +119,11 @@ class TestServiceAccountService:
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
-            mock_service_account_record: models.ServiceAccount,
+            fake_service_account: models.ServiceAccount,
             mock_secrets: MagicMock,
         ) -> None:
             """Should return the secret key when rotating"""
-            mock_scalar_one_or_none.return_value = mock_service_account_record
+            mock_scalar_one_or_none.return_value = fake_service_account
 
             service = ServiceAccountService(mock_db)
 

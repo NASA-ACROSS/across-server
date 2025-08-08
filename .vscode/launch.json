@@ -8,7 +8,6 @@
             "name": "local: Start Server",
             "type": "debugpy",
             "request": "launch",
-            "preLaunchTask": "Run db",
             "envFile": "${workspaceFolder}/.env",
             "python": "${workspaceFolder}/.venv/bin/python",
             "pythonArgs": [
@@ -89,12 +88,33 @@
                 "APP_ENV": "across-plat-ue2-dev",
                 "RUNTIME_ENV": "dev",
                 "AWS_PROFILE": "Project-Admin",
-                "ACROSS_DB_USER": "developer"
+                "ACROSS_DB_USER": "ci"
             },
             "module": "alembic",
             "args": [
                 "upgrade",
                 "head"
+            ],
+        },
+        {
+            "name": "dev: Downgrade",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "downgrade",
+                "-1"
             ],
         },
         {

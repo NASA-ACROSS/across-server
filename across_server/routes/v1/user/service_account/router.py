@@ -39,7 +39,7 @@ async def get_many(
     "/{service_account_id}",
     summary="Read a service account",
     description="Read a service account by an ID.",
-    operation_id="get_service_account",
+    operation_id="get_user_service_account",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -61,7 +61,7 @@ async def get(
     "/",
     summary="Create a service account",
     description="Create a new service account for an ACROSS user.",
-    operation_id="create_service_account",
+    operation_id="create_user_service_account",
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {
@@ -82,7 +82,7 @@ async def create(
     "/{service_account_id}",
     summary="Update a service account",
     description="Update a service account's information.",
-    operation_id="update_service_account",
+    operation_id="update_user_service_account",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -106,8 +106,8 @@ async def update(
 @router.delete(
     "/{service_account_id}",
     summary="Delete a service_account",
-    operation_id="delete_service_account",
-    description="Expire a service account",
+    operation_id="delete_user_service_account",
+    description="Expire a service account, the account will still exist for log/record purposes, but it will not be usable anymore.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete(
@@ -122,7 +122,7 @@ async def delete(
     "/{service_account_id}/rotate_key",
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration_duration",
-    operation_id="rotate_key",
+    operation_id="user_service_account_rotate_key",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {

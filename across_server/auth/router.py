@@ -117,10 +117,17 @@ async def refresh_token(
     return schemas.AccessTokenResponse(access_token=auth_tokens["access"])
 
 
-@router.post("/token", operation_id="token")
+@router.post(
+    "/token",
+    operation_id="token",
+    description=""
+    "Retrieve a token for authorization once authentication has been successful.\n"
+    "A `grant_type` must be provided. For JWTs: `urn:ietf:params:oauth:grant-type:jwt-bearer` "
+    "or for client credentials: `client_credentials`.",
+)
 async def token(
     auth_user: Annotated[schemas.AuthUser, Depends(authenticate_grant_type)],
-    grant_type: Annotated[str, Form()],
+    grant_type: Annotated[enums.GrantType, Form()],
     response: Response,
     service: Annotated[AuthService, Depends(AuthService)],
 ) -> schemas.AccessTokenResponse:
