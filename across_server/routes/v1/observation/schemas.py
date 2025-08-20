@@ -23,6 +23,7 @@ from ....core.schemas.bandpass import bandpass_converter
 from ....core.schemas.base import (
     BaseSchema,
 )
+from ....core.schemas.pagination import PaginationParams
 from ....db.models import Observation as ObservationModel
 
 
@@ -182,7 +183,7 @@ class ObservationCreate(ObservationBase):
         return self.orm_model(**data)
 
 
-class ObservationRead(BaseSchema):
+class ObservationRead(PaginationParams):
     external_id: str | None = None
     schedule_ids: list[uuid.UUID] | None = None
     observatory_ids: list[uuid.UUID] | None = None

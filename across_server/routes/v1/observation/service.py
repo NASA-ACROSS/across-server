@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Annotated
+from typing import Annotated, Tuple
 from uuid import UUID
 
 from across.tools import (
@@ -220,7 +220,9 @@ class ObservationService:
 
         return data_filter
 
-    async def get_many(self, data: ObservationRead) -> Sequence[models.Observation]:
+    async def get_many(
+        self, data: ObservationRead
+    ) -> Sequence[Tuple[models.Observation, int]]:
         """
         Retrieve the Observation records with the given filters.
 
@@ -235,12 +237,14 @@ class ObservationService:
             The Observations within the given filters
         """
         query = (
-            select(models.Observation)
+            select(models.Observation, func.count().over().label("count"))
             .where(*self._get_observation_filter(data))
             .order_by(models.Observation.created_on.desc())
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(query)
-        observations = result.scalars().all()
+        observations = result.tuples().all()
 
         return observations

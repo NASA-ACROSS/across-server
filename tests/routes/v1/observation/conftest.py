@@ -1,6 +1,6 @@
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, Tuple
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -49,6 +49,42 @@ def mock_observation_data() -> Observation:
     )
 
 
+@pytest.fixture()
+def mock_observation_many() -> Sequence[Tuple[Observation, int]]:
+    coordinate = Coordinate(
+        ra=123.456,
+        dec=-87.65,
+    )
+    return [
+        (
+            Observation(
+                id=uuid4(),
+                instrument_id=uuid4(),
+                schedule_id=uuid4(),
+                object_name="Test Object",
+                pointing_position=coordinate.create_gis_point(),
+                pointing_ra=123.456,
+                pointing_dec=-87.65,
+                object_position=coordinate.create_gis_point(),
+                object_ra=123.456,
+                object_dec=-87.65,
+                exposure_time=1800,
+                min_wavelength=2000,
+                max_wavelength=4000,
+                peak_wavelength=3000,
+                filter_name="Test Filter",
+                date_range_begin=datetime(2024, 12, 16, 11, 0),
+                date_range_end=datetime(2024, 12, 17, 11, 0),
+                external_observation_id="test-external-obsid",
+                type="imaging",
+                status="planned",
+                created_on=datetime.now(),
+            ),
+            1,
+        )
+    ]
+
+
 @pytest.fixture
 def mock_observation_create() -> ObservationCreate:
     return ObservationCreate(
@@ -69,11 +105,13 @@ def mock_observation_create() -> ObservationCreate:
 
 
 @pytest.fixture(scope="function")
-def mock_telescope_service(mock_observation_data: None) -> Generator[AsyncMock]:
+def mock_telescope_service(
+    mock_observation_data: None, mock_observation_many: None
+) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
     mock.get = AsyncMock(return_value=mock_observation_data)
-    mock.get_many = AsyncMock(return_value=[mock_observation_data])
+    mock.get_many = AsyncMock(return_value=mock_observation_many)
 
     yield mock
 
