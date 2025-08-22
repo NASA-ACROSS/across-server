@@ -3,8 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
-from across_server.core.schemas.pagination import Page
-
+from ....core.schemas.pagination import Page
 from . import schemas
 from .service import ObservationService
 
