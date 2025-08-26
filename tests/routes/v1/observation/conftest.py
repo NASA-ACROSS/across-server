@@ -105,7 +105,7 @@ def mock_observation_create() -> ObservationCreate:
 
 
 @pytest.fixture(scope="function")
-def mock_telescope_service(
+def mock_observation_service(
     mock_observation_data: None, mock_observation_many: None
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
@@ -118,13 +118,13 @@ def mock_telescope_service(
 
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app: FastAPI, fastapi_dep: Callable, mock_telescope_service: AsyncMock
+    app: FastAPI, fastapi_dep: Callable, mock_observation_service: AsyncMock
 ) -> Generator:
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
-            ObservationService: lambda: mock_telescope_service,
+            ObservationService: lambda: mock_observation_service,
         }
     ):
         yield overrider

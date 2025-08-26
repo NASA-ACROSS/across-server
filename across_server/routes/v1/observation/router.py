@@ -37,7 +37,7 @@ async def get_many(
 ) -> Page[schemas.Observation]:
     observation_tuples = await service.get_many(data=data)
 
-    total_number = observation_tuples[0][1]
+    total_number = observation_tuples[0][1] if observation_tuples else 0
     observations = [tuple[0] for tuple in observation_tuples]
     return Page[schemas.Observation].model_validate(
         {
