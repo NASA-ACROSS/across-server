@@ -5,12 +5,13 @@ from .role.schemas import GroupRole, GroupRoleRead
 
 
 class GroupBase(BaseSchema):
+    id: uuid.UUID
     name: str
     short_name: str
 
 
 class GroupRead(GroupBase):
-    id: uuid.UUID
+    pass
 
 
 # This is explicitly defined due to

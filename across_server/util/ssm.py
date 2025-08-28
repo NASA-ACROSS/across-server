@@ -1,5 +1,5 @@
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import boto3
 
@@ -46,7 +46,8 @@ class SSM:
             return os.getenv(name, "")
 
         client = cls._get_client()
-        param_name = f"{path}/{name}" if len(path) > 0 else f"/{name}"
+        param_name = cls._build_param_name(name, path)
+
         param_value = None
 
         try:
@@ -62,3 +63,42 @@ class SSM:
             )
 
         return param_value
+
+    @classmethod
+    def put_parameter(
+        cls,
+        value: str,
+        name: str,
+        path: str = "",
+        type: Literal["String", "StringList", "SecureString"] = "String",
+        overwrite: bool = False,
+    ) -> None:
+        """Create or update a parameter into AWS Parameter Store.
+
+        Args:
+            value: value to be stored
+            name: The name of the parameter to get
+            path: Optional parameter path prefix.
+
+        Raises:
+            ValueError: If the parameter is not found.
+        """
+        client = cls._get_client()
+        param_name = cls._build_param_name(name, path)
+
+        client.put_parameter(
+            Value=value,
+            Name=param_name,
+            Type=type,
+            Overwrite=overwrite,
+        )
+
+    @classmethod
+    def _build_param_name(cls, name: str, path: str = "") -> str:
+        param_name = f"{path}/{name}" if len(path) > 0 else f"/{name}"
+
+        # normalize for missing `/`
+        if param_name[0] != "/":
+            param_name = f"/{param_name}"
+
+        return param_name

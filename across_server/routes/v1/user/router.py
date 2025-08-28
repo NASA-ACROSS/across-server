@@ -29,6 +29,7 @@ router = APIRouter(
     "/",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.User],
+    operation_id="get_users",
 )
 async def get_many(
     service: Annotated[UserService, Depends(UserService)],
@@ -41,6 +42,7 @@ async def get_many(
     "/{user_id}",
     summary="Read a user",
     description="Read a user by a user ID.",
+    operation_id="get_user",
     status_code=status.HTTP_200_OK,
     response_model=schemas.User,
     responses={
@@ -66,6 +68,7 @@ async def get(
     "/",
     summary="Create a user",
     description="Create a new user for ACROSS.",
+    operation_id="create_user",
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {},
@@ -98,6 +101,7 @@ async def create(
     "/{user_id}",
     summary="Update a user",
     description="Update a user's information for the allowed properties.",
+    operation_id="update_user",
     status_code=status.HTTP_200_OK,
     response_model=schemas.User,
     responses={
@@ -125,6 +129,7 @@ async def update(
     "/{user_id}",
     status_code=status.HTTP_200_OK,
     summary="Delete a user",
+    operation_id="delete_user",
     description="Permanently delete a user from the ACROSS system. This will also delete all associated relations for the user.",
     response_model=schemas.User,
     responses={
@@ -147,6 +152,7 @@ async def delete(
     "/{user_id}/invite",
     summary="Read a user's group invites",
     description="Read a user's group invites by a user ID.",
+    operation_id="get_group_invites",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -168,6 +174,7 @@ async def get_invites(
     "/{user_id}/invite/{invite_id}",
     summary="Accept a group invitation",
     description="Accept a group invitation to join a user group.",
+    operation_id="accept_invite",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
@@ -190,6 +197,7 @@ async def accept_invite(
     "/{user_id}/invite/{invite_id}",
     summary="Decline a group invitation",
     description="Decline a group invitation to refuse joining a user group.",
+    operation_id="decline_invite",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {
@@ -213,6 +221,7 @@ async def decline_invite(
     "/{user_id}/group/{group_id}",
     summary="Leave a group",
     description="Leave a group by id",
+    operation_id="leave_group",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {

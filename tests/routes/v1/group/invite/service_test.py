@@ -16,10 +16,10 @@ class TestGroupInviteService:
             self,
             mock_db: AsyncMock,
             mock_scalar_result: AsyncMock,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group_invite: models.GroupInvite,
         ) -> None:
             """Should return a GroupInvite model when get is successful"""
-            mock_scalar_result.one_or_none.return_value = mock_group_invite_data
+            mock_scalar_result.one_or_none.return_value = fake_group_invite
             service = GroupInviteService(mock_db)
 
             user_invite = await service.get(uuid.uuid4(), uuid.uuid4())
@@ -43,12 +43,12 @@ class TestGroupInviteService:
             self,
             mock_db: AsyncMock,
             mock_scalar_result: AsyncMock,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group_invite: models.GroupInvite,
         ) -> None:
             """Should return an list of GroupInvite models when get_many is successful"""
             mock_scalar_result.all.return_value = [
-                mock_group_invite_data,
-                mock_group_invite_data,
+                fake_group_invite,
+                fake_group_invite,
             ]
             service = GroupInviteService(mock_db)
 
@@ -63,12 +63,12 @@ class TestGroupInviteService:
             self,
             mock_db: AsyncMock,
             mock_scalar_result: AsyncMock,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group_invite: models.GroupInvite,
         ) -> None:
             """Should return an list of GroupInvite models when get_many is successful"""
             mock_scalar_result.all.return_value = [
-                mock_group_invite_data,
-                mock_group_invite_data,
+                fake_group_invite,
+                fake_group_invite,
             ]
             service = GroupInviteService(mock_db)
 
@@ -100,89 +100,86 @@ class TestGroupInviteService:
         async def test_should_raise_duplicate_entity_exception_when_user_in_group(
             self,
             mock_db: AsyncMock,
-            mock_group_data: models.Group,
-            mock_user_data: models.User,
+            fake_group: models.Group,
+            fake_user: models.User,
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            mock_group_data.users = [mock_user_data]
+            fake_group.users = [fake_user]
 
             with pytest.raises(DuplicateEntityException):
-                await service.send(uuid.uuid4(), mock_group_data, mock_user_data)
+                await service.send(uuid.uuid4(), fake_group, fake_user)
 
         @pytest.mark.asyncio
         async def test_should_raise_duplicate_entity_exception_when_user_already_invited(
             self,
             mock_db: AsyncMock,
-            mock_group_data: models.Group,
-            mock_user_data: models.User,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group: models.Group,
+            fake_user: models.User,
+            fake_group_invite: models.GroupInvite,
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            with patch.object(
-                service, "get_many", return_value=[mock_group_invite_data]
-            ):
+            with patch.object(service, "get_many", return_value=[fake_group_invite]):
                 with pytest.raises(DuplicateEntityException):
-                    await service.send(uuid.uuid4(), mock_group_data, mock_user_data)
+                    await service.send(uuid.uuid4(), fake_group, fake_user)
 
         @pytest.mark.asyncio
         async def test_should_return_instance_of_group_invite_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_group_data: models.Group,
-            mock_user_data: models.User,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group: models.Group,
+            fake_user: models.User,
         ) -> None:
             service = GroupInviteService(mock_db)
 
+            # assume no users are in the group
+            fake_group.users = []
+
             with patch.object(service, "get_many", return_value=[]):
-                invite = await service.send(
-                    uuid.uuid4(), mock_group_data, mock_user_data
-                )
+                invite = await service.send(uuid.uuid4(), fake_group, fake_user)
                 assert isinstance(invite, models.GroupInvite)
 
         @pytest.mark.asyncio
         async def test_should_add_group_invite_to_database_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_group_data: models.Group,
-            mock_user_data: models.User,
-            mock_group_invite_data: models.GroupInvite,
+            fake_group: models.Group,
+            fake_user: models.User,
         ) -> None:
             service = GroupInviteService(mock_db)
 
+            fake_group.users = []
+
             with patch.object(service, "get_many", return_value=[]):
-                invite = await service.send(
-                    uuid.uuid4(), mock_group_data, mock_user_data
-                )
+                invite = await service.send(uuid.uuid4(), fake_group, fake_user)
                 mock_db.add.assert_called_once_with(invite)
 
     class TestAccept:
         @pytest.mark.asyncio
         async def test_should_append_user_to_group(
-            self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
+            self, mock_db: AsyncMock, fake_group_invite: models.GroupInvite
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            await service.accept(mock_group_invite_data)
-            assert mock_group_invite_data.receiver in mock_group_invite_data.group.users
+            await service.accept(fake_group_invite)
+            assert fake_group_invite.receiver in fake_group_invite.group.users
 
         @pytest.mark.asyncio
         async def test_should_call_db_delete_with_invite_record_once_when_successful(
-            self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
+            self, mock_db: AsyncMock, fake_group_invite: models.GroupInvite
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            await service.accept(mock_group_invite_data)
-            mock_db.delete.assert_called_once_with(mock_group_invite_data)
+            await service.accept(fake_group_invite)
+            mock_db.delete.assert_called_once_with(fake_group_invite)
 
     class TestDelete:
         @pytest.mark.asyncio
         async def test_should_call_db_delete_with_invite_record_once_when_successful(
-            self, mock_db: AsyncMock, mock_group_invite_data: models.GroupInvite
+            self, mock_db: AsyncMock, fake_group_invite: models.GroupInvite
         ) -> None:
             service = GroupInviteService(mock_db)
 
-            await service.delete(mock_group_invite_data)
-            mock_db.delete.assert_called_once_with(mock_group_invite_data)
+            await service.delete(fake_group_invite)
+            mock_db.delete.assert_called_once_with(fake_group_invite)

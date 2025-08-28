@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from ..... import auth
+from ..... import auth, core
 from . import schemas
 from .service import ServiceAccountService
 
@@ -22,6 +22,7 @@ router = APIRouter(
     "/",
     summary="Read service accounts",
     description="Read many service accounts",
+    operation_id="get_service_accounts",
     status_code=status.HTTP_200_OK,
 )
 async def get_many(
@@ -38,6 +39,7 @@ async def get_many(
     "/{service_account_id}",
     summary="Read a service account",
     description="Read a service account by an ID.",
+    operation_id="get_user_service_account",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -59,10 +61,11 @@ async def get(
     "/",
     summary="Create a service account",
     description="Create a new service account for an ACROSS user.",
+    operation_id="create_user_service_account",
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {
-            "model": schemas.ServiceAccountSecret,
+            "model": core.schemas.ServiceAccountSecret,
             "description": "The newly created service account",
         },
     },
@@ -71,7 +74,7 @@ async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
-) -> schemas.ServiceAccountSecret:
+) -> core.schemas.ServiceAccountSecret:
     return await service.create(data, created_by_id=auth_user.id)
 
 
@@ -79,6 +82,7 @@ async def create(
     "/{service_account_id}",
     summary="Update a service account",
     description="Update a service account's information.",
+    operation_id="update_user_service_account",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -102,7 +106,8 @@ async def update(
 @router.delete(
     "/{service_account_id}",
     summary="Delete a service_account",
-    description="Expire a service account",
+    operation_id="delete_user_service_account",
+    description="Expire a service account, the account will still exist for log/record purposes, but it will not be usable anymore.",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete(
@@ -117,6 +122,7 @@ async def delete(
     "/{service_account_id}/rotate_key",
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration_duration",
+    operation_id="user_service_account_rotate_key",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -125,9 +131,9 @@ async def delete(
         },
     },
 )
-async def rotate(
+async def rotate_key(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-) -> schemas.ServiceAccountSecret:
+) -> core.schemas.ServiceAccountSecret:
     return await service.rotate_key(service_account_id, modified_by_id=auth_user.id)

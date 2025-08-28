@@ -21,6 +21,7 @@ router = APIRouter(
     "/",
     summary="Read roles",
     description="Read many roles.",
+    operation_id="get_roles",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.Role],
     responses={
@@ -41,6 +42,7 @@ async def get_many(
     "/{role_id}",
     summary="Read a role",
     description="Read a role by role ID.",
+    operation_id="get_role",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Role,
     responses={

@@ -2,21 +2,16 @@ import datetime
 import uuid
 
 from .....core.schemas.base import BaseSchema
-from ..schemas import GroupRole
+from ...group.role.schemas import GroupRoleRead
 
 
 class ServiceAccount(BaseSchema):
     id: uuid.UUID
-    user_id: uuid.UUID
     name: str
     description: str | None
     expiration: datetime.datetime
     expiration_duration: int
-    group_roles: list[GroupRole]
-
-
-class ServiceAccountSecret(ServiceAccount):
-    secret_key: str | None = None
+    group_roles: list[GroupRoleRead]
 
 
 class ServiceAccountCreate(BaseSchema):

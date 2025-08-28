@@ -20,6 +20,7 @@ router = APIRouter(
     "/",
     summary="Read permissions",
     description="Read many permissions.",
+    operation_id="get_permissions",
     status_code=status.HTTP_200_OK,
     response_model=list[schemas.Permission],
     responses={

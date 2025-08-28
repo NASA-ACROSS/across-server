@@ -21,6 +21,7 @@ router = APIRouter(
     "/{instrument_id}",
     summary="Read an instrument",
     description="Read an instrument by a instrument ID.",
+    operation_id="get_instrument",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Instrument,
     responses={
@@ -45,6 +46,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     summary="Read instruments(s)",
     description="Read many instruments based on query params",
+    operation_id="get_instruments",
     response_model=list[schemas.Instrument],
     responses={
         status.HTTP_200_OK: {

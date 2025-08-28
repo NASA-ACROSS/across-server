@@ -1,5 +1,5 @@
 from ..config import auth_config
-from ..schemas import AuthUser, AuthUserType, Group
+from ..schemas import AuthUser, Group, PrincipalType
 from .base_token import Token, TokenData
 
 
@@ -19,7 +19,7 @@ class AccessTokenData(TokenData[str]):
 
     scopes: list[str]
     groups: list[Group]
-    type: AuthUserType
+    type: PrincipalType
 
 
 class AccessToken(Token[AccessTokenData, AuthUser]):

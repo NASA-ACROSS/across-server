@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Security, status
 
 from ....auth.schemas import AuthUser
-from ....core.schemas import Page
+from ....core.schemas import ListResponse, Page
 from ..telescope.access import telescope_access
 from ..telescope.service import TelescopeService
 from . import schemas
@@ -26,6 +26,7 @@ router = APIRouter(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
+    operation_id="get_schedules",
     responses={
         status.HTTP_200_OK: {
             "model": Page[schemas.Schedule],
@@ -57,6 +58,7 @@ async def get_many(
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read many recent schedules based on query params",
+    operation_id="get_schedules_history",
     responses={
         status.HTTP_200_OK: {
             "model": Page[schemas.Schedule],
@@ -87,6 +89,7 @@ async def get_history(
     "/{schedule_id}",
     summary="Read a schedule",
     description="Read a schedule by a schedule ID.",
+    operation_id="get_schedule",
     status_code=status.HTTP_200_OK,
     response_model=schemas.Schedule,
     responses={
@@ -110,6 +113,7 @@ async def get(
     "/",
     summary="Create a Schedule",
     description="Create a new observing schedule for ACROSS.",
+    operation_id="create_schedule",
     status_code=status.HTTP_201_CREATED,
     response_model=uuid.UUID,
     responses={
@@ -139,11 +143,12 @@ async def create(
     "/bulk",
     summary="Create many Schedules",
     description="Create many new observing schedules for ACROSS.",
+    operation_id="create_many_schedules",
     status_code=status.HTTP_201_CREATED,
-    response_model=list[uuid.UUID],
+    response_model=ListResponse[uuid.UUID],
     responses={
         status.HTTP_201_CREATED: {
-            "model": list[uuid.UUID],
+            "model": ListResponse[uuid.UUID],
             "description": "Created schedule ids",
         },
         status.HTTP_422_UNPROCESSABLE_ENTITY: {
@@ -161,6 +166,9 @@ async def create_many(
 ) -> list[uuid.UUID]:
     telescope = await telescope_service.get(data.telescope_id)
     instruments = telescope.instruments
+
     return await service.create_many(
-        schedule_create_many=data, instruments=instruments, created_by_id=auth_user.id
+        schedule_create_many=data,
+        instruments=instruments,
+        created_by_id=auth_user.id,
     )

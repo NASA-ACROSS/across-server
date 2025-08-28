@@ -19,7 +19,7 @@ http_bearer = HTTPBearer(
 )
 
 http_basic = HTTPBasic(
-    scheme_name="Service Account Authorization",
+    scheme_name="ServiceAccountAuthorization",
     description="Enter your client credentials.",
     auto_error=False,
 )
