@@ -14,6 +14,7 @@ class ServiceAccountData(BaseModel):
     id: uuid.UUID
     name: str
     description: str
+    expiration_duration: int | None = None  # days
 
 
 T = TypeVar("T", bound=DeclarativeBase)
@@ -24,7 +25,10 @@ def build(
     service_account_model: Type[T],
 ) -> tuple[T, SecretKeySchema]:
     # Use the default duration; the service will have a process to rotate the key accordingly.
-    expiration_duration = config.SERVICE_ACCOUNT_EXPIRATION_DURATION
+    expiration_duration = (
+        service_account_data.expiration_duration
+        or config.SERVICE_ACCOUNT_EXPIRATION_DURATION
+    )
 
     secret = ServiceAccountService.generate_secret_key(expiration_duration)
 

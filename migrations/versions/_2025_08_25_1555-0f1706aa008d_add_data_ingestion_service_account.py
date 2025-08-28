@@ -30,6 +30,7 @@ SERVICE_ACCOUNT_DATA = service_account.ServiceAccountData(
     id=uuid.UUID("9798d4e2-fe46-4da9-8708-dd098c27ea8c"),
     name="Data Ingestion Service Account",
     description="The service account that is used by the data ingestion service to push system information such as observatory schedules.",
+    expiration_duration=36525,  # 100 years rick and morty!
 )
 
 
@@ -37,9 +38,11 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind, expire_on_commit=False)
 
-    # for non-local the ID will be stored in param store for added security
     if not config.is_local():
+        # for non-local the generated ID will be stored in param store for added security
         SERVICE_ACCOUNT_DATA.id = uuid.uuid4()
+        # use the default expiration duration (as of writing this, 30 days)
+        SERVICE_ACCOUNT_DATA.expiration_duration = None
 
     record, secret = service_account.build(SERVICE_ACCOUNT_DATA, models.ServiceAccount)
 
