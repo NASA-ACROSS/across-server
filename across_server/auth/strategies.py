@@ -29,7 +29,7 @@ async def global_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate)],
 ) -> AuthUser:
-    if system_access(security_scopes, auth_user):
+    if system_access(auth_user):
         return auth_user
 
     for scope in security_scopes.scopes:
@@ -50,7 +50,7 @@ async def group_access(
     group_id: Annotated[UUID, Path(title="UUID of the group")],
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
 ) -> AuthUser:
-    if system_access(security_scopes, auth_user):
+    if system_access(auth_user):
         return auth_user
 
     for group in auth_user.groups:
@@ -62,23 +62,18 @@ async def group_access(
     )
 
 
-def system_access(security_scopes: SecurityScopes, principal: AuthUser) -> bool:
-    system_scopes = [
-        scope for scope in security_scopes.scopes if scope.startswith("system")
-    ]
+def system_access(principal: AuthUser) -> bool:
+    system_scopes = [scope for scope in principal.scopes if scope.startswith("system")]
 
-    # verify against the principal's scopes
-    # if the system scopes are a subset of the
-    # principal scopes, the system has access.
-    return set(system_scopes).issubset(principal.scopes)
+    return len(system_scopes) > 0
 
 
 async def self_access(
-    security_scopes: SecurityScopes,
+    _: SecurityScopes,
     user_id: Annotated[UUID, Path(title="UUID of the user")],
     auth_user: Annotated[AuthUser, Depends(authenticate)],
 ) -> AuthUser:
-    if system_access(security_scopes, auth_user):
+    if system_access(auth_user):
         return auth_user
 
     if auth_user.id == user_id:
@@ -90,11 +85,11 @@ async def self_access(
 
 
 async def system_service_account_access(
-    security_scopes: SecurityScopes,
+    _: SecurityScopes,
     service_account_id: Annotated[UUID, Path(title="UUID of the service account")],
     principal: Annotated[AuthUser, Depends(authenticate_jwt)],
 ) -> AuthUser:
-    is_system = system_access(security_scopes, principal)
+    is_system = system_access(principal)
 
     if is_system and principal.id == service_account_id:
         return principal

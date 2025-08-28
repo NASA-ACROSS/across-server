@@ -8,6 +8,8 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from across_server import core
+
 from .....auth.hashing import password_hasher
 from .....auth.schemas import SecretKeySchema
 from .....core import config
@@ -54,17 +56,6 @@ class ServiceAccountService:
 
         return service_account
 
-    async def get_system(self, id: UUID) -> models.ServiceAccount:
-        query = select(models.ServiceAccount).where(models.ServiceAccount.id == id)
-
-        result = await self.db.execute(query)
-        service_account = result.scalar_one_or_none()
-
-        if service_account is None:
-            raise ServiceAccountNotFoundException(id)
-
-        return service_account
-
     async def get_many(self, user_id: UUID) -> Sequence[models.ServiceAccount]:
         result = await self.db.scalars(
             select(models.ServiceAccount)
@@ -77,7 +68,7 @@ class ServiceAccountService:
 
     async def create(
         self, service_account_create: schemas.ServiceAccountCreate, created_by_id: UUID
-    ) -> schemas.ServiceAccountSecret:
+    ) -> core.schemas.ServiceAccountSecret:
         service_account_create.expiration_duration = (
             service_account_create.expiration_duration
             if service_account_create.expiration_duration
@@ -146,7 +137,7 @@ class ServiceAccountService:
 
     async def rotate_key(
         self, id: UUID, modified_by_id: UUID
-    ) -> schemas.ServiceAccountSecret:
+    ) -> core.schemas.ServiceAccountSecret:
         service_account = await self.get(service_account_id=id, user_id=modified_by_id)
 
         # generate a secret key for the service account that will be sent to the user
@@ -180,8 +171,8 @@ class ServiceAccountService:
 
     def _build_sa_secret(
         self, service_account: models.ServiceAccount, secret_key: str
-    ) -> schemas.ServiceAccountSecret:
-        sa_secret = schemas.ServiceAccountSecret.model_validate(service_account)
+    ) -> core.schemas.ServiceAccountSecret:
+        sa_secret = core.schemas.ServiceAccountSecret.model_validate(service_account)
 
         # return the generated secret key to the user one time
         # once the response is sent we will no longer know this value

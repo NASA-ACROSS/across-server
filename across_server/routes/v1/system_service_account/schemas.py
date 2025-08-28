@@ -15,7 +15,3 @@ class SystemServiceAccount(BaseSchema):
     expiration_duration: int
     roles: list[RoleBase]
     group_roles: list[GroupRoleRead]
-
-
-class SystemServiceAccountSecret(SystemServiceAccount):
-    secret_key: str

@@ -14,10 +14,6 @@ class ServiceAccount(BaseSchema):
     group_roles: list[GroupRoleRead]
 
 
-class ServiceAccountSecret(ServiceAccount):
-    secret_key: str | None = None
-
-
 class ServiceAccountCreate(BaseSchema):
     name: str
     description: str | None
