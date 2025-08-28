@@ -72,10 +72,8 @@ class SystemServiceAccountService:
     def _build_sa_secret(
         self, service_account: models.ServiceAccount, secret_key: str
     ) -> schemas.ServiceAccountSecret:
-        sa_secret = schemas.ServiceAccountSecret.model_validate(service_account)
-
-        # return the generated secret key to the user one time
-        # once the response is sent we will no longer know this value
-        sa_secret.secret_key = secret_key
+        sa_secret = schemas.ServiceAccountSecret.model_validate(
+            {**service_account.__dict__, "secret_key": secret_key}
+        )
 
         return sa_secret

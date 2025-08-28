@@ -9,10 +9,10 @@ import pytest
 from argon2 import PasswordHasher
 from fastapi import FastAPI
 
+from across_server import core
 from across_server.auth import strategies
 from across_server.auth.schemas import SecretKeySchema
 from across_server.db import models
-from across_server.routes.v1.user.service_account import schemas
 from across_server.routes.v1.user.service_account.schemas import ServiceAccountCreate
 from across_server.routes.v1.user.service_account.service import ServiceAccountService
 
@@ -21,8 +21,8 @@ from across_server.routes.v1.user.service_account.service import ServiceAccountS
 def fake_service_account_data_with_secret(
     fake_service_account: dict,
     fake_generated_hex: str,
-) -> schemas.ServiceAccountSecret:
-    return schemas.ServiceAccountSecret.model_validate(
+) -> core.schemas.ServiceAccountSecret:
+    return core.schemas.ServiceAccountSecret.model_validate(
         {**fake_service_account.__dict__, "secret_key": fake_generated_hex}
     )
 
@@ -30,7 +30,7 @@ def fake_service_account_data_with_secret(
 @pytest.fixture(scope="function")
 def mock_service_account_service(
     fake_service_account: dict,
-    fake_service_account_data_with_secret: schemas.ServiceAccountSecret,
+    fake_service_account_data_with_secret: core.schemas.ServiceAccountSecret,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ServiceAccountService)
 

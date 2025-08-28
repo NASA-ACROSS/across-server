@@ -5,9 +5,9 @@ from uuid import uuid4
 
 import pytest
 
+from across_server import core
 from across_server.auth.schemas import SecretKeySchema
 from across_server.db import models
-from across_server.routes.v1.user.service_account import schemas
 from across_server.routes.v1.user.service_account.exceptions import (
     ServiceAccountNotFoundException,
 )
@@ -62,7 +62,7 @@ class TestServiceAccountService:
             service_account_secret = await service.create(
                 fake_service_account_create, created_by_id=uuid4()
             )
-            assert isinstance(service_account_secret, schemas.ServiceAccountSecret)
+            assert isinstance(service_account_secret, core.schemas.ServiceAccountSecret)
 
         @pytest.mark.asyncio
         async def test_create_should_save_service_account_to_database(

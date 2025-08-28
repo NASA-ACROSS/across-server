@@ -13,5 +13,5 @@ class SystemServiceAccount(BaseSchema):
     description: str | None = None
     expiration: datetime.datetime
     expiration_duration: int
-    roles: list[RoleBase]
-    group_roles: list[GroupRoleRead]
+    roles: list[RoleBase] = []
+    group_roles: list[GroupRoleRead] = []

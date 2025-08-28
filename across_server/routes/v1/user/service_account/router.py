@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from ..... import auth
+from ..... import auth, core
 from . import schemas
 from .service import ServiceAccountService
 
@@ -65,7 +65,7 @@ async def get(
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {
-            "model": schemas.ServiceAccountSecret,
+            "model": core.schemas.ServiceAccountSecret,
             "description": "The newly created service account",
         },
     },
@@ -74,7 +74,7 @@ async def create(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     data: schemas.ServiceAccountCreate,
-) -> schemas.ServiceAccountSecret:
+) -> core.schemas.ServiceAccountSecret:
     return await service.create(data, created_by_id=auth_user.id)
 
 
@@ -135,5 +135,5 @@ async def rotate_key(
     service: Annotated[ServiceAccountService, Depends(ServiceAccountService)],
     auth_user: Annotated[auth.schemas.AuthUser, Depends(auth.strategies.self_access)],
     service_account_id: uuid.UUID,
-) -> schemas.ServiceAccountSecret:
+) -> core.schemas.ServiceAccountSecret:
     return await service.rotate_key(service_account_id, modified_by_id=auth_user.id)
