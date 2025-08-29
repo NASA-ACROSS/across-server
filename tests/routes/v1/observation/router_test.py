@@ -1,3 +1,5 @@
+from collections.abc import Generator
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import fastapi
@@ -5,11 +7,12 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
+from across_server.core.schemas.pagination import Page
 from across_server.routes.v1.observation.schemas import Observation
 
 
 class Setup:
-    @pytest_asyncio.fixture(autouse=True)
+    @pytest_asyncio.fixture(autouse=True, scope="function")
     async def setup(
         self, async_client: AsyncClient, mock_observation_data: None
     ) -> None:
@@ -18,7 +21,17 @@ class Setup:
         self.get_data = mock_observation_data
 
 
-class TestObservationRouter:
+class SetupMany:
+    @pytest_asyncio.fixture(autouse=True, scope="function")
+    async def setup(
+        self, async_client: AsyncClient, mock_observation_many: None
+    ) -> None:
+        self.client = async_client
+        self.endpoint = "/observation/"
+        self.get_data = mock_observation_many
+
+
+class TestObservationRouterGet:
     class TestGet(Setup):
         @pytest.mark.asyncio
         async def test_should_return_observation(self) -> None:
@@ -34,6 +47,7 @@ class TestObservationRouter:
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
+    class TestGetMany(SetupMany):
         @pytest.mark.asyncio
         async def test_many_should_return_many(self) -> None:
             """GET many should return multiple when successful"""
@@ -44,10 +58,21 @@ class TestObservationRouter:
         async def test_many_should_return_many_observations(self) -> None:
             """GET many should return multiple observations when successful"""
             res = await self.client.get(self.endpoint)
-            assert all([Observation.model_validate(json) for json in res.json()])
+            assert all([Observation.model_validate(obs) for obs in res.json()["items"]])
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self) -> None:
             """GET many should return 200 when successful"""
             res = await self.client.get(self.endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_empty_items_with_pagination_metadata(
+            self, mock_observation_service: Generator[AsyncMock]
+        ) -> None:
+            """GET many should return empty items with pagination metadata when no results"""
+            mock_observation_service.get_many = AsyncMock(return_value=[])  # type: ignore
+            res = await self.client.get(self.endpoint)
+            assert len(res.json()["items"]) == 0
+            assert res.json()["total_number"] == 0
+            assert Page[Observation].model_validate(res.json())

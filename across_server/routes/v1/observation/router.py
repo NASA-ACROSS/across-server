@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, status
 
+from ....core.schemas.pagination import Page
 from . import schemas
 from .service import ObservationService
 
@@ -23,10 +24,9 @@ router = APIRouter(
     summary="Read observations(s)",
     description="Read the observations based on query params",
     operation_id="get_observations",
-    response_model=list[schemas.Observation],
     responses={
         status.HTTP_200_OK: {
-            "model": list[schemas.Observation],
+            "model": Page[schemas.Observation],
             "description": "Return a list of observations",
         },
     },
@@ -34,9 +34,22 @@ router = APIRouter(
 async def get_many(
     service: Annotated[ObservationService, Depends(ObservationService)],
     data: Annotated[schemas.ObservationRead, Query()],
-) -> list[schemas.Observation]:
-    observations = await service.get_many(data=data)
-    return [schemas.Observation.from_orm(observation) for observation in observations]
+) -> Page[schemas.Observation]:
+    observation_tuples = await service.get_many(data=data)
+
+    total_number = observation_tuples[0][1] if observation_tuples else 0
+    observations = [tuple[0] for tuple in observation_tuples]
+    return Page[schemas.Observation].model_validate(
+        {
+            "total_number": total_number,
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "items": [
+                schemas.Observation.from_orm(observation)
+                for observation in observations
+            ],
+        }
+    )
 
 
 @router.get(
@@ -45,7 +58,6 @@ async def get_many(
     description="Read an observation by an observation ID.",
     operation_id="get_observation",
     status_code=status.HTTP_200_OK,
-    response_model=schemas.Observation,
     responses={
         status.HTTP_200_OK: {
             "model": schemas.Observation,
