@@ -33,6 +33,7 @@ class TelescopeBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
+    schedule_cadence: str | None = None
     observatory: IDNameSchema | None = None
     instruments: list[TelescopeInstrument] | None = None
 
@@ -72,6 +73,7 @@ class Telescope(TelescopeBase):
             id=obj.id,
             name=obj.name,
             short_name=obj.short_name,
+            schedule_cadence=obj.schedule_cadence,
             observatory=IDNameSchema(
                 id=obj.observatory.id,
                 name=obj.observatory.name,
