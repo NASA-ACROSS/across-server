@@ -5,6 +5,7 @@ from datetime import datetime
 
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Telescope as TelescopeModel
+from ..instrument.schemas import Instrument
 
 
 class TelescopeBase(BaseSchema):
@@ -30,7 +31,7 @@ class TelescopeBase(BaseSchema):
     name: str
     short_name: str
     observatory: IDNameSchema | None = None
-    instruments: list[IDNameSchema] | None = None
+    instruments: list[Instrument] | None = None
 
 
 class Telescope(TelescopeBase):
@@ -69,12 +70,7 @@ class Telescope(TelescopeBase):
                 short_name=obj.observatory.short_name,
             ),
             instruments=[
-                IDNameSchema(
-                    id=instrument.id,
-                    name=instrument.name,
-                    short_name=instrument.short_name,
-                )
-                for instrument in obj.instruments
+                Instrument.from_orm(instrument) for instrument in obj.instruments
             ],
             created_on=obj.created_on,
         )
