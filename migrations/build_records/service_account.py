@@ -30,6 +30,8 @@ def build(
         or config.SERVICE_ACCOUNT_EXPIRATION_DURATION
     )
 
+    service_account_data.expiration_duration = expiration_duration
+
     secret = ServiceAccountService.generate_secret_key(expiration_duration)
 
     if config.is_local():
@@ -42,7 +44,6 @@ def build(
     record = service_account_model(
         **service_account_data.model_dump(),
         hashed_key=hashed_secret_key,
-        expiration_duration=expiration_duration,
         expiration=secret.expiration,
     )
 
