@@ -1,6 +1,6 @@
 from collections.abc import Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from uuid import UUID, uuid4
 
 import pytest
@@ -81,7 +81,9 @@ def instrument_without_constraints() -> InstrumentSchema:
 
 
 @pytest.fixture
-def mock_ephemeris_mocks() -> Generator[tuple[AsyncMock, AsyncMock, AsyncMock]]:
+def mock_ephemeris_mocks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[tuple[AsyncMock, AsyncMock, AsyncMock], None, None]:
     """Mock ephemeris-related services and functions"""
     mock_ephemeris_service = AsyncMock()
     mock_compute_visibility = AsyncMock()
@@ -89,18 +91,17 @@ def mock_ephemeris_mocks() -> Generator[tuple[AsyncMock, AsyncMock, AsyncMock]]:
 
     mock_ephemeris_service.get.return_value = AsyncMock()
 
-    with (
-        patch(
-            "across_server.routes.v1.tools.visibility_calculator.service.EphemerisService",
-            return_value=mock_ephemeris_service,
-        ),
-        patch(
-            "across_server.routes.v1.tools.visibility_calculator.service.compute_ephemeris_visibility",
-            mock_compute_visibility,
-        ),
-        patch(
-            "anyio.to_thread.run_sync",
-            new=AsyncMock(return_value=mock_visibility_result),
-        ),
-    ):
-        yield mock_ephemeris_service, mock_compute_visibility, mock_visibility_result
+    monkeypatch.setattr(
+        "across_server.routes.v1.tools.visibility_calculator.service.EphemerisService",
+        lambda *args, **kwargs: mock_ephemeris_service,
+    )
+    monkeypatch.setattr(
+        "across_server.routes.v1.tools.visibility_calculator.service.compute_ephemeris_visibility",
+        mock_compute_visibility,
+    )
+    monkeypatch.setattr(
+        "anyio.to_thread.run_sync",
+        AsyncMock(return_value=mock_visibility_result),
+    )
+
+    yield mock_ephemeris_service, mock_compute_visibility, mock_visibility_result

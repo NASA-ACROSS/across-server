@@ -1,5 +1,5 @@
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
 import pytest
@@ -104,12 +104,9 @@ class TestVisibilityService:
             )
 
     @pytest.mark.asyncio
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService"
-    )
     async def test_get_should_raise_instrument_not_found_when_instrument_does_not_exist(
         self,
-        mock_instrument_service_class: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_db: AsyncMock,
         sample_coordinates: tuple[float, float],
         sample_instrument_id: UUID,
@@ -119,7 +116,10 @@ class TestVisibilityService:
         ra, dec = sample_coordinates
         mock_instrument_service = AsyncMock()
         mock_instrument_service.get.return_value = None
-        mock_instrument_service_class.return_value = mock_instrument_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService",
+            MagicMock(return_value=mock_instrument_service),
+        )
 
         service = VisibilityService(mock_db)
 
@@ -134,16 +134,9 @@ class TestVisibilityService:
             )
 
     @pytest.mark.asyncio
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm"
-    )
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService"
-    )
     async def test_get_should_raise_http_exception_when_instrument_has_no_telescope(
         self,
-        mock_instrument_service_class: MagicMock,
-        mock_from_orm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_db: AsyncMock,
         sample_coordinates: tuple[float, float],
         sample_instrument_id: UUID,
@@ -154,12 +147,18 @@ class TestVisibilityService:
         mock_instrument_model = MagicMock()
         mock_instrument_service = AsyncMock()
         mock_instrument_service.get.return_value = mock_instrument_model
-        mock_instrument_service_class.return_value = mock_instrument_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService",
+            MagicMock(return_value=mock_instrument_service),
+        )
 
         mock_instrument_schema = MagicMock()
         mock_instrument_schema.name = "Test Instrument"
         mock_instrument_schema.telescope = None
-        mock_from_orm.return_value = mock_instrument_schema
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm",
+            MagicMock(return_value=mock_instrument_schema),
+        )
 
         service = VisibilityService(mock_db)
 
@@ -177,20 +176,9 @@ class TestVisibilityService:
         assert "has no associated telescope" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm"
-    )
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.TelescopeService"
-    )
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService"
-    )
     async def test_get_should_call_get_ephemeris_visibility_when_visibility_type_is_ephemeris(
         self,
-        mock_instrument_service_class: MagicMock,
-        mock_telescope_service_class: MagicMock,
-        mock_from_orm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_db: AsyncMock,
         sample_coordinates: tuple[float, float],
         sample_instrument_id: UUID,
@@ -203,20 +191,29 @@ class TestVisibilityService:
         mock_instrument_model = MagicMock()
         mock_instrument_service = AsyncMock()
         mock_instrument_service.get.return_value = mock_instrument_model
-        mock_instrument_service_class.return_value = mock_instrument_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService",
+            MagicMock(return_value=mock_instrument_service),
+        )
 
         mock_telescope = MagicMock()
         mock_telescope.observatory_id = sample_observatory_id
         mock_telescope_service = AsyncMock()
         mock_telescope_service.get.return_value = mock_telescope
-        mock_telescope_service_class.return_value = mock_telescope_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.TelescopeService",
+            MagicMock(return_value=mock_telescope_service),
+        )
 
         mock_instrument_schema = MagicMock()
         mock_instrument_schema.name = "Test Instrument"
         mock_instrument_schema.telescope = MagicMock()
         mock_instrument_schema.telescope.id = sample_telescope_id
         mock_instrument_schema.visibility_type = "ephemeris"
-        mock_from_orm.return_value = mock_instrument_schema
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm",
+            MagicMock(return_value=mock_instrument_schema),
+        )
 
         mock_visibility = MagicMock()
 
@@ -236,20 +233,9 @@ class TestVisibilityService:
         assert result == mock_visibility
 
     @pytest.mark.asyncio
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm"
-    )
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.TelescopeService"
-    )
-    @patch(
-        "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService"
-    )
     async def test_get_should_raise_not_implemented_error_when_visibility_type_not_supported(
         self,
-        mock_instrument_service_class: MagicMock,
-        mock_telescope_service_class: MagicMock,
-        mock_from_orm: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_db: AsyncMock,
         sample_coordinates: tuple[float, float],
         sample_instrument_id: UUID,
@@ -262,20 +248,29 @@ class TestVisibilityService:
         mock_instrument_model = MagicMock()
         mock_instrument_service = AsyncMock()
         mock_instrument_service.get.return_value = mock_instrument_model
-        mock_instrument_service_class.return_value = mock_instrument_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentService",
+            MagicMock(return_value=mock_instrument_service),
+        )
 
         mock_telescope = MagicMock()
         mock_telescope.observatory_id = sample_observatory_id
         mock_telescope_service = AsyncMock()
         mock_telescope_service.get.return_value = mock_telescope
-        mock_telescope_service_class.return_value = mock_telescope_service
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.TelescopeService",
+            MagicMock(return_value=mock_telescope_service),
+        )
 
         mock_instrument_schema = MagicMock()
         mock_instrument_schema.name = "Test Instrument"
         mock_instrument_schema.telescope = MagicMock()
         mock_instrument_schema.telescope.id = sample_telescope_id
         mock_instrument_schema.visibility_type = "unsupported_type"
-        mock_from_orm.return_value = mock_instrument_schema
+        monkeypatch.setattr(
+            "across_server.routes.v1.tools.visibility_calculator.service.InstrumentSchema.from_orm",
+            MagicMock(return_value=mock_instrument_schema),
+        )
 
         service = VisibilityService(mock_db)
 
