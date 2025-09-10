@@ -4,7 +4,11 @@ import uuid
 from datetime import datetime
 
 from ....core.schemas.base import BaseSchema, IDNameSchema
+from ....db.models import Instrument as InstrumentModel
 from ....db.models import Telescope as TelescopeModel
+from ..filter.schemas import Filter
+from ..footprint.schemas import Footprint
+from ..instrument.schemas import InstrumentBase
 
 
 class TelescopeBase(BaseSchema):
@@ -30,7 +34,7 @@ class TelescopeBase(BaseSchema):
     name: str
     short_name: str
     observatory: IDNameSchema | None = None
-    instruments: list[IDNameSchema] | None = None
+    instruments: list[TelescopeInstrument] | None = None
 
 
 class Telescope(TelescopeBase):
@@ -48,7 +52,12 @@ class Telescope(TelescopeBase):
     """
 
     @classmethod
-    def from_orm(cls, obj: TelescopeModel) -> Telescope:
+    def from_orm(
+        cls,
+        obj: TelescopeModel,
+        include_footprints: bool = True,
+        include_filters: bool = True,
+    ) -> Telescope:
         """
         Method that converts a models.Telescope record to a schemas.Telescope
         Parameters
@@ -69,10 +78,8 @@ class Telescope(TelescopeBase):
                 short_name=obj.observatory.short_name,
             ),
             instruments=[
-                IDNameSchema(
-                    id=instrument.id,
-                    name=instrument.name,
-                    short_name=instrument.short_name,
+                TelescopeInstrument.from_orm(
+                    instrument, include_footprints, include_filters
                 )
                 for instrument in obj.instruments
             ],
@@ -99,3 +106,56 @@ class TelescopeRead(BaseSchema):
     instrument_id: uuid.UUID | None = None
     instrument_name: str | None = None
     created_on: datetime | None = None
+    include_filters: bool = False
+    include_footprints: bool = False
+
+
+class TelescopeInstrument(InstrumentBase):
+    """
+    A Pydantic model class representing a created Instrument for the Telescope Endpoint
+
+    Notes
+    -----
+    Inherits from InstrumentBase
+
+    Methods
+    -------
+    from_orm(instrument: InstrumentModel, include_footprints: bool, include_filters: bool) -> Instrument
+        Static method that instantiates this class from a Instrument database record
+    """
+
+    @classmethod
+    def from_orm(
+        cls,
+        obj: InstrumentModel,
+        include_footprints: bool = True,
+        include_filters: bool = True,
+    ) -> TelescopeInstrument:
+        """
+        Method that converts a models.Instrument record to a schemas.Instrument
+        Parameters
+        ----------
+        Telescope: TelescopeModel
+            the models.Telescope record
+        Returns
+        -------
+            schemas.Telescope
+        """
+        footprints = [Footprint.from_orm(footprint) for footprint in obj.footprints]
+        filters = [Filter.model_validate(filter) for filter in obj.filters]
+
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            short_name=obj.short_name,
+            telescope=IDNameSchema(
+                id=obj.telescope.id,
+                name=obj.telescope.name,
+                short_name=obj.telescope.short_name,
+            ),
+            footprints=[footprint.polygon for footprint in footprints]
+            if include_footprints
+            else [],
+            filters=filters if include_filters else [],
+            created_on=obj.created_on,
+        )

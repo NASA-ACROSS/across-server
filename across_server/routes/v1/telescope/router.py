@@ -60,4 +60,11 @@ async def get_many(
     data: Annotated[schemas.TelescopeRead, Query()],
 ) -> list[schemas.Telescope]:
     telescopes = await service.get_many(data=data)
-    return [schemas.Telescope.from_orm(telescope) for telescope in telescopes]
+    return [
+        schemas.Telescope.from_orm(
+            telescope,
+            include_footprints=data.include_footprints,
+            include_filters=data.include_filters,
+        )
+        for telescope in telescopes
+    ]
