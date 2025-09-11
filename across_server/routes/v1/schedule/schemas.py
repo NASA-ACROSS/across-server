@@ -74,12 +74,15 @@ class Schedule(ScheduleBase):
 
     id: uuid.UUID
     observations: list[Observation] | None
+    observation_count: int
     created_on: datetime
     created_by_id: uuid.UUID | None
     checksum: str = ""
 
     @classmethod
-    def from_orm(cls, obj: ScheduleModel) -> Schedule:
+    def from_orm(
+        cls, obj: ScheduleModel, include_observations: bool = False
+    ) -> Schedule:
         """
         Method that converts a models.Schedule record to a schemas.Schedule
 
@@ -92,6 +95,15 @@ class Schedule(ScheduleBase):
         -------
             schemas.Schedule
         """
+        observations = []
+
+        if include_observations:
+            observations = [
+                Observation.from_orm(observation) for observation in obj.observations
+            ]
+
+        observation_count = len(obj.observations)
+
         return cls(
             id=obj.id,
             telescope_id=obj.telescope_id,
@@ -102,9 +114,8 @@ class Schedule(ScheduleBase):
             fidelity=ScheduleFidelity(obj.fidelity),
             created_on=obj.created_on,
             created_by_id=obj.created_by_id,
-            observations=[
-                Observation.from_orm(observation) for observation in obj.observations
-            ],
+            observations=observations,
+            observation_count=observation_count,
             checksum=obj.checksum,
         )
 
@@ -193,6 +204,7 @@ class ScheduleRead(PaginationParams):
     telescope_ids: list[uuid.UUID] = []
     telescope_names: list[str] = []
     name: str | None = None
+    include_observations: bool | None = None
 
 
 class ScheduleCreateMany(BaseSchema):

@@ -63,6 +63,7 @@ class ObservatoryBase(BaseSchema):
     type: ObservatoryType
     telescopes: list[IDNameSchema] | None = None
     ephemeris_types: list[ObservatoryEphemerisType] | None = None
+    reference_url: str | None
 
 
 class Observatory(ObservatoryBase):
