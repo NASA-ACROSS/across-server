@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from ....core.enums.schedule_status import ScheduleStatus
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
 from ....db.models import Telescope as TelescopeModel
@@ -33,7 +34,7 @@ class TelescopeBase(BaseSchema):
     created_on: datetime
     name: str
     short_name: str
-    schedule_cadence: str | None = None
+    schedule_cadences: list[ScheduleCadence] | None = None
     observatory: IDNameSchema | None = None
     instruments: list[TelescopeInstrument] | None = None
 
@@ -73,7 +74,6 @@ class Telescope(TelescopeBase):
             id=obj.id,
             name=obj.name,
             short_name=obj.short_name,
-            schedule_cadence=obj.schedule_cadence,
             observatory=IDNameSchema(
                 id=obj.observatory.id,
                 name=obj.observatory.name,
@@ -84,6 +84,10 @@ class Telescope(TelescopeBase):
                     instrument, include_footprints, include_filters
                 )
                 for instrument in obj.instruments
+            ],
+            schedule_cadences=[
+                ScheduleCadence.model_validate(schedule_cadence)
+                for schedule_cadence in obj.schedule_cadences
             ],
             created_on=obj.created_on,
         )
@@ -161,3 +165,10 @@ class TelescopeInstrument(InstrumentBase):
             filters=filters if include_filters else [],
             created_on=obj.created_on,
         )
+
+
+class ScheduleCadence(BaseSchema):
+    id: uuid.UUID
+    telescope_id: uuid.UUID
+    cron: str | None
+    schedule_status: ScheduleStatus

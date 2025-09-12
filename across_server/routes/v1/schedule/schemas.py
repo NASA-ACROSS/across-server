@@ -81,7 +81,7 @@ class Schedule(ScheduleBase):
 
     @classmethod
     def from_orm(
-        cls, obj: ScheduleModel, include_observations: bool = False
+        cls, obj: ScheduleModel, include_observations: bool | None = False
     ) -> Schedule:
         """
         Method that converts a models.Schedule record to a schemas.Schedule

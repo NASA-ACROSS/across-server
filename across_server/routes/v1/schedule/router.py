@@ -48,7 +48,10 @@ async def get_many(
             "total_number": total_number,
             "page": data.page,
             "page_limit": data.page_limit,
-            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
+            "items": [
+                schemas.Schedule.from_orm(schedule, data.include_observations)
+                for schedule in schedules
+            ],
         }
     )
 
@@ -80,7 +83,10 @@ async def get_history(
             "total_number": total_number,
             "page": data.page,
             "page_limit": data.page_limit,
-            "items": [schemas.Schedule.from_orm(schedule) for schedule in schedules],
+            "items": [
+                schemas.Schedule.from_orm(schedule, data.include_observations)
+                for schedule in schedules
+            ],
         }
     )
 

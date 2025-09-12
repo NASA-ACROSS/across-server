@@ -414,7 +414,6 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     )
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
-    schedule_cadence: Mapped[str] = mapped_column(String(50), nullable=True)
 
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
@@ -424,6 +423,9 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     )
     schedules: Mapped[list["Schedule"]] = relationship(
         back_populates="telescope", lazy="noload"
+    )
+    schedule_cadences: Mapped[list["ScheduleCadence"]] = relationship(
+        back_populates="telescope", lazy="selectin", cascade="all,delete"
     )
 
 
@@ -518,6 +520,19 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
         Index("ix_schedule_date_range_begin", "date_range_begin"),
         Index("ix_schedule_date_range_end", "date_range_end"),
         Index("ix_schedule_checksum", "checksum"),
+    )
+
+
+class ScheduleCadence(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "schedule_cadence"
+
+    telescope_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Telescope.id)
+    )
+    schedule_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    cron: Mapped[str] = mapped_column(String(50), nullable=True)
+    telescope: Mapped["Telescope"] = relationship(
+        back_populates="schedule_cadences", lazy="selectin"
     )
 
 
