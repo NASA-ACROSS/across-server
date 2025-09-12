@@ -133,7 +133,7 @@ instrument_constraint = Table(
     "instrument_constraint",
     Base.metadata,
     Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
-    Column("constraint_id", ForeignKey("constraints.id"), primary_key=True),
+    Column("constraint_id", ForeignKey("constraint.id"), primary_key=True),
 )
 
 
@@ -467,7 +467,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         back_populates="instrument", lazy="selectin", cascade="all,delete"
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
-    constraints: Mapped[list["Constraints"]] = relationship(
+    constraints: Mapped[list["Constraint"]] = relationship(
         secondary=instrument_constraint,
         back_populates="instruments",
         lazy="selectin",
@@ -612,8 +612,8 @@ class TLE(Base):
     )
 
 
-class Constraints(Base, CreatableMixin, ModifiableMixin):
-    __tablename__ = "constraints"
+class Constraint(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "constraint"
 
     constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
     constraint_parameters: Mapped[dict] = mapped_column(JSON, nullable=False)

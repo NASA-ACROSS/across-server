@@ -70,6 +70,7 @@ class VisibilityService:
             dec=dec,
             step_size=step_size * u.s,
             observatory_id=observatory_id,
+            min_vis=min_visibility_duration,
         )
         visibility = await anyio.to_thread.run_sync(vis_function)
 
