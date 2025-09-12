@@ -21,7 +21,10 @@ from ...instrument.schemas import Instrument as InstrumentSchema
 from ...instrument.service import InstrumentService
 from ...telescope.service import TelescopeService
 from ...tools.ephemeris.service import EphemerisService
-from .exceptions import VisibilityConstraintsNotFoundException
+from .exceptions import (
+    VisibilityConstraintsNotFoundException,
+    VisibilityTypeNotImplementedException,
+)
 
 
 class VisibilityService:
@@ -115,6 +118,6 @@ class VisibilityService:
                 min_visibility_duration=min_visibility_duration,
             )
         else:
-            raise NotImplementedError(
+            raise VisibilityTypeNotImplementedException(
                 f"Visibility type {instrument.visibility_type} is not implemented."
             )

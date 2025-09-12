@@ -9,6 +9,7 @@ from across_server.routes.v1.instrument.exceptions import InstrumentNotFoundExce
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.tools.visibility_calculator.exceptions import (
     VisibilityConstraintsNotFoundException,
+    VisibilityTypeNotImplementedException,
 )
 from across_server.routes.v1.tools.visibility_calculator.service import (
     VisibilityService,
@@ -218,7 +219,7 @@ class TestVisibilityService:
         mock_visibility = MagicMock()
 
         service = VisibilityService(mock_db)
-        service.get_ephemeris_visibility = AsyncMock(return_value=mock_visibility)
+        service.get_ephemeris_visibility = AsyncMock(return_value=mock_visibility)  # type: ignore
 
         result = await service.get(
             ra=ra,
@@ -274,7 +275,7 @@ class TestVisibilityService:
 
         service = VisibilityService(mock_db)
 
-        with pytest.raises(NotImplementedError) as exc_info:
+        with pytest.raises(VisibilityTypeNotImplementedException) as exc_info:
             await service.get(
                 ra=ra,
                 dec=dec,
