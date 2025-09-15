@@ -15,22 +15,6 @@ maintainers = [
   { name = "Samuel D. Wyatt", email = "samuel.d.wyatt@nasa.gov" },
 ]
 requires-python = ">= 3.12"
-dependencies = [
-    "ipykernel>=6.29.5",
-    "ipython>=9.4.0",
-]
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["across_server"]
-[tool.hatch.version]
-path = "across_server/__about__.py"
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
 
 [tool.mypy]
 files = ["."]
