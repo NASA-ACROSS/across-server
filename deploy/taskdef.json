@@ -2,7 +2,11 @@
     "containerDefinitions": [
         {
             "name": "core-server",
-            "image": "{{ must_env `IMAGE` }}",
+            "image": "{{ must_env `IMAGE` }}"
+        }
+    ],
+    "containerOverrides": [
+        {
             "environment": [
                 {
                     "name": "LIMIT_TOKEN_REQUESTS_PER_MINUTE",
