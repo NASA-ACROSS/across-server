@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/ACROSS-Team/across-server/compare/v0.3.1...v0.3.2) (2025-09-16)
+
+
+### Bug Fixes
+
+* **deploy:** overrides for staging and prod migration ([#349](https://github.com/ACROSS-Team/across-server/issues/349)) ([d0a1edd](https://github.com/ACROSS-Team/across-server/commit/d0a1edd8b717c77ab74cf8cb8a2c09465aacbe9b))
+
 ## [0.3.1](https://github.com/ACROSS-Team/across-server/compare/v0.3.0...v0.3.1) (2025-09-16)
 
 
