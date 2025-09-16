@@ -23,7 +23,7 @@ jobs:
       app: core-server
       enable-migration: true
       migration-env-overrides: |
-        "[{ "name": "ACROSS_DB_USER", "value": "ci" }]"
+        [{ "name": "ACROSS_DB_USER", "value": "ci" }]
     secrets:
       github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
       registry: "${{ secrets.ECR_REGISTRY }}"
