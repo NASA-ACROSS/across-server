@@ -82,6 +82,10 @@ on:
         description: "Display web url after deployment"
         default: true
         type: boolean
+      migration-env-overrides:
+        description: "Array of KeyValuePairs to override env vars in the migration step."
+        required: false
+        type: string
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"

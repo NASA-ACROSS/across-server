@@ -31,6 +31,8 @@ jobs:
       labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
       ref: ${{ github.event.pull_request.head.ref  }}
       enable-migration: true
+      migration-env-overrides: |
+        "[{ "name": "ACROSS_DB_USER", "value": "ci" }]"
       image-name: core-server
       app: core-server
       output-web-url: false
