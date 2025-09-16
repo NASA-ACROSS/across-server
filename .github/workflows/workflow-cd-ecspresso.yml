@@ -155,7 +155,7 @@ jobs:
               "containerOverrides":[
                 {
                   "name": "${{ inputs.app }}",
-                  "command": ["alembic", "upgrade", "head"]
+                  "command": ["alembic", "upgrade", "head"],
                   "environment": ${{inputs.migration-env-overrides}}
                 }
               ]
