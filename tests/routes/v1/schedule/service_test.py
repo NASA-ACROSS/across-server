@@ -27,12 +27,12 @@ class TestScheduleService:
             schedule_create_example: ScheduleCreate,
             instrument_model_example: InstrumentModel,
             mock_result: AsyncMock,
-            mock_schedule_data: ScheduleModel,
+            fake_schedule_data: ScheduleModel,
         ) -> None:
             """Should raise duplicate schedule"""
             # sets the checksum query to a value so it raises
             mock_result.scalars.return_value.all.return_value = [
-                mock_schedule_data,
+                fake_schedule_data,
             ]
             mock_db.execute.return_value = mock_result
             service = ScheduleService(mock_db)
@@ -113,12 +113,12 @@ class TestScheduleService:
             self,
             mock_db: AsyncMock,
             mock_result: AsyncMock,
-            mock_schedule_data: ScheduleModel,
+            fake_schedule_data: ScheduleModel,
         ) -> None:
             """Should return a list of Schedule models when get_many is successful"""
             mock_result.tuples.return_value.all.return_value = [
-                mock_schedule_data,
-                mock_schedule_data,
+                fake_schedule_data,
+                fake_schedule_data,
             ]
             service = ScheduleService(mock_db)
             params = ScheduleRead()
@@ -131,12 +131,12 @@ class TestScheduleService:
             self,
             mock_db: AsyncMock,
             mock_result: AsyncMock,
-            mock_schedule_data: ScheduleModel,
+            fake_schedule_data: ScheduleModel,
         ) -> None:
             """Should return a list of Schedule models when get_history is successful"""
             mock_result.tuples.return_value.all.return_value = [
-                mock_schedule_data,
-                mock_schedule_data,
+                fake_schedule_data,
+                fake_schedule_data,
             ]
             service = ScheduleService(mock_db)
             params = ScheduleRead()
@@ -151,13 +151,13 @@ class TestScheduleService:
             schedule_create_many_example: ScheduleCreateMany,
             instrument_model_example: InstrumentModel,
             mock_result: AsyncMock,
-            mock_schedule_data: ScheduleModel,
+            fake_schedule_data: ScheduleModel,
         ) -> None:
             """Should not raise duplicate schedule"""
             # sets the checksum query to a value
             mock_result.scalars.return_value.all.return_value = [
-                mock_schedule_data,
-                mock_schedule_data,
+                fake_schedule_data,
+                fake_schedule_data,
             ]
             mock_db.execute.return_value = mock_result
             service = ScheduleService(mock_db)
