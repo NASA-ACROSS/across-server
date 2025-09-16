@@ -72,6 +72,11 @@ on:
         description: "Matrix key - matrix output workaround. [Read more](https://github.com/cloudposse/github-action-matrix-outputs-write#introduction)"
         required: false
         type: string
+      migration-env-overrides:
+        description: "Array of KeyValuePairs to override env vars in the migration step."
+        required: false
+        type: string
+        default: "[]"
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -151,6 +156,7 @@ jobs:
                 {
                   "name": "${{ inputs.app }}",
                   "command": ["alembic", "upgrade", "head"]
+                  "environment": ${{inputs.migration-env-overrides}}
                 }
               ]
             }
