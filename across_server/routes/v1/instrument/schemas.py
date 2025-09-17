@@ -42,6 +42,7 @@ class InstrumentBase(BaseSchema):
     short_name: str
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
+    filters: list[Filter] | None = None
     constraints: list[Constraint] | None = None
     visibility_type: VisibilityType | None = None
 
