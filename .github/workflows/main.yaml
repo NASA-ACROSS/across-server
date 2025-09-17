@@ -7,7 +7,7 @@ on:
       # release-please PRs since they do not need another deploy to dev.
       # release-please PRs only ever get generated AFTER a successful deploy to dev.
       # release-pr _should_ be the only PR to ever modify this.
-      - across_data_ingestion/__init__.py
+      - across_server/__init__.py
       - .release-please-manifest.json
       - CHANGELOG.md
       - release-please-config.json
