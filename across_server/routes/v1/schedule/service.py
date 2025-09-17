@@ -225,6 +225,7 @@ class ScheduleService:
             select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
             .distinct(
+                models.Schedule.created_on,
                 models.Schedule.date_range_begin,
                 models.Schedule.date_range_end,
                 models.Schedule.status,
@@ -232,12 +233,12 @@ class ScheduleService:
                 models.Schedule.telescope_id,
             )
             .order_by(
+                models.Schedule.created_on.desc(),
                 models.Schedule.date_range_begin,
                 models.Schedule.date_range_end,
                 models.Schedule.status,
                 models.Schedule.fidelity,
                 models.Schedule.telescope_id,
-                models.Schedule.created_on.desc(),
             )
             .limit(data.page_limit)
             .offset(data.offset)
