@@ -15,13 +15,13 @@ class Setup:
         self,
         async_client: AsyncClient,
         mock_schedule_post_data: dict,
-        mock_schedule_data: ScheduleModel,
+        fake_schedule_data: ScheduleModel,
         mock_schedule_post_many_data: dict,
     ) -> None:
         self.client = async_client
         self.endpoint = "/schedule/"
         self.post_data = mock_schedule_post_data
-        self.get_data = mock_schedule_data
+        self.get_data = fake_schedule_data
         self.post_many_data = mock_schedule_post_many_data
 
 
@@ -89,6 +89,18 @@ class TestScheduleRouter:
             """GET history should return 200 when successful"""
             res = await self.client.get(self.endpoint + "history")
             assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_many_should_include_observations_when_specified(self) -> None:
+            """GET many should include observations when specified"""
+            res = await self.client.get(self.endpoint + "?include_observations=true")
+            assert len(res.json()["items"][0]["observations"])
+
+        @pytest.mark.asyncio
+        async def test_many_should_exclude_observations_when_specified(self) -> None:
+            """GET many should exclude observations when specified"""
+            res = await self.client.get(self.endpoint + "?include_observations=false")
+            assert len(res.json()["items"][0]["observations"]) == 0
 
     class TestPostMany(Setup):
         @pytest.mark.asyncio

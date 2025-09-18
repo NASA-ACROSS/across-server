@@ -18,6 +18,50 @@ Migrations and seeds use snapshot and application models, respectively. This add
 
 **A note about this complexity:** I don't love the current implementation, but for now it is good enough. If this sort of requirement appears in the future, where seed data needs to use other migrational data, it would be nice to implement a more generic `build_model` fn.
 
+### Data Migration Example
+
+#### (A) Schema Changes:
+- make a change in `models.py`
+- run `make rev` this will look at the existing db structure vs the `models.py` structure and output necessary DB changes.
+   - note: this is ONLY for additions at this time
+- new migration is created, with upgrade and downgrades. all that is used is alembic’s op commands (effectively SQL)
+- run `make migrate`
+- run `alembic downgrade -1`
+
+#### (B) Data Migrations (Assume db changes are made):
+- `make rev` for a blank migration
+- snapshot `models.py` -> `models_2025_01_28.py`
+   - use current date when snapshotting models
+- import snapshot models
+- use snapshot models to add whatever data you need in upgrade
+- use snapshot models to delete whatever data you need in downgrade (select from the db and delete/modify the record(s), commit, etc)
+- run `make migrate`
+- run `alembic downgrade -1`
+
+#### (C) if you are combining both a schema change and data migration:
+- Do all of A (except running it)
+   - now you have "future `models.py` changes"
+- take the snapshot steps 2-5 of (B)
+- run `make migrate`
+- run `alembic downgrade -1`
+
+
+When migrating, the difference for combining is the order in which you add and remove data.
+
+Add data AFTER schema changes, delete data BEFORE schema changes.
+
+```
+def upgrade()
+  ## schema changes, no snapshot needed
+
+  ## data migration, use snapshot models.py
+
+def downgrade()
+  ## remove data migration, use snapshot models.py
+
+  ## undo schema changes, no snapshot needed
+```
+
 ## Initial Setup In Deployed Envs
 
 The ACROSS DB must go through a few initial manual steps for any new environment in AWS. This must be completed prior to migrations, and cannot be part of migrations since these are prerequisites for migrations to run successfully. See the [AWS docs for IAM auth](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.Connecting.html) and enabling [POSTGIS extension](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Appendix.PostgreSQL.CommonDBATasks.PostGIS.html)for more context.

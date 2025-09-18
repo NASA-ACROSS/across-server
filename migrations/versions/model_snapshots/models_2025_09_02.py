@@ -25,7 +25,7 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from .config import config
+from across_server.db.config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
@@ -531,9 +531,6 @@ class ScheduleCadence(Base, CreatableMixin, ModifiableMixin):
     )
     schedule_status: Mapped[str] = mapped_column(String(50), nullable=False)
     cron: Mapped[str] = mapped_column(String(50), nullable=True)
-    telescope: Mapped["Telescope"] = relationship(
-        back_populates="schedule_cadences", lazy="selectin"
-    )
 
 
 class Observation(Base, CreatableMixin, ModifiableMixin):
