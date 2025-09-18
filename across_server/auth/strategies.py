@@ -27,7 +27,7 @@ async def authenticate_jwt(
 
 async def global_access(
     security_scopes: SecurityScopes,
-    auth_user: Annotated[AuthUser, Depends(authenticate)],
+    auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
 ) -> AuthUser:
     if system_access(auth_user):
         return auth_user
