@@ -101,6 +101,11 @@ on:
         description: "Display web url after deployment"
         default: true
         type: boolean
+      migration-env-overrides:
+        description: "Array of KeyValuePairs to override env vars in the migration step."
+        required: false
+        type: string
+        default: "[]"
     secrets:
       secret-outputs-passphrase:
         description: "Passphrase to encrypt/decrypt secret outputs with gpg. For more information [read](https://github.com/cloudposse/github-action-secret-outputs)"
@@ -193,7 +198,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Run DB Migration
-        uses: cloudposse/github-action-run-ecspresso@0.2.0
+        uses: ./.github/actions/run-ecspresso
         continue-on-error: true
         if: ${{ inputs.enable-migration }}
         id: db_migrate
@@ -201,7 +206,7 @@ jobs:
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
           region: ${{ steps.environment.outputs.region }}
-          debug: true
+          debug: 'true'
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ${{ inputs.path }}
@@ -213,10 +218,7 @@ jobs:
                 {
                   "name": "${{ inputs.app }}",
                   "command": ["alembic", "upgrade", "head"],
-                  "environment": [{
-                    "name": "ACROSS_DB_USER",
-                    "value": "ci"
-                  }]
+                  "environment": ${{inputs.migration-env-overrides}}
                 }
               ]
             }
@@ -228,7 +230,7 @@ jobs:
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
 
       - name: Deploy
-        uses: cloudposse/github-action-deploy-ecspresso@0.6.0
+        uses: ./.github/actions/deploy-ecspresso
         continue-on-error: true
         if: ${{ steps.db_migrate.outcome != 'failure' }}
         id: deploy

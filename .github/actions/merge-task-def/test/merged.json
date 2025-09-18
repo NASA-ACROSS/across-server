@@ -1,0 +1,53 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "core-server",
+      "image": "{{ must_env `IMAGE` }}",
+      "environment": [
+        {
+          "name": "ACROSS_DB_ROLE_NAME",
+          "value": "DBAccessRole"
+        },
+        {
+          "name": "ACROSS_DB_USER",
+          "value": "core_server"
+        },
+        {
+          "name": "APP_ENV",
+          "value": "across-plat-ue2-feat1"
+        },
+        {
+          "name": "CLUSTER_NAME",
+          "value": "across-plat-ue2-feat1-ecs"
+        },
+        {
+          "name": "LIMIT_DEFAULT_REQUESTS_PER_MINUTE",
+          "value": "30"
+        },
+        {
+          "name": "LIMIT_SERVICE_ACCOUNT_REQUESTS_PER_SECOND",
+          "value": "10"
+        },
+        {
+          "name": "LIMIT_TOKEN_REQUESTS_PER_MINUTE",
+          "value": "5"
+        },
+        {
+          "name": "LIMIT_USER_REQUESTS_PER_SECOND",
+          "value": "5"
+        },
+        {
+          "name": "LOG_JSON_FORMAT",
+          "value": "1"
+        },
+        {
+          "name": "RUNTIME_ENV",
+          "value": "feat1"
+        }
+      ]
+    }
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "family": "across-plat-ue2-feat1-core-server"
+}

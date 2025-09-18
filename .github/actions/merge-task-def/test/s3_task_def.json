@@ -1,0 +1,37 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "core-server",
+            "image": "0123456789.dkr.ecr.us-east-2.amazonaws.com/core-server:old",
+            "environment": [
+                {
+                    "name": "ACROSS_DB_ROLE_NAME",
+                    "value": "DBAccessRole"
+                },
+                {
+                    "name": "ACROSS_DB_USER",
+                    "value": "core_server"
+                },
+                {
+                    "name": "APP_ENV",
+                    "value": "across-plat-ue2-feat1"
+                },
+                {
+                    "name": "CLUSTER_NAME",
+                    "value": "across-plat-ue2-feat1-ecs"
+                },
+                {
+                    "name": "LOG_JSON_FORMAT",
+                    "value": "1"
+                },
+                {
+                    "name": "RUNTIME_ENV",
+                    "value": "feat1"
+                }
+            ]
+        }
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "family": "across-plat-ue2-feat1-core-server"
+}

@@ -1,0 +1,151 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$ref": "#/definitions/Welcome8",
+    "definitions": {
+        "Welcome8": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "containerOverrides": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ContainerOverride"
+                    }
+                },
+                "cpu": {
+                    "type": "string"
+                },
+                "ephemeralStorage": {
+                    "$ref": "#/definitions/EphemeralStorage"
+                },
+                "executionRoleArn": {
+                    "type": "string"
+                },
+                "inferenceAcceleratorOverrides": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/InferenceAcceleratorOverride"
+                    }
+                },
+                "memory": {
+                    "type": "string"
+                },
+                "taskRoleArn": {
+                    "type": "string"
+                }
+            },
+            "required": [],
+            "title": "Welcome8"
+        },
+        "ContainerOverride": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "command": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cpu": {
+                    "type": "integer"
+                },
+                "environment": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Environment"
+                    }
+                },
+                "environmentFiles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EnvironmentFile"
+                    }
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "memoryReservation": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resourceRequirements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EnvironmentFile"
+                    }
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "title": "ContainerOverride"
+        },
+        "Environment": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "title": "Environment"
+        },
+        "EnvironmentFile": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "value"
+            ],
+            "title": "EnvironmentFile"
+        },
+        "EphemeralStorage": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "sizeInGiB": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "sizeInGiB"
+            ],
+            "title": "EphemeralStorage"
+        },
+        "InferenceAcceleratorOverride": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "deviceName": {
+                    "type": "string"
+                },
+                "deviceType": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "deviceName",
+                "deviceType"
+            ],
+            "title": "InferenceAcceleratorOverride"
+        }
+    }
+}

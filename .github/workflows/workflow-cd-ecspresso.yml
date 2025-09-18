@@ -144,7 +144,7 @@ jobs:
           image: ${{ steps.image.outputs.out }}
           image-tag: ${{ inputs.tag }}
           region: ${{ steps.environment.outputs.region }}
-          debug: false
+          debug: true
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ${{ inputs.path }}
@@ -177,7 +177,7 @@ jobs:
           image-tag: ${{ inputs.tag }}
           region: ${{ steps.environment.outputs.region }}
           operation: deploy
-          debug: false
+          debug: true
           cluster: ${{ steps.environment.outputs.cluster }}
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ${{ inputs.path }}

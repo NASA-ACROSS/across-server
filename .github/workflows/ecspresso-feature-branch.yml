@@ -143,6 +143,7 @@ jobs:
       enable-migration: ${{ inputs.enable-migration }}
       support-rollback: ${{ inputs.support-rollback }}
       output-web-url: ${{ inputs.output-web-url }}
+      migration-env-overrides: ${{inputs.migration-env-overrides}}
     secrets:
       secret-outputs-passphrase: ${{ secrets.secret-outputs-passphrase }}
       github-private-actions-pat: ${{ secrets.github-private-actions-pat }}

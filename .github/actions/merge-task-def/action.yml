@@ -1,0 +1,43 @@
+name: "merge-task-def"
+description: "Merge two ECS task definition JSONs with smart environment merging using jq"
+inputs:
+  s3-path:
+    description: "Path to S3/base task definition JSON"
+    required: true
+  incoming-path:
+    description: "Path to incoming/taskdef JSON"
+    required: true
+  out-path:
+    description: "Path to write merged JSON"
+    required: true
+  merge-script:
+    description: "Path to merge.jq in the repo (relative to repo root)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: "Install jq 1.6"
+      uses: dcarbone/install-jq-action@v1.0.1
+      with:
+        version: 1.6
+        force: "true"
+
+    - name: Merge task definitions
+      shell: bash
+      run: |
+        set -eo pipefail
+        echo "Merging:"
+        echo "  s3: ${{ inputs.s3-path }}"
+        echo "  incoming: ${{ inputs.incoming-path }}"
+        echo "  out: ${{ inputs.out-path }}"
+        jq -s -f "${{ inputs.merge-script }}" "${{ inputs.s3-path }}" "${{ inputs.incoming-path }}" > "${{ inputs.out-path }}"
+        echo "Wrote merged -> ${{ inputs.out-path }}"
+
+outputs:
+  merged-path:
+    description: "Path where merged taskdef was written"
+    value: ${{ inputs.out-path }}

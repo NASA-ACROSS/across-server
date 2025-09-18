@@ -1,0 +1,158 @@
+name: "Run Ecspresso"
+description: "Run ECS task with Ecspresso"
+author: hello@cloudposse.com
+branding:
+  icon: "search"
+  color: "white"
+inputs:
+  image:
+    description: Docker image
+    required: true
+  image-tag:
+    description: Docker image tag
+    required: true
+  debug:
+    description: Debug mode
+    default: "false"
+    required: false
+  region:
+    description: AWS Region
+    required: true
+  cluster:
+    description: Cluster name
+    required: true
+  ecspresso-version:
+    description: Ecspresso version
+    required: false
+    default: v2.1.0
+  application:
+    description: Application name
+    required: true
+  taskdef-path:
+    description: Task definition path
+    required: true
+  timeout:
+    description: Ecspresso timeout
+    required: false
+    default: 5m
+  overrides:
+    description: A list of container overrides in JSON format that specify the name of a container in the specified task definition and the overrides it should receive.
+    required: false
+    default: "{}"
+  mirror_to_s3_bucket:
+    description: Mirror task definition to s3 bucket
+    required: false
+  use_partial_taskdefinition:
+    description: "NOTE: Experimental. Load templated task definition from S3 bucket, which is created by the `ecs-service` component. This is useful when you want to manage the task definition in the infrastructure repository and the application repository. The infrastructure repository manages things like Volumes and EFS mounts, and the Application repository manages the application code and environment variables."
+    required: false
+outputs:
+  webapp-url:
+    description: "Web Application url"
+    value:
+      "null"
+      # https://${{ steps.webapp.outputs.output }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: 1arp/create-a-file-action@0.2
+      with:
+        path: "./"
+        file: "overrides.json"
+        content: |
+          ${{ inputs.overrides }}
+
+    - name: Schema path
+      id: schema
+      shell: bash
+      run: |
+        echo "path=${GITHUB_ACTION_PATH}/schema/run-task-override.schema.json" >> $GITHUB_OUTPUT
+
+    - name: Validate task override
+      uses: cardinalby/schema-validator-action@v3
+      with:
+        file: ./overrides.json
+        schema: ${{ steps.schema.outputs.path }}
+
+    - name: "Install jq 1.6"
+      uses: dcarbone/install-jq-action@v1.0.1
+      with:
+        version: 1.6
+        force: "true"
+
+    - uses: kayac/ecspresso@v2
+      with:
+        version: ${{ inputs.ecspresso-version }}
+
+    - name: Set random environment variables
+      id: tmp
+      shell: bash
+      run: |
+        VALUE=$(echo $RANDOM | md5sum | head -c 20)
+        echo "dir_name=${VALUE}" >> $GITHUB_OUTPUT
+
+    - name: Create TMP dir
+      shell: bash
+      run: |
+        mkdir -p ./${{ steps.tmp.outputs.dir_name }}
+        cp ${{ inputs.taskdef-path }} ./${{ steps.tmp.outputs.dir_name }}/${{ inputs.application }}.json
+
+    - name: Fetch Current Task Definition
+      if: ${{ inputs.mirror_to_s3_bucket != '' && inputs.use_partial_taskdefinition != '' }}
+      uses: keithweaver/aws-s3-github-action@v1.0.0
+      with:
+        command: cp
+        source: s3://${{ inputs.mirror_to_s3_bucket }}/${{ inputs.cluster }}/${{ inputs.application }}/task-template.json
+        destination: ./${{ steps.tmp.outputs.dir_name }}/s3_task_def.json
+        aws_region: ${{ inputs.region }}
+
+    - name: Merge Task Definitions
+      if: ${{ inputs.mirror_to_s3_bucket != '' && inputs.use_partial_taskdefinition != '' }}
+      uses: ./.github/actions/merge-task-def
+      with:
+        s3-path: "./${{ steps.tmp.outputs.dir_name }}/s3_task_def.json"
+        incoming-path: ${{ inputs.taskdef-path }}
+        out-path: "./${{ steps.tmp.outputs.dir_name }}/${{ inputs.application }}.json"
+
+    - name: Debug
+      if: ${{ inputs.mirror_to_s3_bucket != '' && inputs.use_partial_taskdefinition != '' && inputs.debug == 'true'}}
+      shell: bash
+      run: |
+        echo "----------------- S3 Task Definition -----------------"
+        cat ./${{ steps.tmp.outputs.dir_name }}/s3_task_def.json | jq
+        echo "----------------- Current Task Definition -----------------"
+        cat ${{ inputs.taskdef-path }}
+        echo "----------------- Merged Task Definition -----------------"
+        cat ./${{ steps.tmp.outputs.dir_name }}/${{ inputs.application }}.json
+
+    - name: Init
+      shell: bash
+      run: |
+        ecspresso init \
+          --cluster=${{ inputs.cluster }} \
+          --service=${{ inputs.application }} \
+          --task-definition-path=./${{ steps.tmp.outputs.dir_name }}/${{ inputs.application }}.json \
+          --service-definition-path=./${{ steps.tmp.outputs.dir_name }}/ecs-service-def.json \
+          --config-file-path=./${{ steps.tmp.outputs.dir_name }}/
+      env:
+        AWS_REGION: ${{ inputs.region }}
+
+    - uses: 1arp/create-a-file-action@0.2
+      with:
+        path: "./"
+        file: "ecspresso.yml"
+        content: |
+          region: ${{ inputs.region }}
+          cluster: ${{ inputs.cluster }}
+          service: ${{ inputs.application }}
+          service_definition: ./${{ steps.tmp.outputs.dir_name }}/ecs-service-def.json
+          task_definition: ./${{ steps.tmp.outputs.dir_name }}/${{ inputs.application }}.json
+          timeout: ${{ inputs.timeout }}
+
+    - name: Run
+      shell: bash
+      run: |
+        ecspresso --config=./ecspresso.yml run --overrides-file=./overrides.json
+      env:
+        IMAGE: ${{ inputs.image }}:${{ inputs.image-tag }}
+        AWS_REGION: ${{ inputs.region }}
