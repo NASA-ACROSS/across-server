@@ -531,6 +531,9 @@ class ScheduleCadence(Base, CreatableMixin, ModifiableMixin):
     )
     schedule_status: Mapped[str] = mapped_column(String(50), nullable=False)
     cron: Mapped[str] = mapped_column(String(50), nullable=True)
+    telescope: Mapped["Telescope"] = relationship(
+        back_populates="schedule_cadences", lazy="selectin"
+    )
 
 
 class Observation(Base, CreatableMixin, ModifiableMixin):
