@@ -43,7 +43,10 @@ class Config(BaseConfig):
         return self.RUNTIME_ENV == Environments.LOCAL
 
     def base_url(self) -> str:
-        return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
+        if self.is_local():
+            return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
+        else:
+            return f"https://server.{self.RUNTIME_ENV.value}.across.smce.nasa.gov{self.ROOT_PATH}"
 
 
 config = Config()
