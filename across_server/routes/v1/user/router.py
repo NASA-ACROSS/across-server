@@ -138,6 +138,7 @@ async def update(
             "description": "Upon successful deletion, the user is returned",
         },
     },
+    dependencies=[Depends(auth.strategies.self_access)],
 )
 async def delete(
     service: Annotated[UserService, Depends(UserService)],
