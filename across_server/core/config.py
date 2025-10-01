@@ -39,6 +39,10 @@ class Config(BaseConfig):
         "data-ingestion/core-server/client_secret"
     )
 
+    APP_TITLE: str = "ACROSS Server"
+    APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
+    APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
+
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
