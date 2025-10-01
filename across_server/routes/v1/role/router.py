@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
+from ....util.decorators import local_only_route
 from . import schemas
 from .service import RoleService
 
@@ -17,19 +18,12 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/",
+@local_only_route(
+    router,
+    path="/",
+    methods=["GET"],
     summary="Read roles",
-    description="Read many roles.",
-    operation_id="get_roles",
-    status_code=status.HTTP_200_OK,
-    response_model=list[schemas.Role],
-    responses={
-        status.HTTP_200_OK: {
-            "model": list[schemas.Role],
-            "description": "A list of roles",
-        },
-    },
+    description="Read many roles",
 )
 async def get_many(
     service: Annotated[RoleService, Depends(RoleService)],
@@ -38,19 +32,12 @@ async def get_many(
     return [schemas.Role.model_validate(role_model) for role_model in many_role_models]
 
 
-@router.get(
-    "/{role_id}",
+@local_only_route(
+    router,
+    path="/{role_id}",
+    methods=["GET"],
     summary="Read a role",
     description="Read a role by role ID.",
-    operation_id="get_role",
-    status_code=status.HTTP_200_OK,
-    response_model=schemas.Role,
-    responses={
-        status.HTTP_200_OK: {
-            "model": schemas.Role,
-            "description": "The requested role",
-        },
-    },
 )
 async def get(
     service: Annotated[RoleService, Depends(RoleService)], role_id: uuid.UUID

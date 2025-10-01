@@ -4,9 +4,8 @@ from typing import Annotated
 import structlog
 from fastapi import APIRouter, Depends, status
 
-from across_server.util.decorators import local_only_route
-
 from .... import auth, db
+from ....util.decorators import local_only_route
 from ....util.email.service import EmailService
 from ..group.invite.service import GroupInviteService
 from ..group.service import GroupService
@@ -27,7 +26,13 @@ router = APIRouter(
 )
 
 
-@local_only_route(router, path="/", methods=["GET"])
+@local_only_route(
+    router,
+    path="/",
+    methods=["GET"],
+    summary="Read users",
+    description="Read many users",
+)
 async def get_many(
     service: Annotated[UserService, Depends(UserService)],
 ) -> list[schemas.User]:
