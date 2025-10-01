@@ -3,7 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Security, status
 
-from ....auth.strategies import global_access, group_access
+from ....auth.strategies import group_access
+from ....util.decorators import local_only_route
 from ..user.service import UserService
 from . import schemas
 from .service import GroupService
@@ -19,20 +20,12 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/",
+@local_only_route(
+    router,
+    path="/",
+    methods=["GET"],
     summary="Read groups",
-    description="Read many groups.",
-    operation_id="get_groups",
-    status_code=status.HTTP_200_OK,
-    response_model=list[schemas.Group],
-    responses={
-        status.HTTP_200_OK: {
-            "model": list[schemas.Group],
-            "description": "A list of groups",
-        },
-    },
-    dependencies=[Security(global_access, scopes=["group:read"])],
+    description="Read many groups",
 )
 async def get_many(
     service: Annotated[GroupService, Depends(GroupService)],
