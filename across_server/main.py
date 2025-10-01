@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 tags_metadata = [
     {
         "name": "v1",
-        "description": "API version 1, check link on the right",
+        "description": "API version 1, click link on the right",
         "externalDocs": {
             "description": "V1 docs",
             "url": f"{config.base_url()}/v1/docs",
@@ -45,9 +45,9 @@ tags_metadata = [
 ]
 
 app = FastAPI(
-    title="ACROSS Server",
-    summary="Astrophysics Cross-Observatory Science Support (ACROSS)",
-    description="Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts.",
+    title=config.APP_TITLE,
+    summary=config.APP_SUMMARY,
+    description=config.APP_DESCRIPTION,
     root_path=config.ROOT_PATH,
     lifespan=lifespan,
     openapi_tags=tags_metadata,
