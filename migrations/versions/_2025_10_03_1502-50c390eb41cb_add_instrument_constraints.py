@@ -21,6 +21,7 @@ from sqlalchemy import orm
 
 import migrations.versions.model_snapshots.models_2025_10_03 as models
 from across_server.core.enums.instrument_fov import InstrumentFOV
+from across_server.core.enums.visibility_type import VisibilityType
 
 # revision identifiers, used by Alembic.
 revision: str = "50c390eb41cb"
@@ -128,6 +129,7 @@ def upgrade() -> None:
             moon20constraint,
             earth20constraint,
         ]
+        pointed_instrument.visibility_type = VisibilityType.EPHEMERIS
         session.add(pointed_instrument)
 
     all_sky_instruments = (
@@ -138,6 +140,7 @@ def upgrade() -> None:
 
     for all_sky_instrument in all_sky_instruments:
         all_sky_instrument.constraints = [earth0constraint]
+        all_sky_instrument.visibility_type = VisibilityType.EPHEMERIS
         session.add(all_sky_instrument)
 
     session.commit()
