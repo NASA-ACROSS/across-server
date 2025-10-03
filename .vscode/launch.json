@@ -142,5 +142,26 @@
                 "8000"
             ]
         },
+        {
+            "name": "staging: Migrations",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-staging",
+                "RUNTIME_ENV": "staging",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "upgrade",
+                "head"
+            ],
+        },
     ]
 }

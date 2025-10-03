@@ -2,7 +2,7 @@ name: Feature Branch
 on:
   pull_request:
     branches: [ 'main' ]
-    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+    types: [opened, synchronize, reopened, closed, labeled]
     paths-ignore:
       # release-pr _should_ be the only PR to ever modify this.
       - across_server/__init__.py
@@ -31,6 +31,8 @@ jobs:
       labels: ${{ toJSON(github.event.pull_request.labels.*.name) }}
       ref: ${{ github.event.pull_request.head.ref  }}
       enable-migration: true
+      migration-env-overrides: |
+        [{ "name": "ACROSS_DB_USER", "value": "ci" }]
       image-name: core-server
       app: core-server
       output-web-url: false

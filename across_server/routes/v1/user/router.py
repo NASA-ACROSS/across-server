@@ -5,6 +5,7 @@ import structlog
 from fastapi import APIRouter, Depends, status
 
 from .... import auth, db
+from ....util.decorators import local_only_route
 from ....util.email.service import EmailService
 from ..group.invite.service import GroupInviteService
 from ..group.service import GroupService
@@ -25,11 +26,12 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/",
-    status_code=status.HTTP_200_OK,
-    response_model=list[schemas.User],
-    operation_id="get_users",
+@local_only_route(
+    router,
+    path="/",
+    methods=["GET"],
+    summary="Read users",
+    description="Read many users",
 )
 async def get_many(
     service: Annotated[UserService, Depends(UserService)],
@@ -138,6 +140,7 @@ async def update(
             "description": "Upon successful deletion, the user is returned",
         },
     },
+    dependencies=[Depends(auth.strategies.self_access)],
 )
 async def delete(
     service: Annotated[UserService, Depends(UserService)],

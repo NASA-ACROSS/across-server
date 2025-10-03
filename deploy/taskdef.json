@@ -2,23 +2,27 @@
     "containerDefinitions": [
         {
             "name": "core-server",
-            "image": "{{ must_env `IMAGE` }}",
+            "image": "{{ must_env `IMAGE` }}"
+        }
+    ],
+    "containerOverrides": [
+        {
             "environment": [
                 {
                     "name": "LIMIT_TOKEN_REQUESTS_PER_MINUTE",
-                    "value": 5
+                    "value": "5"
                 },
                 {
                     "name": "LIMIT_DEFAULT_REQUESTS_PER_MINUTE",
-                    "value": 30
+                    "value": "30"
                 },
                 {
                     "name": "LIMIT_USER_REQUESTS_PER_SECOND",
-                    "value": 5
+                    "value": "5"
                 },
                 {
                     "name": "LIMIT_SERVICE_ACCOUNT_REQUESTS_PER_SECOND",
-                    "value": 10
+                    "value": "10"
                 }
             ]
         }

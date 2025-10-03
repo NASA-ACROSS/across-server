@@ -39,11 +39,18 @@ class Config(BaseConfig):
         "data-ingestion/core-server/client_secret"
     )
 
+    APP_TITLE: str = "ACROSS Server"
+    APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
+    APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
+
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
     def base_url(self) -> str:
-        return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
+        if self.is_local():
+            return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
+        else:
+            return f"https://server.{self.RUNTIME_ENV.value}.across.smce.nasa.gov{self.ROOT_PATH}"
 
 
 config = Config()

@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.3.2](https://github.com/ACROSS-Team/across-server/compare/v0.3.1...v0.3.2) (2025-09-16)
+
+
+### Bug Fixes
+
+* **deploy:** overrides for staging and prod migration ([#349](https://github.com/ACROSS-Team/across-server/issues/349)) ([d0a1edd](https://github.com/ACROSS-Team/across-server/commit/d0a1edd8b717c77ab74cf8cb8a2c09465aacbe9b))
+
+## [0.3.1](https://github.com/ACROSS-Team/across-server/compare/v0.3.0...v0.3.1) (2025-09-16)
+
+
+### Bug Fixes
+
+* **deploy:** add missing comma ([0b56ef0](https://github.com/ACROSS-Team/across-server/commit/0b56ef0859a52f284ea3c9e6eaab420ce33b58b5))
+* **deploy:** env var values must be strings ([#345](https://github.com/ACROSS-Team/across-server/issues/345)) ([04c5275](https://github.com/ACROSS-Team/across-server/commit/04c527523e1041abd2dfc3c0bfe473ee7e16ef0a))
+* **deploy:** set ci db user for migrations ([#347](https://github.com/ACROSS-Team/across-server/issues/347)) ([792eaaa](https://github.com/ACROSS-Team/across-server/commit/792eaaa214928b984529978d976dab8ae22064ae))
+* **deploy:** set containerOverrides to include the env overrides ([#346](https://github.com/ACROSS-Team/across-server/issues/346)) ([f12acc9](https://github.com/ACROSS-Team/across-server/commit/f12acc9ee087750c65f73c4a068f3f853fd9174d))
+
+## [0.3.0](https://github.com/ACROSS-Team/across-server/compare/v0.2.1...v0.3.0) (2025-07-24)
+
+
+### Features
+
+* add Hubble observatory data migration ([#283](https://github.com/ACROSS-Team/across-server/issues/283)) ([6a22bf6](https://github.com/ACROSS-Team/across-server/commit/6a22bf625705bd053067ac0e0873ab76b19e4fd9))
+* **api:** add interface for instrument Filter ([#285](https://github.com/ACROSS-Team/across-server/issues/285)) ([ea1f815](https://github.com/ACROSS-Team/across-server/commit/ea1f815b1da9f9f6de36eb08c8e744045e612621))
+
 ## [0.2.1](https://github.com/ACROSS-Team/across-server/compare/v0.2.0...v0.2.1) (2025-07-21)
 
 

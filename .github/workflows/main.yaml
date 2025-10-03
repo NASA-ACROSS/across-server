@@ -2,6 +2,15 @@ name: Main Branch
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      # We only want to run main branch workflow on code change PRs and ignore
+      # release-please PRs since they do not need another deploy to dev.
+      # release-please PRs only ever get generated AFTER a successful deploy to dev.
+      # release-pr _should_ be the only PR to ever modify this.
+      - across_server/__init__.py
+      - .release-please-manifest.json
+      - CHANGELOG.md
+      - release-please-config.json
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,9 +28,11 @@ jobs:
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
-      enable-migration: true
       image-name: core-server
       app: core-server
+      enable-migration: true
+      migration-env-overrides: |
+        [{ "name": "ACROSS_DB_USER", "value": "ci" }]
     secrets:
       github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
       registry: "${{ secrets.ECR_REGISTRY }}"

@@ -15,6 +15,7 @@ from across_server.core.enums.observation_status import ObservationStatus
 from across_server.core.enums.observation_type import ObservationType
 from across_server.core.schemas import Coordinate, DateRange
 from across_server.db.models import Instrument as InstrumentModel
+from across_server.db.models import Observation as ObservationModel
 from across_server.db.models import Schedule as ScheduleModel
 from across_server.db.models import Telescope as TelescopeModel
 from across_server.routes.v1.observation.schemas import ObservationCreate
@@ -152,7 +153,9 @@ def mock_schedule_post_many_data() -> dict:
 
 
 @pytest.fixture()
-def mock_schedule_data(mock_schedule_post_data: dict) -> ScheduleModel:
+def fake_schedule_data(
+    mock_schedule_post_data: dict, fake_observation_data: ObservationModel
+) -> ScheduleModel:
     return ScheduleModel(
         id=uuid4(),
         telescope_id=UUID(mock_schedule_post_data["telescope_id"]),
@@ -163,10 +166,41 @@ def mock_schedule_data(mock_schedule_post_data: dict) -> ScheduleModel:
         external_id=mock_schedule_post_data["external_id"],
         fidelity=mock_schedule_post_data["fidelity"],
         telescope=TelescopeModel(id=UUID(mock_schedule_post_data["telescope_id"])),
-        observations=[],
+        observations=[fake_observation_data],
         created_on=datetime.now(),
         created_by_id=uuid4(),
         checksum="checked sum",
+    )
+
+
+@pytest.fixture()
+def fake_observation_data() -> ObservationModel:
+    coordinate = Coordinate(
+        ra=123.456,
+        dec=-87.65,
+    )
+    return ObservationModel(
+        id=uuid4(),
+        instrument_id=uuid4(),
+        schedule_id=uuid4(),
+        object_name="Test Object",
+        pointing_position=coordinate.create_gis_point(),
+        pointing_ra=123.456,
+        pointing_dec=-87.65,
+        object_position=coordinate.create_gis_point(),
+        object_ra=123.456,
+        object_dec=-87.65,
+        exposure_time=3600,
+        min_wavelength=2000,
+        max_wavelength=4000,
+        peak_wavelength=3000,
+        filter_name="Test Filter",
+        date_range_begin=datetime(2024, 12, 16, 11, 0),
+        date_range_end=datetime(2024, 12, 17, 11, 0),
+        external_observation_id="test-external-obsid",
+        type="imaging",
+        status="planned",
+        created_on=datetime.now(),
     )
 
 
@@ -183,13 +217,13 @@ def mock_telescope_data(mock_schedule_post_data: dict) -> TelescopeModel:
 
 
 @pytest.fixture(scope="function")
-def mock_schedule_service(mock_schedule_data: ScheduleModel) -> Generator[AsyncMock]:
+def mock_schedule_service(fake_schedule_data: ScheduleModel) -> Generator[AsyncMock]:
     mock = AsyncMock(ScheduleService)
 
     mock.create = AsyncMock(return_value=uuid4())
-    mock.get = AsyncMock(return_value=mock_schedule_data)
-    mock.get_many = AsyncMock(return_value=[(mock_schedule_data, 1)])
-    mock.get_history = AsyncMock(return_value=[(mock_schedule_data, 1)])
+    mock.get = AsyncMock(return_value=fake_schedule_data)
+    mock.get_many = AsyncMock(return_value=[(fake_schedule_data, 1)])
+    mock.get_history = AsyncMock(return_value=[(fake_schedule_data, 1)])
     mock.create_many = AsyncMock(return_value=[uuid4(), uuid4()])
 
     yield mock

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from ... import __version__, auth
+from ...core import config
 from . import (
     filter,
     group,
@@ -17,7 +18,12 @@ from . import (
     user,
 )
 
-api = FastAPI(version=__version__)
+api = FastAPI(
+    title=config.APP_TITLE,
+    summary=config.APP_SUMMARY,
+    description=config.APP_DESCRIPTION,
+    version=__version__,
+)
 
 api.include_router(auth.router)
 api.include_router(permission.router)

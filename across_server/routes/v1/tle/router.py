@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Security, status
 
 from .... import auth
 from . import schemas
@@ -27,7 +27,7 @@ router = APIRouter(
         status.HTTP_201_CREATED: {},
     },
     response_model=schemas.TLE,
-    dependencies=[Depends(auth.strategies.global_access)],
+    dependencies=[Security(auth.strategies.global_access, scopes=["system:tle:write"])],
 )
 async def create(
     TLE_service: Annotated[TLEService, Depends(TLEService)],
