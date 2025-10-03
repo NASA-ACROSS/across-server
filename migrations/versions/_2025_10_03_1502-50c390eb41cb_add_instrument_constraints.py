@@ -1,19 +1,30 @@
 """add instrument constraints
 
 Revision ID: 50c390eb41cb
-Revises: d41e0c380a1f
+Revises: 59faf999b470
 Create Date: 2025-06-30 15:02:13.633687
 
 """
 
+import uuid
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+from across.tools.core.enums import ConstraintType
+from across.tools.visibility.constraints import (
+    EarthLimbConstraint,
+    MoonAngleConstraint,
+    SunAngleConstraint,
+)
 from alembic import op
+from sqlalchemy import orm
+
+import migrations.versions.model_snapshots.models_2025_10_03 as models
+from across_server.core.enums.instrument_fov import InstrumentFOV
 
 # revision identifiers, used by Alembic.
 revision: str = "50c390eb41cb"
-down_revision: Union[str, None] = "0f1706aa008d"
+down_revision: Union[str, None] = "59faf999b470"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -72,6 +83,64 @@ def upgrade() -> None:
     op.alter_column(
         "observatory", "operational_begin_date", nullable=False, schema="across"
     )
+
+    ### add default constraints to our pointed instruments
+    # For all pointed intruments add the following constraints:
+    #   Sun angle constraint of 45 degrees
+    #   Moon angle constraint of 20 degrees
+    #   Earth angle constraint of 20 degrees
+
+    # For all-sky instruments add the following constraint:
+    #   Earth angle constraint of 0 degrees
+
+    bind = op.get_bind()
+    session = orm.Session(bind=bind, expire_on_commit=False)
+
+    sun45constraint = models.Constraint(
+        id=uuid.UUID("d530a37d-0fc1-4ea3-8bae-1ab4940308b5"),
+        constraint_type=ConstraintType.SUN,
+        constraint_parameters=SunAngleConstraint(min_angle=45).model_dump(),
+    )
+    moon20constraint = models.Constraint(
+        id=uuid.UUID("3390c3f9-62ea-4ee1-a94e-cc5178a7a383"),
+        constraint_type=ConstraintType.MOON,
+        constraint_parameters=MoonAngleConstraint(min_angle=20).model_dump(),
+    )
+    earth20constraint = models.Constraint(
+        id=uuid.UUID("70d3f9cb-2550-4064-9808-36a75f9cae87"),
+        constraint_type=ConstraintType.EARTH,
+        constraint_parameters=EarthLimbConstraint(min_angle=20).model_dump(),
+    )
+    earth0constraint = models.Constraint(
+        id=uuid.UUID("5a2bcefc-f08e-4d4f-a2a9-1dd526638884"),
+        constraint_type=ConstraintType.EARTH,
+        constraint_parameters=EarthLimbConstraint(min_angle=0).model_dump(),
+    )
+    pointed_instruments = (
+        session.query(models.Instrument)
+        .where(models.Instrument.field_of_view != InstrumentFOV.ALL_SKY.value)
+        .all()
+    )
+
+    for pointed_instrument in pointed_instruments:
+        pointed_instrument.constraints = [
+            sun45constraint,
+            moon20constraint,
+            earth20constraint,
+        ]
+        session.add(pointed_instrument)
+
+    all_sky_instruments = (
+        session.query(models.Instrument)
+        .where(models.Instrument.field_of_view == InstrumentFOV.ALL_SKY.value)
+        .all()
+    )
+
+    for all_sky_instrument in all_sky_instruments:
+        all_sky_instrument.constraints = [earth0constraint]
+        session.add(all_sky_instrument)
+
+    session.commit()
     # ### end Alembic commands ###
 
 

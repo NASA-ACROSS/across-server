@@ -121,6 +121,7 @@ def fake_observatory_model(
         id=fake_observatory_id,
         ephemeris_types=[fake_tle_ephemeris_type],
         created_on=datetime(2023, 1, 1),
+        reference_url="omegle.com",
     )
     return mock_model
 

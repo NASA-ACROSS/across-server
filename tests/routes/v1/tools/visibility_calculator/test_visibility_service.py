@@ -175,9 +175,9 @@ class TestVisibilityService:
             mock_visibility_result = MagicMock()
 
             service = VisibilityCalculatorService(mock_db)
-            service._calc_ephemeris_visibility = AsyncMock(
+            service._calc_ephemeris_visibility = AsyncMock(  # type: ignore
                 return_value=mock_visibility_result
-            )  # type: ignore
+            )
 
             result = await service.calculate_windows(
                 ra=ra,

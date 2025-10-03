@@ -19,6 +19,7 @@ def mock_observatory_data() -> ObservatoryModel:
         short_name="TO",
         type="GROUND_BASED",
         created_on=datetime.now(),
+        reference_url="test_observatory.nasa.gov",
     )
 
 
