@@ -11,7 +11,7 @@ from across.tools.visibility import (
     compute_ephemeris_visibility,
 )
 from astropy.time import Time  # type: ignore[import-untyped]
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .....core.enums.visibility_type import VisibilityType
@@ -19,6 +19,7 @@ from .....db.database import get_session
 from ...instrument.exceptions import InstrumentNotFoundException
 from ...instrument.schemas import Instrument as InstrumentSchema
 from ...instrument.service import InstrumentService
+from ...telescope.exceptions import TelescopeNotFoundException
 from ...telescope.service import TelescopeService
 from ...tools.ephemeris.service import EphemerisService
 from .exceptions import (
@@ -27,11 +28,11 @@ from .exceptions import (
 )
 
 
-class VisibilityService:
+class VisibilityCalculatorService:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
         self.db = db
 
-    async def get_ephemeris_visibility(
+    async def _calc_ephemeris_visibility(
         self,
         ra: float,
         dec: float,
@@ -71,7 +72,7 @@ class VisibilityService:
             constraints=constraints,
             ra=ra,
             dec=dec,
-            step_size=step_size * u.s,
+            step_size=step_size * u.s,  # type: ignore
             observatory_id=observatory_id,
             min_vis=min_visibility_duration,
         )
@@ -79,7 +80,7 @@ class VisibilityService:
 
         return visibility
 
-    async def get(
+    async def calculate_windows(
         self,
         ra: float,
         dec: float,
@@ -97,17 +98,14 @@ class VisibilityService:
         # Convert the instrument model to a schema
         instrument = InstrumentSchema.from_orm(instrument_model)
         if instrument.telescope is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Instrument {instrument.name} has no associated telescope.",
-            )
+            raise TelescopeNotFoundException(instrument_model.telescope_id)
 
         # Obtain the telescope that hosts this instrument
         telescope = await TelescopeService(self.db).get(instrument.telescope.id)
 
         if instrument.visibility_type == VisibilityType.EPHEMERIS:
             # Calculate visibility using the instrument schema
-            return await self.get_ephemeris_visibility(
+            return await self._calc_ephemeris_visibility(
                 ra=ra,
                 dec=dec,
                 instrument=instrument,

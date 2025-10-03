@@ -6,7 +6,7 @@ from fastapi import status
 from .....core.exceptions import AcrossHTTPException
 
 
-class EphemerisOutsideOperationalRangeException(AcrossHTTPException):
+class EphemerisNotFound(AcrossHTTPException):
     def __init__(
         self,
         date_range_begin: datetime,
@@ -24,7 +24,7 @@ class EphemerisOutsideOperationalRangeException(AcrossHTTPException):
         )
 
 
-class NoEphemerisTypesFoundException(AcrossHTTPException):
+class EphemerisTypeNotFound(AcrossHTTPException):
     def __init__(self, observatory_id: UUID):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,

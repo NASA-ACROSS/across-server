@@ -25,8 +25,8 @@ from ...observatory.service import ObservatoryService
 from ...tle.exceptions import TLENotFoundException
 from ...tle.service import TLEService
 from .exceptions import (
-    EphemerisOutsideOperationalRangeException,
-    NoEphemerisTypesFoundException,
+    EphemerisNotFound,
+    EphemerisTypeNotFound,
 )
 
 
@@ -70,7 +70,7 @@ class EphemerisService:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
         self.db: AsyncSession = db
 
-    async def get_tle_ephem(
+    async def _get_tle_ephem(
         self,
         parameters: observatory_schemas.TLEParameters,
         date_range_begin: datetime,
@@ -129,7 +129,7 @@ class EphemerisService:
 
         return ephem
 
-    async def get_jpl_ephem(
+    async def _get_jpl_ephem(
         self,
         parameters: observatory_schemas.JPLParameters,
         date_range_begin: datetime,
@@ -163,7 +163,7 @@ class EphemerisService:
         )
         return await anyio.to_thread.run_sync(eph_func)
 
-    async def get_spice_ephem(
+    async def _get_spice_ephem(
         self,
         parameters: observatory_schemas.SPICEParameters,
         date_range_begin: datetime,
@@ -198,7 +198,7 @@ class EphemerisService:
         )
         return await anyio.to_thread.run_sync(eph_func)
 
-    async def get_ground_ephem(
+    async def _get_ground_ephem(
         self,
         parameters: observatory_schemas.GroundParameters,
         date_range_begin: datetime,
@@ -228,9 +228,9 @@ class EphemerisService:
             begin=date_range_begin,
             end=date_range_end,
             step_size=step_size,
-            longitude=Longitude(parameters.longitude * u.deg),
-            latitude=Latitude(parameters.latitude * u.deg),
-            height=parameters.height * u.m,
+            longitude=Longitude(parameters.longitude * u.deg),  # type: ignore
+            latitude=Latitude(parameters.latitude * u.deg),  # type: ignore
+            height=parameters.height * u.m,  # type: ignore
         )
         return await anyio.to_thread.run_sync(eph_func)
 
@@ -271,7 +271,7 @@ class EphemerisService:
                 or date_range_end > observatory.operational.end
             )
         ):
-            raise EphemerisOutsideOperationalRangeException(
+            raise EphemerisNotFound(
                 observatory_id=observatory_id,
                 date_range_begin=date_range_begin,
                 date_range_end=date_range_end,
@@ -280,7 +280,7 @@ class EphemerisService:
         # Compute Ephemeris
         ephemeris_types = observatory.ephemeris_types
         if ephemeris_types is None or len(ephemeris_types) == 0:
-            raise NoEphemerisTypesFoundException(observatory_id=observatory_id)
+            raise EphemerisTypeNotFound(observatory_id=observatory_id)
 
         # Sort ephemeris types by priority
         ephemeris_types.sort(key=lambda x: x.priority)
@@ -290,7 +290,7 @@ class EphemerisService:
             if etype.ephemeris_type == EphemerisType.TLE and isinstance(
                 etype.parameters, observatory_schemas.TLEParameters
             ):
-                return await self.get_tle_ephem(
+                return await self._get_tle_ephem(
                     parameters=etype.parameters,
                     date_range_begin=date_range_begin,
                     date_range_end=date_range_end,
@@ -299,7 +299,7 @@ class EphemerisService:
             if etype.ephemeris_type == EphemerisType.GROUND and isinstance(
                 etype.parameters, observatory_schemas.GroundParameters
             ):
-                return await self.get_ground_ephem(
+                return await self._get_ground_ephem(
                     parameters=etype.parameters,
                     date_range_begin=date_range_begin,
                     date_range_end=date_range_end,
@@ -308,7 +308,7 @@ class EphemerisService:
             if etype.ephemeris_type == EphemerisType.SPICE and isinstance(
                 etype.parameters, observatory_schemas.SPICEParameters
             ):
-                return await self.get_spice_ephem(
+                return await self._get_spice_ephem(
                     parameters=etype.parameters,
                     date_range_begin=date_range_begin,
                     date_range_end=date_range_end,
@@ -317,12 +317,10 @@ class EphemerisService:
             if etype.ephemeris_type == EphemerisType.JPL and isinstance(
                 etype.parameters, observatory_schemas.JPLParameters
             ):
-                return await self.get_jpl_ephem(
+                return await self._get_jpl_ephem(
                     parameters=etype.parameters,
                     date_range_begin=date_range_begin,
                     date_range_end=date_range_end,
                     step_size=step_size,
                 )
-        raise NoEphemerisTypesFoundException(
-            observatory_id=observatory_id
-        )  # pragma: no cover
+        raise EphemerisTypeNotFound(observatory_id=observatory_id)  # pragma: no cover

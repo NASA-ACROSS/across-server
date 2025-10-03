@@ -3,6 +3,8 @@ from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
 
+from across_server.core.schemas.coordinate import NonNullCoordinate
+
 from .....core.schemas.base import BaseSchema
 
 
@@ -41,7 +43,7 @@ class VisibilityWindow(BaseSchema):
     constraint_reason: ConstraintReason
 
 
-class VisibilityRead(BaseSchema):
+class VisibilityReadParams(BaseSchema):
     """
     A Pydantic model class representing the query parameters for the Visibility
     GET methods.
@@ -62,15 +64,14 @@ class VisibilityRead(BaseSchema):
         Minimum visibility duration in seconds (default is 0)
     """
 
-    ra: float
-    dec: float
+    coordinate: NonNullCoordinate
     date_range_begin: datetime
     date_range_end: datetime
     hi_res: bool = True
     min_visibility_duration: int = 0
 
 
-class VisibilityResult(VisibilityRead):
+class VisibilityResult(VisibilityReadParams):
     """
     A Pydantic model class representing the visibility calculation parameters.
 
@@ -81,7 +82,7 @@ class VisibilityResult(VisibilityRead):
     visibility_windows: list[VisibilityWindow]
 
 
-class JointVisibilityRead(VisibilityRead):
+class JointVisibilityReadParams(VisibilityReadParams):
     """
     A Pydantic model class representing the query parameters for the Joint
     Visibility GET methods.
@@ -107,7 +108,7 @@ class JointVisibilityRead(VisibilityRead):
     instrument_ids: list[UUID]
 
 
-class JointVisibilityResult(VisibilityRead):
+class JointVisibilityResult(VisibilityReadParams):
     """
     A Pydantic model class representing the joint visibility calculation
     parameters.

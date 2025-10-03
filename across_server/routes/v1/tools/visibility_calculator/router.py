@@ -4,10 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
 from across_server.routes.v1.tools.visibility_calculator.service import (
-    VisibilityService,
+    VisibilityCalculatorService,
 )
 
-from .schemas import VisibilityRead, VisibilityResult
+from .schemas import VisibilityReadParams, VisibilityResult
 
 router = APIRouter(
     prefix="/visibility-calculator",
@@ -21,38 +21,42 @@ router = APIRouter(
 
 
 @router.get(
-    "/calculate/{instrument_id}",
+    "/windows/{instrument_id}",
     status_code=status.HTTP_200_OK,
-    summary="Visibility Calculator",
-    description="Calculate visibility of a satellite from a given location.",
+    summary="Calculated Visibility Windows",
+    description="Calculate visibility windows of a telescope from a given location.",
     responses={
         status.HTTP_200_OK: {
-            "description": "Return visibility calculation results.",
+            "description": "Return visibility window calculation results.",
         },
     },
 )
-async def visibility_calculator(
+async def calculate_windows(
     instrument_id: UUID,
-    parameters: Annotated[VisibilityRead, Query()],
-    visibility_calculator: Annotated[VisibilityService, Depends(VisibilityService)],
+    parameters: Annotated[VisibilityReadParams, Query()],
+    visibility_calculator: Annotated[
+        VisibilityCalculatorService, Depends(VisibilityCalculatorService)
+    ],
 ) -> VisibilityResult:
-    visibility = await visibility_calculator.get(
-        ra=parameters.ra,
-        dec=parameters.dec,
+    visibility = await visibility_calculator.calculate_windows(
+        ra=parameters.coordinate.ra,
+        dec=parameters.coordinate.dec,
         date_range_begin=parameters.date_range_begin,
         date_range_end=parameters.date_range_end,
         hi_res=parameters.hi_res,
+        min_visibility_duration=parameters.min_visibility_duration,
         instrument_id=instrument_id,
     )
 
     return VisibilityResult.model_validate(
         {
-            "ra": parameters.ra,
-            "dec": parameters.dec,
+            "ra": parameters.coordinate.ra,
+            "dec": parameters.coordinate.dec,
             "date_range_begin": parameters.date_range_begin,
             "date_range_end": parameters.date_range_end,
             "visibility_windows": visibility.model_dump()["visibility_windows"],
             "instrument_id": instrument_id,
+            "min_visibility_duration": parameters.min_visibility_duration,
             "hi_res": parameters.hi_res,
         }
     )

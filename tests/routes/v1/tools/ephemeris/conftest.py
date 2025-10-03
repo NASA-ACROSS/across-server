@@ -2,32 +2,38 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
+import anyio.to_thread
 import pytest
 
 from across_server.core.enums.ephemeris_type import EphemerisType
+from across_server.db.models import (
+    EarthLocationParameters,
+    JPLEphemerisParameters,
+    Observatory,
+    ObservatoryEphemerisType,
+    SpiceKernelParameters,
+    TLEParameters,
+)
 from across_server.routes.v1.observatory import schemas as observatory_schemas
+from across_server.routes.v1.observatory.service import ObservatoryService
+from across_server.routes.v1.tle.service import TLEService
+from across_server.routes.v1.tools.ephemeris.service import EphemerisService
 
 
 @pytest.fixture
-def mock_db() -> AsyncMock:
-    """Mock database session"""
-    return AsyncMock()
-
-
-@pytest.fixture
-def test_observatory_id() -> UUID:
+def fake_observatory_id() -> UUID:
     """Test observatory ID"""
     return uuid4()
 
 
 @pytest.fixture
-def test_date_range() -> dict[str, datetime]:
+def fake_date_range() -> dict[str, datetime]:
     """Test date range"""
     return {"begin": datetime(2023, 1, 1), "end": datetime(2023, 1, 2)}
 
 
 @pytest.fixture
-def operational_date_range() -> observatory_schemas.DateRange:
+def fake_operational_date_range() -> observatory_schemas.DateRange:
     """Operational date range for observatory"""
     return observatory_schemas.DateRange(
         begin=datetime(2023, 6, 1), end=datetime(2023, 12, 31)
@@ -35,132 +41,102 @@ def operational_date_range() -> observatory_schemas.DateRange:
 
 
 @pytest.fixture
-def tle_parameters() -> observatory_schemas.TLEParameters:
+def fake_tle_parameters(fake_observatory_id: UUID) -> TLEParameters:
     """TLE parameters"""
-    return observatory_schemas.TLEParameters(
-        norad_id=12345, norad_satellite_name="Test"
+    return TLEParameters(
+        observatory_id=fake_observatory_id, norad_id=12345, norad_satellite_name="Test"
     )
 
 
 @pytest.fixture
-def jpl_parameters() -> observatory_schemas.JPLParameters:
+def fake_jpl_parameters() -> JPLEphemerisParameters:
     """JPL parameters"""
-    return observatory_schemas.JPLParameters(naif_id=399)
+    return JPLEphemerisParameters(naif_id=399)
 
 
 @pytest.fixture
-def spice_parameters() -> observatory_schemas.SPICEParameters:
+def fake_spice_parameters() -> SpiceKernelParameters:
     """SPICE parameters"""
-    return observatory_schemas.SPICEParameters(
-        spice_kernel_url="http://test.com", naif_id=399
-    )
+    return SpiceKernelParameters(spice_kernel_url="http://test.com", naif_id=399)
 
 
 @pytest.fixture
-def ground_parameters() -> observatory_schemas.GroundParameters:
+def fake_ground_parameters() -> EarthLocationParameters:
     """Ground parameters"""
-    return observatory_schemas.GroundParameters(longitude=0.0, latitude=0.0, height=0.0)
+    return EarthLocationParameters(longitude=0.0, latitude=0.0, height=0.0)
 
 
 @pytest.fixture
-def tle_ephemeris_type(
-    tle_parameters: observatory_schemas.TLEParameters,
-) -> observatory_schemas.ObservatoryEphemerisType:
+def fake_tle_ephemeris_type(
+    fake_tle_parameters: TLEParameters,
+) -> ObservatoryEphemerisType:
     """TLE ephemeris type"""
-    return observatory_schemas.ObservatoryEphemerisType(
-        ephemeris_type=EphemerisType.TLE, priority=1, parameters=tle_parameters
+    return ObservatoryEphemerisType(
+        ephemeris_type=EphemerisType.TLE, priority=1, parameters=fake_tle_parameters
     )
 
 
 @pytest.fixture
-def jpl_ephemeris_type(
-    jpl_parameters: observatory_schemas.JPLParameters,
-) -> observatory_schemas.ObservatoryEphemerisType:
+def fake_jpl_ephemeris_type(
+    fake_jpl_parameters: JPLEphemerisParameters,
+) -> ObservatoryEphemerisType:
     """JPL ephemeris type"""
-    return observatory_schemas.ObservatoryEphemerisType(
-        ephemeris_type=EphemerisType.JPL, priority=2, parameters=jpl_parameters
+    return ObservatoryEphemerisType(
+        ephemeris_type=EphemerisType.JPL, priority=2, parameters=fake_jpl_parameters
     )
 
 
 @pytest.fixture
-def spice_ephemeris_type(
-    spice_parameters: observatory_schemas.SPICEParameters,
-) -> observatory_schemas.ObservatoryEphemerisType:
+def fake_spice_ephemeris_type(
+    fake_spice_parameters: SpiceKernelParameters,
+) -> ObservatoryEphemerisType:
     """SPICE ephemeris type"""
-    return observatory_schemas.ObservatoryEphemerisType(
-        ephemeris_type=EphemerisType.SPICE, priority=3, parameters=spice_parameters
+    return ObservatoryEphemerisType(
+        ephemeris_type=EphemerisType.SPICE, priority=3, parameters=fake_spice_parameters
     )
 
 
 @pytest.fixture
-def ground_ephemeris_type(
-    ground_parameters: observatory_schemas.GroundParameters,
-) -> observatory_schemas.ObservatoryEphemerisType:
+def fake_ground_ephemeris_type(
+    fake_ground_parameters: EarthLocationParameters,
+) -> ObservatoryEphemerisType:
     """Ground ephemeris type"""
-    return observatory_schemas.ObservatoryEphemerisType(
-        ephemeris_type=EphemerisType.GROUND, priority=4, parameters=ground_parameters
+    return ObservatoryEphemerisType(
+        ephemeris_type=EphemerisType.GROUND,
+        priority=4,
+        parameters=fake_ground_parameters,
     )
 
 
 @pytest.fixture
-def mock_observatory_model(
-    test_observatory_id: UUID,
-    tle_ephemeris_type: observatory_schemas.ObservatoryEphemerisType,
-) -> MagicMock:
-    """Mock observatory model"""
-    mock_model = MagicMock()
-    mock_model.__dict__ = {
-        "name": "Test Observatory",
-        "short_name": "TEST",
-        "type": "SPACE_BASED",
-        "id": test_observatory_id,
-        "operational": None,
-        "ephemeris_types": [tle_ephemeris_type],
-        "created_on": datetime.now(),
-    }
+def fake_observatory_model(
+    fake_observatory_id: UUID,
+    fake_tle_ephemeris_type: ObservatoryEphemerisType,
+) -> Observatory:
+    """Mock observatory model. This needs to be an actual Observatory db model"""
+    mock_model = Observatory(
+        name="Test Observatory",
+        short_name="TEST",
+        type="SPACE_BASED",
+        id=fake_observatory_id,
+        ephemeris_types=[fake_tle_ephemeris_type],
+        created_on=datetime(2023, 1, 1),
+    )
     return mock_model
 
 
 @pytest.fixture
-def mock_observatory_model_with_operational(
-    test_observatory_id: UUID,
-    tle_ephemeris_type: observatory_schemas.ObservatoryEphemerisType,
-    operational_date_range: observatory_schemas.DateRange,
-) -> MagicMock:
-    """Mock observatory model with operational range"""
-    mock_model = MagicMock()
-    mock_model.__dict__ = {
-        "name": "Test Observatory",
-        "short_name": "TEST",
-        "type": "SPACE_BASED",
-        "id": test_observatory_id,
-        "operational_begin_date": operational_date_range.begin,
-        "operational_end_date": operational_date_range.end,
-        "ephemeris_types": [tle_ephemeris_type],
-        "created_on": datetime(2023, 1, 1),
-    }
+def fake_observatory_model_no_ephemeris(fake_observatory_id: UUID) -> Observatory:
+    """Fake observatory model with no ephemeris types"""
+    mock_model = Observatory(
+        name="Test Observatory",
+        short_name="TEST",
+        type="SPACE_BASED",
+        id=fake_observatory_id,
+        ephemeris_types=[],
+        created_on=datetime(2023, 1, 1),
+    )
     return mock_model
-
-
-@pytest.fixture
-def mock_observatory_model_no_ephemeris(test_observatory_id: UUID) -> MagicMock:
-    """Mock observatory model with no ephemeris types"""
-    mock_model = MagicMock()
-    mock_model.__dict__ = {
-        "name": "Test Observatory",
-        "short_name": "TEST",
-        "type": "SPACE_BASED",
-        "id": test_observatory_id,
-        "ephemeris_types": [],
-        "created_on": datetime(2023, 1, 1),
-    }
-    return mock_model
-
-
-@pytest.fixture
-def mock_ephemeris() -> MagicMock:
-    """Mock ephemeris result"""
-    return MagicMock()
 
 
 @pytest.fixture(scope="function")
@@ -189,10 +165,52 @@ def todays_epoch_yyddd(todays_epoch: datetime) -> str:
 
 
 @pytest.fixture(scope="function")
-def mock_tle_data(todays_epoch_yyddd: str) -> dict:
+def fake_tle_data(todays_epoch_yyddd: str) -> dict:
     return {
         "norad_id": 12345,
         "satellite_name": "TEST",
         "tle1": f"1 28485U 04047A   {todays_epoch_yyddd}  .00027471  00000+0  86373-3 0  9997",
         "tle2": "2 28485  20.5557 285.8116 0006385  93.6070 266.5099 15.31053389110064",
     }
+
+
+@pytest.fixture
+def mock_ephemeris_result(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    """Patches anyio.to_thread.run_sync with a AsyncMock"""
+    mock_ephemeris_result = MagicMock()
+    monkeypatch.setattr(
+        anyio.to_thread, "run_sync", AsyncMock(return_value=mock_ephemeris_result)
+    )
+    return mock_ephemeris_result
+
+
+@pytest.fixture
+def fake_tle_service_get(
+    monkeypatch: pytest.MonkeyPatch, fake_tle_data: dict
+) -> AsyncMock:
+    """"""
+    mock_tle_model = MagicMock()
+    mock_tle_model.__dict__ = fake_tle_data
+
+    fake_tle_get = AsyncMock(return_value=mock_tle_model)
+
+    monkeypatch.setattr(TLEService, "__init__", MagicMock(return_value=None))
+    monkeypatch.setattr(TLEService, "get", fake_tle_get)
+
+    return fake_tle_get
+
+
+@pytest.fixture
+def fake_observatory_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    """"""
+    fake_observatory_get = AsyncMock(return_value=None)
+    monkeypatch.setattr(ObservatoryService, "__init__", MagicMock(return_value=None))
+    monkeypatch.setattr(ObservatoryService, "get", fake_observatory_get)
+    return fake_observatory_get
+
+
+@pytest.fixture
+def fake_ephemeris_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+    fake_get_result = AsyncMock(return_value=None)
+    monkeypatch.setattr(EphemerisService, "_get_tle_ephem", fake_get_result)
+    return fake_get_result
