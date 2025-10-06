@@ -34,7 +34,7 @@ class ServiceAccount(BaseSchema):
     id: uuid.UUID
     name: str
     description: str | None
-    user: User
+    user: list[User]
 
 
 class GroupRole(GroupRoleRead):
