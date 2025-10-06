@@ -2,8 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
-
-from across_server.core.schemas.coordinate import NonNullCoordinate
+from pydantic import Field
 
 from .....core.schemas.base import BaseSchema
 
@@ -64,7 +63,8 @@ class VisibilityReadParams(BaseSchema):
         Minimum visibility duration in seconds (default is 0)
     """
 
-    coordinate: NonNullCoordinate
+    ra: float = Field(ge=0.0, le=360.0)
+    dec: float = Field(ge=-90.0, le=90.0)
     date_range_begin: datetime
     date_range_end: datetime
     hi_res: bool = True

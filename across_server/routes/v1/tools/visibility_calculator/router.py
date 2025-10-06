@@ -39,8 +39,8 @@ async def calculate_windows(
     ],
 ) -> VisibilityResult:
     visibility = await visibility_calculator.calculate_windows(
-        ra=parameters.coordinate.ra,
-        dec=parameters.coordinate.dec,
+        ra=parameters.ra,
+        dec=parameters.dec,
         date_range_begin=parameters.date_range_begin,
         date_range_end=parameters.date_range_end,
         hi_res=parameters.hi_res,
@@ -50,8 +50,8 @@ async def calculate_windows(
 
     return VisibilityResult.model_validate(
         {
-            "ra": parameters.coordinate.ra,
-            "dec": parameters.coordinate.dec,
+            "ra": parameters.ra,
+            "dec": parameters.dec,
             "date_range_begin": parameters.date_range_begin,
             "date_range_end": parameters.date_range_end,
             "visibility_windows": visibility.model_dump()["visibility_windows"],
