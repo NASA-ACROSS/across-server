@@ -1,7 +1,7 @@
 """add instrument constraints
 
 Revision ID: 50c390eb41cb
-Revises: 59faf999b470
+Revises: 9c6db8cdfe82
 Create Date: 2025-06-30 15:02:13.633687
 
 """
@@ -25,7 +25,7 @@ from across_server.core.enums.visibility_type import VisibilityType
 
 # revision identifiers, used by Alembic.
 revision: str = "50c390eb41cb"
-down_revision: Union[str, None] = "59faf999b470"
+down_revision: Union[str, None] = "9c6db8cdfe82"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
