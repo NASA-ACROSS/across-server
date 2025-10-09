@@ -47,17 +47,37 @@ def build(
     # get the telescopes
     for telescope_data in telescopes:
         instruments = telescope_data.pop("instruments")
+        telescope_constraints = telescope_data.pop("constraints", [])
         # create the telescope record
         telescope = models.Telescope(observatory_id=observatory.id, **telescope_data)
         records.append(telescope)
+
+        # create constraints that belong to all instruments on the telescope
+        telescope_constraint_records = []
+        for constraint_data in telescope_constraints:
+            constraint = models.Constraint(**constraint_data)
+            records.append(constraint)
+            telescope_constraint_records.append(constraint)
 
         # get the instruments
         for instrument_data in instruments:
             footprints = instrument_data.pop("footprint")
             filters = instrument_data.pop("filters")
+            instrument_constraints = instrument_data.pop("constraints", [])
 
             # create the instrument record
             instrument = models.Instrument(telescope_id=telescope.id, **instrument_data)
+
+            # add the global telescope constraints
+            if len(telescope_constraint_records):
+                instrument.constraints.extend(telescope_constraint_records)
+
+            # create any constraints for the individual instrument and add them
+            for constraint_data in instrument_constraints:
+                constraint = models.Constraint(**constraint_data)
+                records.append(constraint)
+                instrument.constraints.extend([constraint])
+
             records.append(instrument)
 
             for footprint_data in footprints:
