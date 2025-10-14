@@ -1,9 +1,16 @@
 from datetime import datetime
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Callable
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
+import anyio.to_thread
 import pytest
+from across.tools.ephemeris import (
+    compute_ground_ephemeris,
+    compute_jpl_ephemeris,
+    compute_spice_ephemeris,
+    compute_tle_ephemeris,
+)
 
 from across_server.routes.v1.observatory import schemas as observatory_schemas
 from across_server.routes.v1.observatory.exceptions import ObservatoryNotFoundException
@@ -17,38 +24,6 @@ from across_server.routes.v1.tools.ephemeris.service import EphemerisService
 
 class TestEphemerisService:
     class TestTLE:
-        @pytest.mark.parametrize(
-            ("fake_parameters", "ephemeris_method_name"),
-            [
-                ("fake_tle_parameters", "_get_tle_ephem"),
-                ("fake_jpl_parameters", "_get_jpl_ephem"),
-                ("fake_spice_parameters", "_get_spice_ephem"),
-                ("fake_ground_parameters", "_get_ground_ephem"),
-            ],
-        )
-        @pytest.mark.asyncio
-        async def test_should_return_ephemeris_with_valid_parameters(
-            self,
-            request: Any,
-            fake_parameters: Any,
-            ephemeris_method_name: str,
-            mock_db: AsyncMock,
-            fake_date_range: dict[str, datetime],
-            mock_ephemeris_result: MagicMock,
-            fake_tle_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
-        ) -> None:
-            """Should successfully compute all ephemerises when valid parameters are provided"""
-            service = EphemerisService(mock_db)
-            method = getattr(service, ephemeris_method_name)
-            result = await method(
-                request.getfixturevalue(fake_parameters),
-                fake_date_range["begin"],
-                fake_date_range["end"],
-            )
-
-            assert result == mock_ephemeris_result
-
         @pytest.mark.asyncio
         async def test_should_raise_when_tle_not_found(
             self,
@@ -148,39 +123,44 @@ class TestEphemerisService:
                 )
 
         @pytest.mark.parametrize(
-            "fake_ephemeris_type",
+            ("fake_ephemeris_type", "expected_compute_fn"),
             [
-                ("fake_tle_ephemeris_type"),
-                ("fake_jpl_ephemeris_type"),
-                ("fake_spice_ephemeris_type"),
-                ("fake_ground_ephemeris_type"),
+                ("fake_tle_ephemeris_type", compute_tle_ephemeris),
+                ("fake_jpl_ephemeris_type", compute_jpl_ephemeris),
+                ("fake_spice_ephemeris_type", compute_spice_ephemeris),
+                ("fake_ground_ephemeris_type", compute_ground_ephemeris),
             ],
         )
         @pytest.mark.asyncio
-        async def test_should_return_ephemeris_when_successful_for_tle_ephemeris(
+        async def test_should_call_correct_compute_fn_for_given_ephemeris_type(
             self,
             request: Any,
             fake_ephemeris_type: observatory_schemas.ObservatoryEphemerisType,
+            expected_compute_fn: Callable,
             mock_db: AsyncMock,
             fake_observatory_id: UUID,
             fake_date_range: dict[str, datetime],
             fake_observatory_model: MagicMock,
-            mock_ephemeris_result: MagicMock,
             fake_observatory_service_get: AsyncMock,
-            fake_ephemeris_service_get: AsyncMock,
+            fake_tle_service_get: AsyncMock,
             monkeypatch: pytest.MonkeyPatch,
         ) -> None:
-            """Should successfully return TLE ephemeris when TLE ephemeris type is available"""
+            """Should call the correct compute fn given the ephemeris type"""
             fake_observatory_model.ephemeris_types = [
                 request.getfixturevalue(fake_ephemeris_type)
             ]
 
             fake_observatory_service_get.return_value = fake_observatory_model
-            fake_ephemeris_service_get.return_value = mock_ephemeris_result
 
-            service = EphemerisService(mock_db)
-            result = await service.get(
-                fake_observatory_id, fake_date_range["begin"], fake_date_range["end"]
-            )
-
-            assert result == mock_ephemeris_result
+            mock_run_sync = AsyncMock(return_value=None)
+            monkeypatch.setattr(anyio.to_thread, "run_sync", mock_run_sync)
+            with patch(
+                "across_server.routes.v1.tools.ephemeris.service.partial", MagicMock()
+            ) as mock_partial:
+                service = EphemerisService(mock_db)
+                await service.get(
+                    fake_observatory_id,
+                    fake_date_range["begin"],
+                    fake_date_range["end"],
+                )
+                assert expected_compute_fn in mock_partial.call_args_list[0][0]

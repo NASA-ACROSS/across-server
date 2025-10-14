@@ -5,9 +5,9 @@ from uuid import UUID, uuid4
 import anyio
 import anyio.to_thread
 import pytest
-from across.tools.visibility.constraints import SunAngleConstraint
 
 from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.models import Constraint, Instrument, Telescope
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.instrument.service import InstrumentService
 from across_server.routes.v1.telescope.service import TelescopeService
@@ -15,9 +15,16 @@ from across_server.routes.v1.tools.ephemeris.service import EphemerisService
 
 
 @pytest.fixture
-def fake_sun_constraint() -> SunAngleConstraint:
+def fake_sun_constraint() -> Constraint:
     """Mock SunAngleConstraint"""
-    return SunAngleConstraint(min_angle=45)
+    return Constraint(
+        constraint_type="Sun Angle",
+        constraint_parameters={
+            "short_name": "Sun",
+            "name": "Sun Angle",
+            "min_angle": 45,
+        },
+    )
 
 
 @pytest.fixture
@@ -52,29 +59,32 @@ def fake_coordinates() -> tuple[float, float]:
 
 @pytest.fixture
 def fake_instrument_with_constraints(
-    fake_sun_constraint: SunAngleConstraint,
-) -> InstrumentSchema:
-    """Instrument schema with constraints"""
-    return InstrumentSchema(
+    fake_sun_constraint: Constraint,
+    mock_telescope_data: Telescope,
+) -> Instrument:
+    """Instrument model with constraint"""
+    return Instrument(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
         constraints=[fake_sun_constraint],
         short_name="test",
         created_on=datetime.now(),
+        telescope=mock_telescope_data,
     )
 
 
 @pytest.fixture
-def fake_instrument_without_constraints() -> InstrumentSchema:
-    """Instrument schema without constraints"""
-    return InstrumentSchema(
+def fake_instrument_without_constraints(mock_telescope_data: Telescope) -> Instrument:
+    """Instrument model without constraints"""
+    return Instrument(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
-        constraints=None,
+        constraints=[],
         short_name="test",
         created_on=datetime.now(),
+        telescope=mock_telescope_data,
     )
 
 

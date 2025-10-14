@@ -52,7 +52,7 @@ class VisibilityCalculatorService:
 
         # Obtain constraint definitions
         constraints = instrument.constraints
-        if constraints is None:
+        if not constraints:
             raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
 
         # Compute Ephemeris
@@ -117,5 +117,5 @@ class VisibilityCalculatorService:
             )
         else:
             raise VisibilityTypeNotImplementedException(
-                f"Visibility type {instrument.visibility_type} is not implemented."
+                f"Visibility type {instrument.visibility_type} is not implemented. Please select an instrument with visibility type {VisibilityType.EPHEMERIS}"
             )

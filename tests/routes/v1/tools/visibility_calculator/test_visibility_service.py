@@ -1,11 +1,12 @@
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
+import astropy.units as u  # type: ignore
 import pytest
 
+from across_server.db.models import Instrument, Telescope
 from across_server.routes.v1.instrument.exceptions import InstrumentNotFoundException
-from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.telescope.exceptions import TelescopeNotFoundException
 from across_server.routes.v1.tools.visibility_calculator.exceptions import (
     VisibilityConstraintsNotFoundException,
@@ -19,85 +20,109 @@ from across_server.routes.v1.tools.visibility_calculator.service import (
 class TestVisibilityService:
     class TestGet:
         @pytest.mark.asyncio
-        async def test_should_return_value(
+        async def test_should_return_visibility_with_minute_resolution_when_hi_res_is_true(
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
             fake_date_range: tuple[datetime, datetime],
-            fake_instrument_with_constraints: InstrumentSchema,
-            fake_async_result: AsyncMock,
             fake_ephemeris_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            fake_instrument_service_get: AsyncMock,
+            fake_telescope_service_get: AsyncMock,
+            mock_telescope_data: Telescope,
+            fake_instrument_with_constraints: Instrument,
         ) -> None:
             """Should calculate ephemeris visibility with minute resolution when hi_res is True"""
             ra, dec = fake_coordinates
             date_range_begin, date_range_end = fake_date_range
 
-            service = VisibilityCalculatorService(mock_db)
-            result = await service._calc_ephemeris_visibility(
-                ra=ra,
-                dec=dec,
-                instrument=fake_instrument_with_constraints,
-                observatory_id=fake_observatory_id,
-                date_range_begin=date_range_begin,
-                date_range_end=date_range_end,
-                hi_res=True,
-            )
+            fake_telescope_service_get.return_value = mock_telescope_data
+            fake_instrument_service_get.return_value = fake_instrument_with_constraints
 
-            assert result == fake_async_result
+            with patch(
+                "across_server.routes.v1.tools.visibility_calculator.service.partial",
+                MagicMock(),
+            ) as mock_partial:
+                service = VisibilityCalculatorService(mock_db)
+                await service.calculate_windows(
+                    ra=ra,
+                    dec=dec,
+                    instrument_id=fake_instrument_with_constraints.id,
+                    date_range_begin=date_range_begin,
+                    date_range_end=date_range_end,
+                    hi_res=True,
+                )
+                expected_step_size = 60 * u.s  # type: ignore
+                assert (
+                    expected_step_size == mock_partial.call_args_list[0][1]["step_size"]
+                )
 
         @pytest.mark.asyncio
-        async def test_ephemeris_visibility_with_hi_res_false(
+        async def test_should_return_visibility_with_hour_resolution_when_hi_res_is_false(
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
             fake_date_range: tuple[datetime, datetime],
-            fake_instrument_with_constraints: InstrumentSchema,
-            fake_async_result: AsyncMock,
             fake_ephemeris_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            fake_instrument_service_get: AsyncMock,
+            fake_telescope_service_get: AsyncMock,
+            mock_telescope_data: Telescope,
+            fake_instrument_with_constraints: Instrument,
         ) -> None:
             """Should calculate ephemeris visibility with hour resolution when hi_res is False"""
 
             ra, dec = fake_coordinates
             date_range_begin, date_range_end = fake_date_range
 
-            service = VisibilityCalculatorService(mock_db)
-            result = await service._calc_ephemeris_visibility(
-                ra=ra,
-                dec=dec,
-                instrument=fake_instrument_with_constraints,
-                observatory_id=fake_observatory_id,
-                date_range_begin=date_range_begin,
-                date_range_end=date_range_end,
-                hi_res=False,
-            )
-            assert result == fake_async_result
+            fake_telescope_service_get.return_value = mock_telescope_data
+            fake_instrument_service_get.return_value = fake_instrument_with_constraints
+
+            with patch(
+                "across_server.routes.v1.tools.visibility_calculator.service.partial",
+                MagicMock(),
+            ) as mock_partial:
+                service = VisibilityCalculatorService(mock_db)
+                await service.calculate_windows(
+                    ra=ra,
+                    dec=dec,
+                    instrument_id=fake_instrument_with_constraints.id,
+                    date_range_begin=date_range_begin,
+                    date_range_end=date_range_end,
+                    hi_res=False,
+                )
+                expected_step_size = 3600 * u.s  # type: ignore
+                assert (
+                    expected_step_size == mock_partial.call_args_list[0][1]["step_size"]
+                )
 
         @pytest.mark.asyncio
         async def test_ephemeris_visibility_raises_exception_when_no_constraints(
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
             fake_date_range: tuple[datetime, datetime],
-            fake_instrument_without_constraints: InstrumentSchema,
+            fake_ephemeris_service_get: AsyncMock,
+            fake_instrument_without_constraints: Instrument,
+            fake_instrument_service_get: AsyncMock,
+            fake_telescope_service_get: AsyncMock,
+            mock_telescope_data: Telescope,
         ) -> None:
             """Should raise VisibilityConstraintsNotFoundException when instrument has no constraints"""
 
             ra, dec = fake_coordinates
             date_range_begin, date_range_end = fake_date_range
 
+            fake_telescope_service_get.return_value = mock_telescope_data
+            fake_instrument_service_get.return_value = (
+                fake_instrument_without_constraints
+            )
+
             service = VisibilityCalculatorService(mock_db)
 
             with pytest.raises(VisibilityConstraintsNotFoundException):
-                await service._calc_ephemeris_visibility(
+                await service.calculate_windows(
                     ra=ra,
                     dec=dec,
-                    instrument=fake_instrument_without_constraints,
-                    observatory_id=fake_observatory_id,
+                    instrument_id=fake_instrument_without_constraints.id,
                     date_range_begin=date_range_begin,
                     date_range_end=date_range_end,
                     hi_res=True,
