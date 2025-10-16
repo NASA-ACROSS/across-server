@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
 import anyio.to_thread
@@ -12,6 +12,7 @@ from across.tools.ephemeris import (
     compute_tle_ephemeris,
 )
 
+import across_server.routes.v1.tools.ephemeris.service as service_mod
 from across_server.routes.v1.observatory import schemas as observatory_schemas
 from across_server.routes.v1.observatory.exceptions import ObservatoryNotFoundException
 from across_server.routes.v1.tle.exceptions import TLENotFoundException
@@ -30,14 +31,14 @@ class TestEphemerisService:
             mock_db: AsyncMock,
             fake_tle_parameters: observatory_schemas.TLEParameters,
             fake_date_range: dict[str, datetime],
-            fake_tle_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
         ) -> None:
             """Should raise TLENotFoundException when TLE is not found"""
-
-            fake_tle_service_get.return_value = None
-
-            service = EphemerisService(mock_db)
+            mock_tle_service.get.return_value = None
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
 
             with pytest.raises(TLENotFoundException):
                 await service._get_tle_ephem(
@@ -53,11 +54,13 @@ class TestEphemerisService:
             mock_db: AsyncMock,
             fake_observatory_id: UUID,
             fake_date_range: dict[str, datetime],
-            fake_observatory_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
         ) -> None:
             """Should raise ObservatoryNotFoundException when observatory is not found"""
-            service = EphemerisService(mock_db)
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
 
             with pytest.raises(ObservatoryNotFoundException):
                 await service.get(
@@ -72,13 +75,12 @@ class TestEphemerisService:
             mock_db: AsyncMock,
             fake_observatory_id: UUID,
             fake_date_range: dict[str, datetime],
-            fake_operational_date_range: observatory_schemas.DateRange,
+            fake_operational_date_range: observatory_schemas.NullableDateRange,
             fake_observatory_model: MagicMock,
-            fake_observatory_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
         ) -> None:
             """Should raise EphemerisNotFound when date range is outside operational range"""
-
             fake_observatory_model.operational_begin_date = (
                 fake_operational_date_range.begin
             )
@@ -86,9 +88,10 @@ class TestEphemerisService:
                 fake_operational_date_range.end
             )
 
-            fake_observatory_service_get.return_value = fake_observatory_model
-
-            service = EphemerisService(mock_db)
+            mock_observatory_service.get.return_value = fake_observatory_model
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
 
             with pytest.raises(EphemerisNotFound):
                 await service.get(
@@ -104,16 +107,16 @@ class TestEphemerisService:
             fake_observatory_id: UUID,
             fake_date_range: dict[str, datetime],
             fake_observatory_model: MagicMock,
-            fake_observatory_service_get: AsyncMock,
-            monkeypatch: pytest.MonkeyPatch,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
         ) -> None:
             """Should raise NoEphemerisTypesFoundException when no ephemeris types are found"""
-
             fake_observatory_model.ephemeris_types = []
 
-            fake_observatory_service_get.return_value = fake_observatory_model
-
-            service = EphemerisService(mock_db)
+            mock_observatory_service.get.return_value = fake_observatory_model
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
 
             with pytest.raises(EphemerisTypeNotFound):
                 await service.get(
@@ -141,8 +144,8 @@ class TestEphemerisService:
             fake_observatory_id: UUID,
             fake_date_range: dict[str, datetime],
             fake_observatory_model: MagicMock,
-            fake_observatory_service_get: AsyncMock,
-            fake_tle_service_get: AsyncMock,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
             monkeypatch: pytest.MonkeyPatch,
         ) -> None:
             """Should call the correct compute fn given the ephemeris type"""
@@ -150,17 +153,20 @@ class TestEphemerisService:
                 request.getfixturevalue(fake_ephemeris_type)
             ]
 
-            fake_observatory_service_get.return_value = fake_observatory_model
+            mock_observatory_service.get.return_value = fake_observatory_model
 
             mock_run_sync = AsyncMock(return_value=None)
             monkeypatch.setattr(anyio.to_thread, "run_sync", mock_run_sync)
-            with patch(
-                "across_server.routes.v1.tools.ephemeris.service.partial", MagicMock()
-            ) as mock_partial:
-                service = EphemerisService(mock_db)
-                await service.get(
-                    fake_observatory_id,
-                    fake_date_range["begin"],
-                    fake_date_range["end"],
-                )
-                assert expected_compute_fn in mock_partial.call_args_list[0][0]
+
+            mock_partial = MagicMock()
+            monkeypatch.setattr(service_mod, "partial", mock_partial)
+
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
+            await service.get(
+                fake_observatory_id,
+                fake_date_range["begin"],
+                fake_date_range["end"],
+            )
+            assert expected_compute_fn in mock_partial.call_args_list[0][0]

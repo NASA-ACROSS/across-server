@@ -3,11 +3,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from across_server.routes.v1.tools.visibility_calculator.service import (
+from ...instrument.schemas import Instrument as InstrumentSchema
+from ...instrument.service import InstrumentService
+from ...telescope.exceptions import TelescopeNotFoundException
+from ...telescope.service import TelescopeService
+from .schemas import VisibilityReadParams, VisibilityResult
+from .service import (
     VisibilityCalculatorService,
 )
-
-from .schemas import VisibilityReadParams, VisibilityResult
 
 router = APIRouter(
     prefix="/visibility-calculator",
@@ -37,26 +40,33 @@ async def calculate_windows(
     visibility_calculator: Annotated[
         VisibilityCalculatorService, Depends(VisibilityCalculatorService)
     ],
+    instrument_service: Annotated[InstrumentService, Depends(InstrumentService)],
+    telescope_service: Annotated[TelescopeService, Depends(TelescopeService)],
 ) -> VisibilityResult:
+    instrument_model = await instrument_service.get(instrument_id)
+
+    # Convert the instrument model to a schema
+    instrument = InstrumentSchema.from_orm(instrument_model)
+    if instrument.telescope is None:
+        raise TelescopeNotFoundException(instrument_model.telescope_id)
+
+    # Obtain the telescope that hosts this instrument
+    telescope = await telescope_service.get(instrument.telescope.id)
+
     visibility = await visibility_calculator.calculate_windows(
         ra=parameters.ra,
         dec=parameters.dec,
+        instrument=instrument,
+        observatory_id=telescope.observatory_id,
         date_range_begin=parameters.date_range_begin,
         date_range_end=parameters.date_range_end,
         hi_res=parameters.hi_res,
         min_visibility_duration=parameters.min_visibility_duration,
-        instrument_id=instrument_id,
     )
 
     return VisibilityResult.model_validate(
         {
-            "ra": parameters.ra,
-            "dec": parameters.dec,
-            "date_range_begin": parameters.date_range_begin,
-            "date_range_end": parameters.date_range_end,
             "visibility_windows": visibility.model_dump()["visibility_windows"],
             "instrument_id": instrument_id,
-            "min_visibility_duration": parameters.min_visibility_duration,
-            "hi_res": parameters.hi_res,
         }
     )

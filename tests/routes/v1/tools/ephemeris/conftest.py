@@ -1,9 +1,11 @@
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import anyio.to_thread
 import pytest
+from fastapi import FastAPI
 
 from across_server.core.enums.ephemeris_type import EphemerisType
 from across_server.db.models import (
@@ -17,7 +19,6 @@ from across_server.db.models import (
 from across_server.routes.v1.observatory import schemas as observatory_schemas
 from across_server.routes.v1.observatory.service import ObservatoryService
 from across_server.routes.v1.tle.service import TLEService
-from across_server.routes.v1.tools.ephemeris.service import EphemerisService
 
 
 @pytest.fixture
@@ -33,9 +34,9 @@ def fake_date_range() -> dict[str, datetime]:
 
 
 @pytest.fixture
-def fake_operational_date_range() -> observatory_schemas.DateRange:
+def fake_operational_date_range() -> observatory_schemas.NullableDateRange:
     """Operational date range for observatory"""
-    return observatory_schemas.DateRange(
+    return observatory_schemas.NullableDateRange(
         begin=datetime(2023, 6, 1), end=datetime(2023, 12, 31)
     )
 
@@ -185,33 +186,36 @@ def mock_ephemeris_result(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     return mock_ephemeris_result
 
 
-@pytest.fixture
-def fake_tle_service_get(
-    monkeypatch: pytest.MonkeyPatch, fake_tle_data: dict
-) -> AsyncMock:
-    """"""
+@pytest.fixture(scope="function")
+def mock_tle_service(fake_tle_data: dict) -> Generator[AsyncMock]:
+    mock = AsyncMock(TLEService)
+
     mock_tle_model = MagicMock()
     mock_tle_model.__dict__ = fake_tle_data
+    mock.get = AsyncMock(return_value=mock_tle_model)
 
-    fake_tle_get = AsyncMock(return_value=mock_tle_model)
-
-    monkeypatch.setattr(TLEService, "__init__", MagicMock(return_value=None))
-    monkeypatch.setattr(TLEService, "get", fake_tle_get)
-
-    return fake_tle_get
+    yield mock
 
 
-@pytest.fixture
-def fake_observatory_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
-    """"""
-    fake_observatory_get = AsyncMock(return_value=None)
-    monkeypatch.setattr(ObservatoryService, "__init__", MagicMock(return_value=None))
-    monkeypatch.setattr(ObservatoryService, "get", fake_observatory_get)
-    return fake_observatory_get
+@pytest.fixture(scope="function")
+def mock_observatory_service() -> Generator[AsyncMock]:
+    mock = AsyncMock(ObservatoryService)
+
+    mock.get = AsyncMock(return_value=None)
+    yield mock
 
 
-@pytest.fixture
-def fake_ephemeris_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
-    fake_get_result = AsyncMock(return_value=None)
-    monkeypatch.setattr(EphemerisService, "_get_tle_ephem", fake_get_result)
-    return fake_get_result
+@pytest.fixture(scope="function", autouse=True)
+def dep_override(
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_tle_service: AsyncMock,
+) -> Generator[None, None, None]:
+    overrider = fastapi_dep(app)
+
+    with overrider.override(
+        {
+            TLEService: lambda: mock_tle_service,
+        }
+    ):
+        yield overrider

@@ -78,12 +78,6 @@ def upgrade() -> None:
         sa.Column("operational_end_date", sa.DateTime(), nullable=True),
         schema="across",
     )
-    op.execute(
-        "UPDATE across.observatory SET operational_begin_date = '1970-01-01 00:00:00'::timestamp"
-    )
-    op.alter_column(
-        "observatory", "operational_begin_date", nullable=False, schema="across"
-    )
 
     ### add default constraints to our pointed instruments
     # For all pointed intruments add the following constraints:

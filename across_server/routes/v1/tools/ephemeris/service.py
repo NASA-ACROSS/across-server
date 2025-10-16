@@ -67,8 +67,15 @@ class EphemerisService:
         type is found, it raises a HTTPException.
     """
 
-    def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
+    def __init__(
+        self,
+        db: Annotated[AsyncSession, Depends(get_session)],
+        tle_service: Annotated[TLEService, Depends(TLEService)],
+        observatory_service: Annotated[ObservatoryService, Depends(ObservatoryService)],
+    ) -> None:
         self.db: AsyncSession = db
+        self.tle_service = tle_service
+        self.observatory_service = observatory_service
 
     async def _get_tle_ephem(
         self,
@@ -107,7 +114,7 @@ class EphemerisService:
             The computed TLE ephemeris for the specified date range.
         """
 
-        tle_model = await TLEService(self.db).get(
+        tle_model = await self.tle_service.get(
             norad_id=parameters.norad_id, epoch=date_range_begin
         )
         if tle_model is None:
@@ -256,7 +263,7 @@ class EphemerisService:
         """
 
         # Obtain the observatory that hosts this telescope
-        observatory_model = await ObservatoryService(self.db).get(observatory_id)
+        observatory_model = await self.observatory_service.get(observatory_id)
         if observatory_model is None:
             raise ObservatoryNotFoundException(observatory_id)
         observatory = observatory_schemas.Observatory.model_validate(observatory_model)
@@ -264,11 +271,13 @@ class EphemerisService:
         # Check if the requested date range is within the observatory's
         # `operational` range (if defined)
         if observatory.operational is not None and (
-            observatory.operational.begin
-            and observatory.operational.end
-            and (
-                date_range_begin < observatory.operational.begin
-                or date_range_end > observatory.operational.end
+            (
+                observatory.operational.begin
+                and date_range_begin < observatory.operational.begin
+            )
+            or (
+                observatory.operational.end
+                and date_range_end > observatory.operational.end
             )
         ):
             raise EphemerisNotFound(

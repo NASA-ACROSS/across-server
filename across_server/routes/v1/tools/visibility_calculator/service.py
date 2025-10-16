@@ -7,7 +7,6 @@ import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
 from across.tools.visibility import (
     EphemerisVisibility,
-    Visibility,
     compute_ephemeris_visibility,
 )
 from astropy.time import Time  # type: ignore[import-untyped]
@@ -16,11 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .....core.enums.visibility_type import VisibilityType
 from .....db.database import get_session
-from ...instrument.exceptions import InstrumentNotFoundException
 from ...instrument.schemas import Instrument as InstrumentSchema
-from ...instrument.service import InstrumentService
-from ...telescope.exceptions import TelescopeNotFoundException
-from ...telescope.service import TelescopeService
 from ...tools.ephemeris.service import EphemerisService
 from .exceptions import (
     VisibilityConstraintsNotFoundException,
@@ -29,8 +24,13 @@ from .exceptions import (
 
 
 class VisibilityCalculatorService:
-    def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
+    def __init__(
+        self,
+        db: Annotated[AsyncSession, Depends(get_session)],
+        ephem_service: Annotated[EphemerisService, Depends(EphemerisService)],
+    ) -> None:
         self.db = db
+        self.ephem_service = ephem_service
 
     async def _calc_ephemeris_visibility(
         self,
@@ -56,7 +56,7 @@ class VisibilityCalculatorService:
             raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
 
         # Compute Ephemeris
-        ephemeris = await EphemerisService(self.db).get(
+        ephemeris = await self.ephem_service.get(
             observatory_id=observatory_id,
             date_range_begin=date_range_begin,
             date_range_end=date_range_end,
@@ -84,32 +84,20 @@ class VisibilityCalculatorService:
         self,
         ra: float,
         dec: float,
-        instrument_id: UUID,
+        instrument: InstrumentSchema,
+        observatory_id: UUID,
         date_range_begin: datetime,
         date_range_end: datetime,
         hi_res: bool,
         min_visibility_duration: int = 0,
-    ) -> Visibility:
-        # Read in the instrument from UUID
-        instrument_model = await InstrumentService(self.db).get(instrument_id)
-        if instrument_model is None:
-            raise InstrumentNotFoundException(instrument_id)
-
-        # Convert the instrument model to a schema
-        instrument = InstrumentSchema.from_orm(instrument_model)
-        if instrument.telescope is None:
-            raise TelescopeNotFoundException(instrument_model.telescope_id)
-
-        # Obtain the telescope that hosts this instrument
-        telescope = await TelescopeService(self.db).get(instrument.telescope.id)
-
+    ) -> EphemerisVisibility:
         if instrument.visibility_type == VisibilityType.EPHEMERIS:
             # Calculate visibility using the instrument schema
             return await self._calc_ephemeris_visibility(
                 ra=ra,
                 dec=dec,
                 instrument=instrument,
-                observatory_id=telescope.observatory_id,
+                observatory_id=observatory_id,
                 date_range_begin=date_range_begin,
                 date_range_end=date_range_end,
                 hi_res=hi_res,

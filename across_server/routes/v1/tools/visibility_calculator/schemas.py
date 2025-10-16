@@ -71,7 +71,7 @@ class VisibilityReadParams(BaseSchema):
     min_visibility_duration: int = 0
 
 
-class VisibilityResult(VisibilityReadParams):
+class VisibilityResult(BaseSchema):
     """
     A Pydantic model class representing the visibility calculation parameters.
 
@@ -108,7 +108,7 @@ class JointVisibilityReadParams(VisibilityReadParams):
     instrument_ids: list[UUID]
 
 
-class JointVisibilityResult(VisibilityReadParams):
+class JointVisibilityResult(BaseSchema):
     """
     A Pydantic model class representing the joint visibility calculation
     parameters.

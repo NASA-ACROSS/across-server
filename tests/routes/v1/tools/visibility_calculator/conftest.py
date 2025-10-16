@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
@@ -5,26 +6,22 @@ from uuid import UUID, uuid4
 import anyio
 import anyio.to_thread
 import pytest
+from across.tools.visibility.constraints import SunAngleConstraint
 
 from across_server.core.enums.visibility_type import VisibilityType
-from across_server.db.models import Constraint, Instrument, Telescope
+from across_server.db.models import Instrument
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.instrument.service import InstrumentService
-from across_server.routes.v1.telescope.service import TelescopeService
 from across_server.routes.v1.tools.ephemeris.service import EphemerisService
+from across_server.routes.v1.tools.visibility_calculator.schemas import (
+    VisibilityReadParams,
+)
 
 
 @pytest.fixture
-def fake_sun_constraint() -> Constraint:
+def fake_sun_constraint() -> SunAngleConstraint:
     """Mock SunAngleConstraint"""
-    return Constraint(
-        constraint_type="Sun Angle",
-        constraint_parameters={
-            "short_name": "Sun",
-            "name": "Sun Angle",
-            "min_angle": 45,
-        },
-    )
+    return SunAngleConstraint(min_angle=45)
 
 
 @pytest.fixture
@@ -59,32 +56,29 @@ def fake_coordinates() -> tuple[float, float]:
 
 @pytest.fixture
 def fake_instrument_with_constraints(
-    fake_sun_constraint: Constraint,
-    mock_telescope_data: Telescope,
-) -> Instrument:
+    fake_sun_constraint: SunAngleConstraint,
+) -> InstrumentSchema:
     """Instrument model with constraint"""
-    return Instrument(
+    return InstrumentSchema(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
         constraints=[fake_sun_constraint],
         short_name="test",
         created_on=datetime.now(),
-        telescope=mock_telescope_data,
     )
 
 
 @pytest.fixture
-def fake_instrument_without_constraints(mock_telescope_data: Telescope) -> Instrument:
+def fake_instrument_without_constraints() -> InstrumentSchema:
     """Instrument model without constraints"""
-    return Instrument(
+    return InstrumentSchema(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
         constraints=[],
         short_name="test",
         created_on=datetime.now(),
-        telescope=mock_telescope_data,
     )
 
 
@@ -98,38 +92,22 @@ def fake_async_result(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     return mock_result
 
 
-@pytest.fixture
-def fake_ephemeris_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
-    """Patches the EphemerisService.get return value with a MagicMock Ephemeris"""
-    fake_service_get = AsyncMock(return_value=MagicMock())
-    monkeypatch.setattr(EphemerisService, "__init__", MagicMock(return_value=None))
-    monkeypatch.setattr(EphemerisService, "get", fake_service_get)
-    return fake_service_get
+@pytest.fixture(scope="function")
+def mock_ephemeris_service() -> Generator[AsyncMock]:
+    mock = AsyncMock(EphemerisService)
+
+    mock.get = AsyncMock(return_value=None)
+    yield mock
 
 
-@pytest.fixture
-def fake_instrument_service_get(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
-    """Patches the InstrumentService.get return value with a MagicMock Instrument"""
-    fake_service_get = AsyncMock(return_value=MagicMock())
+@pytest.fixture(scope="function")
+def mock_instrument_service(
+    fake_instrument_with_constraints: Instrument,
+) -> Generator[AsyncMock]:
+    mock = AsyncMock(InstrumentService)
 
-    monkeypatch.setattr(InstrumentService, "__init__", MagicMock(return_value=None))
-    monkeypatch.setattr(InstrumentService, "get", fake_service_get)
-
-    return fake_service_get
-
-
-@pytest.fixture
-def fake_telescope_service_get(
-    monkeypatch: pytest.MonkeyPatch, fake_observatory_id: UUID
-) -> AsyncMock:
-    """Patches the TelescopeService.get return value with a MagicMock Telescope"""
-    fake_telescope = MagicMock()
-    fake_telescope.observatory_id = fake_observatory_id
-    fake_telescope_get = AsyncMock(return_value=fake_telescope)
-
-    monkeypatch.setattr(TelescopeService, "__init__", MagicMock(return_value=None))
-    monkeypatch.setattr(TelescopeService, "get", fake_telescope_get)
-    return fake_telescope_get
+    mock.get = AsyncMock(return_value=fake_instrument_with_constraints)
+    yield mock
 
 
 @pytest.fixture
@@ -147,3 +125,16 @@ def fake_instrument_schema_from_orm(
         InstrumentSchema, "from_orm", MagicMock(return_value=mock_instrument_schema)
     )
     return mock_instrument_schema
+
+
+@pytest.fixture
+def fake_visibility_read_params(
+    fake_coordinates: tuple[float, float],
+    fake_date_range: tuple[datetime, datetime],
+) -> dict:
+    return VisibilityReadParams(
+        ra=fake_coordinates[0],
+        dec=fake_coordinates[1],
+        date_range_begin=fake_date_range[0],
+        date_range_end=fake_date_range[1],
+    ).model_dump()
