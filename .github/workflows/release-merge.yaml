@@ -1,0 +1,47 @@
+# Run this workflow only on merged release-please PRs
+name: Release PR Merged
+on:
+  push:
+    branches: ["main"]
+    # look for the specific files that are changed in a release-pr
+    paths:
+      - CHANGELOG.md
+      - across_server/__init__.py
+      - .release-please-manifest.json
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  deployments: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  ci:
+    # build the container before the release to be able to tag the correctly versioned container.
+    uses: ./.github/workflows/workflow-ci-dockerized-app-build.yml
+    with:
+      organization: "${{ github.event.repository.owner.login }}"
+      repository: "${{ github.event.repository.name }}"
+      image-name: data-ingestion
+      build-args: "BUILD_ENV=deploy"
+    secrets:
+      ecr-region: "${{ secrets.ECR_REGION }}"
+      ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
+      registry: "${{ secrets.ECR_REGISTRY }}"
+      secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
+      ssh-private-key: |
+        ${{ secrets.ACROSS_TOOLS_SSH_KEY }}
+        ${{ secrets.OPENAPI_SDK_SSH_KEY }}
+
+  release-please:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
