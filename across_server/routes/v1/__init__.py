@@ -14,6 +14,7 @@ from . import (
     system_service_account,
     telescope,
     tle,
+    tools,
     user,
 )
 
@@ -41,3 +42,4 @@ api.include_router(instrument.router)
 api.include_router(observation.router)
 api.include_router(filter.router)
 api.include_router(system_service_account.router)
+api.include_router(tools.router)

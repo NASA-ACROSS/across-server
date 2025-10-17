@@ -59,3 +59,14 @@ class InvalidEntityException(AcrossHTTPException):
                 f"{entity_name}": message,
             },
         )
+
+
+class NotImplementedException(AcrossHTTPException):
+    def __init__(self, message: str):
+        super().__init__(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            message=f"{message}",
+            log_data={
+                "message": message,
+            },
+        )

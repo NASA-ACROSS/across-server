@@ -3,10 +3,17 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from across.tools.visibility.constraints import Constraint
+from pydantic import TypeAdapter
+
+from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
 from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint, Point
+
+# TypeAdapter to convert list of Constraints dicts to a Pydantic model
+ConstraintsAdaptor = TypeAdapter(list[Constraint])
 
 
 class InstrumentBase(BaseSchema):
@@ -35,7 +42,9 @@ class InstrumentBase(BaseSchema):
     short_name: str
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
-    filters: list[Filter] = []
+    filters: list[Filter] | None = None
+    constraints: list[Constraint] | None = None
+    visibility_type: VisibilityType | None = None
 
 
 class Instrument(InstrumentBase):
@@ -79,6 +88,10 @@ class Instrument(InstrumentBase):
             footprints=[footprint.polygon for footprint in footprints],
             filters=filters,
             created_on=obj.created_on,
+            constraints=ConstraintsAdaptor.validate_python(
+                [constraint.constraint_parameters for constraint in obj.constraints]
+            ),
+            visibility_type=obj.visibility_type,
         )
 
 
