@@ -5,6 +5,7 @@ from uuid import UUID
 
 import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
+import structlog
 from across.tools.core.schemas import tle as tle_schemas
 from across.tools.ephemeris import (
     Ephemeris,
@@ -28,6 +29,8 @@ from .exceptions import (
     EphemerisNotFound,
     EphemerisTypeNotFound,
 )
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
 class EphemerisService:
@@ -296,40 +299,49 @@ class EphemerisService:
 
         # Iterate through the ephemeris types and return the first valid one
         for etype in ephemeris_types:
-            if etype.ephemeris_type == EphemerisType.TLE and isinstance(
-                etype.parameters, observatory_schemas.TLEParameters
-            ):
-                return await self._get_tle_ephem(
-                    parameters=etype.parameters,
-                    date_range_begin=date_range_begin,
-                    date_range_end=date_range_end,
-                    step_size=step_size,
-                )
-            if etype.ephemeris_type == EphemerisType.GROUND and isinstance(
-                etype.parameters, observatory_schemas.GroundParameters
-            ):
-                return await self._get_ground_ephem(
-                    parameters=etype.parameters,
-                    date_range_begin=date_range_begin,
-                    date_range_end=date_range_end,
-                    step_size=step_size,
-                )
-            if etype.ephemeris_type == EphemerisType.SPICE and isinstance(
-                etype.parameters, observatory_schemas.SPICEParameters
-            ):
-                return await self._get_spice_ephem(
-                    parameters=etype.parameters,
-                    date_range_begin=date_range_begin,
-                    date_range_end=date_range_end,
-                    step_size=step_size,
-                )
-            if etype.ephemeris_type == EphemerisType.JPL and isinstance(
-                etype.parameters, observatory_schemas.JPLParameters
-            ):
-                return await self._get_jpl_ephem(
-                    parameters=etype.parameters,
-                    date_range_begin=date_range_begin,
-                    date_range_end=date_range_end,
-                    step_size=step_size,
+            try:
+                if etype.ephemeris_type == EphemerisType.TLE and isinstance(
+                    etype.parameters, observatory_schemas.TLEParameters
+                ):
+                    return await self._get_tle_ephem(
+                        parameters=etype.parameters,
+                        date_range_begin=date_range_begin,
+                        date_range_end=date_range_end,
+                        step_size=step_size,
+                    )
+                if etype.ephemeris_type == EphemerisType.GROUND and isinstance(
+                    etype.parameters, observatory_schemas.GroundParameters
+                ):
+                    return await self._get_ground_ephem(
+                        parameters=etype.parameters,
+                        date_range_begin=date_range_begin,
+                        date_range_end=date_range_end,
+                        step_size=step_size,
+                    )
+                if etype.ephemeris_type == EphemerisType.SPICE and isinstance(
+                    etype.parameters, observatory_schemas.SPICEParameters
+                ):
+                    return await self._get_spice_ephem(
+                        parameters=etype.parameters,
+                        date_range_begin=date_range_begin,
+                        date_range_end=date_range_end,
+                        step_size=step_size,
+                    )
+                if etype.ephemeris_type == EphemerisType.JPL and isinstance(
+                    etype.parameters, observatory_schemas.JPLParameters
+                ):
+                    return await self._get_jpl_ephem(
+                        parameters=etype.parameters,
+                        date_range_begin=date_range_begin,
+                        date_range_end=date_range_end,
+                        step_size=step_size,
+                    )
+            except Exception as e:
+                logger.error(
+                    "Failed to calculate ephemeris",
+                    observatory=observatory.name,
+                    ephemeris_type=etype.ephemeris_type,
+                    ephemeris_params=etype.parameters,
+                    e=e,
                 )
         raise EphemerisTypeNotFound(observatory_id=observatory_id)  # pragma: no cover
