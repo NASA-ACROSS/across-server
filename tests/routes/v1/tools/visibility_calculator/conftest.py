@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4

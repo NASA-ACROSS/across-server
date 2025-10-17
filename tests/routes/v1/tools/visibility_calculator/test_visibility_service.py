@@ -8,7 +8,6 @@ import pytest
 import across_server.routes.v1.tools.visibility_calculator.service as service_mod
 from across_server.core.enums.visibility_type import VisibilityType
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
-from across_server.routes.v1.telescope.exceptions import TelescopeNotFoundException
 from across_server.routes.v1.tools.visibility_calculator.exceptions import (
     VisibilityConstraintsNotFoundException,
     VisibilityTypeNotImplementedException,
