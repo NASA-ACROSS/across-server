@@ -26,6 +26,7 @@ from ...observatory.service import ObservatoryService
 from ...tle.exceptions import TLENotFoundException
 from ...tle.service import TLEService
 from .exceptions import (
+    EphemerisCalculationNotFound,
     EphemerisNotFound,
     EphemerisTypeNotFound,
 )
@@ -344,4 +345,6 @@ class EphemerisService:
                     ephemeris_params=etype.parameters,
                     e=e,
                 )
-        raise EphemerisTypeNotFound(observatory_id=observatory_id)  # pragma: no cover
+        raise EphemerisCalculationNotFound(
+            observatory_id=observatory.id, ephem_types=ephemeris_types
+        )
