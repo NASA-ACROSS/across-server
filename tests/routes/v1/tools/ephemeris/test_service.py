@@ -17,6 +17,7 @@ from across_server.routes.v1.observatory import schemas as observatory_schemas
 from across_server.routes.v1.observatory.exceptions import ObservatoryNotFoundException
 from across_server.routes.v1.tle.exceptions import TLENotFoundException
 from across_server.routes.v1.tools.ephemeris.exceptions import (
+    EphemerisCalculationNotFound,
     EphemerisNotFound,
     EphemerisTypeNotFound,
 )
@@ -119,6 +120,30 @@ class TestEphemerisService:
             )
 
             with pytest.raises(EphemerisTypeNotFound):
+                await service.get(
+                    fake_observatory_id,
+                    fake_date_range["begin"],
+                    fake_date_range["end"],
+                )
+
+        @pytest.mark.asyncio
+        async def test_should_error_when_ephemeris_calculations_fail(
+            self,
+            mock_db: AsyncMock,
+            fake_observatory_id: UUID,
+            fake_date_range: dict[str, datetime],
+            fake_observatory_model: MagicMock,
+            mock_tle_service: AsyncMock,
+            mock_observatory_service: AsyncMock,
+        ) -> None:
+            """Should raise EphemerisCalculationNotFound when ephemeris calculations all fail"""
+            mock_observatory_service.get.return_value = fake_observatory_model
+            mock_tle_service.get.return_value = None
+            service = EphemerisService(
+                mock_db, mock_tle_service, mock_observatory_service
+            )
+
+            with pytest.raises(EphemerisCalculationNotFound):
                 await service.get(
                     fake_observatory_id,
                     fake_date_range["begin"],
