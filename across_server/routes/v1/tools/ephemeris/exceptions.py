@@ -43,7 +43,10 @@ class EphemerisCalculationNotFound(AcrossHTTPException):
     ) -> None:
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
-            message=f"None of {ephem_types} could be used to calculate an ephemeris for observatory {observatory_id}",
+            message=(
+                f"None of {ephem_types} could be used to calculate an ephemeris for observatory {observatory_id}. "
+                "Please try again later. If this issue persists please contact support."
+            ),
             log_data={
                 "entity": "Ephemeris",
                 "observatory_id": observatory_id,
