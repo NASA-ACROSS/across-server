@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/ACROSS-Team/across-server/compare/v0.4.0...v0.4.1) (2025-10-22)
+
+
+### Bug Fixes
+
+* **release:** release-merge needs ci as dep before publishing ([#377](https://github.com/ACROSS-Team/across-server/issues/377)) ([c76e494](https://github.com/ACROSS-Team/across-server/commit/c76e494b3c8240f9209f4da406c51bc51b817935))
+
 ## [0.4.0](https://github.com/ACROSS-Team/across-server/compare/v0.3.2...v0.4.0) (2025-10-22)
 
 
