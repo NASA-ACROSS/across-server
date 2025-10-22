@@ -26,7 +26,7 @@ jobs:
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
-      image-name: data-ingestion
+      image-name: core-server
       build-args: "BUILD_ENV=deploy"
     secrets:
       ecr-region: "${{ secrets.ECR_REGION }}"
