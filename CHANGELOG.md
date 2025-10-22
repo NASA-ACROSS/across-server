@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/ACROSS-Team/across-server/compare/v0.4.1...v0.4.2) (2025-10-22)
+
+
+### Bug Fixes
+
+* **release:** push to core-server ecr ([3a93c9f](https://github.com/ACROSS-Team/across-server/commit/3a93c9f13a7f7e0216aeda3003fe724c7316477a))
+
 ## [0.4.1](https://github.com/ACROSS-Team/across-server/compare/v0.4.0...v0.4.1) (2025-10-22)
 
 
