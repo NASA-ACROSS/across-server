@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0](https://github.com/ACROSS-Team/across-server/compare/v0.3.2...v0.4.0) (2025-10-22)
+
+
+### Features
+
+* add Keck observatory data migration ([#371](https://github.com/ACROSS-Team/across-server/issues/371)) ([2bd8551](https://github.com/ACROSS-Team/across-server/commit/2bd85516534a4d50dbca88d1bf66c80188d55eb7))
+* **cron:** add schedule_cadence table and populate with ingestion cron timings ([#342](https://github.com/ACROSS-Team/across-server/issues/342)) ([8b6e1d4](https://github.com/ACROSS-Team/across-server/commit/8b6e1d4443c13cb6946d34cc2a9ee3de4ebf8435))
+* **tools:** add single instrument visibility endpoint ([#344](https://github.com/ACROSS-Team/across-server/issues/344)) ([f21db18](https://github.com/ACROSS-Team/across-server/commit/f21db184f491eee7317602683530e1b6c5212e52))
+
+
+### Bug Fixes
+
+* add self_access authorization strategy to delete user route ([#359](https://github.com/ACROSS-Team/across-server/issues/359)) ([069fac5](https://github.com/ACROSS-Team/across-server/commit/069fac528579ae2e4a99b99ca0fb84d70c5b35d6))
+* add title, summary, and description to v1 docs swagger ui ([#362](https://github.com/ACROSS-Team/across-server/issues/362)) ([1499c4b](https://github.com/ACROSS-Team/across-server/commit/1499c4bbc65dcccc4363d0e925cf034ebcf6a952))
+* deployed api docs URL matches currently deployed environment ([#356](https://github.com/ACROSS-Team/across-server/issues/356)) ([41699d3](https://github.com/ACROSS-Team/across-server/commit/41699d3f900e471984c90cea5f0647818f079349))
+* deployed docs URL matches currently deployed environment ([41699d3](https://github.com/ACROSS-Team/across-server/commit/41699d3f900e471984c90cea5f0647818f079349))
+* **deploy:** merge release pr triggers release-please action ([#360](https://github.com/ACROSS-Team/across-server/issues/360)) ([e3b9af2](https://github.com/ACROSS-Team/across-server/commit/e3b9af24a5e24c3d918d401521c65ff64049a7a7))
+* **deploy:** prevent main from running on release pr merge ([ff92ce7](https://github.com/ACROSS-Team/across-server/commit/ff92ce72eb4a4d96947c493daf25f72f065f155a))
+* **migrations:** adding migration for jwst ephmeris type to jpl ([08d1c42](https://github.com/ACROSS-Team/across-server/commit/08d1c42ad60a6ae93257aa6f55af129511cb4b46))
+* **migrations:** adding migration for jwst ephmeris type to jpl ([#370](https://github.com/ACROSS-Team/across-server/issues/370)) ([08d1c42](https://github.com/ACROSS-Team/across-server/commit/08d1c42ad60a6ae93257aa6f55af129511cb4b46))
+* nested user service account schema in group role schema causing validation error ([#368](https://github.com/ACROSS-Team/across-server/issues/368)) ([ebb9cdd](https://github.com/ACROSS-Team/across-server/commit/ebb9cdd768791677ad1ee4bf6c9685b22b2202eb))
+* remove unlabeled trigger from feature branch CI workflow ([#366](https://github.com/ACROSS-Team/across-server/issues/366)) ([c1a19fe](https://github.com/ACROSS-Team/across-server/commit/c1a19fe983dce265a241183aafe8d1e02533aa5c))
+* **schedule:** sort by created_on DESC ([#353](https://github.com/ACROSS-Team/across-server/issues/353)) ([e1d8d2d](https://github.com/ACROSS-Team/across-server/commit/e1d8d2d3037696458e349a2d5bdc688a10b0a3e6))
+* set local_only_route decorator for debugging routes ([#364](https://github.com/ACROSS-Team/across-server/issues/364)) ([b131663](https://github.com/ACROSS-Team/across-server/commit/b131663a8a905d817cdae7f432fdb20ff6a62962))
+* **tle:** add system permission to enable system role to write TLE ([#355](https://github.com/ACROSS-Team/across-server/issues/355)) ([bae350c](https://github.com/ACROSS-Team/across-server/commit/bae350ca02eb2d7be37606b8778f00ce361bd9a1))
+* **visibility:** raise appropriate exception if ephemeris calculations fail ([#375](https://github.com/ACROSS-Team/across-server/issues/375)) ([c1360e0](https://github.com/ACROSS-Team/across-server/commit/c1360e08ed579ff31126b8341875dc6c72039797))
+
 ## [0.3.2](https://github.com/ACROSS-Team/across-server/compare/v0.3.1...v0.3.2) (2025-09-16)
 
 
