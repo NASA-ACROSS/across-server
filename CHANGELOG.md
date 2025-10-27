@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/ACROSS-Team/across-server/compare/v0.4.2...v1.0.0) (2025-10-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* release for v1 ([#385](https://github.com/ACROSS-Team/across-server/issues/385))
+* v1 release ([#386](https://github.com/ACROSS-Team/across-server/issues/386))
+
+### Features
+
+* additional description for visibility calculator route in api docs ([#383](https://github.com/ACROSS-Team/across-server/issues/383)) ([bfec41c](https://github.com/ACROSS-Team/across-server/commit/bfec41c84d4d6d8f666a93ac94189dadc689a255))
+* release for v1 ([#385](https://github.com/ACROSS-Team/across-server/issues/385)) ([c5f54fb](https://github.com/ACROSS-Team/across-server/commit/c5f54fbd1fac3dd0b8db4a5c61fde3b188522aa7))
+* release for v1 ([#385](https://github.com/ACROSS-Team/across-server/issues/385)) ([ac901ce](https://github.com/ACROSS-Team/across-server/commit/ac901ce97a3272c6fe8714292c9dcc485bcb5883))
+* update constraints for Swift instruments ([#381](https://github.com/ACROSS-Team/across-server/issues/381)) ([99878b2](https://github.com/ACROSS-Team/across-server/commit/99878b2859494ba0c85abeda0227754672cdf559))
+* v1 release ([#386](https://github.com/ACROSS-Team/across-server/issues/386)) ([c5f54fb](https://github.com/ACROSS-Team/across-server/commit/c5f54fbd1fac3dd0b8db4a5c61fde3b188522aa7))
+
 ## [0.4.2](https://github.com/ACROSS-Team/across-server/compare/v0.4.1...v0.4.2) (2025-10-22)
 
 
