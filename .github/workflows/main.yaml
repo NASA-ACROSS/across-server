@@ -1,7 +1,7 @@
 name: Main Branch
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
       # We only want to run main branch workflow on code change PRs and ignore
       # release-please PRs since they do not need another deploy to dev.
