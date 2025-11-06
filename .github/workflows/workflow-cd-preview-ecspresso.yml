@@ -142,7 +142,7 @@ jobs:
     environment:
       name: ${{ matrix.env }}
       url: ${{ steps.result.outputs.webapp-url }}
-    needs: [ preview ]
+    needs: [preview]
     steps:
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
@@ -192,6 +192,37 @@ jobs:
           role-to-assume: ${{ steps.environment.outputs.role }}-gha
           role-skip-session-tagging: true
 
+      - name: Store Current DB Revision
+        uses: ./.github/actions/store-alembic-revision
+        if: ${{ inputs.enable-migration }}
+        id: store_revision
+        with:
+          # Image configuration
+          image: ${{ steps.image.outputs.out }}
+          image-tag: ${{ inputs.tag }}
+
+          # ECS configuration
+          region: ${{ steps.environment.outputs.region }}
+          cluster: ${{ steps.environment.outputs.cluster }}
+          application: ${{ steps.environment.outputs.name }}
+          taskdef-path: ${{ inputs.path }}
+          app-name: ${{ inputs.app }}
+          s3-bucket: ${{ steps.environment.outputs.s3-bucket }}
+
+          # Environment configuration
+          stage: ${{ steps.environment.outputs.stage }}
+          aws-account-id: ${{ steps.environment.outputs.account-id }}
+          ecs-service-name: ${{ steps.environment.outputs.name }}
+          task-role: ${{ steps.environment.outputs.role }}
+
+          # Artifact configuration
+          debug: true
+
+      - name: Check Revision Storage
+        run: |
+          echo "Stored revision: ${{ steps.store_revision.outputs.revision-id }}"
+          echo "Artifact name: ${{ steps.store_revision.outputs.artifact-name }}"
+
       - name: Run DB Migration
         uses: cloudposse/github-action-run-ecspresso@0.2.0
         continue-on-error: true
@@ -206,7 +237,7 @@ jobs:
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ${{ inputs.path }}
           mirror_to_s3_bucket: ${{ steps.environment.outputs.s3-bucket }}
-          use_partial_taskdefinition: 'true'
+          use_partial_taskdefinition: "true"
           overrides: |-
             {
               "containerOverrides":[
@@ -221,8 +252,8 @@ jobs:
               ]
             }
         env:
-          STAGE:  ${{ steps.environment.outputs.stage }}
-          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          STAGE: ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID: ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
@@ -242,14 +273,20 @@ jobs:
           application: ${{ steps.environment.outputs.name }}
           taskdef-path: ${{ inputs.path }}
           mirror_to_s3_bucket: ${{ steps.environment.outputs.s3-bucket }}
-          use_partial_taskdefinition: 'true'
+          use_partial_taskdefinition: "true"
           timeout: 30m
         env:
-          STAGE:  ${{ steps.environment.outputs.stage }}
-          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          STAGE: ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID: ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
+
+      # Retrieve revision for rollback if needed
+      - name: Get Rollback Revision
+        uses: ./.github/actions/get-alembic-revision
+        if: ${{ inputs.enable-migration && inputs.support-rollback && (steps.db_migrate.outcome == 'failure' || steps.deploy.outcome == 'failure') }}
+        id: get_revision
 
       - name: Run DB Rollback
         uses: cloudposse/github-action-run-ecspresso@0.1.0
@@ -267,17 +304,18 @@ jobs:
             {
               "containerOverrides":[
                 {
-                  "name": "app",
+                  "name": "${{ inputs.app }}",
+                  "command": ["alembic", "downgrade", "${{ steps.get_revision.outputs.revision-id }}"]
                   "environment": [{
-                    "name": "RUN_DB_ROLLBACK",
-                    "value": "true"
+                    "name": "ACROSS_DB_USER",
+                    "value": "ci"
                   }]
                 }
               ]
             }
         env:
-          STAGE:  ${{ steps.environment.outputs.stage }}
-          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          STAGE: ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID: ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec
@@ -308,7 +346,7 @@ jobs:
     strategy:
       matrix:
         env: ${{ fromJson(needs.preview.outputs.destroy_envs) }}
-    needs: [ preview ]
+    needs: [preview]
     steps:
       - run: |
           echo "${{ inputs.image }}"
@@ -394,8 +432,8 @@ jobs:
               ]
             }
         env:
-          STAGE:  ${{ steps.environment.outputs.stage }}
-          AWS_ACCOUNT_ID:  ${{ steps.environment.outputs.account-id }}
+          STAGE: ${{ steps.environment.outputs.stage }}
+          AWS_ACCOUNT_ID: ${{ steps.environment.outputs.account-id }}
           ECS_SERVICE_NAME: ${{ steps.environment.outputs.name }}
           ECS_SERVICE_TASK_ROLE: ${{ steps.environment.outputs.role }}-task
           ECS_SERVICE_EXECUTION_ROLE: ${{ steps.environment.outputs.role }}-exec

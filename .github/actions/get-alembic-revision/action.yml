@@ -1,0 +1,67 @@
+name: "Get Alembic Revision ID"
+description: "Downloads and retrieves the stored Alembic revision ID from artifact"
+author: "Your Team"
+
+inputs:
+  artifact-name:
+    description: "Name of the artifact to download"
+    required: false
+    default: "db-revision-id"
+  environment:
+    description: "Environment name used when storing the revision"
+    required: false
+    default: ""
+
+outputs:
+  revision-id:
+    description: "The retrieved revision ID"
+    value: ${{ steps.read.outputs.revision_id }}
+  found:
+    description: "Whether a revision ID was found"
+    value: ${{ steps.read.outputs.found }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Construct Artifact Name
+      id: artifact
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.environment }}" ]; then
+          ARTIFACT_NAME="${{ inputs.artifact-name }}-${{ inputs.environment }}"
+        else
+          ARTIFACT_NAME="${{ inputs.artifact-name }}"
+        fi
+        echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+        echo "Looking for artifact: $ARTIFACT_NAME"
+
+    - name: Download Revision Artifact
+      id: download
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ steps.artifact.outputs.artifact_name }}
+      continue-on-error: true
+
+    - name: Read Revision ID
+      id: read
+      shell: bash
+      run: |
+        if [ -f db_revision_id.txt ]; then
+          REVISION_ID=$(cat db_revision_id.txt)
+
+          # Validate revision format
+          if echo "$REVISION_ID" | grep -qE '^[a-f0-9]{12}$'; then
+            echo "✅ Found valid revision ID: $REVISION_ID"
+            echo "revision_id=$REVISION_ID" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ ERROR: Invalid revision ID format in artifact: $REVISION_ID"
+            echo "revision_id=" >> $GITHUB_OUTPUT
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+        else
+          echo "⚠️  WARNING: No revision ID artifact found"
+          echo "revision_id=" >> $GITHUB_OUTPUT
+          echo "found=false" >> $GITHUB_OUTPUT
+        fi

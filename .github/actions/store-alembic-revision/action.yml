@@ -1,0 +1,163 @@
+name: "Store Alembic Revision ID from ECS"
+description: "Runs alembic current via ECS task and stores the revision ID as an artifact"
+author: "Your Team"
+
+inputs:
+  # ECS/ecspresso configuration
+  image:
+    description: "Docker image to use"
+    required: true
+  image-tag:
+    description: "Docker image tag"
+    required: true
+  region:
+    description: "AWS region"
+    required: true
+  cluster:
+    description: "ECS cluster name"
+    required: true
+  application:
+    description: "Application name"
+    required: true
+  taskdef-path:
+    description: "Path to task definition"
+    required: true
+  app-name:
+    description: "Container name in task definition"
+    required: true
+  s3-bucket:
+    description: "S3 bucket for mirroring task definitions"
+    required: false
+    default: ""
+
+  # Environment variables for the task
+  stage:
+    description: "Stage/environment (e.g., dev, staging, prod)"
+    required: true
+  aws-account-id:
+    description: "AWS Account ID"
+    required: true
+  ecs-service-name:
+    description: "ECS service name"
+    required: true
+  task-role:
+    description: "ECS task role name (without -task suffix)"
+    required: true
+
+  # Artifact configuration
+  artifact-name:
+    description: "Base name for the artifact"
+    required: false
+    default: "db-revision-id"
+  retention-days:
+    description: "Number of days to retain the artifact"
+    required: false
+    default: "30"
+
+  # Optional
+  debug:
+    description: "Enable debug mode"
+    required: false
+    default: "false"
+
+outputs:
+  revision-id:
+    description: "The extracted revision ID"
+    value: ${{ steps.extract.outputs.revision_id }}
+  artifact-name:
+    description: "The name of the uploaded artifact"
+    value: ${{ steps.extract.outputs.artifact_name }}
+  success:
+    description: "Whether revision was successfully extracted and stored"
+    value: ${{ steps.extract.outputs.success }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Current DB Revision via ECS
+      uses: cloudposse/github-action-run-ecspresso@0.2.0
+      id: get_current_revision
+      shell: bash
+      with:
+        image: ${{ inputs.image }}
+        image-tag: ${{ inputs.image-tag }}
+        region: ${{ inputs.region }}
+        debug: ${{ inputs.debug }}
+        cluster: ${{ inputs.cluster }}
+        application: ${{ inputs.application }}
+        taskdef-path: ${{ inputs.taskdef-path }}
+        mirror_to_s3_bucket: ${{ inputs.s3-bucket }}
+        use_partial_taskdefinition: "true"
+        overrides: |-
+          {
+            "containerOverrides":[
+              {
+                "name": "${{ inputs.app-name }}",
+                "command": ["alembic", "current"],
+                "environment": [{
+                  "name": "ACROSS_DB_USER",
+                  "value": "ci"
+                }]
+              }
+            ]
+          }
+      env:
+        STAGE: ${{ inputs.stage }}
+        AWS_ACCOUNT_ID: ${{ inputs.aws-account-id }}
+        ECS_SERVICE_NAME: ${{ inputs.ecs-service-name }}
+        ECS_SERVICE_TASK_ROLE: ${{ inputs.task-role }}-task
+        ECS_SERVICE_EXECUTION_ROLE: ${{ inputs.task-role }}-exec
+
+    - name: Extract Revision ID
+      id: extract
+      shell: bash
+      run: |
+        OUTPUT="${{ steps.get_current_revision.outputs.stdout }}"
+
+        echo "=== Alembic Output ==="
+        echo "$OUTPUT"
+        echo "======================"
+
+        # Check for "no current revision" case
+        if echo "$OUTPUT" | grep -q "(no current revision)"; then
+          echo "⚠️  WARNING: Database has no current revision (fresh database)"
+          echo "revision_id=" >> $GITHUB_OUTPUT
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Extract revision ID
+        REVISION_ID=$(echo "$OUTPUT" | awk '/^[a-f0-9]{12}/ {print $1}' | tail -1)
+
+        if [ -z "$REVISION_ID" ]; then
+          echo "❌ ERROR: Could not extract revision ID from alembic output"
+          echo "revision_id=" >> $GITHUB_OUTPUT
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+        # Validate it's actually 12 hex characters
+        if ! echo "$REVISION_ID" | grep -qE '^[a-f0-9]{12}$'; then
+          echo "❌ ERROR: Extracted value '$REVISION_ID' is not a valid revision ID"
+          echo "revision_id=" >> $GITHUB_OUTPUT
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+        echo "✅ Successfully extracted revision: $REVISION_ID"
+        echo "$REVISION_ID" > db_revision_id.txt
+        echo "revision_id=$REVISION_ID" >> $GITHUB_OUTPUT
+        echo "success=true" >> $GITHUB_OUTPUT
+
+        # Construct artifact name with stage
+        ARTIFACT_NAME="${{ inputs.artifact-name }}-${{ inputs.stage }}"
+        echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
+        echo "Artifact will be named: $ARTIFACT_NAME"
+
+    - name: Upload Revision ID Artifact
+      if: steps.extract.outputs.success == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.extract.outputs.artifact_name }}
+        path: db_revision_id.txt
+        retention-days: ${{ inputs.retention-days }}
