@@ -341,13 +341,19 @@ Currently, the simplest way to install new dependencies is to add the dependency
 
 ## Deployment
 
+The deployment pipeline utilizes Github Actions and Workflows in order to have a fully automated deployment and release process. In general, there are two main "steps" that must happen for a complete deployment, those are continuous integration (CI) and Continuous Deployment (CD). Although these are used interchangeably, they are not the same thing.
+
 ### Continuous Integration (CI)
 
-The CI pipeline runs on any PR against `main`. It is initialized through a GitHub Action within `.github/workflows/ci.yml` which will include running the following jobs: `lint`, `format`, `build` (the docker container), and `test`. All of the checks must pass in order for a PR to be approved and merged.
+The CI pipeline runs before any deployment to any environment. This flow, at a high level, will run tests, linting, formatting, and build and push to the ECR. If any of these steps are not successful, then the process fails to continue. Continuous integration is effectively the first gate to ensuring that new additions will not break deployments or releases.
 
 ### Continuous Deployment (CD)
 
-TBD
+Continuous deployment happens once the CI pipeline has been cleared. At this point, deployment of the systems can be initialized. This includes running DB migrations against the deployed environment such as `dev`. Once migrations are completed and successful, the deployment to ECS is initialized. This process is specific to AWS ECS Fargate, but the general flow is that a new task is spun up with the new container, then once healthchecks become stabilized, traffic is routed from the old task to the new one and the old task is shut down. This allows for a zero-downtime deployment.
+
+### Releases
+
+As of writing this, ACROSS has four different deployment environments: `feat1`, `dev`, `staging`, `prod`. In the future, we may have a `qa` or potentially another `feat` env if the need calls for it. Releases for `feat1` and `dev` are effectively completed after the CD step. Since they are immediately deployed, however for `staging` and `prod` a special PR must be merged called a Release PR. Release PRs are generated through [`release-please`](https://github.com/googleapis/release-please) after any merge to the `main` branch has successfully completed. When this release PR is merged, it will kick off a process to build and tag an image to the new version and deploy `staging` and `prod` in lockstep. This is to ensure that `staging` mirrors `prod` as much as possible.
 
 ### Manually pushing an ECR image to the ECR repository
 
