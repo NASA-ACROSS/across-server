@@ -109,10 +109,11 @@ async def get_history(
 async def get(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     schedule_id: uuid.UUID,
+    include_observations: Annotated[bool, Query()] = False,
 ) -> schemas.Schedule:
     schedule = await service.get(schedule_id)
 
-    return schemas.Schedule.from_orm(schedule)
+    return schemas.Schedule.from_orm(schedule, include_observations)
 
 
 @router.post(

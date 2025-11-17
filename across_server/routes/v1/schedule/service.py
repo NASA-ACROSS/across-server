@@ -1,3 +1,4 @@
+import datetime
 from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
@@ -5,6 +6,7 @@ import numpy as np
 from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload, selectinload
 
 from across_server.core.enums.instrument_fov import InstrumentFOV
 
@@ -95,7 +97,9 @@ class ScheduleService:
         schedules = result.scalars().all()
         return schedules
 
-    def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
+    def _get_schedule_filter(
+        self, data: schemas.ScheduleRead, history: bool = False
+    ) -> list:
         """
         Build the sql alchemy filter list based on ScheduleRead.
         Parses whether or not any of the fields are populated, and constructs a list
@@ -112,6 +116,12 @@ class ScheduleService:
             list of schedule filter booleans
         """
         data_filter = []
+
+        # only return schedules which end after now (when no date_range_begin filter)
+        # past schedules should only be returned with history
+        if not history and not data.date_range_begin:
+            now = datetime.datetime.now()
+            data_filter.append(models.Schedule.date_range_end > now)
 
         if data.date_range_begin:
             data_filter.append(models.Schedule.date_range_end > data.date_range_begin)
@@ -202,6 +212,14 @@ class ScheduleService:
 
         return data_filter
 
+    def _get_schedule_query_options(self, data: schemas.ScheduleRead) -> list[tuple]:
+        options = noload(models.Schedule.observations)
+
+        if data.include_observations:
+            options = selectinload(models.Schedule.observations)
+
+        return options  # type: ignore
+
     async def get_many(
         self, data: schemas.ScheduleRead
     ) -> Sequence[Tuple[models.Schedule, int]]:
@@ -220,6 +238,8 @@ class ScheduleService:
             The list of Schedules and total number of entries passing the filter
         """
         schedule_filter = self._get_schedule_filter(data=data)
+
+        query_options = self._get_schedule_query_options(data=data)
 
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
@@ -240,8 +260,10 @@ class ScheduleService:
                 models.Schedule.fidelity,
                 models.Schedule.telescope_id,
             )
+            .group_by(models.Schedule.id)
             .limit(data.page_limit)
             .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(schedule_query)
@@ -267,7 +289,8 @@ class ScheduleService:
         Sequence[Tuple[models.Schedule, int]]
             The list of Schedules and total number of entries passing the filter
         """
-        schedule_filter = self._get_schedule_filter(data=data)
+        schedule_filter = self._get_schedule_filter(data=data, history=True)
+        query_options = self._get_schedule_query_options(data=data)
 
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
@@ -275,6 +298,7 @@ class ScheduleService:
             .order_by(models.Schedule.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(schedule_query)

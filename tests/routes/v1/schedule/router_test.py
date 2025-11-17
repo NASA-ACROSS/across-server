@@ -35,7 +35,7 @@ class TestScheduleRouter:
 
         @pytest.mark.asyncio
         async def test_should_return_created_schedule_id(self) -> None:
-            """POST Should return created service_account when successful"""
+            """POST Should return created schedule when successful"""
             res = await self.client.post(self.endpoint, json=self.post_data)
             assert UUID(res.json())
 
@@ -52,7 +52,7 @@ class TestScheduleRouter:
     class TestGet(Setup):
         @pytest.mark.asyncio
         async def test_should_return_schedule(self) -> None:
-            """GET Should return created service_account when successful"""
+            """GET Should return schedule when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.json()["name"] == "Test Schedule"
