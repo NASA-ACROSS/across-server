@@ -2,12 +2,13 @@ import os
 import time
 import uuid
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
 
@@ -83,6 +84,11 @@ app.add_middleware(
 async def get() -> str:
     logger.debug("health check!")
     return "ok"
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon() -> FileResponse:
+    return FileResponse(Path("across_server/favicon.ico"))
 
 
 @app.get("/", include_in_schema=False)
