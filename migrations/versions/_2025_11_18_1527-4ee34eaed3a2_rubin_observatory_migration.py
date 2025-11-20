@@ -1,7 +1,7 @@
 """rubin observatory migration
 
 Revision ID: 4ee34eaed3a2
-Revises: d56250541a9b
+Revises: 2a3f02d11576
 Create Date: 2025-11-18 15:27:35.792405
 
 """
@@ -28,7 +28,7 @@ from migrations.util.footprint_util import (
 
 # revision identifiers, used by Alembic.
 revision: str = "4ee34eaed3a2"
-down_revision: Union[str, None] = "d56250541a9b"
+down_revision: Union[str, None] = "2a3f02d11576"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
