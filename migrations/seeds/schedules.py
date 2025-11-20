@@ -19,6 +19,7 @@ sandy_schedule = Schedule(
     fidelity=ScheduleFidelity.LOW.value,
     created_by_id=sandy.id,
     checksum=hashlib.sha512("Sandy's Schedule".encode()).hexdigest(),
+    observation_count=1,
 )
 
 schedules = [sandy_schedule]
