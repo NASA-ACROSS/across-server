@@ -102,8 +102,6 @@ class Schedule(ScheduleBase):
                 Observation.from_orm(observation) for observation in obj.observations
             ]
 
-        observation_count = len(obj.observations)
-
         return cls(
             id=obj.id,
             telescope_id=obj.telescope_id,
@@ -115,7 +113,7 @@ class Schedule(ScheduleBase):
             created_on=obj.created_on,
             created_by_id=obj.created_by_id,
             observations=observations,
-            observation_count=observation_count,
+            observation_count=obj.observation_count,
             checksum=obj.checksum,
         )
 
@@ -154,6 +152,7 @@ class ScheduleCreate(ScheduleBase):
             if self.fidelity
             else ScheduleFidelity.HIGH.value,
             created_by_id=created_by_id,
+            observation_count=len(self.observations),
             checksum=self.generate_checksum(),
         )
 

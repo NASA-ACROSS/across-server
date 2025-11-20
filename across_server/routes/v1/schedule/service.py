@@ -5,6 +5,7 @@ import numpy as np
 from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload, selectinload
 
 from across_server.core.enums.instrument_fov import InstrumentFOV
 
@@ -47,7 +48,9 @@ class ScheduleService:
     ) -> None:
         self.db = db
 
-    async def get(self, schedule_id: UUID) -> models.Schedule:
+    async def get(
+        self, schedule_id: UUID, include_observations: bool = False
+    ) -> models.Schedule:
         """
         Retrieve the Schedule record with the given checksum.
 
@@ -65,7 +68,15 @@ class ScheduleService:
         ------
         ScheduleNotFoundException
         """
-        query = select(models.Schedule).where(models.Schedule.id == schedule_id)
+        query_options = self._get_schedule_query_options(
+            include_observations=include_observations
+        )
+
+        query = (
+            select(models.Schedule)
+            .where(models.Schedule.id == schedule_id)
+            .options(query_options)  # type: ignore
+        )
 
         result = await self.db.execute(query)
         schedule = result.scalar_one_or_none()
@@ -74,133 +85,6 @@ class ScheduleService:
             raise ScheduleNotFoundException(schedule_id)
 
         return schedule
-
-    async def _exists(self, checksums: list[str]) -> Sequence[models.Schedule]:
-        """
-        Retrieve the Schedule records with the given checksums.
-
-        Parameters
-        ----------
-        checksum : list[str]
-            the Schedule checksum
-
-        Returns
-        -------
-        Sequence[models.Schedule]
-            returns an array of Schedule records
-
-        """
-        query = select(models.Schedule).filter(models.Schedule.checksum.in_(checksums))
-        result = await self.db.execute(query)
-        schedules = result.scalars().all()
-        return schedules
-
-    def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
-        """
-        Build the sql alchemy filter list based on ScheduleRead.
-        Parses whether or not any of the fields are populated, and constructs a list
-        of sqlalchemy filter booleans for a schedule
-
-        Parameters
-        ----------
-        data : schemas.ScheduleRead
-             class representing Schedule filter parameters
-
-        Returns
-        -------
-        list[sqlalchemy.filters]
-            list of schedule filter booleans
-        """
-        data_filter = []
-
-        if data.date_range_begin:
-            data_filter.append(models.Schedule.date_range_end > data.date_range_begin)
-
-        if data.date_range_end:
-            data_filter.append(models.Schedule.date_range_begin < data.date_range_end)
-
-        if data.status:
-            data_filter.append(models.Schedule.status == data.status)
-
-        if data.external_id:
-            data_filter.append(
-                func.lower(models.Schedule.external_id).contains(
-                    str.lower(data.external_id)
-                )
-            )
-
-        if data.created_on:
-            data_filter.append(
-                models.Schedule.created_on >= data.created_on
-            )  # this should/could be a date-range parameter
-
-        if data.observatory_ids and len(data.observatory_ids):
-            data_filter.append(
-                models.Schedule.telescope.has(
-                    models.Telescope.observatory_id.in_(data.observatory_ids)
-                )
-            )
-
-        if data.observatory_names and len(data.observatory_names):
-            observatory_name_or_filter = []
-
-            for observatory_name in data.observatory_names:
-                observatory_name_or_filter.append(
-                    models.Schedule.telescope.has(
-                        models.Telescope.observatory.has(
-                            func.lower(models.Observatory.name).contains(
-                                str.lower(observatory_name)
-                            )
-                        )
-                    )
-                )
-
-                observatory_name_or_filter.append(
-                    models.Schedule.telescope.has(
-                        models.Telescope.observatory.has(
-                            func.lower(models.Observatory.short_name).contains(
-                                str.lower(observatory_name)
-                            )
-                        )
-                    )
-                )
-
-            data_filter.append(or_(*observatory_name_or_filter))
-
-        if data.telescope_ids and len(data.telescope_ids):
-            data_filter.append(models.Schedule.telescope_id.in_(data.telescope_ids))
-
-        if data.telescope_names and len(data.telescope_names):
-            telescope_name_or_filter = []
-
-            for telescope_name in data.telescope_names:
-                telescope_name_or_filter.append(
-                    models.Schedule.telescope.has(
-                        func.lower(models.Telescope.name).contains(
-                            str.lower(telescope_name)
-                        )
-                    )
-                )
-
-                telescope_name_or_filter.append(
-                    models.Schedule.telescope.has(
-                        func.lower(models.Telescope.short_name).contains(
-                            str.lower(telescope_name)
-                        )
-                    )
-                )
-
-            data_filter.append(or_(*telescope_name_or_filter))
-
-        if data.name:
-            data_filter.append(
-                func.lower(models.Schedule.name).contains(str.lower(data.name))
-            )
-
-        if data.fidelity:
-            data_filter.append(models.Schedule.fidelity == data.fidelity.value)
-
-        return data_filter
 
     async def get_many(
         self, data: schemas.ScheduleRead
@@ -221,6 +105,10 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
+        query_options = self._get_schedule_query_options(
+            include_observations=data.include_observations
+        )
+
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
             .filter(*schedule_filter)
@@ -240,8 +128,10 @@ class ScheduleService:
                 models.Schedule.fidelity,
                 models.Schedule.telescope_id,
             )
+            .group_by(models.Schedule.id)
             .limit(data.page_limit)
             .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(schedule_query)
@@ -268,6 +158,9 @@ class ScheduleService:
             The list of Schedules and total number of entries passing the filter
         """
         schedule_filter = self._get_schedule_filter(data=data)
+        query_options = self._get_schedule_query_options(
+            include_observations=data.include_observations
+        )
 
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
@@ -275,6 +168,7 @@ class ScheduleService:
             .order_by(models.Schedule.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(schedule_query)
@@ -432,3 +326,138 @@ class ScheduleService:
         self.db.add_all(list((*schedules_to_add, *observations_to_add)))
         await self.db.commit()
         return schedule_ids
+
+    async def _exists(self, checksums: list[str]) -> Sequence[models.Schedule]:
+        """
+        Retrieve the Schedule records with the given checksums.
+
+        Parameters
+        ----------
+        checksum : list[str]
+            the Schedule checksum
+
+        Returns
+        -------
+        Sequence[models.Schedule]
+            returns an array of Schedule records
+
+        """
+        query = select(models.Schedule).filter(models.Schedule.checksum.in_(checksums))
+        result = await self.db.execute(query)
+        schedules = result.scalars().all()
+        return schedules
+
+    def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
+        """
+        Build the sql alchemy filter list based on ScheduleRead.
+        Parses whether or not any of the fields are populated, and constructs a list
+        of sqlalchemy filter booleans for a schedule
+
+        Parameters
+        ----------
+        data : schemas.ScheduleRead
+             class representing Schedule filter parameters
+
+        Returns
+        -------
+        list[sqlalchemy.filters]
+            list of schedule filter booleans
+        """
+        data_filter = []
+
+        if data.date_range_begin:
+            data_filter.append(models.Schedule.date_range_end > data.date_range_begin)
+
+        if data.date_range_end:
+            data_filter.append(models.Schedule.date_range_begin < data.date_range_end)
+
+        if data.status:
+            data_filter.append(models.Schedule.status == data.status)
+
+        if data.external_id:
+            data_filter.append(
+                func.lower(models.Schedule.external_id).contains(
+                    str.lower(data.external_id)
+                )
+            )
+
+        if data.created_on:
+            data_filter.append(
+                models.Schedule.created_on >= data.created_on
+            )  # this should/could be a date-range parameter
+
+        if data.observatory_ids and len(data.observatory_ids):
+            data_filter.append(
+                models.Schedule.telescope.has(
+                    models.Telescope.observatory_id.in_(data.observatory_ids)
+                )
+            )
+
+        if data.observatory_names and len(data.observatory_names):
+            observatory_name_or_filter = []
+
+            for observatory_name in data.observatory_names:
+                observatory_name_or_filter.append(
+                    models.Schedule.telescope.has(
+                        models.Telescope.observatory.has(
+                            func.lower(models.Observatory.name).contains(
+                                str.lower(observatory_name)
+                            )
+                        )
+                    )
+                )
+
+                observatory_name_or_filter.append(
+                    models.Schedule.telescope.has(
+                        models.Telescope.observatory.has(
+                            func.lower(models.Observatory.short_name).contains(
+                                str.lower(observatory_name)
+                            )
+                        )
+                    )
+                )
+
+            data_filter.append(or_(*observatory_name_or_filter))
+
+        if data.telescope_ids and len(data.telescope_ids):
+            data_filter.append(models.Schedule.telescope_id.in_(data.telescope_ids))
+
+        if data.telescope_names and len(data.telescope_names):
+            telescope_name_or_filter = []
+
+            for telescope_name in data.telescope_names:
+                telescope_name_or_filter.append(
+                    models.Schedule.telescope.has(
+                        func.lower(models.Telescope.name).contains(
+                            str.lower(telescope_name)
+                        )
+                    )
+                )
+
+                telescope_name_or_filter.append(
+                    models.Schedule.telescope.has(
+                        func.lower(models.Telescope.short_name).contains(
+                            str.lower(telescope_name)
+                        )
+                    )
+                )
+
+            data_filter.append(or_(*telescope_name_or_filter))
+
+        if data.name:
+            data_filter.append(
+                func.lower(models.Schedule.name).contains(str.lower(data.name))
+            )
+
+        if data.fidelity:
+            data_filter.append(models.Schedule.fidelity == data.fidelity.value)
+
+        return data_filter
+
+    def _get_schedule_query_options(
+        self, include_observations: bool | None
+    ) -> list[tuple]:
+        if include_observations:
+            return selectinload(models.Schedule.observations)  # type: ignore
+
+        return noload(models.Schedule.observations)  # type: ignore

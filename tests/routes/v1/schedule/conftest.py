@@ -38,6 +38,7 @@ def mock_schedule_post_data() -> dict:
         "name": "Test Schedule",
         "external_id": "test_schedule_external_id",
         "fidelity": "low",
+        "observation_count": 1,
         "observations": [
             {
                 "instrument_id": str(uuid4()),
@@ -83,6 +84,7 @@ def mock_schedule_post_many_data() -> dict:
                 "name": "Test Schedule",
                 "external_id": "test_schedule_external_id",
                 "fidelity": "low",
+                "observation_count": 1,
                 "observations": [
                     {
                         "instrument_id": str(uuid4()),
@@ -120,6 +122,7 @@ def mock_schedule_post_many_data() -> dict:
                 "name": "Test Schedule 2",
                 "external_id": "test_schedule_external_id_2",
                 "fidelity": "low",
+                "observation_count": 1,
                 "observations": [
                     {
                         "instrument_id": str(uuid4()),
@@ -166,6 +169,7 @@ def fake_schedule_data(
         external_id=mock_schedule_post_data["external_id"],
         fidelity=mock_schedule_post_data["fidelity"],
         telescope=TelescopeModel(id=UUID(mock_schedule_post_data["telescope_id"])),
+        observation_count=1,
         observations=[fake_observation_data],
         created_on=datetime.now(),
         created_by_id=uuid4(),

@@ -19,15 +19,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship,
-)
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..core.enums.visibility_type import VisibilityType
-from .config import config
+from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
@@ -460,14 +455,14 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         back_populates="instruments", lazy="selectin"
     )
     footprints: Mapped[list["Footprint"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
 
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="noload"
     )
     filters: Mapped[list["Filter"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     constraints: Mapped[list["Constraint"]] = relationship(
