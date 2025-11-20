@@ -111,7 +111,7 @@ async def get(
     schedule_id: uuid.UUID,
     include_observations: Annotated[bool, Query()] = False,
 ) -> schemas.Schedule:
-    schedule = await service.get(schedule_id)
+    schedule = await service.get(schedule_id, include_observations)
 
     return schemas.Schedule.from_orm(schedule, include_observations)
 

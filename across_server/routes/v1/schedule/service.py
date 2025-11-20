@@ -1,4 +1,3 @@
-import datetime
 from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
@@ -49,7 +48,9 @@ class ScheduleService:
     ) -> None:
         self.db = db
 
-    async def get(self, schedule_id: UUID) -> models.Schedule:
+    async def get(
+        self, schedule_id: UUID, include_observations: bool = False
+    ) -> models.Schedule:
         """
         Retrieve the Schedule record with the given checksum.
 
@@ -67,7 +68,15 @@ class ScheduleService:
         ------
         ScheduleNotFoundException
         """
-        query = select(models.Schedule).where(models.Schedule.id == schedule_id)
+        query_options = self._get_schedule_query_options(
+            include_observations=include_observations
+        )
+
+        query = (
+            select(models.Schedule)
+            .where(models.Schedule.id == schedule_id)
+            .options(query_options)
+        )  # type: ignore
 
         result = await self.db.execute(query)
         schedule = result.scalar_one_or_none()
@@ -96,7 +105,9 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
 
-        query_options = self._get_schedule_query_options(data=data)
+        query_options = self._get_schedule_query_options(
+            include_observations=data.include_observations
+        )
 
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
@@ -146,8 +157,10 @@ class ScheduleService:
         Sequence[Tuple[models.Schedule, int]]
             The list of Schedules and total number of entries passing the filter
         """
-        schedule_filter = self._get_schedule_filter(data=data, history=True)
-        query_options = self._get_schedule_query_options(data=data)
+        schedule_filter = self._get_schedule_filter(data=data)
+        query_options = self._get_schedule_query_options(
+            include_observations=data.include_observations
+        )
 
         schedule_query = (
             select(models.Schedule, func.count().over().label("count"))
@@ -334,9 +347,7 @@ class ScheduleService:
         schedules = result.scalars().all()
         return schedules
 
-    def _get_schedule_filter(
-        self, data: schemas.ScheduleRead, history: bool = False
-    ) -> list:
+    def _get_schedule_filter(self, data: schemas.ScheduleRead) -> list:
         """
         Build the sql alchemy filter list based on ScheduleRead.
         Parses whether or not any of the fields are populated, and constructs a list
@@ -353,12 +364,6 @@ class ScheduleService:
             list of schedule filter booleans
         """
         data_filter = []
-
-        # only return schedules which end after now (when no date_range_begin filter)
-        # past schedules should only be returned with history
-        if not history and not data.date_range_begin:
-            now = datetime.datetime.now()
-            data_filter.append(models.Schedule.date_range_end > now)
 
         if data.date_range_begin:
             data_filter.append(models.Schedule.date_range_end > data.date_range_begin)
@@ -449,8 +454,10 @@ class ScheduleService:
 
         return data_filter
 
-    def _get_schedule_query_options(self, data: schemas.ScheduleRead) -> list[tuple]:
-        if data.include_observations:
+    def _get_schedule_query_options(
+        self, include_observations: bool | None
+    ) -> list[tuple]:
+        if include_observations:
             return selectinload(models.Schedule.observations)  # type: ignore
 
         return noload(models.Schedule.observations)  # type: ignore
