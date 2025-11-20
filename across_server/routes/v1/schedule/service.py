@@ -75,8 +75,8 @@ class ScheduleService:
         query = (
             select(models.Schedule)
             .where(models.Schedule.id == schedule_id)
-            .options(query_options)
-        )  # type: ignore
+            .options(query_options)  # type: ignore
+        )
 
         result = await self.db.execute(query)
         schedule = result.scalar_one_or_none()
