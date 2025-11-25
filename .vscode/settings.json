@@ -27,6 +27,7 @@
         "geocoder",
         "gsub",
         "healthcheck",
+        "healthchecks",
         "httpx",
         "imgs",
         "isready",
