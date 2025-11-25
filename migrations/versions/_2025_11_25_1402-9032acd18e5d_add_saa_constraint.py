@@ -1,8 +1,8 @@
 """add SAA constraint
 
 Revision ID: 9032acd18e5d
-Revises: d56250541a9b
-Create Date: 2025-10-21 14:02:27.152104
+Revises: 4ee34eaed3a2
+Create Date: 2025-11-25 14:02:27.152104
 
 """
 
@@ -19,7 +19,7 @@ import migrations.versions.model_snapshots.models_2025_10_03 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "9032acd18e5d"
-down_revision: Union[str, None] = "d56250541a9b"
+down_revision: Union[str, None] = "4ee34eaed3a2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
