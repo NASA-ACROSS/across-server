@@ -88,7 +88,7 @@ async def get() -> str:
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon() -> FileResponse:
-    return FileResponse(Path("across_server/favicon.ico"))
+    return FileResponse(Path("static/favicon.ico"))
 
 
 @app.get("/", include_in_schema=False)
