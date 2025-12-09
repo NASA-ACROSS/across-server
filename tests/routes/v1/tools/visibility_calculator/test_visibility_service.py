@@ -169,3 +169,25 @@ class TestVisibilityService:
                     date_range_end=datetime.now(),
                     hi_res=False,
                 )
+
+    class TestFindJointVisibility:
+        @pytest.mark.asyncio
+        async def test_find_joint_visibility_should_call_partial(
+            self,
+            mock_db: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_instrument_with_constraints: InstrumentSchema,
+            fake_ephemeris_visibility_result: MagicMock,
+            monkeypatch: pytest.MonkeyPatch,
+        ) -> None:
+            """Should calculate joint visibility with partial"""
+
+            mock_partial = MagicMock()
+            monkeypatch.setattr(service_mod, "partial", mock_partial)
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+            await service.find_joint_visibility(
+                visibilities=[fake_ephemeris_visibility_result],
+                instrument_ids=[fake_instrument_with_constraints.id],
+            )
+            mock_partial.assert_called_once()
