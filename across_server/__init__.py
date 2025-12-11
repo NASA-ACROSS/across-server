@@ -12,8 +12,6 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.“
 
-The copyright notice to be included in the software is as follows:
-
 Copyright © 2025 United States Government as represented by the Administrator
 of the National Aeronautics and Space Administration and The Penn State
 Research Foundation.  All rights reserved. This software is licensed under the
