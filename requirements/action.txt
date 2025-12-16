@@ -50,15 +50,19 @@ certifi==2024.8.30
     #   httpx
     #   requests
 cffi==1.17.1
-    # via argon2-cffi-bindings
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 cfgv==3.4.0
     # via pre-commit
 charset-normalizer==3.4.1
     # via requests
 click==8.1.7
     # via uvicorn
-coverage==7.6.9
+coverage[toml]==7.6.9
     # via pytest-cov
+cryptography==46.0.0
+    # via secretstorage
 distlib==0.3.9
     # via virtualenv
 dnspython==2.7.0
@@ -106,6 +110,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.1.0
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jmespath==1.0.1
     # via
     #   boto3
@@ -152,7 +160,7 @@ pre-commit==4.1.0
     # via -r requirements/lint.in
 pycparser==2.22
     # via cffi
-pydantic==2.11.7
+pydantic[email]==2.11.7
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -204,6 +212,8 @@ rush==2021.4.0
     # via spacetrack
 s3transfer==0.13.0
     # via boto3
+secretstorage==3.5.0
+    # via keyring
 sgp4==2.24
     # via across-tools
 shapely==2.0.7
@@ -224,7 +234,7 @@ spacetrack==1.3.1
     # via across-tools
 spiceypy==6.0.1
     # via across-tools
-sqlalchemy==2.0.37
+sqlalchemy[asyncio]==2.0.37
     # via
     #   -r requirements/base.in
     #   alembic
@@ -237,7 +247,7 @@ structlog==25.1.0
     # via -r requirements/base.in
 types-awscrt==0.25.7
     # via botocore-stubs
-types-boto3==1.37.30
+types-boto3[rds,ssm,sts]==1.37.30
     # via -r requirements/types.in
 types-boto3-rds==1.37.21
     # via types-boto3
@@ -253,7 +263,7 @@ types-requests==2.32.0.20250306
     # via -r requirements/types.in
 types-s3transfer==0.13.0
     # via types-boto3
-types-shapely==2.0.0.20250202
+types-shapely==2.1.0.20250917
     # via -r requirements/types.in
 typing-extensions==4.12.2
     # via
