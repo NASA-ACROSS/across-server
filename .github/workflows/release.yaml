@@ -3,7 +3,6 @@ on:
   release:
     types: [published]
 
-
 permissions:
   id-token: write
   deployments: write
@@ -15,7 +14,7 @@ concurrency:
 
 jobs:
   perform:
-    uses: ./.github/workflows/ecspresso-release.yml
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-release.yml@main
     with:
       organization: "${{ github.event.repository.owner.login }}"
       version: ${{ github.event.release.tag_name }}
