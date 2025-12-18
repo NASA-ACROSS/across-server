@@ -2,10 +2,12 @@
 #    uv pip compile requirements/action.in -o requirements/action.txt
 across-tools==0.1.dev42
     # via -r requirements/base.in
-aiosmtplib==4.0.0
+aiosmtplib==5.0.0
     # via -r requirements/base.in
-alembic==1.15.1
+alembic==1.17.2
     # via -r requirements/base.in
+annotated-doc==0.0.4
+    # via fastapi
 annotated-types==0.7.0
     # via pydantic
 anyio==4.7.0
@@ -69,7 +71,7 @@ dnspython==2.7.0
     # via email-validator
 email-validator==2.2.0
     # via pydantic
-fastapi==0.115.11
+fastapi==0.124.4
     # via
     #   -r requirements/base.in
     #   pytest-fastapi-deps
@@ -120,6 +122,8 @@ jmespath==1.0.1
     #   botocore
 keyring==25.6.0
     # via astroquery
+librt==0.7.4
+    # via mypy
 logbook==1.8.0
     # via spacetrack
 mako==1.3.8
@@ -130,7 +134,7 @@ more-itertools==10.7.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.15.0
+mypy==1.19.1
     # via -r requirements/types.in
 mypy-extensions==1.0.0
     # via mypy
@@ -152,11 +156,13 @@ packaging==24.2
     #   astropy
     #   geoalchemy2
     #   pytest
+pathspec==0.12.1
+    # via mypy
 platformdirs==4.3.6
     # via virtualenv
 pluggy==1.5.0
     # via pytest
-pre-commit==4.1.0
+pre-commit==4.5.0
     # via -r requirements/lint.in
 pycparser==2.22
     # via cffi
@@ -174,15 +180,17 @@ pydantic-settings==2.8.1
     #   across-tools
 pyerfa==2.0.1.5
     # via astropy
+pygments==2.19.2
+    # via pytest
 pyjwt==2.10.1
     # via -r requirements/base.in
-pytest==8.3.5
+pytest==8.4.2
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-fastapi-deps
-pytest-asyncio==0.25.3
+pytest-asyncio==1.3.0
     # via -r requirements/test.in
 pytest-cov==6.0.0
     # via -r requirements/test.in
@@ -259,7 +267,7 @@ types-pyasn1==0.6.0.20240913
     # via types-python-jose
 types-python-jose==3.4.0.20250224
     # via -r requirements/types.in
-types-requests==2.32.0.20250306
+types-requests==2.32.4.20250913
     # via -r requirements/types.in
 types-s3transfer==0.13.0
     # via types-boto3
@@ -274,6 +282,7 @@ typing-extensions==4.12.2
     #   mypy
     #   pydantic
     #   pydantic-core
+    #   pytest-asyncio
     #   sqlalchemy
     #   typing-inspection
 typing-inspection==0.4.1
@@ -283,7 +292,7 @@ urllib3==2.2.3
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.34.0
+uvicorn==0.38.0
     # via -r requirements/base.in
 virtualenv==20.28.0
     # via pre-commit
