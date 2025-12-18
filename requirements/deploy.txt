@@ -2,9 +2,9 @@
 #    uv pip compile requirements/deploy.in -o requirements/deploy.txt
 across-tools==0.1.dev42
     # via -r requirements/base.in
-aiosmtplib==4.0.1
+aiosmtplib==5.0.0
     # via -r requirements/base.in
-alembic==1.15.2
+alembic==1.17.2
     # via -r requirements/base.in
 annotated-doc==0.0.4
     # via fastapi
