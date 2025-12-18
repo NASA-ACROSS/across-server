@@ -2,10 +2,12 @@
 #    uv pip compile requirements/local.in -o requirements/local.txt
 across-tools==0.1.dev42
     # via -r requirements/base.in
-aiosmtplib==4.0.0
+aiosmtplib==5.0.0
     # via -r requirements/base.in
-alembic==1.15.1
+alembic==1.17.2
     # via -r requirements/base.in
+annotated-doc==0.0.4
+    # via fastapi
 annotated-types==0.7.0
     # via pydantic
 anyio==4.6.2.post1
@@ -50,6 +52,7 @@ certifi==2024.8.30
     #   httpcore
     #   httpx
     #   requests
+    #   sentry-sdk
 cffi==1.17.1
     # via
     #   argon2-cffi-bindings
@@ -60,6 +63,7 @@ charset-normalizer==3.4.1
     # via requests
 click==8.1.7
     # via
+    #   rich-toolkit
     #   typer
     #   uvicorn
 coverage[toml]==7.6.8
@@ -74,13 +78,17 @@ email-validator==2.2.0
     # via
     #   fastapi
     #   pydantic
-fastapi[standard]==0.115.11
+fastapi[standard]==0.124.4
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
     #   pytest-fastapi-deps
-fastapi-cli[standard]==0.0.5
+fastapi-cli[standard]==0.0.16
     # via fastapi
+fastapi-cloud-cli==0.6.0
+    # via fastapi-cli
+fastar==0.8.0
+    # via fastapi-cloud-cli
 filelock==3.16.1
     # via virtualenv
 geoalchemy2==0.17.1
@@ -104,6 +112,7 @@ httpx==0.28.1
     #   -r requirements/base.in
     #   across-tools
     #   fastapi
+    #   fastapi-cloud-cli
     #   spacetrack
 identify==2.6.3
     # via pre-commit
@@ -184,6 +193,7 @@ pydantic[email]==2.11.7
     #   -r requirements/base.in
     #   across-tools
     #   fastapi
+    #   fastapi-cloud-cli
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
@@ -233,7 +243,15 @@ requests==2.32.3
     #   astroquery
     #   pyvo
 rich==13.9.4
-    # via typer
+    # via
+    #   rich-toolkit
+    #   typer
+rich-toolkit==0.17.0
+    # via
+    #   fastapi-cli
+    #   fastapi-cloud-cli
+rignore==0.7.6
+    # via fastapi-cloud-cli
 ruff==0.14.9
     # via -r requirements/lint.in
 rush==2021.4.0
@@ -242,6 +260,8 @@ s3transfer==0.13.0
     # via boto3
 secretstorage==3.5.0
     # via keyring
+sentry-sdk==2.47.0
+    # via fastapi-cloud-cli
 sgp4==2.24
     # via across-tools
 shapely==2.0.7
@@ -275,8 +295,10 @@ starlette==0.45.3
     #   fastapi
 structlog==25.1.0
     # via -r requirements/base.in
-typer==0.14.0
-    # via fastapi-cli
+typer==0.20.0
+    # via
+    #   fastapi-cli
+    #   fastapi-cloud-cli
 types-awscrt==0.25.7
     # via botocore-stubs
 types-boto3[rds,ssm,sts]==1.37.30
@@ -305,6 +327,7 @@ typing-extensions==4.12.2
     #   mypy
     #   pydantic
     #   pydantic-core
+    #   rich-toolkit
     #   sqlalchemy
     #   typer
     #   typing-inspection
@@ -314,12 +337,14 @@ urllib3==2.2.3
     # via
     #   botocore
     #   requests
+    #   sentry-sdk
     #   types-requests
 uvicorn[standard]==0.34.3
     # via
     #   -r requirements/base.in
     #   fastapi
     #   fastapi-cli
+    #   fastapi-cloud-cli
 uvloop==0.21.0
     # via uvicorn
 virtualenv==20.28.0
