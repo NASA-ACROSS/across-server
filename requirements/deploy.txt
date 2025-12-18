@@ -199,7 +199,7 @@ starlette==0.46.2
     # via
     #   asgi-correlation-id
     #   fastapi
-structlog==25.3.0
+structlog==25.5.0
     # via -r requirements/base.in
 typing-extensions==4.13.2
     # via

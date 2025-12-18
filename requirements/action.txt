@@ -251,7 +251,7 @@ starlette==0.45.3
     # via
     #   asgi-correlation-id
     #   fastapi
-structlog==25.1.0
+structlog==25.5.0
     # via -r requirements/base.in
 types-awscrt==0.25.7
     # via botocore-stubs
