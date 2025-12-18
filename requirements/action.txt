@@ -2,7 +2,7 @@
 #    uv pip compile requirements/action.in -o requirements/action.txt
 across-tools==0.1.dev42
     # via -r requirements/base.in
-aiosmtplib==4.0.0
+aiosmtplib==5.0.0
     # via -r requirements/base.in
 alembic==1.17.2
     # via -r requirements/base.in
