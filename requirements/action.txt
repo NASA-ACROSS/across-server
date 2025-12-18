@@ -291,7 +291,7 @@ urllib3==2.2.3
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.34.0
+uvicorn==0.38.0
     # via -r requirements/base.in
 virtualenv==20.28.0
     # via pre-commit

@@ -345,7 +345,7 @@ urllib3==2.2.3
     #   requests
     #   sentry-sdk
     #   types-requests
-uvicorn[standard]==0.34.3
+uvicorn[standard]==0.38.0
     # via
     #   -r requirements/base.in
     #   fastapi
