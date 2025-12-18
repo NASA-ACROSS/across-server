@@ -32,7 +32,7 @@ astropy-iers-data==0.2025.2.10.0.33.26
     # via astropy
 astroquery==0.4.10
     # via across-tools
-asyncpg==0.30.0
+asyncpg==0.31.0
     # via -r requirements/base.in
 attrs==25.3.0
     # via rush
