@@ -10,137 +10,133 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.7.0
+anyio==4.12.0
     # via
     #   httpx
     #   starlette
 argon2-cffi==25.1.0
     # via -r requirements/base.in
-argon2-cffi-bindings==21.2.0
+argon2-cffi-bindings==25.1.0
     # via argon2-cffi
 asgi-correlation-id==4.3.4
     # via -r requirements/base.in
 asgi-ratelimit==0.10.0
     # via -r requirements/base.in
-astropy==7.0.1
+astropy==7.2.0
     # via
     #   across-tools
     #   astroquery
     #   healpy
     #   pyvo
-astropy-iers-data==0.2025.2.10.0.33.26
+astropy-iers-data==0.2025.12.15.0.40.51
     # via astropy
-astroquery==0.4.9.post1
+astroquery==0.4.11
     # via across-tools
 asyncpg==0.31.0
     # via -r requirements/base.in
-attrs==24.2.0
-    # via rush
-beautifulsoup4==4.13.3
+attrs==25.4.0
+    # via
+    #   outcome
+    #   rush
+beautifulsoup4==4.14.3
     # via astroquery
-boto3==1.42.9
+boto3==1.42.13
     # via -r requirements/base.in
-botocore==1.42.9
+botocore==1.42.13
     # via
     #   boto3
     #   s3transfer
-botocore-stubs==1.37.29
+botocore-stubs==1.42.13
     # via types-boto3
-certifi==2024.8.30
+certifi==2025.11.12
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
-    # via
-    #   argon2-cffi-bindings
-    #   cryptography
-cfgv==3.4.0
+cffi==2.0.0
+    # via argon2-cffi-bindings
+cfgv==3.5.0
     # via pre-commit
-charset-normalizer==3.4.1
+charset-normalizer==3.4.4
     # via requests
-click==8.1.7
+click==8.3.1
     # via uvicorn
-coverage[toml]==7.13.0
+coverage==7.13.0
     # via pytest-cov
-cryptography==46.0.0
-    # via secretstorage
-distlib==0.3.9
+distlib==0.4.0
     # via virtualenv
-dnspython==2.7.0
+dnspython==2.8.0
     # via email-validator
-email-validator==2.2.0
+email-validator==2.3.0
     # via pydantic
-fastapi==0.124.4
+fastapi==0.125.0
     # via
     #   -r requirements/base.in
     #   pytest-fastapi-deps
-filelock==3.16.1
-    # via virtualenv
+filelock==3.20.1
+    # via
+    #   spacetrack
+    #   virtualenv
 geoalchemy2==0.18.1
     # via -r requirements/base.in
-greenlet==3.1.1
+greenlet==3.3.0
     # via sqlalchemy
-h11==0.14.0
+h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-healpy==1.18.1
+healpy==1.19.0
     # via across-tools
 html5lib==1.1
     # via astroquery
-httpcore==1.0.7
+httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via
     #   -r requirements/base.in
     #   across-tools
     #   spacetrack
-identify==2.6.3
+identify==2.6.15
     # via pre-commit
-idna==3.10
+idna==3.11
     # via
     #   anyio
     #   email-validator
     #   httpx
     #   requests
-iniconfig==2.0.0
+iniconfig==2.3.0
     # via pytest
 jaraco-classes==3.4.0
     # via keyring
 jaraco-context==6.0.1
     # via keyring
-jaraco-functools==4.1.0
+jaraco-functools==4.3.0
     # via keyring
-jeepney==0.9.0
-    # via
-    #   keyring
-    #   secretstorage
 jmespath==1.0.1
     # via
     #   boto3
     #   botocore
-keyring==25.6.0
+keyring==25.7.0
     # via astroquery
 librt==0.7.4
     # via mypy
-logbook==1.8.0
+logbook==1.9.2
     # via spacetrack
-mako==1.3.8
+mako==1.3.10
     # via alembic
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via mako
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
 mypy==1.19.1
     # via -r requirements/types.in
-mypy-extensions==1.0.0
+mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.2.0
+numpy==2.3.5
     # via
     #   across-tools
     #   astropy
@@ -150,7 +146,9 @@ numpy==2.2.0
     #   shapely
     #   spiceypy
     #   types-shapely
-packaging==24.2
+outcome==1.3.0.post0
+    # via spacetrack
+packaging==25.0
     # via
     #   asgi-correlation-id
     #   astropy
@@ -158,23 +156,25 @@ packaging==24.2
     #   pytest
 pathspec==0.12.1
     # via mypy
-platformdirs==4.3.6
-    # via virtualenv
-pluggy==1.5.0
+platformdirs==4.5.1
+    # via
+    #   spacetrack
+    #   virtualenv
+pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.5.0
+pre-commit==4.5.1
     # via -r requirements/lint.in
-pycparser==2.22
+pycparser==2.23
     # via cffi
-pydantic[email]==2.11.7
+pydantic==2.12.5
     # via
     #   -r requirements/base.in
     #   across-tools
     #   fastapi
     #   pydantic-settings
-pydantic-core==2.33.2
+pydantic-core==2.41.5
     # via pydantic
 pydantic-settings==2.12.0
     # via
@@ -186,7 +186,7 @@ pygments==2.19.2
     # via pytest
 pyjwt==2.10.1
     # via -r requirements/base.in
-pytest==8.4.2
+pytest==9.0.2
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
@@ -200,19 +200,19 @@ pytest-fastapi-deps==0.2.3
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via botocore
-python-dotenv==1.0.1
+python-dotenv==1.2.1
     # via pydantic-settings
-python-multipart==0.0.20
+python-multipart==0.0.21
     # via -r requirements/base.in
-pyvo==1.6.1
+pyvo==1.8
     # via astroquery
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   astropy
     #   pre-commit
 represent==2.1
     # via spacetrack
-requests==2.32.3
+requests==2.32.5
     # via
     #   astroquery
     #   pyvo
@@ -222,9 +222,7 @@ rush==2021.4.0
     # via spacetrack
 s3transfer==0.16.0
     # via boto3
-secretstorage==3.5.0
-    # via keyring
-sgp4==2.24
+sgp4==2.25
     # via across-tools
 shapely==2.1.2
     # via
@@ -235,70 +233,70 @@ six==1.17.0
     #   html5lib
     #   python-dateutil
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   spacetrack
-soupsieve==2.6
+    # via spacetrack
+soupsieve==2.8.1
     # via beautifulsoup4
-spacetrack==1.3.1
+spacetrack==1.4.0
     # via across-tools
-spiceypy==6.0.1
+spiceypy==8.0.0
     # via across-tools
-sqlalchemy[asyncio]==2.0.37
+sqlalchemy==2.0.45
     # via
     #   -r requirements/base.in
     #   alembic
     #   geoalchemy2
-starlette==0.45.3
+starlette==0.50.0
     # via
     #   asgi-correlation-id
     #   fastapi
 structlog==25.5.0
     # via -r requirements/base.in
-types-awscrt==0.25.7
+types-awscrt==0.30.0
     # via botocore-stubs
-types-boto3[rds,ssm,sts]==1.37.30
+types-boto3==1.42.13
     # via -r requirements/types.in
-types-boto3-rds==1.37.21
+types-boto3-rds==1.42.5
     # via types-boto3
-types-boto3-ssm==1.37.19
+types-boto3-ssm==1.42.3
     # via types-boto3
-types-boto3-sts==1.37.0
+types-boto3-sts==1.42.3
     # via types-boto3
-types-pyasn1==0.6.0.20240913
+types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20250531
     # via -r requirements/types.in
 types-requests==2.32.4.20250913
     # via -r requirements/types.in
-types-s3transfer==0.13.0
+types-s3transfer==0.16.0
     # via types-boto3
 types-shapely==2.1.0.20250917
     # via -r requirements/types.in
-typing-extensions==4.12.2
+typing-extensions==4.15.0
     # via
     #   alembic
     #   anyio
     #   beautifulsoup4
     #   fastapi
+    #   logbook
     #   mypy
     #   pydantic
     #   pydantic-core
     #   pytest-asyncio
     #   sqlalchemy
+    #   starlette
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via
     #   pydantic
     #   pydantic-settings
-urllib3==2.2.3
+urllib3==2.6.2
     # via
     #   botocore
     #   requests
     #   types-requests
 uvicorn==0.38.0
     # via -r requirements/base.in
-virtualenv==20.28.0
+virtualenv==20.35.4
     # via pre-commit
 webencodings==0.5.1
     # via html5lib
