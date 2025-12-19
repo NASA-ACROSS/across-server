@@ -161,7 +161,9 @@ pathspec==0.12.1
 platformdirs==4.3.6
     # via virtualenv
 pluggy==1.5.0
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-cov
 pre-commit==4.5.0
     # via -r requirements/lint.in
 pycparser==2.22
@@ -214,7 +216,7 @@ requests==2.32.3
     # via
     #   astroquery
     #   pyvo
-ruff==0.14.9
+ruff==0.14.10
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
