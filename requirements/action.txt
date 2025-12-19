@@ -161,7 +161,9 @@ pathspec==0.12.1
 platformdirs==4.3.6
     # via virtualenv
 pluggy==1.5.0
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-cov
 pre-commit==4.5.0
     # via -r requirements/lint.in
 pycparser==2.22
@@ -184,7 +186,7 @@ pygments==2.19.2
     # via pytest
 pyjwt==2.10.1
     # via -r requirements/base.in
-pytest==8.4.2
+pytest==9.0.2
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
