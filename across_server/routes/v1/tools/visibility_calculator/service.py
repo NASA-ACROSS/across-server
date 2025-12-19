@@ -7,7 +7,9 @@ import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
 from across.tools.visibility import (
     EphemerisVisibility,
+    JointVisibility,
     compute_ephemeris_visibility,
+    compute_joint_visibility,
 )
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
@@ -107,3 +109,17 @@ class VisibilityCalculatorService:
             raise VisibilityTypeNotImplementedException(
                 f"Visibility type {instrument.visibility_type} is not implemented. Please select an instrument with visibility type {VisibilityType.EPHEMERIS}"
             )
+
+    async def find_joint_visibility(
+        self,
+        visibilities: list[EphemerisVisibility],
+        instrument_ids: list[UUID],
+    ) -> JointVisibility:
+        # Compute joint visibility
+        joint_vis_function = partial(
+            compute_joint_visibility,
+            visibilities=visibilities,
+            instrument_ids=instrument_ids,
+        )
+        joint_visibility = await anyio.to_thread.run_sync(joint_vis_function)
+        return joint_visibility

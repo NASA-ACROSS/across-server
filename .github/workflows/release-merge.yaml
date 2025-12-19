@@ -22,7 +22,7 @@ permissions:
 jobs:
   ci:
     # build the container before the release to be able to tag the correctly versioned container.
-    uses: ./.github/workflows/workflow-ci-dockerized-app-build.yml
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/workflow-ci-dockerized-app-build.yml@main
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
@@ -33,9 +33,6 @@ jobs:
       ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
       registry: "${{ secrets.ECR_REGISTRY }}"
       secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
-      ssh-private-key: |
-        ${{ secrets.ACROSS_TOOLS_SSH_KEY }}
-        ${{ secrets.OPENAPI_SDK_SSH_KEY }}
 
   release-please:
     runs-on: "ubuntu-latest"

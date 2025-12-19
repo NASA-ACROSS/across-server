@@ -3,18 +3,22 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
-import anyio
-import anyio.to_thread
 import pytest
 from across.tools.visibility.constraints import SunAngleConstraint
+from fastapi import FastAPI
 
 from across_server.core.enums.visibility_type import VisibilityType
-from across_server.db.models import Instrument
+from across_server.db.models import Instrument, Telescope
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.instrument.service import InstrumentService
+from across_server.routes.v1.telescope.service import TelescopeService
 from across_server.routes.v1.tools.ephemeris.service import EphemerisService
 from across_server.routes.v1.tools.visibility_calculator.schemas import (
+    JointVisibilityReadParams,
     VisibilityReadParams,
+)
+from across_server.routes.v1.tools.visibility_calculator.service import (
+    VisibilityCalculatorService,
 )
 
 
@@ -83,13 +87,21 @@ def fake_instrument_without_constraints() -> InstrumentSchema:
 
 
 @pytest.fixture
-def fake_async_result(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
-    """Patches anyio.to_thread.run_sync with a AsyncMock"""
-    mock_result = AsyncMock()
-    monkeypatch.setattr(
-        anyio.to_thread, "run_sync", AsyncMock(return_value=mock_result)
-    )
-    return mock_result
+def fake_ephemeris_visibility_result() -> MagicMock:
+    mock = MagicMock()
+    mock.model_dump.return_value = {"visibility_windows": []}
+    mock.instrument_id = uuid4()
+
+    return mock
+
+
+@pytest.fixture
+def fake_joint_visibility_result() -> MagicMock:
+    mock = MagicMock()
+    mock.model_dump.return_value = {"visibility_windows": []}
+    mock.instrument_ids = [uuid4()]
+
+    return mock
 
 
 @pytest.fixture(scope="function")
@@ -102,11 +114,31 @@ def mock_ephemeris_service() -> Generator[AsyncMock]:
 
 @pytest.fixture(scope="function")
 def mock_instrument_service(
-    fake_instrument_with_constraints: Instrument,
+    mock_instrument_data: Instrument,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(InstrumentService)
 
-    mock.get = AsyncMock(return_value=fake_instrument_with_constraints)
+    mock.get = AsyncMock(return_value=mock_instrument_data)
+    yield mock
+
+
+@pytest.fixture(scope="function")
+def mock_telescope_service(mock_telescope_data: Telescope) -> Generator[AsyncMock]:
+    mock = AsyncMock(TelescopeService)
+
+    mock.get = AsyncMock(return_value=mock_telescope_data)
+    yield mock
+
+
+@pytest.fixture(scope="function")
+def mock_visibility_calculator_service(
+    fake_ephemeris_visibility_result: MagicMock,
+    fake_joint_visibility_result: MagicMock,
+) -> Generator[AsyncMock]:
+    mock = AsyncMock(VisibilityCalculatorService)
+
+    mock.calculate_windows = AsyncMock(return_value=fake_ephemeris_visibility_result)
+    mock.find_joint_visibility = AsyncMock(return_value=fake_joint_visibility_result)
     yield mock
 
 
@@ -138,3 +170,37 @@ def fake_visibility_read_params(
         date_range_begin=fake_date_range[0],
         date_range_end=fake_date_range[1],
     ).model_dump()
+
+
+@pytest.fixture
+def fake_joint_visibility_read_params(
+    fake_coordinates: tuple[float, float],
+    fake_date_range: tuple[datetime, datetime],
+) -> dict:
+    return JointVisibilityReadParams(
+        ra=fake_coordinates[0],
+        dec=fake_coordinates[1],
+        date_range_begin=fake_date_range[0],
+        date_range_end=fake_date_range[1],
+        instrument_ids=[uuid4(), uuid4()],
+    ).model_dump()
+
+
+@pytest.fixture(scope="function", autouse=True)
+def dep_override(
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_instrument_service: AsyncMock,
+    mock_telescope_service: AsyncMock,
+    mock_visibility_calculator_service: AsyncMock,
+) -> Generator[None, None, None]:
+    overrider = fastapi_dep(app)
+
+    with overrider.override(
+        {
+            InstrumentService: lambda: mock_instrument_service,
+            TelescopeService: lambda: mock_telescope_service,
+            VisibilityCalculatorService: lambda: mock_visibility_calculator_service,
+        }
+    ):
+        yield overrider

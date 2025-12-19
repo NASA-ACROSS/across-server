@@ -12,11 +12,11 @@ nodeenv==1.9.1
     # via pre-commit
 platformdirs==4.3.8
     # via virtualenv
-pre-commit==4.2.0
+pre-commit==4.5.0
     # via -r requirements/lint.in
 pyyaml==6.0.2
     # via pre-commit
-ruff==0.12.4
+ruff==0.14.9
     # via -r requirements/lint.in
 virtualenv==20.32.0
     # via pre-commit
