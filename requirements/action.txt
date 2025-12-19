@@ -161,8 +161,10 @@ pathspec==0.12.1
 platformdirs==4.3.6
     # via virtualenv
 pluggy==1.5.0
-    # via pytest
-pre-commit==4.5.0
+    # via
+    #   pytest
+    #   pytest-cov
+pre-commit==4.5.1
     # via -r requirements/lint.in
 pycparser==2.22
     # via cffi
