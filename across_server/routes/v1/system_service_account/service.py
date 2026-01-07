@@ -3,6 +3,7 @@ import secrets
 from typing import Annotated
 from uuid import UUID
 
+import structlog
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +17,8 @@ from ....auth.schemas import SecretKeySchema
 from ....core import schemas
 from ....db import models
 from ....db.database import get_session
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
 class SystemServiceAccountService:
@@ -49,15 +52,32 @@ class SystemServiceAccountService:
     async def rotate_key(
         self, id: UUID, modified_by_id: UUID
     ) -> schemas.ServiceAccountSecret:
+        logger.debug("Rotating service account key", service_account_id=id)
+
         service_account = await self.get(id=id)
+
+        logger.debug(
+            "Generating secret key for service account",
+            service_account_id=id,
+        )
 
         # generate a secret key for the service account that will be sent to the user
         secret_key_information = self.generate_secret_key(
             expiration_duration=service_account.expiration_duration
         )
 
+        logger.debug(
+            "Hashing secret key for storage",
+            service_account_id=id,
+        )
+
         # hash the secret key for storage in database
         hashed_secret_key = password_hasher.hash(secret_key_information.key)
+
+        logger.debug(
+            "Updating service account with new key and expiration",
+            service_account_id=id,
+        )
 
         service_account.hashed_key = hashed_secret_key
         service_account.expiration = secret_key_information.expiration
@@ -67,7 +87,16 @@ class SystemServiceAccountService:
         await self.db.commit()
         await self.db.refresh(service_account)
 
-        return self._build_sa_secret(service_account, secret_key_information.key)
+        logger.info("Service account key rotated", service_account_id=id)
+
+        sa_secret = self._build_sa_secret(service_account, secret_key_information.key)
+
+        logger.debug(
+            "Returning service account secret",
+            service_account_id=id,
+            key=f"xxxx{sa_secret.secret_key[-4:]}",
+        )
+        return sa_secret
 
     def _build_sa_secret(
         self, service_account: models.ServiceAccount, secret_key: str
