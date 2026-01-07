@@ -130,10 +130,12 @@ class ObservationService:
 
         if data.date_range_begin:
             data_filter.append(
-                models.Observation.date_range_begin >= data.date_range_begin
+                models.Observation.date_range_end >= data.date_range_begin
             )
         if data.date_range_end:
-            data_filter.append(models.Observation.date_range_end <= data.date_range_end)
+            data_filter.append(
+                models.Observation.date_range_begin <= data.date_range_end
+            )
 
         bandpass_params = [data.bandpass_min, data.bandpass_max, data.bandpass_type]
         if any(bandpass_params) and not all(bandpass_params):
