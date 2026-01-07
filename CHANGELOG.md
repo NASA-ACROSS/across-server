@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.1.0](https://github.com/NASA-ACROSS/across-server/compare/v1.0.0...v1.1.0) (2026-01-07)
+
+
+### Features
+
+* add apache 2.0 license ([#400](https://github.com/NASA-ACROSS/across-server/issues/400)) ([875716b](https://github.com/NASA-ACROSS/across-server/commit/875716b06af034a8e60ae9ed8d983bf6b35f9d9e))
+* add favicon ([#393](https://github.com/NASA-ACROSS/across-server/issues/393)) ([b08a053](https://github.com/NASA-ACROSS/across-server/commit/b08a0536a5323f385b63ca8e4373f2aeb8994ec7))
+* add joint visibility calculator endpoint ([#398](https://github.com/NASA-ACROSS/across-server/issues/398)) ([ae4e2d8](https://github.com/NASA-ACROSS/across-server/commit/ae4e2d843692dcf99b08ea8c71896ada4144d3af))
+* add SAA constraints ([#376](https://github.com/NASA-ACROSS/across-server/issues/376)) ([933290d](https://github.com/NASA-ACROSS/across-server/commit/933290d923d13d7b231119dbe6ea9db91c42643a))
+* **legal:** add NASA copyright notices ([#402](https://github.com/NASA-ACROSS/across-server/issues/402)) ([af4a8d8](https://github.com/NASA-ACROSS/across-server/commit/af4a8d80fbc7c45b2b816134f821a8ae7a4a03f1))
+* rubin observatory migration ([#394](https://github.com/NASA-ACROSS/across-server/issues/394)) ([64c3b29](https://github.com/NASA-ACROSS/across-server/commit/64c3b29bc93899b357c2643cc1faee65be38d9e4))
+* **schedule:** performance improvements, store observation_count on schedule table ([#391](https://github.com/NASA-ACROSS/across-server/issues/391)) ([fe79761](https://github.com/NASA-ACROSS/across-server/commit/fe7976119c13e04e46034b7e292b66385cb6cd62))
+
+
+### Bug Fixes
+
+* add debug logs for rotate key ([#435](https://github.com/NASA-ACROSS/across-server/issues/435)) ([a0a19eb](https://github.com/NASA-ACROSS/across-server/commit/a0a19ebda55c0f45fbd19e0aca5a964ef2ca44da))
+* adding observation_count to seeded schedule ([#397](https://github.com/NASA-ACROSS/across-server/issues/397)) ([f9dae2d](https://github.com/NASA-ACROSS/across-server/commit/f9dae2d3a8a525ed924278f496a4ac025608ff58))
+* **cicd:** remove ssh-private-key req ([#436](https://github.com/NASA-ACROSS/across-server/issues/436)) ([ac9070b](https://github.com/NASA-ACROSS/across-server/commit/ac9070b24e01c0086194cc460716bffc27724b66))
+* **cicd:** use shared workflows and actions ([#427](https://github.com/NASA-ACROSS/across-server/issues/427)) ([19e15fd](https://github.com/NASA-ACROSS/across-server/commit/19e15fd1ae47f569e9a525067c836eb87859dde5))
+* daterange begin and end fix for observations ([1caf420](https://github.com/NASA-ACROSS/across-server/commit/1caf4203ede79c8d9ebd7a82be821eb1f9d2efa5))
+* **observation:** correct date-range filtering logic ([#434](https://github.com/NASA-ACROSS/across-server/issues/434)) ([1caf420](https://github.com/NASA-ACROSS/across-server/commit/1caf4203ede79c8d9ebd7a82be821eb1f9d2efa5))
+* **org-name:** update organization name ([#404](https://github.com/NASA-ACROSS/across-server/issues/404)) ([48195c9](https://github.com/NASA-ACROSS/across-server/commit/48195c98fa51b95e4bf31efb44b4866412832196))
+* use across pypi deps ([#426](https://github.com/NASA-ACROSS/across-server/issues/426)) ([ac02ba5](https://github.com/NASA-ACROSS/across-server/commit/ac02ba5301ffd990f6abd41f0ef807cb773521bf))
+
+
+### Documentation
+
+* **cicd:** document general cicd flow ([#389](https://github.com/NASA-ACROSS/across-server/issues/389)) ([6e5a14e](https://github.com/NASA-ACROSS/across-server/commit/6e5a14e78862572730254682f2083a038845c2f2))
+
 ## [1.0.0](https://github.com/NASA-ACROSS/across-server/compare/v0.4.2...v1.0.0) (2025-10-27)
 
 
