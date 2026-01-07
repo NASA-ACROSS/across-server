@@ -2,6 +2,7 @@ from typing import Annotated, TypedDict
 from uuid import UUID
 
 import argon2
+import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasicCredentials
 from pydantic import EmailStr
@@ -13,6 +14,8 @@ from ..auth.hashing import password_hasher
 from ..core.exceptions import AcrossHTTPException
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
+
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
 class Tokens(TypedDict):
@@ -51,6 +54,11 @@ class AuthService:
 
         # !!! COMPARE PASSWORD HERE USING ARGON2 !!!
         try:
+            logger.debug(
+                "Verifying service account credentials",
+                service_account_id=service_account.id,
+                key=f"xxxx{credentials.password[-4:]}",
+            )
             password_hasher.verify(service_account.hashed_key, credentials.password)
             auth_user = await self.get_authenticated_service_account(
                 username=UUID(credentials.username)
