@@ -10,9 +10,6 @@ inputs:
     description: "Version of uv to install"
     required: false
     default: "0.5.7"
-  ssh-private-key:
-    description: "SSH private key for authentication"
-    required: true
 
 runs:
   using: "composite"
