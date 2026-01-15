@@ -28,8 +28,8 @@ class NameResolveService:
     """
 
     async def resolve(self, data: NameResolverRead) -> NameResolver:
-        if "ZTF" in data.name[:3]:
-            coord = await self._antares_resolver(data.name)
+        if "ztf" in data.name.lower()[:3]:
+            coord = await self._antares_resolver("ZTF" + data.name[3:])
             if coord.ra is not None:
                 return NameResolver.model_validate(
                     {"ra": coord.ra, "dec": coord.dec, "resolver": "ANTARES"}
