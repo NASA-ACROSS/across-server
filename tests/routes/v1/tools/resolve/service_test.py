@@ -1,8 +1,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from astropy.coordinates.name_resolve import (
-    NameResolveError,  # type: ignore[import-untyped]
+from astropy.coordinates.name_resolve import (  # type: ignore[import-untyped]
+    NameResolveError,
 )
 from astropy.coordinates.sky_coordinate import SkyCoord  # type: ignore[import-untyped]
 

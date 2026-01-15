@@ -3,8 +3,8 @@ from functools import partial
 
 import anyio.to_thread
 import httpx
-from astropy.coordinates.name_resolve import (
-    NameResolveError,  # type: ignore[import-untyped]
+from astropy.coordinates.name_resolve import (  # type: ignore[import-untyped]
+    NameResolveError,
 )
 from astropy.coordinates.sky_coordinate import SkyCoord  # type: ignore[import-untyped]
 
