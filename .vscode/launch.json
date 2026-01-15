@@ -163,5 +163,30 @@
                 "head"
             ],
         },
+        {
+            "name": "prod: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-prod",
+                "RUNTIME_ENV": "prod",
+                "ACROSS_DB_USER": "developer",
+                "AWS_PROFILE": "Project-Admin",
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
+        },
     ]
 }
