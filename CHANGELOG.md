@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.1.1) (2026-01-15)
+
+
+### Bug Fixes
+
+* **auth:** use correct return type for rotate key ([#438](https://github.com/NASA-ACROSS/across-server/issues/438)) ([553d924](https://github.com/NASA-ACROSS/across-server/commit/553d924f5e969bc70d929924d297041dfff61678))
+
 ## [1.1.0](https://github.com/NASA-ACROSS/across-server/compare/v1.0.0...v1.1.0) (2026-01-07)
 
 
