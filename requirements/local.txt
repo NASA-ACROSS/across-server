@@ -327,7 +327,7 @@ types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20250531
     # via -r requirements/types.in
-types-requests==2.32.4.20250913
+types-requests==2.32.4.20260107
     # via -r requirements/types.in
 types-s3transfer==0.16.0
     # via types-boto3
