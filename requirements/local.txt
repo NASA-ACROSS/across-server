@@ -4,7 +4,7 @@ across-tools==1.1.0
     # via -r requirements/base.in
 aiosmtplib==5.0.0
     # via -r requirements/base.in
-alembic==1.17.2
+alembic==1.18.0
     # via -r requirements/base.in
 annotated-doc==0.0.4
     # via fastapi
