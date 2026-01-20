@@ -4,7 +4,7 @@ cfgv==3.5.0
     # via pre-commit
 distlib==0.4.0
     # via virtualenv
-filelock==3.20.1
+filelock==3.20.3
     # via virtualenv
 identify==2.6.15
     # via pre-commit
@@ -13,10 +13,10 @@ nodeenv==1.9.1
 platformdirs==4.5.1
     # via virtualenv
 pre-commit==4.5.1
-    # via -r requirements/lint.in
+    # via -r lint.in
 pyyaml==6.0.3
     # via pre-commit
-ruff==0.14.10
+ruff==0.14.11
     # via -r requirements/lint.in
-virtualenv==20.35.4
+virtualenv==20.36.1
     # via pre-commit
