@@ -6,7 +6,7 @@ from .schemas import NameResolver, NameResolverRead
 from .service import NameResolveService
 
 router = APIRouter(
-    prefix="/resolve",
+    prefix="/resolve-object",
     tags=["Tools"],
     responses={
         status.HTTP_404_NOT_FOUND: {
@@ -19,11 +19,11 @@ router = APIRouter(
 @router.get(
     "/",
     status_code=status.HTTP_200_OK,
-    summary="Resolve a target name",
-    description="Resolve a target name into coordinates",
+    summary="Resolve an object name",
+    description="Resolve an object name into coordinates",
     responses={
         status.HTTP_200_OK: {
-            "description": "Return resolved target coordinates.",
+            "description": "Return resolved object coordinates.",
         },
     },
 )

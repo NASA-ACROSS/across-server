@@ -122,6 +122,6 @@ class TestNameResolveService:
             return_value=mock_response,
         ):
             coord = await NameResolveService()._antares_resolver(
-                mock_resolve_input.name
+                mock_resolve_input.object_name
             )
             assert Coordinate.model_validate(coord)

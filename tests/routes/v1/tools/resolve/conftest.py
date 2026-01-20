@@ -28,17 +28,17 @@ def mock_skycoord() -> SkyCoord:
 
 @pytest.fixture()
 def mock_resolve_params() -> dict:
-    return NameResolverRead(name="Cas A").model_dump()
+    return NameResolverRead(object_name="Cas A").model_dump()
 
 
 @pytest.fixture()
 def mock_resolve_input() -> NameResolverRead:
-    return NameResolverRead(name="Cas A")
+    return NameResolverRead(object_name="Cas A")
 
 
 @pytest.fixture()
 def mock_ztf_resolve_input() -> NameResolverRead:
-    return NameResolverRead(name="ZTFsandytreedome")
+    return NameResolverRead(object_name="ZTFsandytreedome")
 
 
 @pytest.fixture()

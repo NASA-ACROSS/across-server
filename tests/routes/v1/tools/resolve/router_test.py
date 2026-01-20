@@ -13,7 +13,7 @@ class TestResolveRouter:
         async_client: AsyncClient,
         mock_resolve_params: dict,
     ) -> None:
-        self.endpoint = "/tools/resolve/"
+        self.endpoint = "/tools/resolve-object/"
         self.client = async_client
         self.params = mock_resolve_params
 

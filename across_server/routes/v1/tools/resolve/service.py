@@ -15,21 +15,21 @@ from .schemas import NameResolver, NameResolverRead
 
 class NameResolveService:
     """
-    Service used to resolve target name into coordinates.
+    Service used to resolve object name into coordinates.
 
-    This service provides methods to resolve a target name into its coordinates
+    This service provides methods to resolve an object name into its coordinates
     by either querying the ANTARES broker (for transients with ZTF names) or by
     using the Strasbourg astronomical Data Center (CDS) name resolver.
 
     Methods
     --------
     resolve(data: NameResolverRead) -> NameResolver
-        Resolves a target name into its coordinates and resolver source.
+        Resolves an object name into its coordinates and resolver source.
     """
 
     async def resolve(self, data: NameResolverRead) -> NameResolver:
-        if "ztf" in data.name.lower()[:3]:
-            coord = await self._antares_resolver("ZTF" + data.name[3:])
+        if "ztf" in data.object_name.lower()[:3]:
+            coord = await self._antares_resolver("ZTF" + data.object_name[3:])
             if coord.ra is not None:
                 return NameResolver.model_validate(
                     {"ra": coord.ra, "dec": coord.dec, "resolver": "ANTARES"}
@@ -39,7 +39,7 @@ class NameResolveService:
             try:
                 cds_resolve_function = partial(
                     SkyCoord.from_name,
-                    name=data.name,
+                    name=data.object_name,
                 )
                 skycoord = await anyio.to_thread.run_sync(cds_resolve_function)
                 if skycoord.ra is not None and skycoord.dec is not None:
@@ -52,10 +52,10 @@ class NameResolveService:
                     )
 
             except NameResolveError:
-                raise NameNotFoundException(name=data.name)
+                raise NameNotFoundException(name=data.object_name)
 
         # If no resolution occurred, report a 404 error
-        raise NameNotFoundException(name=data.name)
+        raise NameNotFoundException(name=data.object_name)
 
     async def _antares_resolver(self, name: str) -> Coordinate:
         """
@@ -68,7 +68,7 @@ class NameResolveService:
 
         Returns
         -------
-            Coordinate schema containing the RA and Dec of the target, if found.
+            Coordinate schema containing the RA and Dec of the object, if found.
 
         FIXME: Replace with antares-client module call in future, once confluent-kafka-python issues are resolved.
         """
