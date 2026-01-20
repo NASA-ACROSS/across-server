@@ -224,8 +224,8 @@ requests==2.32.5
     # via
     #   astroquery
     #   pyvo
-ruff==0.14.10
-    # via -r lint.in
+ruff==0.14.11
+    # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
 s3transfer==0.16.0
