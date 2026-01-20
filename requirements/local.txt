@@ -80,7 +80,7 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi[standard]==0.125.0
+fastapi[standard]==0.128.0
     # via
     #   -r base.in
     #   -r local.in
@@ -208,13 +208,17 @@ pydantic[email]==2.12.5
     #   across-tools
     #   fastapi
     #   fastapi-cloud-cli
+    #   pydantic-extra-types
     #   pydantic-settings
 pydantic-core==2.41.5
     # via pydantic
+pydantic-extra-types==2.11.0
+    # via fastapi
 pydantic-settings==2.12.0
     # via
     #   -r base.in
     #   across-tools
+    #   fastapi
 pyerfa==2.0.1.5
     # via astropy
 pygments==2.19.2
@@ -268,8 +272,8 @@ rich-toolkit==0.17.1
     #   fastapi-cloud-cli
 rignore==0.7.6
     # via fastapi-cloud-cli
-ruff==0.14.10
-    # via -r lint.in
+ruff==0.14.11
+    # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
 s3transfer==0.16.0
@@ -326,9 +330,9 @@ types-boto3-sts==1.42.3
 types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20250531
-    # via -r types.in
-types-requests==2.32.4.20250913
-    # via -r types.in
+    # via -r requirements/types.in
+types-requests==2.32.4.20260107
+    # via -r requirements/types.in
 types-s3transfer==0.16.0
     # via types-boto3
 types-shapely==2.1.0.20250917
@@ -342,6 +346,8 @@ typing-extensions==4.15.0
     #   mypy
     #   pydantic
     #   pydantic-core
+    #   pydantic-extra-types
+    #   pytest-asyncio
     #   rich-toolkit
     #   sqlalchemy
     #   typer
@@ -356,7 +362,7 @@ urllib3==2.6.3
     #   requests
     #   sentry-sdk
     #   types-requests
-uvicorn[standard]==0.38.0
+uvicorn[standard]==0.40.0
     # via
     #   -r base.in
     #   fastapi

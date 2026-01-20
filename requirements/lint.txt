@@ -16,7 +16,7 @@ pre-commit==4.5.1
     # via -r lint.in
 pyyaml==6.0.3
     # via pre-commit
-ruff==0.14.10
-    # via -r lint.in
-virtualenv==20.36.1
+ruff==0.14.11
+    # via -r requirements/lint.in
+virtualenv==20.35.4
     # via pre-commit
