@@ -78,6 +78,11 @@ jobs:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
+      - name: Login to ECR Public
+        run: |
+          aws ecr-public get-login-password --region us-east-1 | \
+          docker login --username AWS --password-stdin public.ecr.aws
+
       - name: Sanitize Organization
         id: lowercase
         uses: cloudposse/github-action-string-transformer@main
