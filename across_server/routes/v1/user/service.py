@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from pydantic import EmailStr
-from sqlalchemy import select
+from sqlalchemy import false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....db import models
@@ -26,7 +26,7 @@ class UserService:
 
     async def get_many(self) -> Sequence[models.User]:
         result = await self.db.scalars(
-            select(models.User).where(models.User.is_deleted == False)  # noqa E712
+            select(models.User).where(models.User.is_deleted == false())
         )
         users = result.all()
 
@@ -36,7 +36,7 @@ class UserService:
         result = await self.db.scalars(
             select(models.User)
             .where(models.User.id == user_id)
-            .where(models.User.is_deleted == False)  # noqa E712
+            .where(models.User.is_deleted == false())
         )
 
         user = result.one_or_none()
@@ -52,7 +52,7 @@ class UserService:
             .where(
                 models.User.email.ilike(email)  # case insensitive email lookup
             )
-            .where(models.User.is_deleted == False)  # noqa E712
+            .where(models.User.is_deleted == false())
         )
 
         user = result.one_or_none()
