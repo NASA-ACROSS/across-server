@@ -6,7 +6,7 @@ import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasicCredentials
 from pydantic import EmailStr
-from sqlalchemy import select
+from sqlalchemy import false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -115,7 +115,7 @@ class AuthService:
         query = (
             select(models.User)
             .where((models.User.id == user_id) | (models.User.email == email))
-            .where(models.User.is_deleted == False)  # noqa E712
+            .where(models.User.is_deleted == false())
             .options(joinedload(models.User.roles).joinedload(models.Role.permissions))
             .options(
                 joinedload(models.User.groups)
