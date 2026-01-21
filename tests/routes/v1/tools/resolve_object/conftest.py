@@ -7,8 +7,11 @@ from astropy.coordinates import SkyCoord  # type: ignore[import-untyped]
 from fastapi import FastAPI
 
 from across_server.core.schemas import Coordinate
-from across_server.routes.v1.tools.resolve.schemas import NameResolver, NameResolverRead
-from across_server.routes.v1.tools.resolve.service import NameResolveService
+from across_server.routes.v1.tools.resolve_object.schemas import (
+    NameResolver,
+    NameResolverRead,
+)
+from across_server.routes.v1.tools.resolve_object.service import NameResolveService
 
 
 @pytest.fixture()

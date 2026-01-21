@@ -3,7 +3,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from across_server.routes.v1.tools.resolve.schemas import NameResolver
+from across_server.routes.v1.tools.resolve_object.schemas import NameResolver
 
 
 class TestResolveRouter:

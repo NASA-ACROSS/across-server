@@ -6,11 +6,16 @@ from astropy.coordinates.name_resolve import (  # type: ignore[import-untyped]
 )
 from astropy.coordinates.sky_coordinate import SkyCoord  # type: ignore[import-untyped]
 
-import across_server.routes.v1.tools.resolve.service as service_mod
+import across_server.routes.v1.tools.resolve_object.service as service_mod
 from across_server.core.schemas import Coordinate
-from across_server.routes.v1.tools.resolve.exceptions import NameNotFoundException
-from across_server.routes.v1.tools.resolve.schemas import NameResolver, NameResolverRead
-from across_server.routes.v1.tools.resolve.service import NameResolveService
+from across_server.routes.v1.tools.resolve_object.exceptions import (
+    NameNotFoundException,
+)
+from across_server.routes.v1.tools.resolve_object.schemas import (
+    NameResolver,
+    NameResolverRead,
+)
+from across_server.routes.v1.tools.resolve_object.service import NameResolveService
 
 
 class TestNameResolveService:
@@ -118,7 +123,7 @@ class TestNameResolveService:
         }
 
         with patch(
-            "across_server.routes.v1.tools.resolve.service.httpx.AsyncClient.get",
+            "across_server.routes.v1.tools.resolve_object.service.httpx.AsyncClient.get",
             return_value=mock_response,
         ):
             coord = await NameResolveService()._antares_resolver(
