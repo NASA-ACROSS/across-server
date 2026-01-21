@@ -115,6 +115,7 @@ class AuthService:
         query = (
             select(models.User)
             .where((models.User.id == user_id) | (models.User.email == email))
+            .where(models.User.is_deleted == False)  # noqa E712
             .options(joinedload(models.User.roles).joinedload(models.Role.permissions))
             .options(
                 joinedload(models.User.groups)
