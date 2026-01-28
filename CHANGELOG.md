@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.2.0) (2026-01-28)
+
+
+### Features
+
+* add target name resolver ([#448](https://github.com/NASA-ACROSS/across-server/issues/448)) ([5f3c40e](https://github.com/NASA-ACROSS/across-server/commit/5f3c40e8cc2442d1d3c8cd1f7752afef23e4dd48))
+
+
+### Bug Fixes
+
+* **auth:** use correct return type for rotate key ([#438](https://github.com/NASA-ACROSS/across-server/issues/438)) ([553d924](https://github.com/NASA-ACROSS/across-server/commit/553d924f5e969bc70d929924d297041dfff61678))
+* ra must be less than 360 ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* remove comment ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* undo change for depth_params ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** don't error out on ra/dec = 0, validate range ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** observations endpoint, don't error out on ra/dec = 0, validate range ([#462](https://github.com/NASA-ACROSS/across-server/issues/462)) ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+
 ## [1.1.0](https://github.com/NASA-ACROSS/across-server/compare/v1.0.0...v1.1.0) (2026-01-07)
 
 
