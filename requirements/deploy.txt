@@ -66,7 +66,7 @@ dnspython==2.8.0
 email-validator==2.3.0
     # via pydantic
 fastapi==0.128.0
-    # via -r requirements/base.in
+    # via -r base.in
 filelock==3.20.3
     # via spacetrack
 geoalchemy2==0.18.1
@@ -160,7 +160,7 @@ python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.2.1
     # via pydantic-settings
-python-multipart==0.0.21
+python-multipart==0.0.22
     # via -r base.in
 pyvo==1.8
     # via astroquery
@@ -226,6 +226,6 @@ urllib3==2.6.3
     #   botocore
     #   requests
 uvicorn==0.40.0
-    # via -r requirements/base.in
+    # via -r base.in
 webencodings==0.5.1
     # via html5lib
