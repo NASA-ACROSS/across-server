@@ -15,7 +15,7 @@ class Config(BaseConfig):
     HOST: str = "http://localhost"
     FRONTEND_HOST: str = "http://localhost:5173"
     PORT: int = 8000
-    ROOT_PATH: str = "/api"
+    ROOT_PATH: str = "/data-sites/across/app/api"
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
