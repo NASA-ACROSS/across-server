@@ -73,3 +73,37 @@ async def get(
     observation = await service.get(observation_id)
 
     return schemas.Observation.from_orm(observation)
+
+
+@router.get(
+    "/overlap-point/",
+    summary="Read many observations whose footprints overlap with a given RA/DEC",
+    description="Read many observations whose footprints overlap with a given RA/DEC",
+    operation_id="overlap_point",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {
+            "model": Page[schemas.Observation],
+            "description": "Return many observation observations within search criteria",
+        },
+    },
+)
+async def get_overlap_point_observations(
+    service: Annotated[ObservationService, Depends(ObservationService)],
+    data: Annotated[schemas.PointOverlapRead, Query()],
+) -> Page[schemas.Observation]:
+    observation_tuples = await service.get_overlap_point(data=data)
+
+    total_number = observation_tuples[0][1] if observation_tuples else 0
+    observations = [tuple[0] for tuple in observation_tuples]
+    return Page[schemas.Observation].model_validate(
+        {
+            "total_number": total_number,
+            "page": data.page,
+            "page_limit": data.page_limit,
+            "items": [
+                schemas.Observation.from_orm(observation)
+                for observation in observations
+            ],
+        }
+    )

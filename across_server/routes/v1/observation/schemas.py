@@ -208,3 +208,24 @@ class ObservationRead(PaginationParams):
     type: ObservationType | None = None
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
+
+
+class PointOverlapRead(PaginationParams):
+    ra: float = Field(ge=0.0, lt=360.0)  # required
+    dec: float = Field(ge=-90.0, le=90.0)  # required
+    observatory_ids: list[uuid.UUID] | None = None
+    telescope_ids: list[uuid.UUID] | None = None
+    instrument_ids: list[uuid.UUID] | None = None
+    date_range_begin: datetime | None = None
+    date_range_end: datetime | None = None
+    depth_value: float | None = None
+    depth_unit: DepthUnit | None = None
+    status: ObservationStatus | None = None
+    bandpass_min: float | None = None
+    bandpass_max: float | None = None
+    bandpass_type: (
+        tools_enums.WavelengthUnit
+        | tools_enums.EnergyUnit
+        | tools_enums.FrequencyUnit
+        | None
+    ) = None
