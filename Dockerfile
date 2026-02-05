@@ -69,4 +69,4 @@ EXPOSE 8000
 RUN useradd -m -u 5678 appuser && chown -R appuser /app
 USER appuser
 
-CMD ["uvicorn", "across_server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "across_server.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "54.146.107.154"]
