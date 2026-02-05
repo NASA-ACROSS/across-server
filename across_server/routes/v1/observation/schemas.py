@@ -6,7 +6,7 @@ from typing import Annotated, ClassVar
 
 from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, Field
 
 from ....core.date_utils import convert_to_utc
 from ....core.enums import (
@@ -202,9 +202,9 @@ class ObservationRead(PaginationParams):
         | tools_enums.FrequencyUnit
         | None
     ) = None
-    cone_search_ra: float | None = None
-    cone_search_dec: float | None = None
-    cone_search_radius: float | None = None
+    cone_search_ra: float | None = Field(default=None, ge=0.0, lt=360.0)
+    cone_search_dec: float | None = Field(default=None, ge=-90.0, le=90.0)
+    cone_search_radius: float | None = Field(default=None, gt=0.0)
     type: ObservationType | None = None
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
