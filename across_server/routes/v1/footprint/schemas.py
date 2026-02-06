@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from across.tools import Coordinate, Polygon
+from across.tools.footprint import Footprint as ToolsFootprint
 from geoalchemy2 import shape
 
 from ....core.schemas.base import BaseSchema
@@ -66,3 +68,29 @@ class Footprint(FootprintBase):
         polygon = [Point(x=x[i], y=y[i]) for i in range(len(x))]
 
         return cls(polygon=polygon)
+
+    @classmethod
+    def orm_to_across_tools_footprint(
+        cls, objs: list[FootprintModel]
+    ) -> ToolsFootprint:
+        """
+        Method that converts a list of models.Footprint record to an ACROSS tools footprint
+
+        Parameters
+        ----------
+        obj: FootprintModel
+            the models.Footprint record
+
+        Returns
+        -------
+            across.tools.Footprint
+        """
+
+        detectors = []
+        for obj in objs:
+            poly = shape.to_shape(obj.polygon)
+            x, y = poly.exterior.coords.xy  # type: ignore
+            coordinates = [Coordinate(ra=x[i], dec=y[i]) for i in range(len(x))]
+            detectors.append(Polygon(coordinates=coordinates))
+
+        return ToolsFootprint(detectors=detectors)
