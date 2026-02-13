@@ -116,6 +116,7 @@ class UserService:
         user = await self.get(user_id)
 
         user.is_deleted = True
+        user.modified_by_id = user.id
         await self.db.commit()
 
         return user
