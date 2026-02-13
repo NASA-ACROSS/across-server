@@ -1,8 +1,8 @@
 """soft delete users
 
 Revision ID: effbd9073baa
-Revises: 9032acd18e5d
-Create Date: 2026-01-08 13:12:01.309615
+Revises: cc55dd06ba45
+Create Date: 2026-02-13 13:13:01.309615
 
 """
 
@@ -12,11 +12,11 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm, select
 
-import migrations.versions.model_snapshots.models_2026_01_08 as models
+import migrations.versions.model_snapshots.models_2026_02_13 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "effbd9073baa"
-down_revision: Union[str, None] = "9032acd18e5d"
+down_revision: Union[str, None] = "cc55dd06ba45"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
