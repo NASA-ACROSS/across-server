@@ -1,3 +1,4 @@
+import datetime
 from typing import Annotated, TypedDict
 from uuid import UUID
 
@@ -6,11 +7,12 @@ import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasicCredentials
 from pydantic import EmailStr
-from sqlalchemy import select
+from sqlalchemy import false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from ..auth.hashing import password_hasher
+from ..core.date_utils import convert_to_utc
 from ..core.exceptions import AcrossHTTPException
 from ..db import get_session, models
 from . import magic_link, schemas, tokens
@@ -50,6 +52,18 @@ class AuthService:
         service_account = result.unique().scalar_one_or_none()
 
         if service_account is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        # check expiration
+        current_time = datetime.datetime.now()
+        is_expired = convert_to_utc(service_account.expiration) < current_time
+        if is_expired:
+            logger.debug(
+                "Service Account is expired, cannot authenticate",
+                service_account_id=service_account.id,
+                service_account_expiration=service_account.expiration,
+                current_time=current_time,
+            )
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         # !!! COMPARE PASSWORD HERE USING ARGON2 !!!
@@ -115,6 +129,7 @@ class AuthService:
         query = (
             select(models.User)
             .where((models.User.id == user_id) | (models.User.email == email))
+            .where(models.User.is_deleted == false())
             .options(joinedload(models.User.roles).joinedload(models.Role.permissions))
             .options(
                 joinedload(models.User.groups)
@@ -182,6 +197,13 @@ class AuthService:
         if service_account is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
+        user_list = service_account.user
+        owner = user_list[0] if user_list else None
+
+        # system service accounts do not have an associated user so we must check for owner is not None
+        if owner is not None and owner.is_deleted:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
         groups = []
         # Extract group_ids from group_roles into a deduplicated set
         group_ids = set(
@@ -213,7 +235,7 @@ class AuthService:
         )
 
         # Add the service account's user if it is not a SYSTEM level service account
-        if len(service_account.user):
+        if len(service_account.user) and service_account.user[0] is not None:
             auth_user.first_name = service_account.user[0].first_name
             auth_user.last_name = service_account.user[0].last_name
             auth_user.username = service_account.user[0].username

@@ -12,6 +12,7 @@ from ..group.service import GroupService
 from ..user.invite.service import UserInviteService
 from . import schemas
 from .service import UserService
+from .service_account.service import ServiceAccountService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
@@ -130,9 +131,9 @@ async def update(
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_200_OK,
-    summary="Delete a user",
+    summary="Deactivate a user",
     operation_id="delete_user",
-    description="Permanently delete a user from the ACROSS system. This will also delete all associated relations for the user.",
+    description="Deactivate a user in the ACROSS system. This will also deactivate all associated relations for the user and expire existing service accounts.",
     response_model=schemas.User,
     responses={
         status.HTTP_200_OK: {
@@ -145,9 +146,24 @@ async def update(
 async def delete(
     service: Annotated[UserService, Depends(UserService)],
     user_id: uuid.UUID,
+    service_account_service: Annotated[
+        ServiceAccountService, Depends(ServiceAccountService)
+    ],
+    group_service: Annotated[GroupService, Depends(GroupService)],
 ) -> schemas.User:
-    user_model = await service.delete(user_id)
-    return schemas.User.model_validate(user_model)
+    user = await service.get(user_id)
+
+    # expire the user's service accounts before user deactivation
+    service_accounts = await service_account_service.get_many(user_id)
+    for service_account in service_accounts:
+        await service_account_service.expire_key(service_account.id, user_id)
+
+    # remove the user from all groups, cascade deletes all group roles from user and all service accounts
+    for group in user.groups:
+        await group_service.remove_user(user, group.id)
+
+    user = await service.delete(user_id)
+    return schemas.User.model_validate(user)
 
 
 # Invites
