@@ -44,6 +44,15 @@ def upgrade() -> None:
         table_name="user", column_name="is_deleted", nullable=False, schema="across"
     )
 
+    # index to speed up queries for is_deleted
+    op.create_index(
+        "ix_user_is_deleted",
+        "user",
+        ["is_deleted"],
+        unique=False,
+        schema="across",
+    )
+
 
 def downgrade() -> None:
     op.drop_column(table_name="user", column_name="is_deleted", schema="across")
