@@ -343,7 +343,7 @@ class User(Base, CreatableMixin, ModifiableMixin):
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
 
     groups: Mapped[list["Group"]] = relationship(
         secondary=user_group, back_populates="users", lazy="selectin"
