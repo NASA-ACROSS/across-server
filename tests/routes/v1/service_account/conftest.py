@@ -64,11 +64,6 @@ def dep_override(
         yield overrider
 
 
-@pytest.fixture
-def fake_time() -> datetime.datetime:
-    return datetime.datetime(1992, 12, 23, 19, 15, 00, tzinfo=datetime.UTC)
-
-
 @pytest.fixture()
 def fake_generated_hex() -> Iterable[str]:
     return "somegeneratedhex"

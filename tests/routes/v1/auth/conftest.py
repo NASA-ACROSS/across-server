@@ -1,12 +1,33 @@
+import datetime
 from collections.abc import Callable, Generator
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 
 from across_server.auth import security, strategies
 from across_server.auth.service import AuthService
+from across_server.db import models
 from across_server.util.email.service import EmailService
+
+
+@pytest.fixture(autouse=True)
+def set_fake_service_account_expiration(
+    fake_service_account: models.ServiceAccount, fake_time: datetime.datetime
+) -> None:
+    fake_service_account.expiration = fake_time
+
+
+@pytest.fixture(autouse=True)
+def patch_datetime_now(monkeypatch: Any, fake_time: datetime.datetime) -> None:
+    def real_datetime_class(*args: Any, **kwargs: Any) -> datetime.datetime:
+        return datetime.datetime(*args, **kwargs)
+
+    datetime_mock = MagicMock(wraps=datetime.datetime, side_effect=real_datetime_class)
+    datetime_mock.now.return_value = fake_time
+
+    monkeypatch.setattr(datetime, "datetime", datetime_mock)
 
 
 @pytest.fixture
