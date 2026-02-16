@@ -210,8 +210,8 @@ python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.2.1
     # via pydantic-settings
-python-multipart==0.0.21
-    # via -r requirements/base.in
+python-multipart==0.0.22
+    # via -r base.in
 pyvo==1.8
     # via astroquery
 pyyaml==6.0.3
@@ -225,7 +225,7 @@ requests==2.32.5
     #   astroquery
     #   pyvo
 ruff==0.14.11
-    # via -r requirements/lint.in
+    # via -r lint.in
 rush==2021.4.0
     # via spacetrack
 s3transfer==0.16.0
@@ -274,9 +274,9 @@ types-boto3-sts==1.42.3
 types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20250531
-    # via -r requirements/types.in
+    # via -r types.in
 types-requests==2.32.4.20260107
-    # via -r requirements/types.in
+    # via -r types.in
 types-s3transfer==0.16.0
     # via types-boto3
 types-shapely==2.1.0.20250917
@@ -305,7 +305,7 @@ urllib3==2.6.3
     #   requests
     #   types-requests
 uvicorn==0.40.0
-    # via -r requirements/base.in
+    # via -r base.in
 virtualenv==20.36.1
     # via pre-commit
 webencodings==0.5.1
