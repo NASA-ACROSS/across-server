@@ -138,12 +138,14 @@ class ObservationService:
             )
 
         bandpass_params = [data.bandpass_min, data.bandpass_max, data.bandpass_type]
-        if any(bandpass_params) and not all(bandpass_params):
+        if any(param is not None for param in bandpass_params) and not all(
+            param is not None for param in bandpass_params
+        ):
             raise InvalidObservationReadParametersException(
                 message="Bandpass parameters are not complete. Please provide all bandpass parameters."
             )
 
-        elif all(bandpass_params):
+        elif all(param is not None for param in bandpass_params):
             try:
                 if data.bandpass_type in tools_enums.WavelengthUnit:
                     wavelength_bandpass = WavelengthBandpass(
@@ -185,11 +187,13 @@ class ObservationService:
             data.cone_search_dec,
             data.cone_search_radius,
         ]
-        if any(cone_search_params) and not all(cone_search_params):
+        if any(param is not None for param in cone_search_params) and not all(
+            param is not None for param in cone_search_params
+        ):
             raise InvalidObservationReadParametersException(
                 message="Cone search parameters are not complete. Please provide all cone search parameters."
             )
-        elif all(cone_search_params):
+        elif all(param is not None for param in cone_search_params):
             cone_search_point = from_shape(
                 Point(data.cone_search_ra, data.cone_search_dec),  # type: ignore
                 srid=4326,
