@@ -3,9 +3,8 @@ import uuid
 from across.tools import Coordinate
 from across.tools.footprint import Footprint as ToolsFootprint
 
-from across_server.routes.v1.observation.schemas import Observation
-
 from .....db import models
+from .....routes.v1.observation.schemas import Observation
 from ...footprint.schemas import Footprint as FootprintSchema
 from .schemas import ProjectedObservation
 
