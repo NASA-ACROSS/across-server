@@ -37,7 +37,7 @@ class TestAuthService:
 
     class TestGetAuthenticatedUser:
         @pytest.mark.asyncio
-        async def test_get_authenticated_user_should_return_auth_user(
+        async def test_should_return_auth_user(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -51,7 +51,7 @@ class TestAuthService:
             assert isinstance(auth_user, schemas.AuthUser)
 
         @pytest.mark.asyncio
-        async def test_get_authenticated_user_should_return_type_user(
+        async def test_should_return_type_user(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -65,7 +65,7 @@ class TestAuthService:
             assert auth_user.type == schemas.PrincipalType.USER
 
         @pytest.mark.asyncio
-        async def test_get_authenticated_user_should_throw_when_user_is_deleted_and_not_found(
+        async def test_should_throw_when_user_is_deleted_and_not_found(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -80,7 +80,7 @@ class TestAuthService:
 
     class TestGetAuthenticatedServiceAccount:
         @pytest.mark.asyncio
-        async def test_get_authenticated_service_account_should_return_auth_user(
+        async def test_should_return_auth_user(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -95,7 +95,7 @@ class TestAuthService:
             assert isinstance(auth_user, schemas.AuthUser)
 
         @pytest.mark.asyncio
-        async def test_get_authenticated_service_account_should_return_type_service_account(
+        async def test_should_return_type_service_account(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -110,7 +110,7 @@ class TestAuthService:
             assert authUser.type == schemas.PrincipalType.SERVICE_ACCOUNT
 
         @pytest.mark.asyncio
-        async def test_get_authenticated_service_account_should_throw_when_owner_is_deleted(
+        async def test_should_throw_when_owner_is_deleted(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -125,7 +125,7 @@ class TestAuthService:
                 await service.get_authenticated_service_account(uuid.uuid4())
 
         @pytest.mark.asyncio
-        async def test_get_authenticated_service_account_should_return_system_service_account_when_no_owner(
+        async def test_should_return_system_service_account_when_no_owner(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -148,7 +148,7 @@ class TestAuthService:
 
     class TestAuthenticateServiceAccount:
         @pytest.mark.asyncio
-        async def test_authenticate_service_account_should_throw_when_password_mismatch(
+        async def test_should_throw_when_password_mismatch(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -166,7 +166,7 @@ class TestAuthService:
                 )
 
         @pytest.mark.asyncio
-        async def test_authenticate_service_account_should_return_auth_user_when_password_match(
+        async def test_should_return_auth_user_when_password_match(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
@@ -185,7 +185,7 @@ class TestAuthService:
             assert isinstance(auth_user, schemas.AuthUser)
 
         @pytest.mark.asyncio
-        async def test_authenticate_service_account_should_throw_when_expired(
+        async def test_should_throw_when_expired(
             self,
             mock_db: AsyncMock,
             mock_scalar_one_or_none: MagicMock,
