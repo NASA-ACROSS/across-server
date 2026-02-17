@@ -1,16 +1,4 @@
-from uuid import UUID
-
-from .....core.schemas.base import BaseSchema
 from ...observation.schemas import Observation
-
-
-class ProjectFootprintRead(BaseSchema):
-    """
-    Represents the query parameters for reading project footprints.
-    """
-
-    observation_id: UUID | None = None
-    schedule_id: UUID | None = None
 
 
 class ProjectedObservation(Observation):
