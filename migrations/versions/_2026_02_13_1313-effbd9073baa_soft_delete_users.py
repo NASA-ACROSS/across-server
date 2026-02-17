@@ -55,4 +55,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_index("ix_user_is_deleted", table_name="user", schema="across")
     op.drop_column(table_name="user", column_name="is_deleted", schema="across")
