@@ -1,11 +1,13 @@
 import uuid
-from typing import Tuple
 
 from across.tools import Coordinate
 from across.tools.footprint import Footprint as ToolsFootprint
 
+from across_server.routes.v1.observation.schemas import Observation
+
 from .....db import models
 from ...footprint.schemas import Footprint as FootprintSchema
+from .schemas import ProjectedObservation
 
 
 class ProjectFootprintService:
@@ -14,7 +16,7 @@ class ProjectFootprintService:
         instrument_ids: list[uuid.UUID],
         observations: list[models.Observation],
         footprints: list[models.Footprint],
-    ) -> list[Tuple[ToolsFootprint, uuid.UUID]]:
+    ) -> list[ProjectedObservation]:
         instrument_footprint_map: dict[uuid.UUID, ToolsFootprint] = {}
         for instrument_id in instrument_ids:
             instrument_footprints = [
@@ -26,14 +28,27 @@ class ProjectFootprintService:
                 )
 
         projected_footprints = []
+
         for obs in observations:
+            if obs.instrument_id not in instrument_footprint_map.keys():
+                continue
+
             footprint = instrument_footprint_map[obs.instrument_id]
+
             if obs.pointing_ra is not None and obs.pointing_dec is not None:
                 projected_footprint = footprint.project(
                     Coordinate(ra=obs.pointing_ra, dec=obs.pointing_dec),
                     roll_angle=obs.pointing_angle or 0.0,
                 )
 
-                projected_footprints.append((projected_footprint, obs.id))
+                projected_footprints.append(
+                    ProjectedObservation(
+                        footprint=[
+                            [(coord.ra, coord.dec) for coord in polygon.coordinates]
+                            for polygon in projected_footprint.detectors
+                        ],
+                        **Observation.from_orm(obs).model_dump(),
+                    )
+                )
 
         return projected_footprints

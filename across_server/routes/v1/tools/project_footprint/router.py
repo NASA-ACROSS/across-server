@@ -1,16 +1,18 @@
+import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 
-from across_server.routes.v1.tools.project_footprint.service import (
+from ...footprint.exceptions import FootprintNotFoundException
+from ...footprint.service import FootprintService
+from ...observation.exceptions import ObservationNotFoundException
+from ...observation.service import ObservationService
+from ...schedule.exceptions import ScheduleNotFoundException
+from ...schedule.service import ScheduleService
+from .schemas import ProjectedObservation
+from .service import (
     ProjectFootprintService,
 )
-
-from .....db import models
-from ...footprint.service import FootprintService
-from ...observation.service import ObservationService
-from ...schedule.service import ScheduleService
-from .schemas import ProjectedFootprint, ProjectFootprintRead
 
 router = APIRouter(
     prefix="/project-footprint",
@@ -24,38 +26,73 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "/observation/{observation_id}",
     status_code=status.HTTP_200_OK,
-    summary="Project Observations Footprint",
-    description="Project the footprint of observations based on a list of observation ids or a schedule id",
+    summary="Project Observation Footprint",
+    description="Project the footprint of an observation based on an observation id",
     responses={
         status.HTTP_200_OK: {
-            "description": "Returns a list of projected footprints for the given observations.",
+            "description": "Returns the projected footprint for the given observation.",
         },
     },
 )
-async def project_footprint(
-    data: Annotated[ProjectFootprintRead, Query()],
+async def project_observation_footprint(
+    observation_id: uuid.UUID,
     project_footprint_service: Annotated[
         ProjectFootprintService, Depends(ProjectFootprintService)
     ],
     observation_service: Annotated[ObservationService, Depends(ObservationService)],
+    footprint_service: Annotated[FootprintService, Depends(FootprintService)],
+) -> ProjectedObservation:
+    # Get the observations based on the query parameters
+    observation = await observation_service.get(observation_id)
+
+    if observation is None:
+        raise ObservationNotFoundException(observation_id)
+
+    # Get the instrument for each observation and project the footprint
+    instrument_id = observation.instrument_id
+
+    footprints = await footprint_service.get_from_instrument_ids([instrument_id])
+
+    if footprints is None:
+        raise FootprintNotFoundException(instrument_id)
+
+    projected_footprints = await project_footprint_service.project_footprint(
+        instrument_ids=[instrument_id],
+        observations=[observation],
+        footprints=list(footprints),
+    )
+
+    return projected_footprints[0]
+
+
+@router.get(
+    "/schedule/{schedule_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Project Schedule Footprints",
+    description="Project the footprint of observations based on a schedule id",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Returns a list of projected footprints for the given schedule.",
+        },
+    },
+)
+async def project_schedule_footprints(
+    schedule_id: uuid.UUID,
+    project_footprint_service: Annotated[
+        ProjectFootprintService, Depends(ProjectFootprintService)
+    ],
     schedule_service: Annotated[ScheduleService, Depends(ScheduleService)],
     footprint_service: Annotated[FootprintService, Depends(FootprintService)],
-) -> list[ProjectedFootprint]:
-    """
-    Docstring for project_footprint endpoint
-    """
+) -> list[ProjectedObservation]:
     # Get the observations based on the query parameters
-    observations: list[models.Observation] = []
-    if data.observation_id:
-        observation = await observation_service.get(data.observation_id)
-        observations.append(observation)
-    elif data.schedule_id:
-        schedule = await schedule_service.get(
-            data.schedule_id, include_observations=True
-        )
-        observations.extend(schedule.observations)
+    schedule = await schedule_service.get(schedule_id, include_observations=True)
+
+    if schedule is None:
+        raise ScheduleNotFoundException(schedule_id)
+
+    observations = schedule.observations
 
     # Get the instrument for each observation and project the footprint
     instrument_ids = set(observation.instrument_id for observation in observations)
@@ -68,13 +105,4 @@ async def project_footprint(
         footprints=list(footprints),
     )
 
-    return [
-        ProjectedFootprint(
-            footprint=[
-                [(coord.ra, coord.dec) for coord in polygon.coordinates]
-                for polygon in projected_footprint.detectors
-            ],
-            observation_id=observation_id,
-        )
-        for projected_footprint, observation_id in projected_footprints
-    ]
+    return projected_footprints
