@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from across.tools.visibility.constraints import Constraint
+from across.tools.visibility.constraints import AllConstraint as Constraint
 from pydantic import TypeAdapter
 
 from ....core.enums.visibility_type import VisibilityType
