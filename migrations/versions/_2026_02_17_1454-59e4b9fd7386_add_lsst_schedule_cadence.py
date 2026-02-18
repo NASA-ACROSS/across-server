@@ -1,7 +1,7 @@
 """add lsst schedule cadence
 
 Revision ID: 59e4b9fd7386
-Revises: cc55dd06ba45
+Revises: effbd9073baa
 Create Date: 2026-02-17 14:54:55.011830
 
 """
@@ -11,11 +11,11 @@ from typing import Sequence, Union
 from alembic import op
 from sqlalchemy import delete, insert, orm
 
-import migrations.versions.model_snapshots.models_2025_09_02 as models
+import migrations.versions.model_snapshots.models_2026_02_13 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "59e4b9fd7386"
-down_revision: Union[str, None] = "cc55dd06ba45"
+down_revision: Union[str, None] = "effbd9073baa"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
