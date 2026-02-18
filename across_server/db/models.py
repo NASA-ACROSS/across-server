@@ -458,6 +458,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     field_of_view: Mapped[str] = mapped_column(String(50))
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
+    observation_strategy: Mapped[str] = mapped_column(String(50))
 
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"

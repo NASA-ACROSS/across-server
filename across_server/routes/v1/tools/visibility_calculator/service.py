@@ -5,17 +5,25 @@ from uuid import UUID
 
 import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
+from across.tools.core.schemas import Coordinate, Polygon
+from across.tools.footprint import Footprint as ToolsFootprint
+from across.tools.footprint.schemas import Pointing
 from across.tools.visibility import (
     EphemerisVisibility,
     JointVisibility,
     compute_ephemeris_visibility,
     compute_joint_visibility,
 )
+from across.tools.visibility.constraints import PointingConstraint
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
+from .....core.enums.observation_strategy import ObservationStrategy
 from .....core.enums.visibility_type import VisibilityType
+from .....db import models
 from .....db.database import get_session
 from ...instrument.schemas import Instrument as InstrumentSchema
 from ...tools.ephemeris.service import EphemerisService
@@ -55,7 +63,7 @@ class VisibilityCalculatorService:
         # Obtain constraint definitions
         constraints = instrument.constraints
         if not constraints:
-            raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
+            constraints = []
 
         # Compute Ephemeris
         ephemeris = await self.ephem_service.get(
@@ -65,13 +73,25 @@ class VisibilityCalculatorService:
             step_size=step_size,
         )
 
+        # Check if instrument observation strategy is survey, and if so
+        # pull footprint, observations, and transform to pointing constraints
+        if instrument.observation_strategy == ObservationStrategy.SURVEY:
+            pointing_constraint = await self._get_pointing_constraint(
+                instrument, date_range_begin, date_range_end
+            )
+            if pointing_constraint is not None:
+                constraints.append(pointing_constraint)
+
+        if not len(constraints):
+            raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
+
         # Compute visibility
         vis_function = partial(
             compute_ephemeris_visibility,
             begin=Time(date_range_begin),
             end=Time(date_range_end),
             ephemeris=ephemeris,
-            constraints=constraints,
+            constraints=constraints,  # type: ignore[arg-type]
             ra=ra,
             dec=dec,
             step_size=step_size * u.s,  # type: ignore
@@ -81,6 +101,101 @@ class VisibilityCalculatorService:
         visibility = await anyio.to_thread.run_sync(vis_function)
 
         return visibility
+
+    async def _get_pointing_constraint(
+        self,
+        instrument: InstrumentSchema,
+        date_range_begin: datetime,
+        date_range_end: datetime,
+    ) -> PointingConstraint | None:
+        """
+        Query the observations for a survey instrument,
+        convert them to ACROSS-tools Pointings, and build the
+        corresponding PointingConstraint.
+
+        Parameters
+        ----------
+        instrument: schemas.Instrument
+            The Instrument belonging to the Observations
+        date_range_begin: datetime
+            The begin time to search for observations
+        date_range_end: datetime
+            The end time to search for observations
+
+        Returns
+        -------
+        PointingConstraint
+            A constraint built from the instrument pointings
+        """
+        schedule2 = aliased(models.Schedule)
+        schedule_subquery = (
+            select(schedule2.id)
+            .where(
+                and_(
+                    schedule2.telescope_id == models.Instrument.telescope_id,
+                    schedule2.date_range_end >= date_range_begin,
+                    schedule2.date_range_begin <= date_range_end,
+                    schedule2.id == models.Observation.schedule_id,
+                )
+            )
+            .order_by(schedule2.created_on.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        query = (
+            select(models.Observation)
+            .join(
+                models.Instrument,
+                models.Instrument.id == models.Observation.instrument_id,
+            )
+            .join(models.Schedule, models.Schedule.id == schedule_subquery)
+            .where(
+                and_(
+                    models.Observation.instrument_id == instrument.id,
+                    models.Observation.date_range_begin >= date_range_begin,
+                    models.Observation.date_range_end <= date_range_end,
+                )
+            )
+        )
+
+        result = await self.db.execute(query)
+        observations = result.all()
+
+        # Get instrument footprints
+        instrument_footprints = instrument.footprints
+        if not instrument_footprints:
+            return None
+
+        # Transform to tools Footprint
+        detectors = []
+        for footprint in instrument_footprints:
+            coordinates = [Coordinate(ra=coord.x, dec=coord.y) for coord in footprint]
+            detectors.append(Polygon(coordinates=coordinates))
+
+        tools_footprint = ToolsFootprint(detectors=detectors)
+
+        # Project and rotate footprints
+        pointings: list[Pointing] = []
+        for obs in observations:
+            if obs.pointing_ra is not None and obs.pointing_dec is not None:
+                projected_footprint = tools_footprint.project(
+                    Coordinate(ra=obs.pointing_ra, dec=obs.pointing_dec),
+                    roll_angle=obs.pointing_angle or 0.0,
+                )
+
+                # Transform to pointing object
+                pointings.append(
+                    Pointing(
+                        footprint=projected_footprint,
+                        start_time=obs.date_range_begin,
+                        end_time=obs.date_range_end,
+                    )
+                )
+
+        pointing_constraint = PointingConstraint(pointings=pointings)
+
+        return pointing_constraint
 
     async def calculate_windows(
         self,

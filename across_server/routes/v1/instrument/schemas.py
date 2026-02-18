@@ -3,10 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from across.tools.visibility.constraints import Constraint
+from across.tools.visibility.constraints import AllConstraint
 from pydantic import TypeAdapter
 
 from ....core.date_utils import UTCDatetime
+from ....core.enums.observation_strategy import ObservationStrategy
 from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
@@ -14,7 +15,7 @@ from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint, Point
 
 # TypeAdapter to convert list of Constraints dicts to a Pydantic model
-ConstraintsAdaptor = TypeAdapter(list[Constraint])
+ConstraintsAdaptor = TypeAdapter(list[AllConstraint])
 
 
 class InstrumentBase(BaseSchema):
@@ -35,6 +36,14 @@ class InstrumentBase(BaseSchema):
         the Telescope record the instrument belongs to in id,name format
     footprints: list[list[Point]]
         List of imaging footprints belonging to instrument
+    filters : list[Filter]
+        List of filters belonging to the instrument
+    constraints : list[Constraint]
+        List of Constraints belonging to the instrument
+    visibility_type : VisibilityType
+        How visibility is calculated for the instrument
+    observation_strategy: ObservationStrategy
+        How observations are conducted with the instrument
     """
 
     id: uuid.UUID
@@ -44,8 +53,9 @@ class InstrumentBase(BaseSchema):
     telescope: IDNameSchema | None = None
     footprints: list[list[Point]] | None = None
     filters: list[Filter] | None = None
-    constraints: list[Constraint] | None = None
+    constraints: list[AllConstraint] | None = None
     visibility_type: VisibilityType | None = None
+    observation_strategy: ObservationStrategy | None = None
 
 
 class Instrument(InstrumentBase):
