@@ -1,10 +1,37 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .....core.schemas.base import BaseSchema
+
+
+def convert_astropy_time_to_datetime(time_obj: Any) -> datetime:
+    """
+    Convert an astropy.time.Time object to a datetime.datetime object.
+
+    Parameters
+    ----------
+    time_obj : Any
+        An astropy.time.Time object or datetime object
+
+    Returns
+    -------
+    datetime
+        A datetime.datetime object
+    """
+    # Check if the object is already a datetime
+    if isinstance(time_obj, datetime):
+        return time_obj
+
+    # Check if it's an astropy Time object by checking for the datetime attribute
+    if hasattr(time_obj, "datetime"):
+        return time_obj.datetime
+
+    # If it's neither, try to convert it to datetime
+    return datetime.fromisoformat(str(time_obj))
 
 
 class ConstrainedDate(BaseSchema):
@@ -15,6 +42,14 @@ class ConstrainedDate(BaseSchema):
     datetime: datetime
     constraint: ConstraintType
     observatory_id: UUID
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_astropy_times(cls, data: Any) -> Any:
+        """Convert astropy.time.Time objects to datetime.datetime objects."""
+        if isinstance(data, dict) and "datetime" in data:
+            data["datetime"] = convert_astropy_time_to_datetime(data["datetime"])
+        return data
 
 
 class Window(BaseSchema):
