@@ -1,7 +1,7 @@
 """fix fermi observation types
 
 Revision ID: 7774f10e57fb
-Revises: effbd9073baa
+Revises: 59e4b9fd7386
 Create Date: 2026-02-18 15:59:54.013426
 
 """
@@ -16,7 +16,7 @@ from across_server.core.enums import ObservationType
 
 # revision identifiers, used by Alembic.
 revision: str = "7774f10e57fb"
-down_revision: Union[str, None] = "effbd9073baa"
+down_revision: Union[str, None] = "59e4b9fd7386"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
