@@ -32,7 +32,7 @@ class Config(BaseConfig):
     REQUEST_ID_HEADER: str = "X-Request-ID"
 
     # Always hide local only routes -- mainly used for client generation locally.
-    HIDE_LOCAL_ROUTE: bool = False
+    HIDE_LOCAL_ROUTE: bool = True
 
     DATA_INGESTION_SERVICE_ACCOUNT_ID_PATH: str = "data-ingestion/core-server/client_id"
     DATA_INGESTION_INGESTION_SERVICE_ACCOUNT_SECRET_PATH: str = (
