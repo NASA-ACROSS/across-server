@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from geoalchemy2 import shape
+from geoalchemy2 import WKTElement, shape
+from shapely import Polygon
 
 from ....core.schemas.base import BaseSchema
 from ....db.models import Footprint as FootprintModel
@@ -30,6 +31,24 @@ class FootprintBase(BaseSchema):
     """
 
     polygon: list[Point]
+
+    def polygon_to_wkt(self) -> WKTElement:
+        """
+        Method that converts the polygon of this footprint to a WKT Element
+
+        Returns
+        -------
+            WKTElement: WKT representation of the polygon
+        """
+        points = [(point.x, point.y) for point in self.polygon]
+
+        shapely_polygon = Polygon(points)
+
+        wkt_polygon = WKTElement(
+            shapely_polygon.wkt,
+            srid=4326,  # Specify the appropriate SRID
+        )
+        return wkt_polygon
 
 
 class Footprint(FootprintBase):

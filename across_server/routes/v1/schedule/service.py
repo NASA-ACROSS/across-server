@@ -49,7 +49,10 @@ class ScheduleService:
         self.db = db
 
     async def get(
-        self, schedule_id: UUID, include_observations: bool = False
+        self,
+        schedule_id: UUID,
+        include_observations: bool = False,
+        include_observations_footprints: bool = False,
     ) -> models.Schedule:
         """
         Retrieve the Schedule record with the given checksum.
@@ -58,6 +61,10 @@ class ScheduleService:
         ----------
         schedule_id : UUID
             the Schedule id
+        include_observations: bool, optional
+            Whether to include observations in the returned schedule
+        include_observations_footprints: bool, optional
+            Whether to include observation footprints in the returned schedule if observations are included
 
         Returns
         -------
@@ -69,7 +76,8 @@ class ScheduleService:
         ScheduleNotFoundException
         """
         query_options = self._get_schedule_query_options(
-            include_observations=include_observations
+            include_observations=include_observations,
+            include_observations_footprints=include_observations_footprints,
         )
 
         query = (
@@ -106,7 +114,8 @@ class ScheduleService:
         schedule_filter = self._get_schedule_filter(data=data)
 
         query_options = self._get_schedule_query_options(
-            include_observations=data.include_observations
+            include_observations=data.include_observations,
+            include_observations_footprints=data.include_observations_footprints,
         )
 
         schedule_query = (
@@ -159,7 +168,8 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
         query_options = self._get_schedule_query_options(
-            include_observations=data.include_observations
+            include_observations=data.include_observations,
+            include_observations_footprints=data.include_observations_footprints,
         )
 
         schedule_query = (
@@ -245,9 +255,14 @@ class ScheduleService:
             instrument = instrument_dict[observation_create.instrument_id]
             fov = InstrumentFOV(instrument.field_of_view)
             observation = observation_create.to_orm(instrument_fov=fov)
+            observation.id = uuid4()
             observation.schedule_id = schedule.id
             observation.created_by_id = created_by_id
             self.db.add(observation)
+            for footprint_create in observation_create.footprint or []:
+                footprint = footprint_create.to_orm()
+                footprint.observation_id = observation.id
+                self.db.add(footprint)
 
         await self.db.commit()
         return schedule.id
@@ -291,6 +306,7 @@ class ScheduleService:
         # create arrays of schedules and observations to bulk add
         schedules_to_add = []
         observations_to_add = []
+        observation_footprints_to_add = []
         for i, schedule in enumerate(
             np.asarray(schedules)[np.logical_not(schedule_filter)]
         ):
@@ -319,11 +335,24 @@ class ScheduleService:
                 instrument = instrument_dict[observation_create.instrument_id]
                 fov = InstrumentFOV(instrument.field_of_view)
                 observation = observation_create.to_orm(instrument_fov=fov)
+                observation.id = uuid4()
                 observation.schedule_id = schedule.id
                 observation.created_by_id = created_by_id
+                for footprint_create in observation_create.footprint or []:
+                    footprint = footprint_create.to_orm()
+                    footprint.observation_id = observation.id
+                    observation_footprints_to_add.append(footprint)
                 observations_to_add.append(observation)
 
-        self.db.add_all(list((*schedules_to_add, *observations_to_add)))
+        self.db.add_all(
+            list(
+                (
+                    *schedules_to_add,
+                    *observations_to_add,
+                    *observation_footprints_to_add,
+                )
+            )
+        )
         await self.db.commit()
         return schedule_ids
 
@@ -455,9 +484,15 @@ class ScheduleService:
         return data_filter
 
     def _get_schedule_query_options(
-        self, include_observations: bool | None
+        self,
+        include_observations: bool | None,
+        include_observations_footprints: bool | None = False,
     ) -> list[tuple]:
         if include_observations:
+            if include_observations_footprints:
+                return selectinload(models.Schedule.observations).selectinload(
+                    models.Observation.footprints
+                )  # type: ignore
             return selectinload(models.Schedule.observations)  # type: ignore
 
         return noload(models.Schedule.observations)  # type: ignore

@@ -81,7 +81,10 @@ class Schedule(ScheduleBase):
 
     @classmethod
     def from_orm(
-        cls, obj: ScheduleModel, include_observations: bool | None = False
+        cls,
+        obj: ScheduleModel,
+        include_observations: bool | None = False,
+        include_observations_footprints: bool = False,
     ) -> Schedule:
         """
         Method that converts a models.Schedule record to a schemas.Schedule
@@ -90,6 +93,10 @@ class Schedule(ScheduleBase):
         ----------
         schedule: ScheduleModel
             the models.Schedule record
+        include_observations: bool, optional
+            Whether to include observations in the schedule
+        include_observations_footprints: bool, optional
+            Whether to include observation footprints in the schedule
 
         Returns
         -------
@@ -99,7 +106,10 @@ class Schedule(ScheduleBase):
 
         if include_observations:
             observations = [
-                Observation.from_orm(observation) for observation in obj.observations
+                Observation.from_orm(
+                    observation, include_footprint=include_observations_footprints
+                )
+                for observation in obj.observations
             ]
 
         return cls(
@@ -189,6 +199,10 @@ class ScheduleRead(PaginationParams):
         Query Param for evaluating Schedule.Telescope.short_name in value
     name: str, optional
         Query Param for evaluating Schedule.name.contains(value)
+    include_observations: bool, optional
+        Whether to include observations in the returned schedule(s)
+     include_observations_footprints: bool, optional
+        Whether to include observation footprints in the returned schedule(s) if observations are included
 
     """
 
@@ -203,7 +217,8 @@ class ScheduleRead(PaginationParams):
     telescope_ids: list[uuid.UUID] = []
     telescope_names: list[str] = []
     name: str | None = None
-    include_observations: bool | None = None
+    include_observations: bool = False
+    include_observations_footprints: bool = False
 
 
 class ScheduleCreateMany(BaseSchema):
