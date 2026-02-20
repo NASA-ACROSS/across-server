@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import fastapi
@@ -83,3 +83,25 @@ class TestUserPostRoute:
         with patch("across_server.routes.v1.user.router.logger") as log_mock:
             await self.client.post(self.endpoint, json=self.data)
             assert "Email service failed" in log_mock.error.call_args.args[0]
+
+    @pytest.mark.asyncio
+    async def test_should_return_magic_link_dict_when_local(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
+        """Should return a dict when local"""
+        mock_config_runtime_env_is_local.return_value = True
+        res = await self.client.post(self.endpoint, json=self.data)
+        response_dict = res.json()
+
+        assert isinstance(response_dict, dict)
+
+    @pytest.mark.asyncio
+    async def test_should_contain_magic_link_string(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
+        """Should return a dict containing magic_link string when local"""
+        mock_config_runtime_env_is_local.return_value = True
+        res = await self.client.post(self.endpoint, json=self.data)
+        response_dict = res.json()
+
+        assert isinstance(response_dict["magic_link"], str)

@@ -5,6 +5,7 @@ import structlog
 from fastapi import APIRouter, Depends, status
 
 from .... import auth, db
+from ....core.config import config
 from ....util.decorators import local_only_route
 from ....util.email.service import EmailService
 from ..group.invite.service import GroupInviteService
@@ -83,7 +84,7 @@ async def create(
     auth_service: Annotated[auth.AuthService, Depends(auth.AuthService)],
     email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
-) -> None:
+) -> dict | None:
     user = await user_service.create(data)
     magic_link = auth_service.generate_magic_link(user.email)
     verification_email_body = email_service.construct_verification_email(
@@ -98,6 +99,10 @@ async def create(
         )
     except Exception as e:
         logger.error("Email service failed to send user registration email", e=e)
+
+    if config.is_local():
+        return {"magic_link": magic_link}
+    return None
 
 
 @router.patch(
