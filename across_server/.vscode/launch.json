@@ -1,0 +1,192 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "local: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+            "jinja": true,
+            "justMyCode": false
+        },
+        {
+            "name": "feat1: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-feat1",
+                "RUNTIME_ENV": "feat1",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "core_server"
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
+        },
+        {
+            "name": "dev: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "developer"
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+        },
+        {
+            "name": "dev: Migrations",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "upgrade",
+                "head"
+            ],
+        },
+        {
+            "name": "dev: Downgrade",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-dev",
+                "RUNTIME_ENV": "dev",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "downgrade",
+                "-1"
+            ],
+        },
+        {
+            "name": "staging: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-staging",
+                "RUNTIME_ENV": "staging",
+                "ACROSS_DB_USER": "developer",
+                "AWS_PROFILE": "Project-Admin",
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
+        },
+        {
+            "name": "staging: Migrations",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-staging",
+                "RUNTIME_ENV": "staging",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "upgrade",
+                "head"
+            ],
+        },
+        {
+            "name": "prod: Start Server",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-prod",
+                "RUNTIME_ENV": "prod",
+                "ACROSS_DB_USER": "developer",
+                "AWS_PROFILE": "Project-Admin",
+            },
+            "module": "uvicorn",
+            "args": [
+                "across_server.main:app",
+                "--reload",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ]
+        },
+    ]
+}
