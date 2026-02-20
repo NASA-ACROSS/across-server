@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.2.0](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.2.0) (2026-02-20)
+
+
+### Features
+
+* add target name resolver ([#448](https://github.com/NASA-ACROSS/across-server/issues/448)) ([5f3c40e](https://github.com/NASA-ACROSS/across-server/commit/5f3c40e8cc2442d1d3c8cd1f7752afef23e4dd48))
+* **user:** soft delete user accounts ([#454](https://github.com/NASA-ACROSS/across-server/issues/454)) ([860fdfe](https://github.com/NASA-ACROSS/across-server/commit/860fdfe2b21a64f5907a28e1fd80a1b2af455497))
+
+
+### Bug Fixes
+
+* adding lsst schedule cadence ([#484](https://github.com/NASA-ACROSS/across-server/issues/484)) ([d3fc732](https://github.com/NASA-ACROSS/across-server/commit/d3fc732a0b1bfc759f86f4e892f86a61643a624f))
+* **auth:** use correct return type for rotate key ([#438](https://github.com/NASA-ACROSS/across-server/issues/438)) ([553d924](https://github.com/NASA-ACROSS/across-server/commit/553d924f5e969bc70d929924d297041dfff61678))
+* correct filter values calculated with bandwidths ([#470](https://github.com/NASA-ACROSS/across-server/issues/470)) ([ebe4613](https://github.com/NASA-ACROSS/across-server/commit/ebe461393b19860284592379a3edbdee69bed85f))
+* **data:** change fermi lat observation types to slew ([#487](https://github.com/NASA-ACROSS/across-server/issues/487)) ([c49359a](https://github.com/NASA-ACROSS/across-server/commit/c49359a2b8ba55b640623c0004dc1fba2701f9ad))
+* ra must be less than 360 ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* remove comment ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* undo change for depth_params ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** don't error out on ra/dec = 0, validate range ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** observations endpoint, don't error out on ra/dec = 0, validate range ([#462](https://github.com/NASA-ACROSS/across-server/issues/462)) ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+
 ## [1.1.0](https://github.com/NASA-ACROSS/across-server/compare/v1.0.0...v1.1.0) (2026-01-07)
 
 
