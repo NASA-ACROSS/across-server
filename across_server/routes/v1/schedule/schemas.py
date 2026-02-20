@@ -107,7 +107,7 @@ class Schedule(ScheduleBase):
         if include_observations:
             observations = [
                 Observation.from_orm(
-                    observation, include_footprint=include_observations_footprints
+                    observation, include_footprints=include_observations_footprints
                 )
                 for observation in obj.observations
             ]

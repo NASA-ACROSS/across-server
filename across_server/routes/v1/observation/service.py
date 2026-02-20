@@ -35,7 +35,7 @@ class ObservationService:
         self.db = db
 
     async def get(
-        self, observation_id: UUID, include_footprint: bool = False
+        self, observation_id: UUID, include_footprints: bool = False
     ) -> models.Observation:
         """
         Retrieve the Observation record with the given id.
@@ -55,7 +55,7 @@ class ObservationService:
         ObservationNotFoundException
             If the Observation with the given id does not exist
         """
-        query_options = self._get_observation_query_options(include_footprint)
+        query_options = self._get_observation_query_options(include_footprints)
         query = (
             select(models.Observation)
             .where(models.Observation.id == observation_id)

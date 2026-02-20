@@ -71,7 +71,7 @@ class Observation(ObservationBase):
 
     @classmethod
     def from_orm(
-        cls, obj: ObservationModel, include_footprint: bool = False
+        cls, obj: ObservationModel, include_footprints: bool = False
     ) -> Observation:
         if obj.depth_unit and obj.depth_value:
             depth = UnitValue[DepthUnit](
@@ -126,7 +126,7 @@ class Observation(ObservationBase):
             footprint=[
                 ObservationFootprint.from_orm(footprint) for footprint in obj.footprints
             ]
-            if include_footprint and obj.footprints
+            if include_footprints and obj.footprints
             else None,
         )
 
