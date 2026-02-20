@@ -63,6 +63,17 @@ def mock_schedule_post_data() -> dict:
                     "bandwidth": 1000,
                     "unit": "angstrom",
                 },
+                "footprint": [
+                    {
+                        "polygon": [
+                            {"x": 41, "y": 43},
+                            {"x": 43, "y": 43},
+                            {"x": 43, "y": 41},
+                            {"x": 41, "y": 41},
+                            {"x": 41, "y": 43},
+                        ]
+                    }
+                ],
             }
         ],
     }
@@ -109,6 +120,17 @@ def mock_schedule_post_many_data() -> dict:
                             "bandwidth": 1000,
                             "unit": "angstrom",
                         },
+                        "footprint": [
+                            {
+                                "polygon": [
+                                    {"x": 41, "y": 43},
+                                    {"x": 43, "y": 43},
+                                    {"x": 43, "y": 41},
+                                    {"x": 41, "y": 41},
+                                    {"x": 41, "y": 43},
+                                ]
+                            }
+                        ],
                     }
                 ],
             },
@@ -147,6 +169,17 @@ def mock_schedule_post_many_data() -> dict:
                             "bandwidth": 1000,
                             "unit": "angstrom",
                         },
+                        "footprint": [
+                            {
+                                "polygon": [
+                                    {"x": 41, "y": 43},
+                                    {"x": 43, "y": 43},
+                                    {"x": 43, "y": 41},
+                                    {"x": 41, "y": 41},
+                                    {"x": 41, "y": 43},
+                                ]
+                            }
+                        ],
                     }
                 ],
             },

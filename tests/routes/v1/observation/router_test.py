@@ -76,3 +76,15 @@ class TestObservationRouterGet:
             assert len(res.json()["items"]) == 0
             assert res.json()["total_number"] == 0
             assert Page[Observation].model_validate(res.json())
+
+        @pytest.mark.asyncio
+        async def test_many_should_accept_include_footprints_true(self) -> None:
+            """GET many should accept include_footprints parameter set to true"""
+            res = await self.client.get(self.endpoint + "?include_footprints=true")
+            assert Page[Observation].model_validate(res.json())
+
+        @pytest.mark.asyncio
+        async def test_many_should_accept_include_footprints_false(self) -> None:
+            """GET many should accept include_footprints parameter set to false"""
+            res = await self.client.get(self.endpoint + "?include_footprints=false")
+            assert Page[Observation].model_validate(res.json())

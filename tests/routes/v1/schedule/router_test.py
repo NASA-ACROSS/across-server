@@ -102,6 +102,50 @@ class TestScheduleRouter:
             res = await self.client.get(self.endpoint + "?include_observations=false")
             assert len(res.json()["items"][0]["observations"]) == 0
 
+        @pytest.mark.asyncio
+        async def test_many_should_accept_include_observations_footprints_true(
+            self,
+        ) -> None:
+            """GET many should accept include_observations_footprints parameter set to true"""
+            res = await self.client.get(
+                self.endpoint
+                + "?include_observations=true&include_observations_footprints=true"
+            )
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_many_should_accept_include_observations_footprints_false(
+            self,
+        ) -> None:
+            """GET many should accept include_observations_footprints parameter set to false"""
+            res = await self.client.get(
+                self.endpoint
+                + "?include_observations=true&include_observations_footprints=false"
+            )
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_history_should_accept_include_observations_footprints_true(
+            self,
+        ) -> None:
+            """GET history should accept include_observations_footprints parameter set to true"""
+            res = await self.client.get(
+                self.endpoint
+                + "history?include_observations=true&include_observations_footprints=true"
+            )
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_history_should_accept_include_observations_footprints_false(
+            self,
+        ) -> None:
+            """GET history should accept include_observations_footprints parameter set to false"""
+            res = await self.client.get(
+                self.endpoint
+                + "history?include_observations=true&include_observations_footprints=false"
+            )
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
     class TestPostMany(Setup):
         @pytest.mark.asyncio
         async def test_should_return_201_when_successful(self) -> None:
