@@ -8,23 +8,39 @@ import pytest
 from across.tools import WavelengthBandpass
 from across.tools import enums as tools_enums
 from fastapi import FastAPI
+from geoalchemy2 import WKTElement
 
 from across_server.core.enums.observation_status import ObservationStatus
 from across_server.core.enums.observation_type import ObservationType
 from across_server.core.schemas.coordinate import Coordinate
 from across_server.core.schemas.date_range import DateRange
-from across_server.db.models import Observation
+from across_server.db.models import Observation, ObservationFootprint
 from across_server.routes.v1.observation.schemas import ObservationCreate
 from across_server.routes.v1.observation.service import ObservationService
 
 
 @pytest.fixture()
-def mock_observation_data() -> Observation:
+def mock_observation_footprint() -> ObservationFootprint:
+    """Fixture that creates a mock ObservationFootprint"""
+    return ObservationFootprint(
+        id=uuid4(),
+        observation_id=uuid4(),  # Will be overridden when attached to observation
+        polygon=WKTElement(
+            "POLYGON((123.0 -88.0, 124.0 -88.0, 124.0 -87.0, 123.0 -87.0, 123.0 -88.0))",
+            srid=4326,
+        ),
+    )
+
+
+@pytest.fixture()
+def mock_observation_data(
+    mock_observation_footprint: ObservationFootprint,
+) -> Observation:
     coordinate = Coordinate(
         ra=123.456,
         dec=-87.65,
     )
-    return Observation(
+    observation = Observation(
         id=uuid4(),
         instrument_id=uuid4(),
         schedule_id=uuid4(),
@@ -48,38 +64,52 @@ def mock_observation_data() -> Observation:
         created_on=datetime.now(),
     )
 
+    # Add footprint to observation
+    mock_observation_footprint.observation_id = observation.id
+    observation.footprints = [mock_observation_footprint]
+
+    return observation
+
 
 @pytest.fixture()
-def mock_observation_many() -> Sequence[Tuple[Observation, int]]:
+def mock_observation_many(
+    mock_observation_footprint: ObservationFootprint,
+) -> Sequence[Tuple[Observation, int]]:
     coordinate = Coordinate(
         ra=123.456,
         dec=-87.65,
     )
+    observation = Observation(
+        id=uuid4(),
+        instrument_id=uuid4(),
+        schedule_id=uuid4(),
+        object_name="Test Object",
+        pointing_position=coordinate.create_gis_point(),
+        pointing_ra=123.456,
+        pointing_dec=-87.65,
+        object_position=coordinate.create_gis_point(),
+        object_ra=123.456,
+        object_dec=-87.65,
+        exposure_time=1800,
+        min_wavelength=2000,
+        max_wavelength=4000,
+        peak_wavelength=3000,
+        filter_name="Test Filter",
+        date_range_begin=datetime(2024, 12, 16, 11, 0),
+        date_range_end=datetime(2024, 12, 17, 11, 0),
+        external_observation_id="test-external-obsid",
+        type="imaging",
+        status="planned",
+        created_on=datetime.now(),
+    )
+
+    # Add footprint to observation
+    mock_observation_footprint.observation_id = observation.id
+    observation.footprints = [mock_observation_footprint]
+
     return [
         (
-            Observation(
-                id=uuid4(),
-                instrument_id=uuid4(),
-                schedule_id=uuid4(),
-                object_name="Test Object",
-                pointing_position=coordinate.create_gis_point(),
-                pointing_ra=123.456,
-                pointing_dec=-87.65,
-                object_position=coordinate.create_gis_point(),
-                object_ra=123.456,
-                object_dec=-87.65,
-                exposure_time=1800,
-                min_wavelength=2000,
-                max_wavelength=4000,
-                peak_wavelength=3000,
-                filter_name="Test Filter",
-                date_range_begin=datetime(2024, 12, 16, 11, 0),
-                date_range_end=datetime(2024, 12, 17, 11, 0),
-                external_observation_id="test-external-obsid",
-                type="imaging",
-                status="planned",
-                created_on=datetime.now(),
-            ),
+            observation,
             1,
         )
     ]
