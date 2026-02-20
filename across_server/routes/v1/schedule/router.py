@@ -49,7 +49,11 @@ async def get_many(
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [
-                schemas.Schedule.from_orm(schedule, data.include_observations)
+                schemas.Schedule.from_orm(
+                    schedule,
+                    data.include_observations,
+                    data.include_observations_footprints,
+                )
                 for schedule in schedules
             ],
         }
@@ -84,7 +88,11 @@ async def get_history(
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [
-                schemas.Schedule.from_orm(schedule, data.include_observations)
+                schemas.Schedule.from_orm(
+                    schedule,
+                    data.include_observations,
+                    data.include_observations_footprints,
+                )
                 for schedule in schedules
             ],
         }
@@ -110,10 +118,15 @@ async def get(
     service: Annotated[ScheduleService, Depends(ScheduleService)],
     schedule_id: uuid.UUID,
     include_observations: Annotated[bool, Query()] = False,
+    include_observations_footprints: Annotated[bool, Query()] = False,
 ) -> schemas.Schedule:
-    schedule = await service.get(schedule_id, include_observations)
+    schedule = await service.get(
+        schedule_id, include_observations, include_observations_footprints
+    )
 
-    return schemas.Schedule.from_orm(schedule, include_observations)
+    return schemas.Schedule.from_orm(
+        schedule, include_observations, include_observations_footprints
+    )
 
 
 @router.post(

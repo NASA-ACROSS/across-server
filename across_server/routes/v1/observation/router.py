@@ -45,7 +45,9 @@ async def get_many(
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [
-                schemas.Observation.from_orm(observation)
+                schemas.Observation.from_orm(
+                    observation, include_footprints=data.include_footprints
+                )
                 for observation in observations
             ],
         }
@@ -69,7 +71,12 @@ async def get_many(
 async def get(
     service: Annotated[ObservationService, Depends(ObservationService)],
     observation_id: uuid.UUID,
+    include_footprints: Annotated[bool, Query()] = False,
 ) -> schemas.Observation:
-    observation = await service.get(observation_id)
+    observation = await service.get(
+        observation_id, include_footprints=include_footprints
+    )
 
-    return schemas.Observation.from_orm(observation)
+    return schemas.Observation.from_orm(
+        observation, include_footprints=include_footprints
+    )

@@ -25,6 +25,10 @@ from ....core.schemas.base import (
 )
 from ....core.schemas.pagination import PaginationParams
 from ....db.models import Observation as ObservationModel
+from ..observation_footprint.schemas import (
+    ObservationFootprint,
+    ObservationFootprintCreate,
+)
 
 
 class ObservationBase(
@@ -63,9 +67,12 @@ class Observation(ObservationBase):
     schedule_id: uuid.UUID
     created_on: datetime
     created_by_id: uuid.UUID | None = None
+    footprint: list[ObservationFootprint] | None = None
 
     @classmethod
-    def from_orm(cls, obj: ObservationModel) -> Observation:
+    def from_orm(
+        cls, obj: ObservationModel, include_footprints: bool = False
+    ) -> Observation:
         if obj.depth_unit and obj.depth_value:
             depth = UnitValue[DepthUnit](
                 unit=DepthUnit(obj.depth_unit), value=obj.depth_value
@@ -116,12 +123,19 @@ class Observation(ObservationBase):
             priority=obj.priority,
             created_on=obj.created_on,
             tracking_type=tracking_type,
+            footprint=[
+                ObservationFootprint.from_orm(footprint) for footprint in obj.footprints
+            ]
+            if include_footprints and obj.footprints
+            else None,
         )
 
 
 class ObservationCreate(ObservationBase):
     created_on: Annotated[datetime | None, BeforeValidator(convert_to_utc)] = None
     created_by_id: uuid.UUID | None = None
+
+    footprint: list[ObservationFootprintCreate] | None = []
 
     return_schema: ClassVar = Observation
 
@@ -180,6 +194,9 @@ class ObservationCreate(ObservationBase):
         if "bandpass" in data.keys():
             del data["bandpass"]
 
+        if "footprint" in data.keys():
+            del data["footprint"]
+
         return self.orm_model(**data)
 
 
@@ -208,3 +225,4 @@ class ObservationRead(PaginationParams):
     type: ObservationType | None = None
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
+    include_footprints: bool = False

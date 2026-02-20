@@ -15,6 +15,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import noload, selectinload
 
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from ....db import models
@@ -33,7 +34,9 @@ class ObservationService:
     ) -> None:
         self.db = db
 
-    async def get(self, observation_id: UUID) -> models.Observation:
+    async def get(
+        self, observation_id: UUID, include_footprints: bool = False
+    ) -> models.Observation:
         """
         Retrieve the Observation record with the given id.
 
@@ -52,8 +55,11 @@ class ObservationService:
         ObservationNotFoundException
             If the Observation with the given id does not exist
         """
-        query = select(models.Observation).where(
-            models.Observation.id == observation_id
+        query_options = self._get_observation_query_options(include_footprints)
+        query = (
+            select(models.Observation)
+            .where(models.Observation.id == observation_id)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(query)
@@ -242,15 +248,29 @@ class ObservationService:
         Sequence[models.Observation]
             The Observations within the given filters
         """
+
+        query_options = self._get_observation_query_options(
+            include_footprints=data.include_footprints
+        )
+
         query = (
             select(models.Observation, func.count().over().label("count"))
             .where(*self._get_observation_filter(data))
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(query)
         observations = result.tuples().all()
 
         return observations
+
+    def _get_observation_query_options(
+        self, include_footprints: bool | None
+    ) -> list[tuple]:
+        if include_footprints:
+            return selectinload(models.Observation.footprints)  # type: ignore
+
+        return noload(models.Observation.footprints)  # type: ignore
