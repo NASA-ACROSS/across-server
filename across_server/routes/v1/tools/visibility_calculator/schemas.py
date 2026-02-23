@@ -3,7 +3,7 @@ from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
 from across.tools.core.schemas import AstropyDateTime
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from .....core.schemas.base import BaseSchema
 
@@ -13,7 +13,7 @@ class ConstrainedDate(BaseSchema):
     Represents a constrained date.
     """
 
-    model_config = {"arbitrary_types_allowed": True}
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     datetime: AstropyDateTime
     constraint: ConstraintType
