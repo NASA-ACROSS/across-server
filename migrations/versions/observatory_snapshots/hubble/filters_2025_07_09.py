@@ -98,7 +98,8 @@ WFC3_UVIS_FILTER_INFO: list[tuple[str, float, float, str]] = [
         4971.9,
         5881.1 / 2.0,
         "6975cf5c-af95-4343-8f72-843a59db2ea0",
-    ),  # this is a bad value, but is a bug fix
+    ),  # FIX: initial bandwidth value was incorrect, causing a validation error in across-tools>=1.2.0
+    # Here I divide it by 2 to get correct bandwidth value so it doesn't crash. SW 2026-02-23
     ("F300X", 2820.5, 707.3, "2607ce13-2c51-40dc-88af-e34afc111981"),
     ("F350LP", 5873.9, 4803.7, "de1cf0d1-a7f1-4886-99c3-498ad7fe45b1"),
     ("F475X", 4940.7, 2057.2, "cbbd1698-8226-4487-8a40-ef7763359922"),
