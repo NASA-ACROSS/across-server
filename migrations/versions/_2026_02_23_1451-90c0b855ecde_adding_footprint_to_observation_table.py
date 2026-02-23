@@ -1,8 +1,8 @@
 """adding footprint to observation table
 
 Revision ID: 90c0b855ecde
-Revises: 7774f10e57fb
-Create Date: 2026-02-19 14:51:09.944155
+Revises: 00b3a6244b1c
+Create Date: 2026-02-23 14:51:09.944155
 
 """
 
@@ -14,7 +14,7 @@ from geoalchemy2 import Geography
 
 # revision identifiers, used by Alembic.
 revision: str = "90c0b855ecde"
-down_revision: Union[str, None] = "7774f10e57fb"
+down_revision: Union[str, None] = "00b3a6244b1c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

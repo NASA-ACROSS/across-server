@@ -67,7 +67,7 @@ class Observation(ObservationBase):
     schedule_id: uuid.UUID
     created_on: datetime
     created_by_id: uuid.UUID | None = None
-    footprint: list[ObservationFootprint] | None = None
+    footprint: list[ObservationFootprint] = []
 
     @classmethod
     def from_orm(
@@ -127,7 +127,7 @@ class Observation(ObservationBase):
                 ObservationFootprint.from_orm(footprint) for footprint in obj.footprints
             ]
             if include_footprints and obj.footprints
-            else None,
+            else [],
         )
 
 
@@ -135,7 +135,7 @@ class ObservationCreate(ObservationBase):
     created_on: Annotated[datetime | None, BeforeValidator(convert_to_utc)] = None
     created_by_id: uuid.UUID | None = None
 
-    footprint: list[ObservationFootprintCreate] | None = []
+    footprint: list[ObservationFootprintCreate] = []
 
     return_schema: ClassVar = Observation
 

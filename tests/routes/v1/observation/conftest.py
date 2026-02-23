@@ -20,7 +20,7 @@ from across_server.routes.v1.observation.service import ObservationService
 
 
 @pytest.fixture()
-def mock_observation_footprint() -> ObservationFootprint:
+def fake_observation_footprint() -> ObservationFootprint:
     """Fixture that creates a mock ObservationFootprint"""
     return ObservationFootprint(
         id=uuid4(),
@@ -33,8 +33,8 @@ def mock_observation_footprint() -> ObservationFootprint:
 
 
 @pytest.fixture()
-def mock_observation_data(
-    mock_observation_footprint: ObservationFootprint,
+def fake_observation_data(
+    fake_observation_footprint: ObservationFootprint,
 ) -> Observation:
     coordinate = Coordinate(
         ra=123.456,
@@ -65,15 +65,15 @@ def mock_observation_data(
     )
 
     # Add footprint to observation
-    mock_observation_footprint.observation_id = observation.id
-    observation.footprints = [mock_observation_footprint]
+    fake_observation_footprint.observation_id = observation.id
+    observation.footprints = [fake_observation_footprint]
 
     return observation
 
 
 @pytest.fixture()
-def mock_observation_many(
-    mock_observation_footprint: ObservationFootprint,
+def fake_observation_many(
+    fake_observation_footprint: ObservationFootprint,
 ) -> Sequence[Tuple[Observation, int]]:
     coordinate = Coordinate(
         ra=123.456,
@@ -104,8 +104,8 @@ def mock_observation_many(
     )
 
     # Add footprint to observation
-    mock_observation_footprint.observation_id = observation.id
-    observation.footprints = [mock_observation_footprint]
+    fake_observation_footprint.observation_id = observation.id
+    observation.footprints = [fake_observation_footprint]
 
     return [
         (
@@ -136,12 +136,12 @@ def mock_observation_create() -> ObservationCreate:
 
 @pytest.fixture(scope="function")
 def mock_observation_service(
-    mock_observation_data: None, mock_observation_many: None
+    fake_observation_data: None, fake_observation_many: None
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
-    mock.get = AsyncMock(return_value=mock_observation_data)
-    mock.get_many = AsyncMock(return_value=mock_observation_many)
+    mock.get = AsyncMock(return_value=fake_observation_data)
+    mock.get_many = AsyncMock(return_value=fake_observation_many)
 
     yield mock
 

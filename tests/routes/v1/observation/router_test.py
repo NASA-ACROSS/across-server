@@ -14,21 +14,21 @@ from across_server.routes.v1.observation.schemas import Observation
 class Setup:
     @pytest_asyncio.fixture(autouse=True, scope="function")
     async def setup(
-        self, async_client: AsyncClient, mock_observation_data: None
+        self, async_client: AsyncClient, fake_observation_data: None
     ) -> None:
         self.client = async_client
         self.endpoint = "/observation/"
-        self.get_data = mock_observation_data
+        self.get_data = fake_observation_data
 
 
 class SetupMany:
     @pytest_asyncio.fixture(autouse=True, scope="function")
     async def setup(
-        self, async_client: AsyncClient, mock_observation_many: None
+        self, async_client: AsyncClient, fake_observation_many: None
     ) -> None:
         self.client = async_client
         self.endpoint = "/observation/"
-        self.get_data = mock_observation_many
+        self.get_data = fake_observation_many
 
 
 class TestObservationRouterGet:
@@ -81,10 +81,12 @@ class TestObservationRouterGet:
         async def test_many_should_accept_include_footprints_true(self) -> None:
             """GET many should accept include_footprints parameter set to true"""
             res = await self.client.get(self.endpoint + "?include_footprints=true")
-            assert Page[Observation].model_validate(res.json())
+            observation = res.json()["items"][0]
+            assert len(observation["footprint"]) > 0
 
         @pytest.mark.asyncio
         async def test_many_should_accept_include_footprints_false(self) -> None:
             """GET many should accept include_footprints parameter set to false"""
             res = await self.client.get(self.endpoint + "?include_footprints=false")
-            assert Page[Observation].model_validate(res.json())
+            observation = res.json()["items"][0]
+            assert len(observation["footprint"]) == 0
