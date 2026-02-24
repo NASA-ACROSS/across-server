@@ -1,5 +1,5 @@
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import fastapi
 import pytest
@@ -118,13 +118,13 @@ class TestJointVisibilityCalculatorRouter:
     async def test_get_should_return_observatory_ids_in_joint_visibility_windows(
         self,
         fake_joint_visibility_read_params: dict,
+        fake_observatory_id: UUID,
         mock_visibility_calculator_service: AsyncMock,
         mock_telescope_service: AsyncMock,
     ) -> None:
         """Should return observatory IDs (not instrument IDs) in joint visibility windows"""
         instrument_ids = fake_joint_visibility_read_params["instrument_ids"]
-        expected_observatory_id = uuid4()
-        mock_telescope_service.get.return_value.observatory_id = expected_observatory_id
+        mock_telescope_service.get.return_value.observatory_id = fake_observatory_id
 
         fake_joint_window = MagicMock()
         fake_joint_window.model_dump.return_value = {
@@ -158,15 +158,11 @@ class TestJointVisibilityCalculatorRouter:
             params=fake_joint_visibility_read_params,
         )
 
-        observatory_id = str(expected_observatory_id)
-        assert (
-            res.json()["visibility_windows"][0]["window"]["begin"]["observatory_id"]
-            == observatory_id
-        )
-        assert (
-            res.json()["visibility_windows"][0]["window"]["end"]["observatory_id"]
-            == observatory_id
-        )
+        observatory_id = str(fake_observatory_id)
+        assert [
+            res.json()["visibility_windows"][0]["window"]["begin"]["observatory_id"],
+            res.json()["visibility_windows"][0]["window"]["end"]["observatory_id"],
+        ] == [observatory_id, observatory_id]
 
     @pytest.mark.asyncio
     async def test_get_should_return_422_when_params_invalid(
