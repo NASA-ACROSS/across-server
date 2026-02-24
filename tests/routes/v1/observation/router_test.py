@@ -78,14 +78,18 @@ class TestObservationRouterGet:
             assert Page[Observation].model_validate(res.json())
 
         @pytest.mark.asyncio
-        async def test_many_should_return_footprints_when_include_footprints_is_true(self) -> None:
+        async def test_many_should_return_footprints_when_include_footprints_is_true(
+            self,
+        ) -> None:
             """GET many should return footprints when include_footprints parameter set to true"""
             res = await self.client.get(self.endpoint + "?include_footprints=true")
             observation = res.json()["items"][0]
             assert len(observation["footprint"]) > 0
 
         @pytest.mark.asyncio
-        async def test_many_should_not_return_footprints_when_include_footprints_is_false(self) -> None:
+        async def test_many_should_not_return_footprints_when_include_footprints_is_false(
+            self,
+        ) -> None:
             """GET many should return footprints when include_footprints parameter set to false"""
             res = await self.client.get(self.endpoint + "?include_footprints=false")
             observation = res.json()["items"][0]
