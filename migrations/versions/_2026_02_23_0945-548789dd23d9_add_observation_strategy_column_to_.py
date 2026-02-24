@@ -1,7 +1,7 @@
 """add observation_strategy column to instrument table
 
 Revision ID: 548789dd23d9
-Revises: cc55dd06ba45
+Revises: 00b3a6244b1c
 Create Date: 2026-02-13 09:45:38.878644
 
 """
@@ -12,12 +12,12 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy import orm, select
 
-import migrations.versions.model_snapshots.models_2026_02_13 as models
+import migrations.versions.model_snapshots.models_2026_02_23 as models
 from across_server.core.enums.observation_strategy import ObservationStrategy
 
 # revision identifiers, used by Alembic.
 revision: str = "548789dd23d9"
-down_revision: Union[str, None] = "cc55dd06ba45"
+down_revision: Union[str, None] = "00b3a6244b1c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
