@@ -99,6 +99,7 @@ async def calculate_joint_windows(
 ) -> JointVisibilityResult:
     visibility_tasks = []
     window_results = []
+    instrument_observatory_ids: dict[UUID, UUID] = {}
     for instrument_id in parameters.instrument_ids:
         instrument_model = await instrument_service.get(instrument_id)
 
@@ -109,13 +110,20 @@ async def calculate_joint_windows(
 
         # Obtain the telescope that hosts this instrument
         telescope = await telescope_service.get(instrument.telescope.id)
+        observatory_id = telescope.observatory_id
+        if observatory_id is None and telescope.observatory is not None:
+            observatory_id = telescope.observatory.id
+        if observatory_id is None:
+            raise TelescopeNotFoundException(instrument_model.telescope_id)
+
+        instrument_observatory_ids[instrument_id] = observatory_id
 
         visibility_tasks.append(
             visibility_calculator.calculate_windows(
                 ra=parameters.ra,
                 dec=parameters.dec,
                 instrument=instrument,
-                observatory_id=telescope.observatory_id,
+                observatory_id=observatory_id,
                 date_range_begin=parameters.date_range_begin,
                 date_range_end=parameters.date_range_end,
                 hi_res=parameters.hi_res,
@@ -140,13 +148,24 @@ async def calculate_joint_windows(
     observatory_visibility_windows = {
         window.instrument_id: window.visibility_windows for window in window_results
     }
+    joint_visibility_windows = []
+    for window in joint_visibility.visibility_windows:
+        joint_window = window.model_dump()
+        begin_observatory_id = joint_window["window"]["begin"]["observatory_id"]
+        end_observatory_id = joint_window["window"]["end"]["observatory_id"]
+
+        joint_window["window"]["begin"]["observatory_id"] = (
+            instrument_observatory_ids.get(begin_observatory_id, begin_observatory_id)
+        )
+        joint_window["window"]["end"]["observatory_id"] = (
+            instrument_observatory_ids.get(end_observatory_id, end_observatory_id)
+        )
+        joint_visibility_windows.append(joint_window)
 
     return JointVisibilityResult.model_validate(
         {
             "instrument_ids": parameters.instrument_ids,
-            "visibility_windows": [
-                window.model_dump() for window in joint_visibility.visibility_windows
-            ],
+            "visibility_windows": joint_visibility_windows,
             "observatory_visibility_windows": observatory_visibility_windows,
         },
     )
