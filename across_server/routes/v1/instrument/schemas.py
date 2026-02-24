@@ -103,6 +103,7 @@ class Instrument(InstrumentBase):
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
             visibility_type=obj.visibility_type,
+            observation_strategy=obj.observation_strategy,
         )
 
 

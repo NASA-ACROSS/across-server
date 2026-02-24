@@ -116,7 +116,7 @@ class VisibilityCalculatorService:
         Parameters
         ----------
         instrument: schemas.Instrument
-            The Instrument belonging to the Observations
+            The Instrument belonging to the observations
         date_range_begin: datetime
             The begin time to search for observations
         date_range_end: datetime
@@ -127,6 +127,7 @@ class VisibilityCalculatorService:
         PointingConstraint
             A constraint built from the instrument pointings
         """
+        # Build a subquery to retrieve latest matching schedule ID
         schedule2 = aliased(models.Schedule)
         schedule_subquery = (
             select(schedule2.id)
@@ -143,6 +144,7 @@ class VisibilityCalculatorService:
             .scalar_subquery()
         )
 
+        # Query observations from most recent schedule that match inputs
         query = (
             select(models.Observation)
             .join(
@@ -160,7 +162,7 @@ class VisibilityCalculatorService:
         )
 
         result = await self.db.execute(query)
-        observations = result.all()
+        observations = result.scalars().all()
 
         # Get instrument footprints
         instrument_footprints = instrument.footprints

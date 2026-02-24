@@ -4,9 +4,12 @@ from uuid import UUID
 
 import astropy.units as u  # type: ignore
 import pytest
+from across.tools.footprint.schemas import Pointing
+from across.tools.visibility.constraints import PointingConstraint
 
 import across_server.routes.v1.tools.visibility_calculator.service as service_mod
 from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.models import Observation
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.tools.visibility_calculator.exceptions import (
     VisibilityConstraintsNotFoundException,
@@ -170,6 +173,87 @@ class TestVisibilityService:
                     hi_res=False,
                 )
 
+        @pytest.mark.asyncio
+        async def test_get_should_get_pointing_constraints_if_instrument_observation_strategy_is_survey(
+            self,
+            mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
+            fake_observatory_id: UUID,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+            monkeypatch: pytest.MonkeyPatch,
+        ) -> None:
+            """Should get pointing constraints if the instrument observation strategy is 'survey'"""
+
+            ra, dec = fake_coordinates
+
+            mock_partial = MagicMock()
+            monkeypatch.setattr(service_mod, "partial", mock_partial)
+
+            mock_get_pointing_constraint = AsyncMock(return_value=None)
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+            monkeypatch.setattr(
+                service,
+                "_get_pointing_constraint",
+                mock_get_pointing_constraint,
+            )
+
+            await service.calculate_windows(
+                ra=ra,
+                dec=dec,
+                instrument=fake_survey_instrument,
+                observatory_id=fake_observatory_id,
+                date_range_begin=datetime.now(),
+                date_range_end=datetime.now(),
+                hi_res=False,
+            )
+
+            mock_get_pointing_constraint.assert_called_once()
+
+        @pytest.mark.asyncio
+        async def test_get_should_use_pointing_constraints_for_survey_instruments(
+            self,
+            mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
+            fake_observatory_id: UUID,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+            fake_pointing_constraint: PointingConstraint,
+            monkeypatch: pytest.MonkeyPatch,
+        ) -> None:
+            """Should use pointing constraints for survey instruments"""
+
+            fake_survey_instrument.constraints = []
+
+            ra, dec = fake_coordinates
+
+            mock_partial = MagicMock()
+            monkeypatch.setattr(service_mod, "partial", mock_partial)
+
+            mock_get_pointing_constraint = AsyncMock(
+                return_value=fake_pointing_constraint
+            )
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+            monkeypatch.setattr(
+                service,
+                "_get_pointing_constraint",
+                mock_get_pointing_constraint,
+            )
+
+            await service.calculate_windows(
+                ra=ra,
+                dec=dec,
+                instrument=fake_survey_instrument,
+                observatory_id=fake_observatory_id,
+                date_range_begin=datetime.now(),
+                date_range_end=datetime.now(),
+                hi_res=False,
+            )
+
+            assert [fake_pointing_constraint] == mock_partial.call_args_list[0][1][
+                "constraints"
+            ]
+
     class TestFindJointVisibility:
         @pytest.mark.asyncio
         async def test_find_joint_visibility_should_call_partial(
@@ -191,3 +275,145 @@ class TestVisibilityService:
                 instrument_ids=[fake_instrument_with_constraints.id],
             )
             mock_partial.assert_called_once()
+
+    class TestGetPointingConstraint:
+        @pytest.mark.asyncio
+        async def test_get_pointing_constraint_should_return_pointing_constraint(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+        ) -> None:
+            """Should return a PointingConstraint object"""
+            mock_result.scalars.return_value.all.return_value = []
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+            assert isinstance(res, PointingConstraint)
+
+        @pytest.mark.asyncio
+        async def test_get_pointing_constraint_should_query_for_observations(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+        ) -> None:
+            """Should query the database for observations to build pointing constraints"""
+            mock_result.scalars.return_value.all.return_value = []
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+
+            mock_db.execute.assert_called_once()
+
+        @pytest.mark.asyncio
+        async def test_get_pointing_constraint_should_return_if_instrument_has_no_footprint(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+        ) -> None:
+            """Should return None if instrument has no footprint"""
+            mock_result.scalars.return_value.all.return_value = []
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            fake_survey_instrument.footprints = None
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+
+            assert res is None
+
+        @pytest.mark.asyncio
+        async def test_should_return_no_pointings_if_no_obs_found(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+        ) -> None:
+            """
+            Should return a PointingConstraint object with no pointings if no
+            observations are found
+            """
+            mock_result.scalars.return_value.all.return_value = []
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+            assert len(res.pointings) == 0  # type: ignore[union-attr]
+
+        @pytest.mark.asyncio
+        async def test_should_create_pointings_when_observations_are_returned(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+            mock_observation_data: Observation,
+        ) -> None:
+            """Should create pointings when observations are returned"""
+            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+            assert len(res.pointings) > 0  # type: ignore[union-attr]
+
+        @pytest.mark.asyncio
+        async def test_should_convert_observations_to_pointings(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+            mock_observation_data: Observation,
+        ) -> None:
+            """Should convert retrieved observations to pointings"""
+            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+            assert isinstance(res.pointings[0], Pointing)  # type: ignore[union-attr]
+
+        @pytest.mark.asyncio
+        async def test_should_create_pointings_from_observation_parameters(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+            fake_survey_instrument: InstrumentSchema,
+            mock_observation_data: Observation,
+        ) -> None:
+            """Should create pointings from observation parameters"""
+            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+
+            res = await service._get_pointing_constraint(
+                fake_survey_instrument, datetime.now(), datetime.now()
+            )
+            pointing = res.pointings[0]  # type: ignore[union-attr]
+            assert all(
+                [
+                    pointing.start_time == mock_observation_data.date_range_begin,
+                    pointing.end_time == mock_observation_data.date_range_end,
+                ]
+            )

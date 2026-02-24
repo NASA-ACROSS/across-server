@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from across_server.core.schemas.coordinate import Coordinate
 from across_server.db import models
 
 
@@ -103,3 +104,34 @@ def fake_permissions() -> list[models.Permission]:
             },
         )
     ]
+
+
+@pytest.fixture()
+def mock_observation_data() -> models.Observation:
+    coordinate = Coordinate(
+        ra=123.456,
+        dec=-87.65,
+    )
+    return models.Observation(
+        id=uuid4(),
+        instrument_id=uuid4(),
+        schedule_id=uuid4(),
+        object_name="Test Object",
+        pointing_position=coordinate.create_gis_point(),
+        pointing_ra=123.456,
+        pointing_dec=-87.65,
+        object_position=coordinate.create_gis_point(),
+        object_ra=123.456,
+        object_dec=-87.65,
+        exposure_time=3600,
+        min_wavelength=2000,
+        max_wavelength=4000,
+        peak_wavelength=3000,
+        filter_name="Test Filter",
+        date_range_begin=datetime.datetime(2024, 12, 16, 11, 0),
+        date_range_end=datetime.datetime(2024, 12, 17, 11, 0),
+        external_observation_id="test-external-obsid",
+        type="imaging",
+        status="planned",
+        created_on=datetime.datetime.now(),
+    )
