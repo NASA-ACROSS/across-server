@@ -119,6 +119,7 @@ class TestJointVisibilityCalculatorRouter:
         self,
         fake_joint_visibility_read_params: dict,
         fake_observatory_id: UUID,
+        fake_joint_visibility_result: MagicMock,
         mock_visibility_calculator_service: AsyncMock,
         mock_telescope_service: AsyncMock,
     ) -> None:
@@ -126,31 +127,33 @@ class TestJointVisibilityCalculatorRouter:
         instrument_ids = fake_joint_visibility_read_params["instrument_ids"]
         mock_telescope_service.get.return_value.observatory_id = fake_observatory_id
 
-        fake_joint_window = MagicMock()
-        fake_joint_window.model_dump.return_value = {
-            "window": {
-                "begin": {
-                    "datetime": "2023-01-01T00:00:00",
-                    "constraint": "Window",
-                    "observatory_id": instrument_ids[0],
-                },
-                "end": {
-                    "datetime": "2023-01-01T01:00:00",
-                    "constraint": "Window",
-                    "observatory_id": instrument_ids[1],
-                },
-            },
-            "max_visibility_duration": 0,
-            "constraint_reason": {
-                "start_reason": "date_range_begin",
-                "end_reason": "date_range_end",
-            },
-        }
-
-        fake_joint_visibility = MagicMock()
-        fake_joint_visibility.visibility_windows = [fake_joint_window]
+        fake_joint_visibility_result.visibility_windows = [
+            MagicMock(
+                model_dump=MagicMock(
+                    return_value={
+                        "window": {
+                            "begin": {
+                                "datetime": "2023-01-01T00:00:00",
+                                "constraint": "Window",
+                                "observatory_id": instrument_ids[0],
+                            },
+                            "end": {
+                                "datetime": "2023-01-01T01:00:00",
+                                "constraint": "Window",
+                                "observatory_id": instrument_ids[1],
+                            },
+                        },
+                        "max_visibility_duration": 0,
+                        "constraint_reason": {
+                            "start_reason": "date_range_begin",
+                            "end_reason": "date_range_end",
+                        },
+                    }
+                )
+            )
+        ]
         mock_visibility_calculator_service.find_joint_visibility.return_value = (
-            fake_joint_visibility
+            fake_joint_visibility_result
         )
 
         res = await self.client.get(
