@@ -413,7 +413,9 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
-    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    operational_begin_date: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
     operational_end_date: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
