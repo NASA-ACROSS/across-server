@@ -155,8 +155,8 @@ class VisibilityCalculatorService:
             .where(
                 and_(
                     models.Observation.instrument_id == instrument.id,
-                    models.Observation.date_range_begin >= date_range_begin,
-                    models.Observation.date_range_end <= date_range_end,
+                    models.Observation.date_range_end >= date_range_begin,
+                    models.Observation.date_range_begin <= date_range_end,
                 )
             )
         )
