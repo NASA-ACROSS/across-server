@@ -193,3 +193,71 @@ class TestScheduleService:
                     instruments=[instrument_model_example],
                     created_by_id=uuid4(),
                 )
+
+        @pytest.mark.asyncio
+        async def test_should_not_create_duplicate_schedules(
+            self,
+            mock_db: AsyncMock,
+            schedule_create_many_duplicate_example: ScheduleCreateMany,
+            instrument_model_example: InstrumentModel,
+            mock_result: AsyncMock,
+            fake_schedule_data: ScheduleModel,
+        ) -> None:
+            """Should not create duplicate schedules"""
+            # sets the checksum query to a value
+            mock_result.scalars.return_value.all.return_value = [
+                fake_schedule_data,
+                fake_schedule_data,
+            ]
+            mock_db.execute.return_value = mock_result
+            service = ScheduleService(mock_db)
+
+            await service.create_many(
+                schedule_create_many_duplicate_example,
+                instruments=[instrument_model_example],
+                created_by_id=uuid4(),
+            )
+
+            call_args = mock_db.add_all.call_args[0][0]
+
+            # the duplicate schedules should be caught, so
+            # db.add_all() should only be called with one
+            # schedule and one observation
+            assert len(call_args) == 2
+
+        @pytest.mark.asyncio
+        async def test_should_create_correct_observations_with_schedules(
+            self,
+            mock_db: AsyncMock,
+            schedule_create_many_example: ScheduleCreateMany,
+            instrument_model_example: InstrumentModel,
+            mock_result: AsyncMock,
+            fake_schedule_data: ScheduleModel,
+        ) -> None:
+            """Should create the correct observations with the schedules"""
+            # sets the checksum query to a value
+            # here we are setting the first returned value to the first schedule we are
+            # attempting to create, to mock a scenario in which we have an existing schedule
+            fake_existing_schedule = schedule_create_many_example.schedules[0].to_orm(
+                created_by_id=uuid4()
+            )
+            mock_result.scalars.return_value.all.return_value = [
+                fake_existing_schedule,
+                fake_schedule_data,
+            ]
+            mock_db.execute.return_value = mock_result
+            service = ScheduleService(mock_db)
+
+            await service.create_many(
+                schedule_create_many_example,
+                instruments=[instrument_model_example],
+                created_by_id=uuid4(),
+            )
+
+            call_args = mock_db.add_all.call_args[0][0]
+
+            # check that the second schedule's (aka the correct) observation is being added
+            assert (
+                call_args[1].object_name
+                == schedule_create_many_example.schedules[1].observations[0].object_name
+            )

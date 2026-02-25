@@ -294,55 +294,47 @@ class ScheduleService:
             schedule.checksum for schedule in existing_schedules
         ]
 
-        # Make filter for existing schedules
-        schedule_filter = np.asarray(
-            [
-                schedule.checksum in existing_schedules_checksums
-                for schedule in schedules
-            ]
-        )
-
         # For the schedules that don't exist yet, iterate over them,
         # create arrays of schedules and observations to bulk add
         schedules_to_add = []
         observations_to_add = []
         observation_footprints_to_add = []
-        for i, schedule in enumerate(
-            np.asarray(schedules)[np.logical_not(schedule_filter)]
-        ):
-            schedule_create = schedule_create_many.schedules[i]
-            schedule_instrument_ids = list(
-                set(
-                    [
-                        observation.instrument_id
-                        for observation in schedule_create.observations
-                    ]
-                )
-            )
-
-            for schedule_instrument_id in schedule_instrument_ids:
-                if not instrument_dict.get(schedule_instrument_id):
-                    raise ScheduleInstrumentNotFoundException(
-                        instrument_id=schedule_instrument_id,
-                        telescope_id=schedule.telescope_id,
+        for i, schedule in enumerate(schedules):
+            if schedule.checksum not in existing_schedules_checksums:
+                schedule_create = schedule_create_many.schedules[i]
+                schedule_instrument_ids = list(
+                    set(
+                        [
+                            observation.instrument_id
+                            for observation in schedule_create.observations
+                        ]
                     )
+                )
 
-            schedule.id = uuid4()
-            schedules_to_add.append(schedule)
-            schedule_ids.append(schedule.id)
+                for schedule_instrument_id in schedule_instrument_ids:
+                    if not instrument_dict.get(schedule_instrument_id):
+                        raise ScheduleInstrumentNotFoundException(
+                            instrument_id=schedule_instrument_id,
+                            telescope_id=schedule.telescope_id,
+                        )
 
-            for observation_create in schedule_create.observations:
-                instrument = instrument_dict[observation_create.instrument_id]
-                fov = InstrumentFOV(instrument.field_of_view)
-                observation = observation_create.to_orm(instrument_fov=fov)
-                observation.id = uuid4()
-                observation.schedule_id = schedule.id
-                observation.created_by_id = created_by_id
-                for footprint_create in observation_create.footprint or []:
-                    footprint = footprint_create.to_orm()
-                    footprint.observation_id = observation.id
-                    observation_footprints_to_add.append(footprint)
-                observations_to_add.append(observation)
+                schedule.id = uuid4()
+                schedules_to_add.append(schedule)
+                schedule_ids.append(schedule.id)
+                existing_schedules_checksums.append(schedule.checksum)
+
+                for observation_create in schedule_create.observations:
+                    instrument = instrument_dict[observation_create.instrument_id]
+                    fov = InstrumentFOV(instrument.field_of_view)
+                    observation = observation_create.to_orm(instrument_fov=fov)
+                    observation.id = uuid4()
+                    observation.schedule_id = schedule.id
+                    observation.created_by_id = created_by_id
+                    for footprint_create in observation_create.footprint or []:
+                        footprint = footprint_create.to_orm()
+                        footprint.observation_id = observation.id
+                        observation_footprints_to_add.append(footprint)
+                    observations_to_add.append(observation)
 
         self.db.add_all(
             list(
