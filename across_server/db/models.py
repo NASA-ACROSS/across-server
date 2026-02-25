@@ -413,7 +413,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
-    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     operational_end_date: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
@@ -541,7 +541,7 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
         Index("ix_schedule_date_range", "date_range_begin", "date_range_end"),
         Index("ix_schedule_date_range_begin", "date_range_begin"),
         Index("ix_schedule_date_range_end", "date_range_end"),
-        Index("ix_schedule_checksum", "checksum"),
+        Index("ix_schedule_checksum", "checksum", unique=True),
     )
 
 
