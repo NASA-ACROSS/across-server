@@ -1,7 +1,6 @@
 from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
-import numpy as np
 from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -287,12 +286,12 @@ class ScheduleService:
         )
 
         # Get array of schedule_ids for existing schedules to append to and return
-        schedule_ids = [schedule.id for schedule in np.asarray(existing_schedules)]
+        schedule_ids = [schedule.id for schedule in existing_schedules]
 
         # Get array of checksums of existing schedules to compare against the schedules being added
-        existing_schedules_checksums = [
+        existing_schedules_checksums = {
             schedule.checksum for schedule in existing_schedules
-        ]
+        }
 
         # For the schedules that don't exist yet, iterate over them,
         # create arrays of schedules and observations to bulk add
@@ -302,14 +301,10 @@ class ScheduleService:
         for i, schedule in enumerate(schedules):
             if schedule.checksum not in existing_schedules_checksums:
                 schedule_create = schedule_create_many.schedules[i]
-                schedule_instrument_ids = list(
-                    set(
-                        [
-                            observation.instrument_id
-                            for observation in schedule_create.observations
-                        ]
-                    )
-                )
+                schedule_instrument_ids = {
+                    observation.instrument_id
+                    for observation in schedule_create.observations
+                }
 
                 for schedule_instrument_id in schedule_instrument_ids:
                     if not instrument_dict.get(schedule_instrument_id):
@@ -321,7 +316,7 @@ class ScheduleService:
                 schedule.id = uuid4()
                 schedules_to_add.append(schedule)
                 schedule_ids.append(schedule.id)
-                existing_schedules_checksums.append(schedule.checksum)
+                existing_schedules_checksums.add(schedule.checksum)
 
                 for observation_create in schedule_create.observations:
                     instrument = instrument_dict[observation_create.instrument_id]
