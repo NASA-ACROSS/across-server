@@ -281,6 +281,7 @@ class TestVisibilityService:
         async def test_get_pointing_constraint_should_return_pointing_constraint(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -290,8 +291,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
             assert isinstance(res, PointingConstraint)
 
@@ -299,6 +305,7 @@ class TestVisibilityService:
         async def test_get_pointing_constraint_should_query_for_observations(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -308,8 +315,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
 
             mock_db.execute.assert_called_once()
@@ -318,6 +330,7 @@ class TestVisibilityService:
         async def test_get_pointing_constraint_should_return_if_instrument_has_no_footprint(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -327,9 +340,14 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             fake_survey_instrument.footprints = None
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
 
             assert res is None
@@ -338,6 +356,7 @@ class TestVisibilityService:
         async def test_should_return_no_pointings_if_no_obs_found(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -350,8 +369,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
             assert len(res.pointings) == 0  # type: ignore[union-attr]
 
@@ -359,6 +383,7 @@ class TestVisibilityService:
         async def test_should_create_pointings_when_observations_are_returned(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -369,8 +394,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
             assert len(res.pointings) > 0  # type: ignore[union-attr]
 
@@ -378,6 +408,7 @@ class TestVisibilityService:
         async def test_should_convert_observations_to_pointings(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -388,8 +419,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
             assert isinstance(res.pointings[0], Pointing)  # type: ignore[union-attr]
 
@@ -397,6 +433,7 @@ class TestVisibilityService:
         async def test_should_create_pointings_from_observation_parameters(
             self,
             mock_db: AsyncMock,
+            fake_coordinates: tuple[float, float],
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
@@ -407,8 +444,13 @@ class TestVisibilityService:
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
+            ra, dec = fake_coordinates
             res = await service._get_pointing_constraint(
-                fake_survey_instrument, datetime.now(), datetime.now()
+                fake_survey_instrument,
+                datetime.now(),
+                datetime.now(),
+                ra,
+                dec,
             )
             pointing = res.pointings[0]  # type: ignore[union-attr]
             assert all(

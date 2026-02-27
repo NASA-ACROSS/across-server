@@ -17,10 +17,14 @@ from across.tools.visibility import (
 from across.tools.visibility.constraints import PointingConstraint
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
+from geoalchemy2.functions import ST_DWithin
+from geoalchemy2.shape import from_shape
+from shapely.geometry import Point
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from .....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from .....core.enums.observation_strategy import ObservationStrategy
 from .....core.enums.visibility_type import VisibilityType
 from .....db import models
@@ -77,7 +81,11 @@ class VisibilityCalculatorService:
         # pull footprint, observations, and transform to pointing constraints
         if instrument.observation_strategy == ObservationStrategy.SURVEY:
             pointing_constraint = await self._get_pointing_constraint(
-                instrument, date_range_begin, date_range_end
+                instrument,
+                date_range_begin,
+                date_range_end,
+                ra,
+                dec,
             )
             if pointing_constraint is not None:
                 constraints.append(pointing_constraint)
@@ -107,6 +115,8 @@ class VisibilityCalculatorService:
         instrument: InstrumentSchema,
         date_range_begin: datetime,
         date_range_end: datetime,
+        ra: float,
+        dec: float,
     ) -> PointingConstraint | None:
         """
         Query the observations for a survey instrument,
@@ -121,12 +131,42 @@ class VisibilityCalculatorService:
             The begin time to search for observations
         date_range_end: datetime
             The end time to search for observations
+        ra: float
+            The right ascension of the target
+        dec: float
+            The declination of the target
 
         Returns
         -------
         PointingConstraint
             A constraint built from the instrument pointings
         """
+        # Get instrument footprints
+        instrument_footprints = instrument.footprints
+        if not instrument_footprints:
+            return None
+
+        # Filter obs with a cone search using the max radial extent of the footprint
+        # Since instrument footprints are centered on (0, 0), the max radial extent
+        # is the max value of any coordinate RA or dec
+        footprint_extent: float = max(
+            [
+                max(
+                    [abs(coord.x) for coord in footprint]
+                    + [abs(coord.y) for coord in footprint]
+                )
+                for footprint in instrument_footprints
+            ]
+        )
+        cone_search_point = from_shape(
+            Point(ra, dec),  # type: ignore
+            srid=4326,
+        )
+        # Convert degrees to meters
+        cone_search_radius = (
+            footprint_extent * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE  # type: ignore
+        )
+
         # Build a subquery to retrieve latest matching schedule ID
         schedule2 = aliased(models.Schedule)
         schedule_subquery = (
@@ -157,17 +197,17 @@ class VisibilityCalculatorService:
                     models.Observation.instrument_id == instrument.id,
                     models.Observation.date_range_end >= date_range_begin,
                     models.Observation.date_range_begin <= date_range_end,
+                    ST_DWithin(
+                        models.Observation.pointing_position,
+                        cone_search_point,
+                        cone_search_radius,
+                    ),
                 )
             )
         )
 
         result = await self.db.execute(query)
         observations = result.scalars().all()
-
-        # Get instrument footprints
-        instrument_footprints = instrument.footprints
-        if not instrument_footprints:
-            return None
 
         # Transform to tools Footprint
         detectors = []
