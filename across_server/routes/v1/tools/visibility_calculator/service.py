@@ -114,12 +114,14 @@ class VisibilityCalculatorService:
         self,
         visibilities: list[EphemerisVisibility],
         instrument_ids: list[UUID],
+        min_visibility_duration: int = 0,
     ) -> JointVisibility:
         # Compute joint visibility
         joint_vis_function = partial(
             compute_joint_visibility,
             visibilities=visibilities,
             instrument_ids=instrument_ids,
+            min_vis=min_visibility_duration,
         )
         joint_visibility = await anyio.to_thread.run_sync(joint_vis_function)
         return joint_visibility
