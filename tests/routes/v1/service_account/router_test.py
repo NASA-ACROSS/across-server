@@ -47,7 +47,7 @@ class TestServiceAccountRouter:
             data.pop("name")
             res = await self.client.post(self.endpoint, json=self.post_data)
 
-            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
     class TestGet(Setup):
         @pytest.mark.asyncio
