@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Form, Response, status
+from fastapi import APIRouter, Depends, Form, Response, Security, status
 from pydantic import EmailStr
 
 from ..util.decorators import local_only_route
@@ -62,7 +62,7 @@ async def local_token(
 @router.post(
     "/login",
     operation_id="login",
-    dependencies=[Depends(strategies.webserver_access)],
+    dependencies=[Security(strategies.webserver_access, scopes=["system:login:write"])],
 )
 async def login(
     email: EmailStr,

@@ -53,8 +53,9 @@ async def authenticate_grant_type(
     elif client_credentials and grant_type == GrantType.CLIENT_CREDENTIALS:
         auth_user = await auth_service.authenticate_service_account(client_credentials)
         return auth_user
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not Authenticated",
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW-Authenticate": "Bearer, Basic"},
     )
