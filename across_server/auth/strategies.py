@@ -1,13 +1,13 @@
-import secrets
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Path, Request, status
+from fastapi import Depends, HTTPException, Path, status
 from fastapi.security import SecurityScopes
 
-from .config import auth_config
 from .schemas import AuthUser
-from .security import get_bearer_credentials
+from .security import (
+    get_bearer_credentials,
+)
 from .service import AuthService
 
 
@@ -54,8 +54,14 @@ async def group_access(
         return auth_user
 
     for group in auth_user.groups:
-        if group.id == group_id and set(security_scopes.scopes).issubset(group.scopes):
-            return auth_user
+        # check if group.scopes has admin group:write
+        is_admin = "group:all:write" in group.scopes
+        has_permission = set(security_scopes.scopes).issubset(group.scopes)
+        user_is_in_group = group.id == group_id
+
+        if user_is_in_group:
+            if is_admin or has_permission:
+                return auth_user
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied."
@@ -100,21 +106,20 @@ async def system_service_account_access(
 
 
 async def webserver_access(
-    request: Request,
-    token: Annotated[str, Depends(get_bearer_credentials)],
-) -> None:
-    if token is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing or invalid token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    is_webserver = secrets.compare_digest(token, auth_config.WEBSERVER_SECRET)
+    security_scopes: SecurityScopes,
+    webserver: Annotated[AuthUser, Depends(authenticate_jwt)],
+) -> AuthUser:
+    """
+    Dependency to authenticate the frontend service account.
+    """
 
-    if request.client:
-        ip = str(request.client.host)
+    is_system = system_access(webserver)
+    has_scopes = set(security_scopes.scopes).issubset(webserver.scopes)
 
-    is_ip_allowed = ip in auth_config.ALLOWED_IPS
+    if is_system and has_scopes:
+        return webserver
 
-    if not (is_webserver and is_ip_allowed):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Forbidden",
+    )
