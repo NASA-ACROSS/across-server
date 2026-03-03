@@ -1,7 +1,7 @@
 """add observation_strategy column to instrument table
 
 Revision ID: 548789dd23d9
-Revises: 00b3a6244b1c
+Revises: 21f7b6d5cd1d
 Create Date: 2026-02-13 09:45:38.878644
 
 """
@@ -17,7 +17,7 @@ from across_server.core.enums.observation_strategy import ObservationStrategy
 
 # revision identifiers, used by Alembic.
 revision: str = "548789dd23d9"
-down_revision: Union[str, None] = "00b3a6244b1c"
+down_revision: Union[str, None] = "21f7b6d5cd1d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
