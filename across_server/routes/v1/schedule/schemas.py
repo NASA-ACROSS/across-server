@@ -6,8 +6,7 @@ from typing import Self
 
 from pydantic import model_validator
 
-from across_server.core.date_utils import UTCDatetime
-
+from ....core.date_utils import UTCDatetime
 from ....core.enums import ScheduleFidelity, ScheduleStatus
 from ....core.schemas import DateRange, PaginationParams
 from ....core.schemas.base import BaseSchema

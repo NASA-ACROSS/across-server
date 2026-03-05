@@ -4,8 +4,7 @@ from across.tools.core.enums import ConstraintType
 from across.tools.core.schemas import AstropyDateTime
 from pydantic import ConfigDict, Field
 
-from across_server.core.date_utils import UTCDatetime
-
+from .....core.date_utils import UTCDatetime
 from .....core.schemas.base import BaseSchema
 
 
