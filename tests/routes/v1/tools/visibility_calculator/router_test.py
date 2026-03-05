@@ -125,4 +125,4 @@ class TestJointVisibilityCalculatorRouter:
             self.endpoint,
             params=fake_joint_visibility_read_params,
         )
-        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT

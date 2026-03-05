@@ -171,7 +171,7 @@ async def create(
             "model": ListResponse[uuid.UUID],
             "description": "Created schedule ids",
         },
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": "Incorrect schedule parameters"
         },
     },
