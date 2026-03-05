@@ -1,9 +1,10 @@
-from datetime import datetime
 from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
 from across.tools.core.schemas import AstropyDateTime
 from pydantic import ConfigDict, Field
+
+from across_server.core.date_utils import UTCDatetime
 
 from .....core.schemas.base import BaseSchema
 
@@ -68,8 +69,8 @@ class VisibilityReadParams(BaseSchema):
 
     ra: float = Field(ge=0.0, le=360.0)
     dec: float = Field(ge=-90.0, le=90.0)
-    date_range_begin: datetime
-    date_range_end: datetime
+    date_range_begin: UTCDatetime
+    date_range_end: UTCDatetime
     hi_res: bool = True
     min_visibility_duration: int = 0
 

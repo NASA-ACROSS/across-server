@@ -6,6 +6,8 @@ from typing import Self
 
 from pydantic import model_validator
 
+from across_server.core.date_utils import UTCDatetime
+
 from ....core.enums import ScheduleFidelity, ScheduleStatus
 from ....core.schemas import DateRange, PaginationParams
 from ....core.schemas.base import BaseSchema
@@ -192,12 +194,12 @@ class ScheduleRead(PaginationParams):
 
     """
 
-    date_range_begin: datetime | None = None
-    date_range_end: datetime | None = None
+    date_range_begin: UTCDatetime | None = None
+    date_range_end: UTCDatetime | None = None
     status: ScheduleStatus | None = None
     external_id: str | None = None
     fidelity: ScheduleFidelity | None = None
-    created_on: datetime | None = None
+    created_on: UTCDatetime | None = None
     observatory_ids: list[uuid.UUID] = []
     observatory_names: list[str] = []
     telescope_ids: list[uuid.UUID] = []
