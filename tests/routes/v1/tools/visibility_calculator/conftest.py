@@ -4,11 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
-from across.tools.visibility.constraints import SunAngleConstraint
+from across.tools.visibility.constraints import PointingConstraint, SunAngleConstraint
 from fastapi import FastAPI
 
+from across_server.core.enums.observation_strategy import ObservationStrategy
 from across_server.core.enums.visibility_type import VisibilityType
 from across_server.db.models import Instrument, Telescope
+from across_server.routes.v1.footprint.schemas import Point
 from across_server.routes.v1.instrument.schemas import Instrument as InstrumentSchema
 from across_server.routes.v1.instrument.service import InstrumentService
 from across_server.routes.v1.telescope.service import TelescopeService
@@ -26,6 +28,12 @@ from across_server.routes.v1.tools.visibility_calculator.service import (
 def fake_sun_constraint() -> SunAngleConstraint:
     """Mock SunAngleConstraint"""
     return SunAngleConstraint(min_angle=45)
+
+
+@pytest.fixture
+def fake_pointing_constraint() -> PointingConstraint:
+    """Mock PointingConstraint"""
+    return PointingConstraint(pointings=[])
 
 
 @pytest.fixture
@@ -83,6 +91,37 @@ def fake_instrument_without_constraints() -> InstrumentSchema:
         constraints=[],
         short_name="test",
         created_on=datetime.now(),
+    )
+
+
+@pytest.fixture
+def fake_footprint() -> list[list[Point]]:
+    return [
+        [
+            Point(x=-5.0, y=-5.0),
+            Point(x=-5.0, y=5.0),
+            Point(x=5.0, y=5.0),
+            Point(x=5.0, y=-5.0),
+            Point(x=-5.0, y=-5.0),
+        ]
+    ]
+
+
+@pytest.fixture
+def fake_survey_instrument(
+    fake_sun_constraint: SunAngleConstraint,
+    fake_footprint: list[list[Point]],
+) -> InstrumentSchema:
+    """Survey instrument model with constraints"""
+    return InstrumentSchema(
+        id=uuid4(),
+        name="test_instrument",
+        visibility_type=VisibilityType.EPHEMERIS,
+        constraints=[fake_sun_constraint],
+        short_name="test",
+        created_on=datetime.now(),
+        observation_strategy=ObservationStrategy.SURVEY,
+        footprints=fake_footprint,
     )
 
 

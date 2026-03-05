@@ -26,8 +26,8 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core.enums.visibility_type import VisibilityType
-from .config import config
+from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
@@ -611,28 +611,6 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     )
     schedule: Mapped["Schedule"] = relationship(
         back_populates="observations", lazy="selectin"
-    )
-    footprints: Mapped[list["ObservationFootprint"]] = relationship(
-        back_populates="observation", lazy="selectin", cascade="all,delete"
-    )
-
-
-class ObservationFootprint(Base):
-    __tablename__ = "observation_footprint"
-
-    observation_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Observation.id)
-    )
-    polygon: Mapped[WKBElement] = mapped_column(
-        Geography("POLYGON", srid=4326, spatial_index=True), nullable=False
-    )
-
-    observation: Mapped["Observation"] = relationship(
-        back_populates="footprints", lazy="selectin"
-    )
-
-    __table_args__ = (
-        Index("idx_observation_footprint_polygon", "polygon", postgresql_using="gist"),
     )
 
 
