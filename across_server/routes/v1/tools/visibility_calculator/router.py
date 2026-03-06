@@ -127,6 +127,7 @@ async def calculate_joint_windows(
     joint_visibility = await visibility_calculator.find_joint_visibility(
         visibilities=visibilities,
         instrument_ids=parameters.instrument_ids,
+        min_visibility_duration=parameters.min_visibility_duration,
     )
     window_results = [
         VisibilityResult.model_validate(

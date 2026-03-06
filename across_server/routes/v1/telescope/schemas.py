@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from ....core.date_utils import UTCDatetime
 from ....core.enums.schedule_status import ScheduleStatus
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
@@ -111,7 +112,7 @@ class TelescopeRead(BaseSchema):
     name: str | None = None
     instrument_id: uuid.UUID | None = None
     instrument_name: str | None = None
-    created_on: datetime | None = None
+    created_on: UTCDatetime | None = None
     include_filters: bool = False
     include_footprints: bool = False
 

@@ -6,6 +6,7 @@ from datetime import datetime
 from across.tools.visibility.constraints import Constraint
 from pydantic import TypeAdapter
 
+from ....core.date_utils import UTCDatetime
 from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
@@ -113,4 +114,4 @@ class InstrumentRead(BaseSchema):
     name: str | None = None
     telescope_id: uuid.UUID | None = None
     telescope_name: str | None = None
-    created_on: datetime | None = None
+    created_on: UTCDatetime | None = None
