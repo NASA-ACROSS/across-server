@@ -1,4 +1,7 @@
 from datetime import datetime, timezone
+from typing import Annotated
+
+from pydantic import BeforeValidator
 
 
 def convert_to_utc(date: str | datetime) -> datetime:
@@ -22,3 +25,6 @@ def convert_to_utc(date: str | datetime) -> datetime:
             return date
     else:
         raise ValueError("Date must be a string or datetime")
+
+
+UTCDatetime = Annotated[datetime, BeforeValidator(convert_to_utc)]

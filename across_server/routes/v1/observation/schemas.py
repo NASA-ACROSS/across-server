@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Annotated, ClassVar
+from typing import ClassVar
 
 from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
-from pydantic import BeforeValidator, Field
+from pydantic import Field
 
-from ....core.date_utils import convert_to_utc
+from ....core.date_utils import UTCDatetime
 from ....core.enums import (
     DepthUnit,
     IVOAObsCategory,
@@ -132,7 +132,7 @@ class Observation(ObservationBase):
 
 
 class ObservationCreate(ObservationBase):
-    created_on: Annotated[datetime | None, BeforeValidator(convert_to_utc)] = None
+    created_on: UTCDatetime | None = None
     created_by_id: uuid.UUID | None = None
 
     footprint: list[ObservationFootprintCreate] = []
@@ -209,8 +209,8 @@ class ObservationRead(PaginationParams):
     status: ObservationStatus | None = None
     proposal: str | None = None
     object_name: str | None = None
-    date_range_begin: datetime | None = None
-    date_range_end: datetime | None = None
+    date_range_begin: UTCDatetime | None = None
+    date_range_end: UTCDatetime | None = None
     bandpass_min: float | None = None
     bandpass_max: float | None = None
     bandpass_type: (
