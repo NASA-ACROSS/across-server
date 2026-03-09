@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/NASA-ACROSS/across-server/compare/v1.2.0...v1.3.0) (2026-03-09)
+
+
+### Features
+
+* **login:** only send magic_link to webserver when running locally for development ([#494](https://github.com/NASA-ACROSS/across-server/issues/494)) ([00d0f15](https://github.com/NASA-ACROSS/across-server/commit/00d0f15b73bcca1bddbefc18f8677a05f9308672))
+* **observation:** add footprints to observation table ([#489](https://github.com/NASA-ACROSS/across-server/issues/489)) ([0db8437](https://github.com/NASA-ACROSS/across-server/commit/0db84372b645a233ff0e461250920c5f347f4f74))
+
+
+### Bug Fixes
+
+* convert timezone containing date strings to naive UTC datetimes ([#517](https://github.com/NASA-ACROSS/across-server/issues/517)) ([3267f2c](https://github.com/NASA-ACROSS/across-server/commit/3267f2c21bbd4edb996bc40600f8222e2c7672f4))
+* **data:** add missing schedule cadences ([#512](https://github.com/NASA-ACROSS/across-server/issues/512)) ([3f35e6b](https://github.com/NASA-ACROSS/across-server/commit/3f35e6b2ccbe0f30593ed2c254fdf830b3cf4d14))
+* **deprecation:** update deprecated 422 constant ([#508](https://github.com/NASA-ACROSS/across-server/issues/508)) ([57c5ff7](https://github.com/NASA-ACROSS/across-server/commit/57c5ff7211295eaca6a583b191eaf9dc1b86dba0))
+* **visibility:** add min_visibility_duration to joint visibility calculator ([#506](https://github.com/NASA-ACROSS/across-server/issues/506)) ([7784347](https://github.com/NASA-ACROSS/across-server/commit/778434736b2cf7e02549bc0306b32fb0137a0051))
+
 ## [1.2.0](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.2.0) (2026-02-23)
 
 
