@@ -5,6 +5,7 @@ from uuid import UUID
 
 import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
+import numpy as np
 from across.tools.core.schemas import Coordinate, Polygon
 from across.tools.footprint import Footprint as ToolsFootprint
 from across.tools.footprint.schemas import Pointing
@@ -27,6 +28,7 @@ from sqlalchemy.orm import aliased
 from .....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from .....core.enums.observation_strategy import ObservationStrategy
 from .....core.enums.visibility_type import VisibilityType
+from .....core.math_utils import gc_distance
 from .....db import models
 from .....db.database import get_session
 from ...instrument.schemas import Instrument as InstrumentSchema
@@ -148,12 +150,16 @@ class VisibilityCalculatorService:
 
         # Filter obs with a cone search using the max radial extent of the footprint
         # Since instrument footprints are centered on (0, 0), the max radial extent
-        # is the max value of any coordinate RA or dec
+        # is the max great circle distance of any vertex from the origin
         footprint_extent: float = max(
             [
                 max(
-                    [abs(coord.x) for coord in footprint]
-                    + [abs(coord.y) for coord in footprint]
+                    gc_distance(
+                        np.asarray([coord.x for coord in footprint]),
+                        np.asarray([coord.y for coord in footprint]),
+                        0.0,
+                        0.0,
+                    )
                 )
                 for footprint in instrument_footprints
             ]
