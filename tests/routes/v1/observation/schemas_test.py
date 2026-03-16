@@ -11,10 +11,10 @@ from across_server.routes.v1.observation.schemas import Observation, Observation
 class TestObservationSchemas:
     @pytest.mark.asyncio
     async def test_from_orm_should_return_observation(
-        self, fake_observation_data: ObservationModel
+        self, fake_observation_data_with_footprint: ObservationModel
     ) -> None:
         """Should return the observation schema when successful"""
-        observation = Observation.from_orm(fake_observation_data)
+        observation = Observation.from_orm(fake_observation_data_with_footprint)
         assert isinstance(observation, Observation)
 
     @pytest.mark.asyncio

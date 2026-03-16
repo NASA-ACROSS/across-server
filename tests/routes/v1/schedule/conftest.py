@@ -211,37 +211,6 @@ def fake_schedule_data(
 
 
 @pytest.fixture()
-def fake_observation_data() -> ObservationModel:
-    coordinate = Coordinate(
-        ra=123.456,
-        dec=-87.65,
-    )
-    return ObservationModel(
-        id=uuid4(),
-        instrument_id=uuid4(),
-        schedule_id=uuid4(),
-        object_name="Test Object",
-        pointing_position=coordinate.create_gis_point(),
-        pointing_ra=123.456,
-        pointing_dec=-87.65,
-        object_position=coordinate.create_gis_point(),
-        object_ra=123.456,
-        object_dec=-87.65,
-        exposure_time=3600,
-        min_wavelength=2000,
-        max_wavelength=4000,
-        peak_wavelength=3000,
-        filter_name="Test Filter",
-        date_range_begin=datetime(2024, 12, 16, 11, 0),
-        date_range_end=datetime(2024, 12, 17, 11, 0),
-        external_observation_id="test-external-obsid",
-        type="imaging",
-        status="planned",
-        created_on=datetime.now(),
-    )
-
-
-@pytest.fixture()
 def mock_telescope_data(mock_schedule_post_data: dict) -> TelescopeModel:
     return TelescopeModel(
         id=UUID(mock_schedule_post_data["telescope_id"]),

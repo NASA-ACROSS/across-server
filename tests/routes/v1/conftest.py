@@ -107,7 +107,7 @@ def fake_permissions() -> list[models.Permission]:
 
 
 @pytest.fixture()
-def mock_observation_data() -> models.Observation:
+def fake_observation_data() -> models.Observation:
     coordinate = Coordinate(
         ra=123.456,
         dec=-87.65,

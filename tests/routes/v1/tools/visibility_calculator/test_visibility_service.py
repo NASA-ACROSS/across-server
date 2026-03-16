@@ -387,10 +387,10 @@ class TestVisibilityService:
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
-            mock_observation_data: Observation,
+            fake_observation_data: Observation,
         ) -> None:
             """Should create pointings when observations are returned"""
-            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+            mock_result.scalars.return_value.all.return_value = [fake_observation_data]
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
@@ -412,10 +412,10 @@ class TestVisibilityService:
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
-            mock_observation_data: Observation,
+            fake_observation_data: Observation,
         ) -> None:
             """Should convert retrieved observations to pointings"""
-            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+            mock_result.scalars.return_value.all.return_value = [fake_observation_data]
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
@@ -437,10 +437,10 @@ class TestVisibilityService:
             mock_result: AsyncMock,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
-            mock_observation_data: Observation,
+            fake_observation_data: Observation,
         ) -> None:
             """Should create pointings from observation parameters"""
-            mock_result.scalars.return_value.all.return_value = [mock_observation_data]
+            mock_result.scalars.return_value.all.return_value = [fake_observation_data]
 
             service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
 
@@ -455,7 +455,7 @@ class TestVisibilityService:
             pointing = res.pointings[0]  # type: ignore[union-attr]
             assert all(
                 [
-                    pointing.start_time == mock_observation_data.date_range_begin,
-                    pointing.end_time == mock_observation_data.date_range_end,
+                    pointing.start_time == fake_observation_data.date_range_begin,
+                    pointing.end_time == fake_observation_data.date_range_end,
                 ]
             )

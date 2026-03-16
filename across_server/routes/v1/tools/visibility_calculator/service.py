@@ -168,18 +168,18 @@ class VisibilityCalculatorService:
         )
 
         # Build a subquery to retrieve latest matching schedule ID
-        schedule2 = aliased(models.Schedule)
+        schedule = aliased(models.Schedule)
         schedule_subquery = (
-            select(schedule2.id)
+            select(schedule.id)
             .where(
                 and_(
-                    schedule2.telescope_id == models.Instrument.telescope_id,
-                    schedule2.date_range_end >= date_range_begin,
-                    schedule2.date_range_begin <= date_range_end,
-                    schedule2.id == models.Observation.schedule_id,
+                    schedule.telescope_id == models.Instrument.telescope_id,
+                    schedule.date_range_end >= date_range_begin,
+                    schedule.date_range_begin <= date_range_end,
+                    schedule.id == models.Observation.schedule_id,
                 )
             )
-            .order_by(schedule2.created_on.desc())
+            .order_by(schedule.created_on.desc())
             .limit(1)
             .scalar_subquery()
         )
