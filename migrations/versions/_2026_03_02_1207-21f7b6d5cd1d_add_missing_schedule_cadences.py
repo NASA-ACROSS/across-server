@@ -1,7 +1,7 @@
 """add missing schedule cadences
 
 Revision ID: 21f7b6d5cd1d
-Revises: 90c0b855ecde
+Revises: ce236d6cd364
 Create Date: 2026-03-02 12:07:55.276903
 
 """
@@ -53,7 +53,7 @@ CADENCES = [
 
 # revision identifiers, used by Alembic.
 revision: str = "21f7b6d5cd1d"
-down_revision: Union[str, None] = "90c0b855ecde"
+down_revision: Union[str, None] = "ce236d6cd364"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
