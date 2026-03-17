@@ -1,7 +1,7 @@
 """resolve ix naming
 
 Revision ID: ce236d6cd364
-Revises: 00b3a6244b1c
+Revises: 90c0b855ecde
 Create Date: 2026-02-24 16:07:18.255481
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "ce236d6cd364"
-down_revision: Union[str, None] = "00b3a6244b1c"
+down_revision: Union[str, None] = "90c0b855ecde"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
