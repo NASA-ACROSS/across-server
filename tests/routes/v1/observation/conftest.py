@@ -33,83 +33,24 @@ def fake_observation_footprint() -> ObservationFootprint:
 
 
 @pytest.fixture()
-def fake_observation_data(
+def fake_observation_data_with_footprint(
     fake_observation_footprint: ObservationFootprint,
+    fake_observation_data: Observation,
 ) -> Observation:
-    coordinate = Coordinate(
-        ra=123.456,
-        dec=-87.65,
-    )
-    observation = Observation(
-        id=uuid4(),
-        instrument_id=uuid4(),
-        schedule_id=uuid4(),
-        object_name="Test Object",
-        pointing_position=coordinate.create_gis_point(),
-        pointing_ra=123.456,
-        pointing_dec=-87.65,
-        object_position=coordinate.create_gis_point(),
-        object_ra=123.456,
-        object_dec=-87.65,
-        exposure_time=3600,
-        min_wavelength=2000,
-        max_wavelength=4000,
-        peak_wavelength=3000,
-        filter_name="Test Filter",
-        date_range_begin=datetime(2024, 12, 16, 11, 0),
-        date_range_end=datetime(2024, 12, 17, 11, 0),
-        external_observation_id="test-external-obsid",
-        type="imaging",
-        status="planned",
-        created_on=datetime.now(),
-    )
-
     # Add footprint to observation
-    fake_observation_footprint.observation_id = observation.id
-    observation.footprints = [fake_observation_footprint]
+    fake_observation_footprint.observation_id = fake_observation_data.id
+    fake_observation_data.footprints = [fake_observation_footprint]
 
-    return observation
+    return fake_observation_data
 
 
 @pytest.fixture()
 def fake_observation_many(
-    fake_observation_footprint: ObservationFootprint,
+    fake_observation_data_with_footprint: Observation,
 ) -> Sequence[Tuple[Observation, int]]:
-    coordinate = Coordinate(
-        ra=123.456,
-        dec=-87.65,
-    )
-    observation = Observation(
-        id=uuid4(),
-        instrument_id=uuid4(),
-        schedule_id=uuid4(),
-        object_name="Test Object",
-        pointing_position=coordinate.create_gis_point(),
-        pointing_ra=123.456,
-        pointing_dec=-87.65,
-        object_position=coordinate.create_gis_point(),
-        object_ra=123.456,
-        object_dec=-87.65,
-        exposure_time=1800,
-        min_wavelength=2000,
-        max_wavelength=4000,
-        peak_wavelength=3000,
-        filter_name="Test Filter",
-        date_range_begin=datetime(2024, 12, 16, 11, 0),
-        date_range_end=datetime(2024, 12, 17, 11, 0),
-        external_observation_id="test-external-obsid",
-        type="imaging",
-        status="planned",
-        created_on=datetime.now(),
-    )
-
-    # Add footprint to observation
-    fake_observation_footprint.observation_id = observation.id
-    observation.footprints = [fake_observation_footprint]
-
     return [
         (
-            observation,
+            fake_observation_data_with_footprint,
             1,
         )
     ]
@@ -136,11 +77,11 @@ def mock_observation_create() -> ObservationCreate:
 
 @pytest.fixture(scope="function")
 def mock_observation_service(
-    fake_observation_data: None, fake_observation_many: None
+    fake_observation_data_with_footprint: None, fake_observation_many: None
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
-    mock.get = AsyncMock(return_value=fake_observation_data)
+    mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
     mock.get_many = AsyncMock(return_value=fake_observation_many)
 
     yield mock

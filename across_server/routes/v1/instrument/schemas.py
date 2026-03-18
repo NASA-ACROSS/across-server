@@ -7,6 +7,7 @@ from across.tools.visibility.constraints import Constraint
 from pydantic import TypeAdapter
 
 from ....core.date_utils import UTCDatetime
+from ....core.enums.observation_strategy import ObservationStrategy
 from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
@@ -35,6 +36,14 @@ class InstrumentBase(BaseSchema):
         the Telescope record the instrument belongs to in id,name format
     footprints: list[list[Point]]
         List of imaging footprints belonging to instrument
+    filters : list[Filter]
+        List of filters belonging to the instrument
+    constraints : list[Constraint]
+        List of Constraints belonging to the instrument
+    visibility_type : VisibilityType
+        How visibility is calculated for the instrument
+    observation_strategy: ObservationStrategy
+        How observations are conducted with the instrument
     """
 
     id: uuid.UUID
@@ -46,6 +55,7 @@ class InstrumentBase(BaseSchema):
     filters: list[Filter] | None = None
     constraints: list[Constraint] | None = None
     visibility_type: VisibilityType | None = None
+    observation_strategy: ObservationStrategy | None = None
 
 
 class Instrument(InstrumentBase):
@@ -93,6 +103,7 @@ class Instrument(InstrumentBase):
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
             visibility_type=obj.visibility_type,
+            observation_strategy=obj.observation_strategy,
         )
 
 

@@ -8,17 +8,20 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from across_server.core.schemas.pagination import Page
+from across_server.db.models import Observation as ObservationModel
 from across_server.routes.v1.observation.schemas import Observation
 
 
 class Setup:
     @pytest_asyncio.fixture(autouse=True, scope="function")
     async def setup(
-        self, async_client: AsyncClient, fake_observation_data: None
+        self,
+        async_client: AsyncClient,
+        fake_observation_data_with_footprint: ObservationModel,
     ) -> None:
         self.client = async_client
         self.endpoint = "/observation/"
-        self.get_data = fake_observation_data
+        self.get_data = fake_observation_data_with_footprint
 
 
 class SetupMany:

@@ -26,8 +26,8 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core.enums.visibility_type import VisibilityType
-from .config import config
+from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
@@ -413,9 +413,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
-    operational_begin_date: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     operational_end_date: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
@@ -544,7 +542,7 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
         Index("ix_schedule_date_range", "date_range_begin", "date_range_end"),
         Index("ix_schedule_date_range_begin", "date_range_begin"),
         Index("ix_schedule_date_range_end", "date_range_end"),
-        Index("ix_schedule_checksum", "checksum", unique=True),
+        Index("ix_schedule_checksum", "checksum"),
     )
 
 
@@ -613,28 +611,6 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     )
     schedule: Mapped["Schedule"] = relationship(
         back_populates="observations", lazy="selectin"
-    )
-    footprints: Mapped[list["ObservationFootprint"]] = relationship(
-        back_populates="observation", lazy="selectin", cascade="all,delete"
-    )
-
-
-class ObservationFootprint(Base):
-    __tablename__ = "observation_footprint"
-
-    observation_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Observation.id)
-    )
-    polygon: Mapped[WKBElement] = mapped_column(
-        Geography("POLYGON", srid=4326, spatial_index=True), nullable=False
-    )
-
-    observation: Mapped["Observation"] = relationship(
-        back_populates="footprints", lazy="selectin"
-    )
-
-    __table_args__ = (
-        Index("idx_observation_footprint_polygon", "polygon", postgresql_using="gist"),
     )
 
 

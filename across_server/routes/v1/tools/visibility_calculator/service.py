@@ -5,17 +5,31 @@ from uuid import UUID
 
 import anyio.to_thread
 import astropy.units as u  # type: ignore[import-untyped]
+import numpy as np
+from across.tools.core.schemas import Coordinate, Polygon
+from across.tools.footprint import Footprint as ToolsFootprint
+from across.tools.footprint.schemas import Pointing
 from across.tools.visibility import (
     EphemerisVisibility,
     JointVisibility,
     compute_ephemeris_visibility,
     compute_joint_visibility,
 )
+from across.tools.visibility.constraints import PointingConstraint
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
+from geoalchemy2.functions import ST_DWithin
+from geoalchemy2.shape import from_shape
+from shapely.geometry import Point
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
+from .....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
+from .....core.enums.observation_strategy import ObservationStrategy
 from .....core.enums.visibility_type import VisibilityType
+from .....core.math_utils import gc_distance
+from .....db import models
 from .....db.database import get_session
 from ...instrument.schemas import Instrument as InstrumentSchema
 from ...tools.ephemeris.service import EphemerisService
@@ -55,7 +69,7 @@ class VisibilityCalculatorService:
         # Obtain constraint definitions
         constraints = instrument.constraints
         if not constraints:
-            raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
+            constraints = []
 
         # Compute Ephemeris
         ephemeris = await self.ephem_service.get(
@@ -65,13 +79,29 @@ class VisibilityCalculatorService:
             step_size=step_size,
         )
 
+        # Check if instrument observation strategy is survey, and if so
+        # pull footprint, observations, and transform to pointing constraints
+        if instrument.observation_strategy == ObservationStrategy.SURVEY:
+            pointing_constraint = await self._get_pointing_constraint(
+                instrument,
+                date_range_begin,
+                date_range_end,
+                ra,
+                dec,
+            )
+            if pointing_constraint is not None:
+                constraints.append(pointing_constraint)
+
+        if not len(constraints):
+            raise VisibilityConstraintsNotFoundException(instrument_id=instrument.id)
+
         # Compute visibility
         vis_function = partial(
             compute_ephemeris_visibility,
             begin=Time(date_range_begin),
             end=Time(date_range_end),
             ephemeris=ephemeris,
-            constraints=constraints,
+            constraints=constraints,  # type: ignore[arg-type]
             ra=ra,
             dec=dec,
             step_size=step_size * u.s,  # type: ignore
@@ -81,6 +111,139 @@ class VisibilityCalculatorService:
         visibility = await anyio.to_thread.run_sync(vis_function)
 
         return visibility
+
+    async def _get_pointing_constraint(
+        self,
+        instrument: InstrumentSchema,
+        date_range_begin: datetime,
+        date_range_end: datetime,
+        ra: float,
+        dec: float,
+    ) -> PointingConstraint | None:
+        """
+        Query the observations for a survey instrument,
+        convert them to ACROSS-tools Pointings, and build the
+        corresponding PointingConstraint.
+
+        Parameters
+        ----------
+        instrument: schemas.Instrument
+            The Instrument belonging to the observations
+        date_range_begin: datetime
+            The begin time to search for observations
+        date_range_end: datetime
+            The end time to search for observations
+        ra: float
+            The right ascension of the target
+        dec: float
+            The declination of the target
+
+        Returns
+        -------
+        PointingConstraint
+            A constraint built from the instrument pointings
+        """
+        # Get instrument footprints
+        instrument_footprints = instrument.footprints
+        if not instrument_footprints:
+            return None
+
+        # Filter obs with a cone search using the max radial extent of the footprint
+        # Since instrument footprints are centered on (0, 0), the max radial extent
+        # is the max great circle distance of any vertex from the origin
+        footprint_extent: float = max(
+            [
+                max(
+                    gc_distance(
+                        np.asarray([coord.x for coord in footprint]),
+                        np.asarray([coord.y for coord in footprint]),
+                        0.0,
+                        0.0,
+                    )
+                )
+                for footprint in instrument_footprints
+            ]
+        )
+        cone_search_point = from_shape(
+            Point(ra, dec),  # type: ignore
+            srid=4326,
+        )
+        # Convert degrees to meters
+        cone_search_radius = (
+            footprint_extent * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE  # type: ignore
+        )
+
+        # Build a subquery to retrieve latest matching schedule ID
+        schedule = aliased(models.Schedule)
+        schedule_subquery = (
+            select(schedule.id)
+            .where(
+                and_(
+                    schedule.telescope_id == models.Instrument.telescope_id,
+                    schedule.date_range_end >= date_range_begin,
+                    schedule.date_range_begin <= date_range_end,
+                    schedule.id == models.Observation.schedule_id,
+                )
+            )
+            .order_by(schedule.created_on.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        # Query observations from most recent schedule that match inputs
+        query = (
+            select(models.Observation)
+            .join(
+                models.Instrument,
+                models.Instrument.id == models.Observation.instrument_id,
+            )
+            .join(models.Schedule, models.Schedule.id == schedule_subquery)
+            .where(
+                and_(
+                    models.Observation.instrument_id == instrument.id,
+                    models.Observation.date_range_end >= date_range_begin,
+                    models.Observation.date_range_begin <= date_range_end,
+                    ST_DWithin(
+                        models.Observation.pointing_position,
+                        cone_search_point,
+                        cone_search_radius,
+                    ),
+                )
+            )
+        )
+
+        result = await self.db.execute(query)
+        observations = result.scalars().all()
+
+        # Transform to tools Footprint
+        detectors = []
+        for footprint in instrument_footprints:
+            coordinates = [Coordinate(ra=coord.x, dec=coord.y) for coord in footprint]
+            detectors.append(Polygon(coordinates=coordinates))
+
+        tools_footprint = ToolsFootprint(detectors=detectors)
+
+        # Project and rotate footprints
+        pointings: list[Pointing] = []
+        for obs in observations:
+            if obs.pointing_ra is not None and obs.pointing_dec is not None:
+                projected_footprint = tools_footprint.project(
+                    Coordinate(ra=obs.pointing_ra, dec=obs.pointing_dec),
+                    roll_angle=obs.pointing_angle or 0.0,
+                )
+
+                # Transform to pointing object
+                pointings.append(
+                    Pointing(
+                        footprint=projected_footprint,
+                        start_time=obs.date_range_begin,
+                        end_time=obs.date_range_end,
+                    )
+                )
+
+        pointing_constraint = PointingConstraint(pointings=pointings)
+
+        return pointing_constraint
 
     async def calculate_windows(
         self,
