@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.3.0](https://github.com/NASA-ACROSS/across-server/compare/v1.2.0...v1.3.0) (2026-03-20)
+
+
+### Features
+
+* **data:** add daytime constraints for ground-based instruments ([#522](https://github.com/NASA-ACROSS/across-server/issues/522)) ([750da12](https://github.com/NASA-ACROSS/across-server/commit/750da12e581669c797e036f78eb84f38a48e430b))
+* **login:** only send magic_link to webserver when running locally for development ([#494](https://github.com/NASA-ACROSS/across-server/issues/494)) ([00d0f15](https://github.com/NASA-ACROSS/across-server/commit/00d0f15b73bcca1bddbefc18f8677a05f9308672))
+* **observation:** add footprints to observation table ([#489](https://github.com/NASA-ACROSS/across-server/issues/489)) ([0db8437](https://github.com/NASA-ACROSS/across-server/commit/0db84372b645a233ff0e461250920c5f347f4f74))
+* **visibility:** add pointing constraint functionality to visibility service ([#498](https://github.com/NASA-ACROSS/across-server/issues/498)) ([54befed](https://github.com/NASA-ACROSS/across-server/commit/54befeda15b73d327c39df2fe4114f197f81c1bf))
+
+
+### Bug Fixes
+
+* **cicd:** use updated shared workflows to simplify cicd pipeline ([#519](https://github.com/NASA-ACROSS/across-server/issues/519)) ([4cd625b](https://github.com/NASA-ACROSS/across-server/commit/4cd625b428b908f6de79013df328ef300d19bdc3))
+* convert timezone containing date strings to naive UTC datetimes ([#517](https://github.com/NASA-ACROSS/across-server/issues/517)) ([3267f2c](https://github.com/NASA-ACROSS/across-server/commit/3267f2c21bbd4edb996bc40600f8222e2c7672f4))
+* **data:** add missing schedule cadences ([#512](https://github.com/NASA-ACROSS/across-server/issues/512)) ([3f35e6b](https://github.com/NASA-ACROSS/across-server/commit/3f35e6b2ccbe0f30593ed2c254fdf830b3cf4d14))
+* **db:** fix multiple head revisions ([#521](https://github.com/NASA-ACROSS/across-server/issues/521)) ([210ad7c](https://github.com/NASA-ACROSS/across-server/commit/210ad7cadd33b879b3de40530d6b2ed9761bfee1))
+* **db:** resolve drift of models to migrations ([#501](https://github.com/NASA-ACROSS/across-server/issues/501)) ([61657d5](https://github.com/NASA-ACROSS/across-server/commit/61657d5fce1c4dd55dc145859830b9f910de30ef))
+* **deprecation:** update deprecated 422 constant ([#508](https://github.com/NASA-ACROSS/across-server/issues/508)) ([57c5ff7](https://github.com/NASA-ACROSS/across-server/commit/57c5ff7211295eaca6a583b191eaf9dc1b86dba0))
+* hydrate null instrument values in /telescope endpoint ([b0404df](https://github.com/NASA-ACROSS/across-server/commit/b0404df717593349474e8541100d2136851d815e))
+* **schedule:** fix indexing and identify duplicate schedules in bulk create ([#504](https://github.com/NASA-ACROSS/across-server/issues/504)) ([1b7abce](https://github.com/NASA-ACROSS/across-server/commit/1b7abce5ece6e5d9dd0092e49eab15e095fd748a))
+* **telescope:** hydrate null instrument values in /telescope endpoint ([#524](https://github.com/NASA-ACROSS/across-server/issues/524)) ([b0404df](https://github.com/NASA-ACROSS/across-server/commit/b0404df717593349474e8541100d2136851d815e))
+* **visibility:** add min_visibility_duration to joint visibility calculator ([#506](https://github.com/NASA-ACROSS/across-server/issues/506)) ([7784347](https://github.com/NASA-ACROSS/across-server/commit/778434736b2cf7e02549bc0306b32fb0137a0051))
+
 ## [1.2.0](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.2.0) (2026-02-23)
 
 
