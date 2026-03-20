@@ -10,7 +10,7 @@ from ....db.models import Instrument as InstrumentModel
 from ....db.models import Telescope as TelescopeModel
 from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint
-from ..instrument.schemas import InstrumentBase
+from ..instrument.schemas import ConstraintsAdaptor, InstrumentBase
 
 
 class TelescopeBase(BaseSchema):
@@ -165,6 +165,11 @@ class TelescopeInstrument(InstrumentBase):
             else [],
             filters=filters if include_filters else [],
             created_on=obj.created_on,
+            constraints=ConstraintsAdaptor.validate_python(
+                [constraint.constraint_parameters for constraint in obj.constraints]
+            ),
+            visibility_type=obj.visibility_type,
+            observation_strategy=obj.observation_strategy,
         )
 
 
