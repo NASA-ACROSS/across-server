@@ -326,6 +326,22 @@ def schedule_create_many_example(
     schedule_create_example: ScheduleCreate,
     mock_schedule_post_data: dict,
 ) -> ScheduleCreateMany:
+    schedule_create_2 = schedule_create_example.model_copy(deep=True)
+    schedule_create_2.name = "Second Name"
+    schedule_create_2.observations[0].object_name = "Second Obs Name"
+    return ScheduleCreateMany(
+        **{
+            "schedules": [schedule_create_example, schedule_create_2],
+            "telescope_id": mock_schedule_post_data["telescope_id"],
+        }
+    )
+
+
+@pytest.fixture
+def schedule_create_many_duplicate_example(
+    schedule_create_example: ScheduleCreate,
+    mock_schedule_post_data: dict,
+) -> ScheduleCreateMany:
     return ScheduleCreateMany(
         **{
             "schedules": [schedule_create_example, schedule_create_example],
