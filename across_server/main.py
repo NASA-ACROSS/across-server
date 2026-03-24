@@ -22,6 +22,7 @@ from .routes import v1
 
 # Disable auto-downloading of IERS data
 iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 # Configure UTC system time
 os.environ["TZ"] = "UTC"
