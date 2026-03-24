@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/NASA-ACROSS/across-server/compare/v1.3.0...v1.3.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **hotfix:** configure astropy to not download files ([#528](https://github.com/NASA-ACROSS/across-server/issues/528)) ([0f547eb](https://github.com/NASA-ACROSS/across-server/commit/0f547eb4a999e1d6317cb39614f116bda1e8e422))
+
 ## [1.3.0](https://github.com/NASA-ACROSS/across-server/compare/v1.2.0...v1.3.0) (2026-03-20)
 
 
