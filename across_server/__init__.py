@@ -18,8 +18,4 @@ Research Foundation.  All rights reserved. This software is licensed under the
 Apache 2.0 License.
 """
 
-from astropy.utils import iers  # type: ignore
-
 __version__ = "1.3.0"
-
-iers.conf.auto_download = False
