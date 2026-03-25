@@ -75,7 +75,7 @@ def fake_instrument_with_constraints(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
-        constraints=[fake_sun_constraint],
+        constraints=[fake_sun_constraint.model_dump()],
         short_name="test",
         created_on=datetime.now(),
     )
@@ -117,7 +117,7 @@ def fake_survey_instrument(
         id=uuid4(),
         name="test_instrument",
         visibility_type=VisibilityType.EPHEMERIS,
-        constraints=[fake_sun_constraint],
+        constraints=[fake_sun_constraint.model_dump()],
         short_name="test",
         created_on=datetime.now(),
         observation_strategy=ObservationStrategy.SURVEY,
