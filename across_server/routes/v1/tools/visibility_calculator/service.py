@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import partial
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 import anyio.to_thread
@@ -15,11 +15,12 @@ from across.tools.visibility import (
     compute_ephemeris_visibility,
     compute_joint_visibility,
 )
-from across.tools.visibility.constraints import PointingConstraint
+from across.tools.visibility.constraints import Constraint, PointingConstraint
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
+from pydantic import TypeAdapter
 from shapely.geometry import Point
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,6 +38,8 @@ from .exceptions import (
     VisibilityConstraintsNotFoundException,
     VisibilityTypeNotImplementedException,
 )
+
+ConstraintsAdaptor = TypeAdapter(list[Constraint])
 
 
 class VisibilityCalculatorService:
@@ -66,9 +69,10 @@ class VisibilityCalculatorService:
         else:
             step_size = 3600
 
-        # Obtain constraint definitions
-        raw_constraints = instrument.constraints or []
-        constraints: list[dict[str, Any] | PointingConstraint] = list(raw_constraints)
+        # Obtain constraint definitions — deserialize raw dicts back to typed objects
+        constraints: list[Constraint | PointingConstraint] = (
+            ConstraintsAdaptor.validate_python(instrument.constraints or [])
+        )
 
         # Compute Ephemeris
         ephemeris = await self.ephem_service.get(
@@ -100,7 +104,7 @@ class VisibilityCalculatorService:
             begin=Time(date_range_begin),
             end=Time(date_range_end),
             ephemeris=ephemeris,
-            constraints=constraints,  # type: ignore[arg-type]
+            constraints=constraints,
             ra=ra,
             dec=dec,
             step_size=step_size * u.s,  # type: ignore
