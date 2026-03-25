@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import partial
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 import anyio.to_thread
@@ -67,9 +67,8 @@ class VisibilityCalculatorService:
             step_size = 3600
 
         # Obtain constraint definitions
-        constraints = instrument.constraints
-        if not constraints:
-            constraints = []
+        raw_constraints = instrument.constraints or []
+        constraints: list[dict[str, Any] | PointingConstraint] = list(raw_constraints)
 
         # Compute Ephemeris
         ephemeris = await self.ephem_service.get(
