@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/NASA-ACROSS/across-server/compare/v1.3.1...v1.3.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* add migration to roll back daytime constraints ([#531](https://github.com/NASA-ACROSS/across-server/issues/531)) ([e7ee2f9](https://github.com/NASA-ACROSS/across-server/commit/e7ee2f9c83955feb7c4c41c9fa9617fc945a19bb))
+
 ## [1.3.1](https://github.com/NASA-ACROSS/across-server/compare/v1.3.0...v1.3.1) (2026-03-24)
 
 
