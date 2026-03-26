@@ -3,13 +3,13 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from across.tools.visibility.constraints import Constraint
 from pydantic import TypeAdapter
 
 from ....core.date_utils import UTCDatetime
 from ....core.enums.observation_strategy import ObservationStrategy
 from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
+from ....core.schemas.constraints import Constraint
 from ....db.models import Instrument as InstrumentModel
 from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint, Point

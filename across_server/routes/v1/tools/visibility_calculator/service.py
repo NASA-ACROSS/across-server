@@ -15,11 +15,13 @@ from across.tools.visibility import (
     compute_ephemeris_visibility,
     compute_joint_visibility,
 )
+from across.tools.visibility.constraints import Constraint as ToolsConstraint
 from across.tools.visibility.constraints import PointingConstraint
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
+from pydantic import TypeAdapter
 from shapely.geometry import Point
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,6 +39,8 @@ from .exceptions import (
     VisibilityConstraintsNotFoundException,
     VisibilityTypeNotImplementedException,
 )
+
+ToolsConstraintsAdapter = TypeAdapter(list[ToolsConstraint])
 
 
 class VisibilityCalculatorService:
@@ -67,9 +71,18 @@ class VisibilityCalculatorService:
             step_size = 3600
 
         # Obtain constraint definitions
-        constraints = instrument.constraints
-        if not constraints:
-            constraints = []
+        # Convert local API constraints to across.tools constraints used by
+        # compute_ephemeris_visibility.
+        raw_constraints = [
+            constraint.root if hasattr(constraint, "root") else constraint
+            for constraint in (instrument.constraints or [])
+        ]
+        constraints = ToolsConstraintsAdapter.validate_python(
+            [
+                constraint.model_dump(mode="json", exclude_none=True)
+                for constraint in raw_constraints
+            ]
+        )
 
         # Compute Ephemeris
         ephemeris = await self.ephem_service.get(
