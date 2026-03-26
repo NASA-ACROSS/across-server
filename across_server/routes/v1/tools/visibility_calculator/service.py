@@ -73,14 +73,13 @@ class VisibilityCalculatorService:
         # Obtain constraint definitions
         # Convert local API constraints to across.tools constraints used by
         # compute_ephemeris_visibility.
-        raw_constraints = [
-            constraint.root if hasattr(constraint, "root") else constraint
-            for constraint in (instrument.constraints or [])
-        ]
         constraints = ToolsConstraintsAdapter.validate_python(
             [
-                constraint.model_dump(mode="json", exclude_none=True)
-                for constraint in raw_constraints
+                constraint.model_dump(
+                    mode="json",
+                    exclude_none=True,
+                )
+                for constraint in (instrument.constraints or [])
             ]
         )
 
@@ -114,7 +113,7 @@ class VisibilityCalculatorService:
             begin=Time(date_range_begin),
             end=Time(date_range_end),
             ephemeris=ephemeris,
-            constraints=constraints,  # type: ignore[arg-type]
+            constraints=constraints,
             ra=ra,
             dec=dec,
             step_size=step_size * u.s,  # type: ignore
@@ -249,8 +248,8 @@ class VisibilityCalculatorService:
                 pointings.append(
                     Pointing(
                         footprint=projected_footprint,
-                        start_time=obs.date_range_begin,
-                        end_time=obs.date_range_end,
+                        start_time=Time(obs.date_range_begin),
+                        end_time=Time(obs.date_range_end),
                     )
                 )
 
