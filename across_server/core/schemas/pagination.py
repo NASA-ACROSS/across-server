@@ -2,13 +2,17 @@ from typing import Generic, Self, TypeVar
 
 from pydantic import Field, computed_field, model_validator
 
+from ...core.config import config
 from ...core.schemas.base import BaseSchema
 
 
 class PaginationParams(BaseSchema):
     page: int | None = Field(default=1, ge=1, description="Page number")
     page_limit: int | None = Field(
-        default=100, ge=1, le=10000, description="Records per page"
+        default=config.DEFAULT_PAGE_LIMIT,
+        ge=1,
+        le=10000,
+        description="Records per page",
     )
 
     @computed_field  # type: ignore[prop-decorator]
