@@ -6,9 +6,9 @@ from ...core.schemas.base import BaseSchema
 
 
 class PaginationParams(BaseSchema):
-    page: int | None = Field(default=None, ge=1, description="Page number")
+    page: int | None = Field(default=1, ge=1, description="Page number")
     page_limit: int | None = Field(
-        default=None, ge=1, le=10000, description="Records per page"
+        default=100, ge=1, le=10000, description="Records per page"
     )
 
     @computed_field  # type: ignore[prop-decorator]
