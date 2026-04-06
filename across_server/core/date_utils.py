@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from astropy.time import Time
+from astropy.time import Time  # type: ignore[import-untyped]
 from pydantic import BeforeValidator
 
 
