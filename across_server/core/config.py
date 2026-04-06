@@ -43,6 +43,8 @@ class Config(BaseConfig):
     APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
     APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
 
+    DEFAULT_PAGE_LIMIT: int = 100
+
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
