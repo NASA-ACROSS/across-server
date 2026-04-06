@@ -24,7 +24,7 @@ def convert_to_utc(date: str | datetime) -> datetime:
             return date.astimezone(timezone.utc).replace(tzinfo=None)
         else:
             return date
-    elif isinstance(date, Time):
+    elif isinstance(date, Time) and date.isscalar:
         return date.datetime
     else:
         raise ValueError("Date must be a string or datetime")
