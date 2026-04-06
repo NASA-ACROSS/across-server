@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
+from astropy.time import Time
 from pydantic import BeforeValidator
 
 
@@ -23,6 +24,8 @@ def convert_to_utc(date: str | datetime) -> datetime:
             return date.astimezone(timezone.utc).replace(tzinfo=None)
         else:
             return date
+    elif isinstance(date, Time):
+        return date.datetime
     else:
         raise ValueError("Date must be a string or datetime")
 
