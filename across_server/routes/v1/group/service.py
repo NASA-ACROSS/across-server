@@ -26,17 +26,21 @@ class GroupService:
         return result.all()
 
     async def get(self, id: UUID) -> models.Group:
-        record = await self.db.get(models.Group, id)
+        group = await self.db.get(models.Group, id)
 
-        if record is None:
+        if group is None:
             raise GroupNotFoundException(id)
 
-        return record
+        await group.awaitable_attrs.users
+        await group.awaitable_attrs.roles
+
+        for group_role in group.roles:
+            await group_role.awaitable_attrs.users
+
+        return group
 
     async def remove_user(self, user: models.User, group_id: UUID) -> None:
         group = await self.get(id=group_id)
-        await group.awaitable_attrs.users
-        await group.awaitable_attrs.roles
 
         # application layer removal of group roles from the user and service account
         # can be removed/refactored when across-server issue #196 is implemented

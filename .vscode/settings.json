@@ -34,6 +34,7 @@
         "itsdangerous",
         "ivoa",
         "joinedload",
+        "Morty",
         "mypy",
         "onupdate",
         "overrider",
@@ -65,7 +66,6 @@
     "python.testing.pytestArgs": [
         "tests"
     ],
-    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "makefile.configureOnOpen": false,

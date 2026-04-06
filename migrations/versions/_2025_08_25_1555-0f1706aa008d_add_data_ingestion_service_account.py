@@ -61,9 +61,8 @@ def upgrade() -> None:
             overwrite=True,
         )
 
-    # assign roles to the service account -- must be done separately since
+    # assign roles to the service account from existing role -- must pull the existing record.
     # sqlalchemy expects db records, not new instantiations or IDs
-    # get role records from the db
     roles = session.scalars(
         select(models.Role).filter_by(id=role_data["system_role"]["id"])
     )

@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Security, status
 
 from .... import auth, db
 from ....core.config import config
@@ -77,7 +77,9 @@ async def get(
     responses={
         status.HTTP_201_CREATED: {},
     },
-    dependencies=[Depends(auth.strategies.webserver_access)],
+    dependencies=[
+        Security(auth.strategies.webserver_access, scopes=["system:user:write"])
+    ],
 )
 async def create(
     user_service: Annotated[UserService, Depends(UserService)],
