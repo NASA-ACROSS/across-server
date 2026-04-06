@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from astropy.time import Time
+from astropy.time import Time  # type: ignore[import-untyped]
 from dateutil import tz  # type: ignore[import]
 
 from across_server.core.date_utils import convert_to_utc
