@@ -34,7 +34,7 @@ pytest==9.0.2
     #   pytest-fastapi-deps
 pytest-asyncio==1.3.0
     # via -r requirements/test.in
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via -r requirements/test.in
 pytest-fastapi-deps==0.2.3
     # via -r requirements/test.in
