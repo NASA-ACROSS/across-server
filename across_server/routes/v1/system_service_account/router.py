@@ -45,7 +45,7 @@ async def get(
 
 
 @router.patch(
-    "/{service_account_id}/rotate_key",
+    "/{service_account_id}/rotate-key",
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration duration",
     operation_id="service_account_rotate_key",
