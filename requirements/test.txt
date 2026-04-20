@@ -20,9 +20,9 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pydantic==2.12.5
+pydantic==2.13.2
     # via fastapi
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pygments==2.19.2
     # via pytest

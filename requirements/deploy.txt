@@ -52,11 +52,15 @@ certifi==2025.11.12
     #   httpx
     #   requests
 cffi==2.0.0
-    # via argon2-cffi-bindings
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 charset-normalizer==3.4.4
     # via requests
 click==8.3.1
     # via uvicorn
+cryptography==46.0.7
+    # via secretstorage
 diskcache==5.6.3
     # via across-tools
 dnspython==2.8.0
@@ -96,6 +100,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.3.0
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jmespath==1.0.1
     # via
     #   boto3
@@ -140,14 +148,14 @@ plotly==6.5.2
     # via across-tools
 pycparser==2.23
     # via cffi
-pydantic==2.12.5
+pydantic[email]==2.13.2
     # via
     #   -r requirements/base.in
     #   across-tools
     #   fastapi
     #   pydantic-settings
     #   rust-ephem
-pydantic-core==2.41.5
+pydantic-core==2.46.2
     # via pydantic
 pydantic-settings==2.12.0
     # via
@@ -179,6 +187,8 @@ rust-ephem==0.4.0
     # via across-tools
 s3transfer==0.16.0
     # via boto3
+secretstorage==3.5.0
+    # via keyring
 sgp4==2.25
     # via across-tools
 shapely==2.1.2
@@ -197,7 +207,7 @@ spacetrack==1.4.0
     # via across-tools
 spiceypy==8.0.0
     # via across-tools
-sqlalchemy==2.0.45
+sqlalchemy[asyncio]==2.0.45
     # via
     #   -r requirements/base.in
     #   alembic
