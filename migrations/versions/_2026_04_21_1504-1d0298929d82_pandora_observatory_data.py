@@ -134,7 +134,7 @@ OBSERVATORY: dict = {
             "priority": 1,
             "parameters": {
                 "id": uuid.UUID("fa45448e-6aac-45dd-8101-3c1a58390c88"),
-                "norad_id": 98415,
+                "norad_id": 67395,
                 "norad_satellite_name": "PANDORA",
             },
         },
