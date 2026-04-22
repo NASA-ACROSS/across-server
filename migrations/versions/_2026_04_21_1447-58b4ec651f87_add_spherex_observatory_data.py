@@ -7,6 +7,7 @@ Create Date: 2026-04-21 14:47:22.948075
 """
 
 import uuid
+from datetime import datetime
 from typing import Sequence, Union
 
 from across.tools import WavelengthBandpass
@@ -80,7 +81,7 @@ SPHEREX_BAND_4 = WavelengthBandpass(
     unit=tools_enums.WavelengthUnit.MICRON,
 )
 SPHEREX_BAND_5 = WavelengthBandpass(
-    filter_name="SPHEREx Band 1=5",
+    filter_name="SPHEREx Band 5",
     min=3.82,
     max=4.42,
     unit=tools_enums.WavelengthUnit.MICRON,
@@ -99,6 +100,7 @@ OBSERVATORY: dict = {
     "short_name": "SPHEREx",
     "type": ObservatoryType.SPACE_BASED.value,
     "reference_url": "https://spherex.caltech.edu",
+    "operational_begin_date": datetime(2025, 5, 1, 0, 0, 0),
     "telescopes": [
         {
             "id": uuid.UUID("0c8163cd-aff1-445e-9dc2-ec396aab0340"),
@@ -120,42 +122,42 @@ OBSERVATORY: dict = {
                     "filters": [
                         {
                             "id": uuid.UUID("71afe5a7-675e-4342-bb7c-3531e67d5778"),
-                            "name": "SPHEREx Band 1",
+                            "name": SPHEREX_BAND_1.filter_name,
                             "min_wavelength": SPHEREX_BAND_1.min,
                             "max_wavelength": SPHEREX_BAND_1.max,
                             "is_operational": True,
                         },
                         {
                             "id": uuid.UUID("b87bb481-572c-4648-9822-66020e150f75"),
-                            "name": "SPHEREx Band 2",
+                            "name": SPHEREX_BAND_2.filter_name,
                             "min_wavelength": SPHEREX_BAND_2.min,
                             "max_wavelength": SPHEREX_BAND_2.max,
                             "is_operational": True,
                         },
                         {
                             "id": uuid.UUID("5fad0293-e05f-4f8f-b8a5-1078cbe9eb61"),
-                            "name": "SPHEREx Band 3",
+                            "name": SPHEREX_BAND_3.filter_name,
                             "min_wavelength": SPHEREX_BAND_3.min,
                             "max_wavelength": SPHEREX_BAND_3.max,
                             "is_operational": True,
                         },
                         {
                             "id": uuid.UUID("303bca68-4b46-4c6e-a166-1fc68772bf5c"),
-                            "name": "SPHEREx Band 4",
+                            "name": SPHEREX_BAND_4.filter_name,
                             "min_wavelength": SPHEREX_BAND_4.min,
                             "max_wavelength": SPHEREX_BAND_4.max,
                             "is_operational": True,
                         },
                         {
                             "id": uuid.UUID("7e395b0e-a51e-448c-ad0d-becee5a151e5"),
-                            "name": "SPHEREx Band 5",
+                            "name": SPHEREX_BAND_5.filter_name,
                             "min_wavelength": SPHEREX_BAND_5.min,
                             "max_wavelength": SPHEREX_BAND_5.max,
                             "is_operational": True,
                         },
                         {
                             "id": uuid.UUID("dbd210bb-b2d2-48a5-84c3-edcee3ebf657"),
-                            "name": "SPHEREx Band 6",
+                            "name": SPHEREX_BAND_6.filter_name,
                             "min_wavelength": SPHEREX_BAND_6.min,
                             "max_wavelength": SPHEREX_BAND_6.max,
                             "is_operational": True,
