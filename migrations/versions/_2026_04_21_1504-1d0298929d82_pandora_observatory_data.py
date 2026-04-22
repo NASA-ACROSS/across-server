@@ -14,10 +14,11 @@ from across.tools.core.enums import ConstraintType
 from alembic import op
 from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2026_02_24 as snapshot_models
+import migrations.versions.model_snapshots.models_2026_04_21 as snapshot_models
 from across_server.core.enums.ephemeris_type import EphemerisType
 from across_server.core.enums.instrument_fov import InstrumentFOV
 from across_server.core.enums.instrument_type import InstrumentType
+from across_server.core.enums.observation_strategy import ObservationStrategy
 from across_server.core.enums.observatory_type import ObservatoryType
 from across_server.core.enums.visibility_type import VisibilityType
 from migrations.build_records import ssa_records
@@ -77,6 +78,7 @@ OBSERVATORY: dict = {
             "name": "Pandora Observatory",
             "short_name": "Pandora",
             "reference_url": "https://pandorasat.com/",
+            "is_operational": True,
             "instruments": [
                 {
                     "id": uuid.UUID("5865b62e-179f-4e5b-9cd0-692d1ed84d4a"),
@@ -88,6 +90,8 @@ OBSERVATORY: dict = {
                     "footprint": PANDORA_VISDA_FOOTPRINT,
                     "filters": VISDA_FILTERS,
                     "visibility_type": VisibilityType.EPHEMERIS,
+                    "observation_strategy": ObservationStrategy.POINTED,
+                    "is_operational": True,
                 },
                 {
                     "id": uuid.UUID("6153c306-d100-4118-b859-b7230ff0480e"),
@@ -95,9 +99,12 @@ OBSERVATORY: dict = {
                     "short_name": "NIRDA",
                     "reference_url": "http://pandorasat.com/about/#pandora-payload",
                     "type": InstrumentType.SPECTROSCOPIC_LOW_RES.value,
-                    "field_of_view": InstrumentFOV.POINT,
+                    "field_of_view": InstrumentFOV.POINT.value,
                     "filters": NIRDA_FILTERS,
+                    "footprint": [],
                     "visibility_type": VisibilityType.EPHEMERIS,
+                    "observation_strategy": ObservationStrategy.POINTED,
+                    "is_operational": True,
                 },
             ],
             # constraint information taken from section 2.1 of https://arxiv.org/pdf/2305.02285
