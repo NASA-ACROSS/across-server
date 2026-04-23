@@ -1,7 +1,7 @@
 """pandora observatory data
 
 Revision ID: 1d0298929d82
-Revises: a99c9ee52dce
+Revises: 58b4ec651f87
 Create Date: 2026-04-21 15:04:36.524515
 
 """
@@ -26,7 +26,7 @@ from migrations.util.footprint_util import arcsec_to_deg, square_footprint
 
 # revision identifiers, used by Alembic.
 revision: str = "1d0298929d82"
-down_revision: Union[str, None] = "a99c9ee52dce"
+down_revision: Union[str, None] = "58b4ec651f87"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
