@@ -84,12 +84,26 @@ def fake_user(
 
 
 @pytest.fixture
-def fake_group_role(fake_permissions: list[models.Permission]) -> models.GroupRole:
+def fake_group_role_base() -> models.Group:
+    return models.Group(
+        **{
+            "id": "12aa89d2-1b77-4a34-9504-063236b58782",
+            "name": "test group",
+            "short_name": "test",
+        }
+    )
+
+
+@pytest.fixture
+def fake_group_role(
+    fake_permissions: list[models.Permission], fake_group_role_base: models.Group
+) -> models.GroupRole:
     return models.GroupRole(
         **{
             "id": "12aa89d2-1b77-4a34-9504-063236b58782",
             "name": "Schedule Operations",
             "permissions": fake_permissions,
+            "group": fake_group_role_base,
         }
     )
 

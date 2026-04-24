@@ -8,6 +8,7 @@ from pydantic import BaseModel, BeforeValidator, EmailStr
 
 from ....core.schemas import Permission
 from ....core.schemas.base import BaseSchema
+from ..group.schemas import GroupBase
 from ..role.schemas import RoleBase
 
 # Regular expression to detect HTML tags
@@ -58,6 +59,7 @@ class GroupRole(BaseSchema):
     id: uuid.UUID
     name: str
     permissions: list[Permission]
+    group: GroupBase
 
 
 class Group(BaseSchema):
