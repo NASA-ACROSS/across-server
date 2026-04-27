@@ -70,7 +70,7 @@ click==8.3.1
     #   uvicorn
 coverage[toml]==7.13.0
     # via pytest-cov
-cryptography==46.0.7
+cryptography==47.0.0
     # via secretstorage
 diskcache==5.6.3
     # via across-tools
@@ -206,8 +206,8 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.5.1
-    # via -r lint.in
+pre-commit==4.6.0
+    # via -r requirements/lint.in
 pycparser==2.23
     # via cffi
 pydantic[email]==2.12.5
