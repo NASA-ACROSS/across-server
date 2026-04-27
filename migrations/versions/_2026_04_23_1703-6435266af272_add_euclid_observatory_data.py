@@ -199,6 +199,16 @@ OBSERVATORY: dict = {
                 "naif_id": -680,
             },
         },
+        {
+            "id": uuid.UUID("f1c5d378-b9df-48ac-a9cc-ab7803a6037e"),
+            "ephemeris_type": EphemerisType.TLE.value,
+            "priority": 2,
+            "parameters": {
+                "id": uuid.UUID("95791809-377d-41e5-92ac-4b7d8e77a3f3"),
+                "norad_id": 57209,
+                "norad_satellite_name": "EUCLID",
+            },
+        },
     ],
     "group": {
         "id": uuid.UUID("2d0d7068-c315-4d99-b936-55d1bcc26fea"),
