@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
+from astropy.time import Time  # type: ignore[import-untyped]
 from pydantic import BeforeValidator
 
 
-def convert_to_utc(date: str | datetime) -> datetime:
+def convert_to_utc(date: str | datetime | Time) -> datetime:
     """
     Converts datetimes or strings to UTC and remove timezone info
     Timezone-naive datetimes are needed for sqlalchemy
@@ -23,6 +24,8 @@ def convert_to_utc(date: str | datetime) -> datetime:
             return date.astimezone(timezone.utc).replace(tzinfo=None)
         else:
             return date
+    elif isinstance(date, Time) and date.isscalar:
+        return date.datetime
     else:
         raise ValueError("Date must be a string or datetime")
 

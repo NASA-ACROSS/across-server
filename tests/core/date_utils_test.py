@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from astropy.time import Time  # type: ignore[import-untyped]
 from dateutil import tz  # type: ignore[import]
 
 from across_server.core.date_utils import convert_to_utc
@@ -61,7 +62,24 @@ class TestConvertToUTC:
         """Should convert non-UTC strings to UTC before removing timezone"""
         assert convert_to_utc(self.mock_date_string_gsfc) == self.mock_datetime_tz_naive
 
+    def test_should_handle_scalar_astropy_time(self) -> None:
+        """Should convert scalar astropy Time values to timezone-naive datetimes"""
+        astropy_time = Time("2025-01-01T00:00:00", format="isot", scale="utc")
+
+        assert convert_to_utc(astropy_time) == self.mock_datetime_tz_naive
+
     def test_should_raise_exception_when_input_not_date(self) -> None:
         """should raise an exception when input is not a datetime or iso format string"""
         with pytest.raises(ValueError):
             convert_to_utc("twenty twenty four")
+
+    def test_should_raise_exception_when_astropy_time_is_not_scalar(self) -> None:
+        """Should reject non-scalar astropy Time values"""
+        astropy_time = Time(
+            ["2025-01-01T00:00:00", "2025-01-02T00:00:00"],
+            format="isot",
+            scale="utc",
+        )
+
+        with pytest.raises(ValueError, match="Date must be a string or datetime"):
+            convert_to_utc(astropy_time)
