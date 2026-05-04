@@ -1,7 +1,7 @@
 """add xrism observatory data
 
 Revision ID: d7412770b0be
-Revises: 1d0298929d82
+Revises: 6435266af272
 Create Date: 2026-04-29 12:14:58.813841
 
 """
@@ -37,7 +37,7 @@ from migrations.util.footprint_util import (
 
 # revision identifiers, used by Alembic.
 revision: str = "d7412770b0be"
-down_revision: Union[str, None] = "1d0298929d82"
+down_revision: Union[str, None] = "6435266af272"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
