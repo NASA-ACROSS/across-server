@@ -11,6 +11,7 @@ from .seeds.footprints import footprints
 from .seeds.group_roles import group_roles
 from .seeds.groups import groups
 from .seeds.instruments import instruments
+from .seeds.observation_footprints import observation_footprints
 from .seeds.observations import observations
 from .seeds.observatories import (
     earth_location_parameters,
@@ -40,6 +41,7 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.Footprint, footprints),
     (models.Schedule, schedules),
     (models.Observation, observations),
+    (models.ObservationFootprint, observation_footprints),
     (models.TLE, tles),
     (models.TLEParameters, tle_parameters),
     (models.JPLEphemerisParameters, jpl_parameters),

@@ -1,15 +1,9 @@
 name: Feature Branch
+
 on:
   pull_request:
     branches: ["main"]
-    types: [opened, synchronize, reopened, closed, labeled]
-    paths-ignore:
-      # release-pr _should_ be the only PR to ever modify this.
-      - across_server/__init__.py
-      - .release-please-manifest.json
-      - CHANGELOG.md
-      - Makefile
-      - release-please-config.json
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -23,7 +17,7 @@ permissions:
 
 jobs:
   do:
-    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-feature-branch.yml@main
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-feature-branch.yml@ecspress-feature-branch-only-builds
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"

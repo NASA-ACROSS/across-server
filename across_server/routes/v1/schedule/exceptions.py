@@ -22,7 +22,7 @@ class DuplicateScheduleException(AcrossHTTPException):
 class ScheduleInstrumentNotFoundException(AcrossHTTPException):
     def __init__(self, instrument_id: uuid.UUID, telescope_id: uuid.UUID):
         super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             message=f" Instrument ({instrument_id}) not found for telescope ({telescope_id}).",
             log_data={"entity": "Schedule", "instrument_id": instrument_id},
         )

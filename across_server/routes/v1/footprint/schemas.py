@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from across.tools import Coordinate, Polygon
+from across.tools import Coordinate
+from across.tools import Polygon as ToolsPolygon
 from across.tools.footprint import Footprint as ToolsFootprint
-from geoalchemy2 import shape
+from geoalchemy2 import WKTElement, shape
+from shapely import Polygon
 
 from ....core.schemas.base import BaseSchema
 from ....db.models import Footprint as FootprintModel
@@ -32,6 +34,24 @@ class FootprintBase(BaseSchema):
     """
 
     polygon: list[Point]
+
+    def polygon_to_wkt(self) -> WKTElement:
+        """
+        Method that converts the polygon of this footprint to a WKT Element
+
+        Returns
+        -------
+            WKTElement: WKT representation of the polygon
+        """
+        points = [(point.x, point.y) for point in self.polygon]
+
+        shapely_polygon = Polygon(points)
+
+        wkt_polygon = WKTElement(
+            shapely_polygon.wkt,
+            srid=4326,  # Specify the appropriate SRID
+        )
+        return wkt_polygon
 
 
 class Footprint(FootprintBase):
@@ -91,6 +111,6 @@ class Footprint(FootprintBase):
             poly = shape.to_shape(obj.polygon)
             x, y = poly.exterior.coords.xy  # type: ignore
             coordinates = [Coordinate(ra=x[i], dec=y[i]) for i in range(len(x))]
-            detectors.append(Polygon(coordinates=coordinates))
+            detectors.append(ToolsPolygon(coordinates=coordinates))
 
         return ToolsFootprint(detectors=detectors)

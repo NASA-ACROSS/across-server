@@ -38,10 +38,14 @@ class Config(BaseConfig):
     DATA_INGESTION_INGESTION_SERVICE_ACCOUNT_SECRET_PATH: str = (
         "data-ingestion/core-server/client_secret"
     )
+    FRONTEND_SERVICE_ACCOUNT_ID_PATH: str = "frontend/core-server/client_id"
+    FRONTEND_SERVICE_ACCOUNT_SECRET_PATH: str = "frontend/core-server/client_secret"
 
     APP_TITLE: str = "ACROSS Server"
     APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
     APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
+
+    DEFAULT_PAGE_LIMIT: int = 100
 
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL

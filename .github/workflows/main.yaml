@@ -1,16 +1,7 @@
-name: Main Branch
+name: Main
 on:
   push:
     branches: [main]
-    paths-ignore:
-      # We only want to run main branch workflow on code change PRs and ignore
-      # release-please PRs since they do not need another deploy to dev.
-      # release-please PRs only ever get generated AFTER a successful deploy to dev.
-      # release-pr _should_ be the only PR to ever modify this.
-      - across_server/__init__.py
-      - .release-please-manifest.json
-      - CHANGELOG.md
-      - release-please-config.json
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,7 +15,7 @@ permissions:
 
 jobs:
   do:
-    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-main-branch.yml@main
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-main-branch.yml@remove-release-please-from-main
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"

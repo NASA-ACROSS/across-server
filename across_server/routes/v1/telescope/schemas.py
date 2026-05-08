@@ -3,13 +3,14 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from ....core.date_utils import UTCDatetime
 from ....core.enums.schedule_status import ScheduleStatus
 from ....core.schemas.base import BaseSchema, IDNameSchema
 from ....db.models import Instrument as InstrumentModel
 from ....db.models import Telescope as TelescopeModel
 from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint
-from ..instrument.schemas import InstrumentBase
+from ..instrument.schemas import ConstraintsAdaptor, InstrumentBase
 
 
 class TelescopeBase(BaseSchema):
@@ -111,7 +112,7 @@ class TelescopeRead(BaseSchema):
     name: str | None = None
     instrument_id: uuid.UUID | None = None
     instrument_name: str | None = None
-    created_on: datetime | None = None
+    created_on: UTCDatetime | None = None
     include_filters: bool = False
     include_footprints: bool = False
 
@@ -164,6 +165,11 @@ class TelescopeInstrument(InstrumentBase):
             else [],
             filters=filters if include_filters else [],
             created_on=obj.created_on,
+            constraints=ConstraintsAdaptor.validate_python(
+                [constraint.constraint_parameters for constraint in obj.constraints]
+            ),
+            visibility_type=obj.visibility_type,
+            observation_strategy=obj.observation_strategy,
         )
 
 

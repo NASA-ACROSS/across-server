@@ -22,6 +22,28 @@ class TestLoginRoute:
         assert res.status_code == fastapi.status.HTTP_200_OK
 
     @pytest.mark.asyncio
+    async def test_should_return_magic_link_dict_when_local(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
+        """Should return a dict containing magic_link when successful"""
+        mock_config_runtime_env_is_local.return_value = True
+        res = await self.client.post(self.endpoint)
+        response_dict = res.json()
+
+        assert isinstance(response_dict, dict)
+
+    @pytest.mark.asyncio
+    async def test_magic_link_dict_should_contain_string(
+        self, mock_config_runtime_env_is_local: AsyncMock
+    ) -> None:
+        """Should return a dict containing magic_link when successful"""
+        mock_config_runtime_env_is_local.return_value = True
+        res = await self.client.post(self.endpoint)
+        response_dict = res.json()
+
+        assert isinstance(response_dict["magic_link"], str)
+
+    @pytest.mark.asyncio
     async def test_should_call_magic_link_generate(
         self,
         mock_magic_link_generate: AsyncMock,

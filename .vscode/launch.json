@@ -38,7 +38,7 @@
                 "APP_ENV": "across-plat-ue2-feat1",
                 "RUNTIME_ENV": "feat1",
                 "AWS_PROFILE": "Project-Admin",
-                "ACROSS_DB_USER": "core_server"
+                "ACROSS_DB_USER": "developer"
             },
             "module": "uvicorn",
             "args": [
@@ -49,6 +49,27 @@
                 "--port",
                 "8000"
             ]
+        },
+        {
+            "name": "feat1: Migrations",
+            "type": "debugpy",
+            "request": "launch",
+            "envFile": "${workspaceFolder}/.env",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "pythonArgs": [
+                "-Xfrozen_modules=off"
+            ],
+            "env": {
+                "APP_ENV": "across-plat-ue2-feat1",
+                "RUNTIME_ENV": "feat1",
+                "AWS_PROFILE": "Project-Admin",
+                "ACROSS_DB_USER": "ci"
+            },
+            "module": "alembic",
+            "args": [
+                "upgrade",
+                "head"
+            ],
         },
         {
             "name": "dev: Start Server",

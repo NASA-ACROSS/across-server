@@ -1,0 +1,67 @@
+name: Release Please
+on:
+  workflow_run:
+    workflows: [Main]
+    types:
+      - completed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  deployments: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  release-please:
+    runs-on: "ubuntu-latest"
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # `build` and `release` jobs only run when a new release is created, that only happens when a release-please PR is merged, and not on every push to main.
+  build:
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/workflow-ci-dockerized-app-build.yml@main
+    with:
+      organization: "${{ github.event.repository.owner.login }}"
+      repository: "${{ github.event.repository.name }}"
+      image-name: core-server
+      build-args: "BUILD_ENV=deploy"
+    secrets:
+      ecr-region: "${{ secrets.ECR_REGION }}"
+      ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"
+      registry: "${{ secrets.ECR_REGISTRY }}"
+      secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
+
+  release:
+    needs: [release-please, build]
+    if: needs.release-please.outputs.release_created
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-release.yml@main
+    with:
+      organization: "${{ github.event.repository.owner.login }}"
+      version: ${{ needs.release-please.outputs.version }}
+      # ECR repository name used downstream
+      repository: core-server
+      app: core-server
+      enable-migration: true
+      migration-env-overrides: |
+        [{ "name": "ACROSS_DB_USER", "value": "ci" }]
+    secrets:
+      github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
+      registry: "${{ secrets.ECR_REGISTRY }}"
+      secret-outputs-passphrase: "${{ secrets.GHA_SECRET_OUTPUT_PASSPHRASE }}"
+      ecr-region: "${{ secrets.ECR_REGION }}"
+      ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"

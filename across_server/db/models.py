@@ -343,6 +343,7 @@ class User(Base, CreatableMixin, ModifiableMixin):
     first_name: Mapped[str] = mapped_column(String(50))
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
 
     groups: Mapped[list["Group"]] = relationship(
         secondary=user_group, back_populates="users", lazy="selectin"
@@ -412,7 +413,9 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
     )
-    operational_begin_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    operational_begin_date: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )
     operational_end_date: Mapped[datetime | None] = mapped_column(
         DateTime, nullable=True
     )
@@ -455,6 +458,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     field_of_view: Mapped[str] = mapped_column(String(50))
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
+    observation_strategy: Mapped[str] = mapped_column(String(50))
 
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"
@@ -540,7 +544,7 @@ class Schedule(Base, CreatableMixin, ModifiableMixin):
         Index("ix_schedule_date_range", "date_range_begin", "date_range_end"),
         Index("ix_schedule_date_range_begin", "date_range_begin"),
         Index("ix_schedule_date_range_end", "date_range_end"),
-        Index("ix_schedule_checksum", "checksum"),
+        Index("ix_schedule_checksum", "checksum", unique=True),
     )
 
 
@@ -609,6 +613,28 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
     )
     schedule: Mapped["Schedule"] = relationship(
         back_populates="observations", lazy="selectin"
+    )
+    footprints: Mapped[list["ObservationFootprint"]] = relationship(
+        back_populates="observation", lazy="selectin", cascade="all,delete"
+    )
+
+
+class ObservationFootprint(Base):
+    __tablename__ = "observation_footprint"
+
+    observation_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(Observation.id)
+    )
+    polygon: Mapped[WKBElement] = mapped_column(
+        Geography("POLYGON", srid=4326, spatial_index=True), nullable=False
+    )
+
+    observation: Mapped["Observation"] = relationship(
+        back_populates="footprints", lazy="selectin"
+    )
+
+    __table_args__ = (
+        Index("idx_observation_footprint_polygon", "polygon", postgresql_using="gist"),
     )
 
 
