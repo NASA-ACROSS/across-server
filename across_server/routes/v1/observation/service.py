@@ -10,10 +10,11 @@ from across.tools import (
 )
 from across.tools import enums as tools_enums
 from fastapi import Depends
+from geoalchemy2 import Geometry
 from geoalchemy2.functions import ST_Contains, ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, selectinload
 
@@ -291,6 +292,16 @@ class ObservationService:
         """
         data_filter = []
 
+        if data.external_id:
+            data_filter.append(
+                func.lower(models.Observation.external_observation_id).contains(
+                    str.lower(data.external_id)
+                )
+            )
+
+        if data.schedule_ids:
+            data_filter.append(models.Observation.schedule_id.in_(data.schedule_ids))
+
         if data.observatory_ids:
             data_filter.append(
                 models.Observation.schedule.has(
@@ -314,6 +325,20 @@ class ObservationService:
 
         if data.status:
             data_filter.append(models.Observation.status == data.status.value)
+
+        if data.proposal:
+            data_filter.append(
+                func.lower(models.Observation.proposal_reference).contains(
+                    str.lower(data.proposal)
+                )
+            )
+
+        if data.object_name:
+            data_filter.append(
+                func.lower(models.Observation.object_name).contains(
+                    str.lower(data.object_name)
+                )
+            )
 
         if data.date_range_begin:
             data_filter.append(
@@ -369,6 +394,9 @@ class ObservationService:
                 models.Observation.max_wavelength <= wavelength_bandpass.max
             )
 
+        if data.type:
+            data_filter.append(models.Observation.type == data.type.value)
+
         depth_params = [data.depth_value, data.depth_unit]
         if any(depth_params) and not all(depth_params):
             raise InvalidObservationReadParametersException(
@@ -378,18 +406,26 @@ class ObservationService:
             data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
             data_filter.append(models.Observation.depth_value <= data.depth_value)
 
-        # footprint contains logic
-        data_filter.append(models.Observation.footprints is not None)
-
         coordinate_of_interest = from_shape(
             Point(data.ra, data.dec),  # type: ignore
             srid=4326,
         )
 
+        footprint_polygon_geom = cast(
+            models.ObservationFootprint.polygon,
+            Geometry(geometry_type="POLYGON", srid=4326),
+        )
+        coordinate_of_interest_geom = cast(
+            coordinate_of_interest,
+            Geometry(geometry_type="POINT", srid=4326),
+        )
+
         data_filter.append(
-            ST_Contains(
-                models.Observation.footprints,
-                coordinate_of_interest,
+            models.Observation.footprints.any(
+                ST_Contains(
+                    footprint_polygon_geom,
+                    coordinate_of_interest_geom,
+                )
             )
         )
 
@@ -412,13 +448,17 @@ class ObservationService:
             The Observations whose footprints overlap with the given RA/DEC
         """
 
-        # Gather all observations matching filters
+        query_options = self._get_observation_query_options(
+            include_footprints=data.include_footprints
+        )
+
         query = (
             select(models.Observation, func.count().over().label("count"))
             .where(*self._get_point_overlap_filter(data))
             .order_by(models.Observation.created_on.desc())
-            .limit(data.page_limit or 25)
-            .offset(data.offset or 1)
+            .limit(data.page_limit)
+            .offset(data.offset)
+            .options(query_options)  # type: ignore
         )
 
         result = await self.db.execute(query)

@@ -109,7 +109,9 @@ async def get_overlap_point_observations(
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [
-                schemas.Observation.from_orm(observation)
+                schemas.Observation.from_orm(
+                    observation, include_footprints=data.include_footprints
+                )
                 for observation in observations
             ],
         }
