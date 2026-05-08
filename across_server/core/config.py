@@ -54,7 +54,10 @@ class Config(BaseConfig):
         if self.is_local():
             return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
         else:
-            return f"https://server.{self.RUNTIME_ENV.value}.across.smce.nasa.gov{self.ROOT_PATH}"
+            if self.RUNTIME_ENV == Environments.PRODUCTION:
+                return f"https://api.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
+            else:
+                return f"https://api.{self.RUNTIME_ENV.value}.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
 
 
 config = Config()
