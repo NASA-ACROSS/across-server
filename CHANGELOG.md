@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.4.0](https://github.com/NASA-ACROSS/across-server/compare/v1.3.2...v1.4.0) (2026-05-11)
+
+
+### Features
+
+* add euclid observatory data migration ([#575](https://github.com/NASA-ACROSS/across-server/issues/575)) ([1d30299](https://github.com/NASA-ACROSS/across-server/commit/1d302994b4267f2447aace0b2539ce148955250f))
+* add frontend service account ([f5e1509](https://github.com/NASA-ACROSS/across-server/commit/f5e1509cab713da9854afe7bd437477ca7a1f232))
+* add spherex data migration ([#573](https://github.com/NASA-ACROSS/across-server/issues/573)) ([58e061f](https://github.com/NASA-ACROSS/across-server/commit/58e061f1a6ed278629af296823b0c943214f5078))
+* add xrism observatory data ([#581](https://github.com/NASA-ACROSS/across-server/issues/581)) ([6e9b83c](https://github.com/NASA-ACROSS/across-server/commit/6e9b83cb15610309707a9c0ef6116bcbe85fa614))
+* **auth:** add frontend system service account ([#515](https://github.com/NASA-ACROSS/across-server/issues/515)) ([f5e1509](https://github.com/NASA-ACROSS/across-server/commit/f5e1509cab713da9854afe7bd437477ca7a1f232))
+* **config:** remove api root path prefix to support new domain ([#585](https://github.com/NASA-ACROSS/across-server/issues/585)) ([ab3c6fb](https://github.com/NASA-ACROSS/across-server/commit/ab3c6fbe9321095598888c1e1599f659fc9b7859))
+* **migrations:** adding pandora observatory migration ([#574](https://github.com/NASA-ACROSS/across-server/issues/574)) ([5490eae](https://github.com/NASA-ACROSS/across-server/commit/5490eae6e7f2c0b31d20f3b52fe9d702a1c38997))
+
+
+### Bug Fixes
+
+* **api:** stop across-tools custom types leaking into openapi.json ([#551](https://github.com/NASA-ACROSS/across-server/issues/551)) ([b9c5445](https://github.com/NASA-ACROSS/across-server/commit/b9c5445b9f3a7d8bdb672b8a7482a7ba9abfdefa))
+* **schema:** remove across-tools coordinate from api router ([#536](https://github.com/NASA-ACROSS/across-server/issues/536)) ([80478b1](https://github.com/NASA-ACROSS/across-server/commit/80478b13c615a7680e504d789c4a9046c5187fce))
+* set default page and page_limit for pagination ([#542](https://github.com/NASA-ACROSS/across-server/issues/542)) ([cb09ef9](https://github.com/NASA-ACROSS/across-server/commit/cb09ef9ca1c15b990e54e67631394cfbd71bdda8))
+* update branch name to main ([cd9cbaa](https://github.com/NASA-ACROSS/across-server/commit/cd9cbaa884e005e4b546243dbbc7a40edd177011))
+* update escpresso-feature-branch workflow back to main ([#586](https://github.com/NASA-ACROSS/across-server/issues/586)) ([cd9cbaa](https://github.com/NASA-ACROSS/across-server/commit/cd9cbaa884e005e4b546243dbbc7a40edd177011))
+
 ## [1.3.2](https://github.com/NASA-ACROSS/across-server/compare/v1.3.1...v1.3.2) (2026-03-25)
 
 
