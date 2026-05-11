@@ -15,7 +15,7 @@ class Config(BaseConfig):
     HOST: str = "http://localhost"
     FRONTEND_HOST: str = "http://localhost:5173"
     PORT: int = 8000
-    ROOT_PATH: str = "/api"
+    ROOT_PATH: str = ""
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
@@ -54,7 +54,10 @@ class Config(BaseConfig):
         if self.is_local():
             return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
         else:
-            return f"https://server.{self.RUNTIME_ENV.value}.across.smce.nasa.gov{self.ROOT_PATH}"
+            if self.RUNTIME_ENV == Environments.PRODUCTION:
+                return f"https://api.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
+            else:
+                return f"https://api.{self.RUNTIME_ENV.value}.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
 
 
 config = Config()
