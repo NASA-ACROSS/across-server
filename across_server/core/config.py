@@ -15,7 +15,7 @@ class Config(BaseConfig):
     HOST: str = "http://localhost"
     FRONTEND_HOST: str = "http://localhost:5173"
     PORT: int = 8000
-    ROOT_PATH: str = "/api"
+    ROOT_PATH: str = ""
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
@@ -38,10 +38,14 @@ class Config(BaseConfig):
     DATA_INGESTION_INGESTION_SERVICE_ACCOUNT_SECRET_PATH: str = (
         "data-ingestion/core-server/client_secret"
     )
+    FRONTEND_SERVICE_ACCOUNT_ID_PATH: str = "frontend/core-server/client_id"
+    FRONTEND_SERVICE_ACCOUNT_SECRET_PATH: str = "frontend/core-server/client_secret"
 
     APP_TITLE: str = "ACROSS Server"
     APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
     APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
+
+    DEFAULT_PAGE_LIMIT: int = 100
 
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
@@ -50,7 +54,10 @@ class Config(BaseConfig):
         if self.is_local():
             return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
         else:
-            return f"https://server.{self.RUNTIME_ENV.value}.across.smce.nasa.gov{self.ROOT_PATH}"
+            if self.RUNTIME_ENV == Environments.PRODUCTION:
+                return f"https://api.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
+            else:
+                return f"https://api.{self.RUNTIME_ENV.value}.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
 
 
 config = Config()
