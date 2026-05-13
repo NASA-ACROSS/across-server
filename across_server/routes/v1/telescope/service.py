@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....db import models
@@ -65,7 +65,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
         Returns
         -------
         list[sqlalchemy.filters]
@@ -83,6 +83,30 @@ class TelescopeService:
                 func.lower(models.Telescope.name).contains(str.lower(data.name))
                 | func.lower(models.Telescope.short_name).contains(str.lower(data.name))
             )
+
+        if data.observatory_id:
+            data_filter.append(models.Telescope.observatory_id == data.observatory_id)
+
+        if data.observatory_name:
+            observatory_name_or_filter = []
+
+            observatory_name_or_filter.append(
+                models.Telescope.observatory.has(
+                    func.lower(models.Observatory.name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                )
+            )
+
+            observatory_name_or_filter.append(
+                models.Telescope.observatory.has(
+                    func.lower(models.Observatory.short_name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                )
+            )
+
+            data_filter.append(or_(*observatory_name_or_filter))
 
         if data.instrument_id:
             data_filter.append(
@@ -115,7 +139,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
 
         Returns
         -------

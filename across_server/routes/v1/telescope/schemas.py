@@ -101,6 +101,10 @@ class TelescopeRead(BaseSchema):
     ----------
     name: Optional[str] = None
         Query param to search by name or short name
+    observatory_id: Optional[UUID] = None
+        Query param to search by observatory id
+    observatory_name: Optional[str] = None
+        Query param to search by observatory name or short name
     instrument_id: Optional[UUID] = None
         Query param to search by instruments id
     instrument_name: Optional[str] = None
@@ -110,6 +114,8 @@ class TelescopeRead(BaseSchema):
     """
 
     name: str | None = None
+    observatory_id: uuid.UUID | None = None
+    observatory_name: str | None = None
     instrument_id: uuid.UUID | None = None
     instrument_name: str | None = None
     created_on: UTCDatetime | None = None
