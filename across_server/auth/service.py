@@ -84,7 +84,7 @@ class AuthService:
             argon2.exceptions.InvalidHashError,
         ):
             raise AcrossHTTPException(
-                400,
+                401,
                 "invalid_grant",
                 {
                     "reason": "Invalid password for user.",
