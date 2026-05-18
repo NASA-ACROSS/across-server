@@ -89,6 +89,30 @@ class BrokerEventService:
 
         return broker_events
 
+    async def create(self, data: schemas.BrokerEventCreate) -> models.BrokerEvent:
+        """
+        Create a new BrokerEvent record.
+
+        Parameters
+        ----------
+        data : schemas.BrokerEventCreate
+            Class representing BrokerEvent creation parameters
+        Returns
+        -------
+        models.BrokerEvent
+            The created BrokerEvent record
+        """
+        broker_event = models.BrokerEvent(
+            name=data.name,
+            type=data.type,
+            event_datetime=data.event_datetime,
+        )
+
+        self.db.add(broker_event)
+        await self.db.commit()
+
+        return broker_event
+
     def _get_filter(self, data: schemas.BrokerEventReadParams) -> list:
         """
         Build the sql alchemy filter list based on BrokerEvent parameters.

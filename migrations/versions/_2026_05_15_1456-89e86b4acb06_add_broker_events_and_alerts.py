@@ -1,8 +1,8 @@
 """add broker events and alerts
 
 Revision ID: 89e86b4acb06
-Revises: a99c9ee52dce
-Create Date: 2026-04-14 14:56:15.412358
+Revises: d7412770b0be
+Create Date: 2026-05-15 14:56:15.412358
 
 """
 
@@ -14,11 +14,11 @@ from alembic import op
 from geoalchemy2 import Geography
 from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2026_04_16 as models
+import migrations.versions.model_snapshots.models_2026_05_15 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "89e86b4acb06"
-down_revision: Union[str, None] = "a99c9ee52dce"
+down_revision: Union[str, None] = "d7412770b0be"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -1,8 +1,6 @@
 from collections.abc import Generator, Sequence
-from datetime import datetime
 from typing import Any, Tuple
 from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
@@ -13,24 +11,19 @@ from across_server.core.enums import (
     BrokerAlertStatus,
     BrokerEventType,
 )
-from across_server.db.models import BrokerAlert as BrokerAlertModel
+from across_server.db.models import (
+    BrokerAlert as BrokerAlertModel,
+)
+from across_server.db.models import (
+    BrokerEvent as BrokerEventModel,
+)
+from across_server.db.models import (
+    Localization as LocalizationModel,
+)
 from across_server.routes.v1.broker_alert.schemas import BrokerAlertCreate
 from across_server.routes.v1.broker_alert.service import BrokerAlertService
-
-
-@pytest.fixture()
-def fake_broker_alert_data() -> BrokerAlertModel:
-    return BrokerAlertModel(
-        id=uuid4(),
-        payload={},
-        checksum="",
-        status=BrokerAlertStatus.INITIAL.value,
-        broker_name="TNS",
-        data_source=BrokerAlertDataSource.TNS.value,
-        external_event_id="SN2026test",
-        broker_event_id=uuid4(),
-        broker_received_on=datetime.now(),
-    )
+from across_server.routes.v1.broker_event.service import BrokerEventService
+from across_server.routes.v1.localization.service import LocalizationService
 
 
 @pytest.fixture()
@@ -81,7 +74,32 @@ def mock_broker_alert_service(
 
     mock.get = AsyncMock(return_value=fake_broker_alert_data)
     mock.get_many = AsyncMock(return_value=fake_broker_alert_many)
-    mock.create = AsyncMock(return_value=uuid4())
+    mock.create = AsyncMock(return_value=fake_broker_alert_data)
+
+    yield mock
+
+
+@pytest.fixture(scope="function")
+def mock_broker_event_service(
+    fake_broker_event_data: BrokerEventModel,
+    fake_broker_event_many: Sequence[Tuple[BrokerEventModel, int]],
+) -> Generator[AsyncMock]:
+    mock = AsyncMock(BrokerEventService)
+
+    mock.get = AsyncMock(return_value=fake_broker_event_data)
+    mock.get_many = AsyncMock(return_value=fake_broker_event_many)
+    mock.create = AsyncMock(return_value=fake_broker_event_data)
+
+    yield mock
+
+
+@pytest.fixture(scope="function")
+def mock_localization_service(
+    fake_point_source_localization: LocalizationModel,
+) -> Generator[AsyncMock]:
+    mock = AsyncMock(LocalizationService)
+
+    mock.create_many = AsyncMock(return_value=[fake_point_source_localization])
 
     yield mock
 
@@ -91,6 +109,8 @@ def dep_override(
     app: FastAPI,
     fastapi_dep: Any,
     mock_broker_alert_service: AsyncMock,
+    mock_broker_event_service: AsyncMock,
+    mock_localization_service: AsyncMock,
     mock_global_access: MagicMock,
 ) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
@@ -98,6 +118,8 @@ def dep_override(
     with overrider.override(
         {
             BrokerAlertService: lambda: mock_broker_alert_service,
+            BrokerEventService: lambda: mock_broker_event_service,
+            LocalizationService: lambda: mock_localization_service,
             strategies.global_access: lambda: mock_global_access,
         }
     ):

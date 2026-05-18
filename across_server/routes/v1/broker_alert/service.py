@@ -3,7 +3,7 @@ from typing import Annotated, Tuple
 from uuid import UUID, uuid4
 
 from fastapi import Depends
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....db import models
@@ -74,8 +74,9 @@ class BrokerAlertService:
              class representing BrokerAlert filter parameters
         Returns
         -------
-        Sequence[models.BrokerAlert]
-            The list of BrokerAlert records
+        Sequence[Tuple[models.BrokerAlert, int]]
+            The list of BrokerAlert records and the total number of records
+            as a tuple
         """
         broker_alert_filter = self._get_filter(data=data)
 
@@ -96,67 +97,35 @@ class BrokerAlertService:
     async def create(
         self,
         data: schemas.BrokerAlertCreate,
-    ) -> UUID:
+        broker_event: models.BrokerEvent,
+    ) -> models.BrokerAlert:
         """
         Create a new BrokerAlert record in the database.
-        Checks if the BrokerEvent associated with this Alert
-        already exists, and if not, creates it. Also creates the
-        Localization record associated with this alert.
+        Checks if the BrokerAlert already exists, and if not,
+        creates it.
 
         Parameters
         -----------
         data : schemas.BrokerAlertCreate
-            The BrokerAlert, BrokerEvent, and Localization data, to be created.
+            The BrokerAlert to be created.
         Returns
         -------
-        uuid:
-            The UUID of the newly created BrokerAlert
-
+        models.BrokerAlert:
+            The newly created BrokerAlert
         Raises
         -------
         DuplicateBrokerAlertException
             If a BrokerAlert with the same data already exists in the database.
-
         Notes
         -----
-        The function checks for the existence of an existing BrokerEvent by
-        type and name, and checks for the existence of a duplicate BrokerAlert
-        by checksum.
+        The function checks for the existence of a duplicate BrokerAlert by checksum.
         """
         broker_alert = data.to_orm()
 
-        existing = await self._exists([broker_alert.checksum])
+        existing = await self._get_existing(broker_alert.checksum)
 
         if len(existing):
             raise DuplicateBrokerAlertException(existing[0].id)
-
-        broker_event_query = select(models.BrokerEvent).filter(
-            and_(
-                models.BrokerEvent.type == data.broker_event_type,
-                models.BrokerEvent.name == data.broker_event_name,
-            )
-        )
-
-        result = await self.db.execute(broker_event_query)
-
-        broker_event = result.scalar_one_or_none()
-
-        if broker_event is None:
-            # Create it
-            broker_event = models.BrokerEvent(
-                id=uuid4(),
-                event_datetime=data.broker_event_datetime,
-                type=data.broker_event_type,
-                name=data.broker_event_name,
-            )
-
-        # Create Localization with this BrokerAlert
-        localizations = [localization.to_orm() for localization in data.localizations]
-        for localization in localizations:
-            localization.id = uuid4()
-            self.db.add(localization)
-            broker_alert.localizations.append(localization)
-            broker_event.localizations.append(localization)
 
         broker_alert.id = uuid4()
         broker_alert.broker_event_id = broker_event.id
@@ -165,9 +134,9 @@ class BrokerAlertService:
         self.db.add(broker_event)
 
         await self.db.commit()
-        return broker_alert.id
+        return broker_alert
 
-    async def _exists(self, checksums: list[str]) -> Sequence[models.BrokerAlert]:
+    async def _get_existing(self, checksum: str) -> Sequence[models.BrokerAlert]:
         """
         Retrieve the BrokerAlert records with the given checksums.
 
@@ -175,15 +144,13 @@ class BrokerAlertService:
         ----------
         checksum : list[str]
             the BrokerAlert checksum
-
         Returns
         -------
         Sequence[models.BrokerAlert]
             returns an array of BrokerAlert records
-
         """
         query = select(models.BrokerAlert).filter(
-            models.BrokerAlert.checksum.in_(checksums)
+            models.BrokerAlert.checksum == checksum
         )
         result = await self.db.execute(query)
         broker_alerts = result.scalars().all()

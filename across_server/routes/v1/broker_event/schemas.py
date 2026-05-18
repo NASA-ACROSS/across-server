@@ -101,3 +101,23 @@ class BrokerEvent(BrokerEventBase):
                 for localization in obj.localizations
             ],
         )
+
+
+class BrokerEventCreate(BaseSchema):
+    """
+    A Pydantic model class representing a BrokerEvent to be created
+    in the ACROSS system.
+
+    Parameters
+    ----------
+    event_datetime : UTCDatetime
+        Datetime the event was discovered or detected
+    type : BrokerEventType
+        Astrophysical type or classification of the event
+    name : str
+        Name of the event
+    """
+
+    event_datetime: UTCDatetime
+    type: BrokerEventType
+    name: str

@@ -47,6 +47,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     summary="Read broker event(s)",
     description="Read many broker events based on query params",
+    operation_id="get_broker_events",
     response_model=Page[schemas.BrokerEvent],
     responses={
         status.HTTP_200_OK: {

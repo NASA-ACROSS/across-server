@@ -66,7 +66,7 @@ class LocalizationContour(LocalizationContourBase):
     id: uuid.UUID
 
     @classmethod
-    def from_orm(cls, obj: LocalizationContourModel):  # type: ignore
+    def from_orm(cls, obj: LocalizationContourModel) -> "LocalizationContour":
         """
         Method that converts a models.LocalizationContour record to a schemas.LocalizationContour
 
@@ -133,7 +133,7 @@ class Localization(LocalizationBase):
     broker_alert_id: uuid.UUID
 
     @classmethod
-    def from_orm(cls, obj: LocalizationModel):  # type: ignore
+    def from_orm(cls, obj: LocalizationModel) -> "Localization":
         return cls(
             id=obj.id,
             broker_alert_id=obj.broker_alert_id,

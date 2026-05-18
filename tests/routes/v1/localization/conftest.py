@@ -17,17 +17,6 @@ from across_server.routes.v1.localization.schemas import (
 
 
 @pytest.fixture()
-def fake_point_source_localization() -> LocalizationModel:
-    return LocalizationModel(
-        id=uuid4(),
-        broker_alert_id=uuid4(),
-        broker_event_id=uuid4(),
-        ra=123.45,
-        dec=-43.21,
-    )
-
-
-@pytest.fixture()
 def fake_localization_contour() -> LocalizationContourModel:
     return LocalizationContourModel(
         id=uuid4(),

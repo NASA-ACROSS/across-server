@@ -9,9 +9,6 @@ from across_server.db.models import (
 from across_server.db.models import (
     BrokerEvent as BrokerEventModel,
 )
-from across_server.db.models import (
-    Localization as LocalizationModel,
-)
 from across_server.routes.v1.broker_alert.exceptions import (
     BrokerAlertNotFoundException,
     DuplicateBrokerAlertException,
@@ -47,8 +44,7 @@ class TestBrokerAlertService:
             fake_broker_alert_data: BrokerAlertModel,
         ) -> None:
             """
-            Should raise BrokerAlertNotFoundException
-            when the broker event does not exist
+            Should return a broker alert when it is found
             """
             mock_result.scalar_one_or_none.return_value = fake_broker_alert_data
 
@@ -75,6 +71,7 @@ class TestBrokerAlertService:
             self,
             mock_db: AsyncMock,
             fake_broker_alert_create_schema: BrokerAlertCreate,
+            fake_broker_event_data: BrokerEventModel,
             mock_result: AsyncMock,
             fake_broker_alert_data: BrokerAlertModel,
         ) -> None:
@@ -82,12 +79,12 @@ class TestBrokerAlertService:
             mock_result.scalars.return_value.all.return_value = [
                 fake_broker_alert_data,
             ]
-            mock_db.execute.return_value = mock_result
             service = BrokerAlertService(mock_db)
 
             with pytest.raises(DuplicateBrokerAlertException):
                 await service.create(
                     fake_broker_alert_create_schema,
+                    fake_broker_event_data,
                 )
 
         @pytest.mark.asyncio
@@ -95,53 +92,34 @@ class TestBrokerAlertService:
             self,
             mock_db: AsyncMock,
             fake_broker_alert_create_schema: BrokerAlertCreate,
+            fake_broker_event_data: BrokerEventModel,
             mock_result: AsyncMock,
         ) -> None:
             """Should save the broker alert to the database when successful"""
             mock_result.scalars.return_value.all.return_value = []
-            mock_db.execute.return_value = mock_result
             service = BrokerAlertService(mock_db)
             await service.create(
                 fake_broker_alert_create_schema,
+                fake_broker_event_data,
             )
 
             mock_db.commit.assert_called_once()
-
-        @pytest.mark.asyncio
-        async def test_should_create_broker_event_with_broker_alert(
-            self,
-            mock_db: AsyncMock,
-            fake_broker_alert_create_schema: BrokerAlertCreate,
-            mock_result: AsyncMock,
-        ) -> None:
-            """Should create a broker event with the broker alert"""
-            mock_result.scalar_one_or_none.return_value = None
-            mock_db.execute.return_value = mock_result
-            service = BrokerAlertService(mock_db)
-
-            await service.create(
-                fake_broker_alert_create_schema,
-            )
-
-            call_args = mock_db.add.call_args_list[-1]
-
-            # check that the broker event was created
-            assert isinstance(call_args[0][0], BrokerEventModel)
 
         @pytest.mark.asyncio
         async def test_should_create_broker_event_from_broker_alert_data(
             self,
             mock_db: AsyncMock,
             fake_broker_alert_create_schema: BrokerAlertCreate,
+            fake_broker_event_data: BrokerEventModel,
             mock_result: AsyncMock,
         ) -> None:
             """Should create a broker event from the broker alert data"""
             mock_result.scalar_one_or_none.return_value = None
-            mock_db.execute.return_value = mock_result
             service = BrokerAlertService(mock_db)
 
             await service.create(
                 fake_broker_alert_create_schema,
+                fake_broker_event_data,
             )
 
             call_args = mock_db.add.call_args_list[-1]
@@ -150,49 +128,4 @@ class TestBrokerAlertService:
             assert (
                 call_args[0][0].name
                 == fake_broker_alert_create_schema.broker_event_name
-            )
-
-        @pytest.mark.asyncio
-        async def test_should_create_localization_with_broker_alert(
-            self,
-            mock_db: AsyncMock,
-            fake_broker_alert_create_schema: BrokerAlertCreate,
-            mock_result: AsyncMock,
-        ) -> None:
-            """Should create a localization with the broker alert"""
-            mock_result.scalar_one_or_none.return_value = None
-            mock_db.execute.return_value = mock_result
-            service = BrokerAlertService(mock_db)
-
-            await service.create(
-                fake_broker_alert_create_schema,
-            )
-
-            call_args = mock_db.add.call_args_list[0]
-
-            # check that the broker event was created
-            assert isinstance(call_args[0][0], LocalizationModel)
-
-        @pytest.mark.asyncio
-        async def test_should_create_localization_from_broker_alert_data(
-            self,
-            mock_db: AsyncMock,
-            fake_broker_alert_create_schema: BrokerAlertCreate,
-            mock_result: AsyncMock,
-        ) -> None:
-            """Should create a localization from the broker alert data"""
-            mock_result.scalar_one_or_none.return_value = None
-            mock_db.execute.return_value = mock_result
-            service = BrokerAlertService(mock_db)
-
-            await service.create(
-                fake_broker_alert_create_schema,
-            )
-
-            call_args = mock_db.add.call_args_list[0]
-
-            # check that the localization was created from the BrokerAlertCreate parameters
-            assert (
-                call_args[0][0].ra
-                == fake_broker_alert_create_schema.localizations[0].ra
             )

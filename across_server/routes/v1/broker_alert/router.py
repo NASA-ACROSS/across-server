@@ -5,6 +5,9 @@ from fastapi import APIRouter, Depends, Query, Security, status
 
 from .... import auth
 from ....core.schemas import Page
+from ..broker_event.schemas import BrokerEventCreate, BrokerEventReadParams
+from ..broker_event.service import BrokerEventService
+from ..localization.service import LocalizationService
 from . import schemas
 from .service import BrokerAlertService
 
@@ -48,6 +51,7 @@ async def get(
     status_code=status.HTTP_200_OK,
     summary="Read broker alert(s)",
     description="Read many broker alerts based on query params",
+    operation_id="get_broker_alerts",
     response_model=Page[schemas.BrokerAlert],
     responses={
         status.HTTP_200_OK: {
@@ -98,9 +102,38 @@ async def get_many(
     ],
 )
 async def create(
-    service: Annotated[BrokerAlertService, Depends(BrokerAlertService)],
+    broker_alert_service: Annotated[BrokerAlertService, Depends(BrokerAlertService)],
+    broker_event_service: Annotated[BrokerEventService, Depends(BrokerEventService)],
+    localization_service: Annotated[LocalizationService, Depends(LocalizationService)],
     data: schemas.BrokerAlertCreate,
 ) -> uuid.UUID:
-    return await service.create(
-        data=data,
+    # Check for existing events
+    broker_event_tuples = await broker_event_service.get_many(
+        BrokerEventReadParams(
+            type=[data.broker_event_type], name=data.broker_event_name
+        )
     )
+    total_number = broker_event_tuples[0][1] if broker_event_tuples else 0
+
+    if total_number == 0:
+        # Create the event and return the created model
+        broker_event = await broker_event_service.create(
+            BrokerEventCreate(
+                event_datetime=data.broker_event_datetime,
+                type=data.broker_event_type,
+                name=data.broker_event_name,
+            )
+        )
+    else:
+        broker_event = broker_event_tuples[0][0]
+
+    broker_alert = await broker_alert_service.create(
+        data=data, broker_event=broker_event
+    )
+
+    if len(data.localizations):
+        await localization_service.create_many(
+            data.localizations, broker_event, broker_alert
+        )
+
+    return broker_alert.id

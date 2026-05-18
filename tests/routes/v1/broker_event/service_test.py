@@ -4,7 +4,10 @@ from uuid import uuid4
 import pytest
 
 from across_server.routes.v1.broker_event.exceptions import BrokerEventNotFoundException
-from across_server.routes.v1.broker_event.schemas import BrokerEventReadParams
+from across_server.routes.v1.broker_event.schemas import (
+    BrokerEventCreate,
+    BrokerEventReadParams,
+)
 from across_server.routes.v1.broker_event.service import BrokerEventService
 
 
@@ -36,3 +39,20 @@ class TestBrokerEventService:
             params = BrokerEventReadParams()
             values = await service.get_many(params)
             assert len(values) == 0
+
+    class TestCreate:
+        @pytest.mark.asyncio
+        async def test_should_save_broker_event_to_database(
+            self,
+            mock_db: AsyncMock,
+            fake_broker_event_create: BrokerEventCreate,
+            mock_result: AsyncMock,
+        ) -> None:
+            """Should save the broker alert to the database when successful"""
+            mock_result.scalars.return_value.all.return_value = []
+            service = BrokerEventService(mock_db)
+            await service.create(
+                fake_broker_event_create,
+            )
+
+            mock_db.commit.assert_called_once()
