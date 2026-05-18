@@ -48,36 +48,36 @@ BLACKCAT_WAVELENGTH_BANDPASS = convert_to_wave(BLACKCAT_ENERGY_BANDPASS)
 
 BLACKCAT_FILTER = [
     {
-        "id": uuid.UUID(""),
+        "id": uuid.UUID("b93fbbe3-59aa-4104-bf50-52828846ae67"),
         "name": "BLACKCAT BANDPASS",
         "min_wavelength": BLACKCAT_WAVELENGTH_BANDPASS.min,
         "max_wavelength": BLACKCAT_WAVELENGTH_BANDPASS.max,
         "is_operational": True,
-        "reference_url": "",
+        "reference_url": "https://heasarc.gsfc.nasa.gov/docs/blackcat/",
     },
 ]
 
 
 OBSERVATORY: dict = {
-    "id": uuid.UUID(""),
+    "id": uuid.UUID("4d88443a-ffd7-4d19-bfb7-24da34c16408"),
     "name": "BlackCAT CubeSat",
     "short_name": "BlackCAT",
     "type": ObservatoryType.SPACE_BASED.value,
-    "reference_url": "",
+    "reference_url": "https://heasarc.gsfc.nasa.gov/docs/blackcat/",
     "operational_begin_date": datetime(2026, 1, 12, 0, 0, 0),
     "telescopes": [
         {
-            "id": uuid.UUID(""),
+            "id": uuid.UUID("b73421e2-8b39-40cb-911d-7d93d3aa92fb"),
             "name": "BlackCAT CubeSat",
             "short_name": "BlackCAT",
-            "reference_url": "",
+            "reference_url": "https://heasarc.gsfc.nasa.gov/docs/blackcat/",
             "is_operational": True,
             "instruments": [
                 {
-                    "id": uuid.UUID(""),
+                    "id": uuid.UUID("14b5acc2-02ab-4499-b8d3-0b3b5aca1553"),
                     "name": "BlackCAT",
                     "short_name": "BlackCAT",
-                    "reference_url": "",
+                    "reference_url": "https://heasarc.gsfc.nasa.gov/docs/blackcat/",
                     "type": InstrumentType.PHOTOMETRIC.value,
                     "field_of_view": InstrumentFOV.POLYGON.value,
                     "footprint": BLACKCAT_FOOTPRINT,
@@ -89,17 +89,17 @@ OBSERVATORY: dict = {
             ],
             "constraints": [
                 {
-                    "id": uuid.UUID(""),
+                    "id": uuid.UUID("56969f38-5bec-4cf9-bea4-26e76b1fd6d5"),
                     "constraint_type": ConstraintType.SUN,
                     "constraint_parameters": {"min_angle": 0},
                 },
                 {
-                    "id": uuid.UUID(""),
+                    "id": uuid.UUID("50072037-ae61-491d-9915-30127783f8b4"),
                     "constraint_type": ConstraintType.EARTH,
                     "constraint_parameters": {"min_angle": 0},
                 },
                 {
-                    "id": uuid.UUID(""),
+                    "id": uuid.UUID("0621d393-7db8-45c8-b3f5-d21628e517b2"),
                     "constraint_type": ConstraintType.MOON,
                     "constraint_parameters": {"min_angle": 0},
                 },
@@ -108,22 +108,22 @@ OBSERVATORY: dict = {
     ],
     "ephemeris_types": [
         {
-            "id": uuid.UUID(""),
+            "id": uuid.UUID("aa78b80a-de1c-44f8-bc24-c1016066aff3"),
             "ephemeris_type": EphemerisType.TLE,
             "priority": 1,
             "parameters": {
-                "id": uuid.UUID(""),
-                "norad_id": -0,
+                "id": uuid.UUID("0e46ba3e-88d8-4f0c-91a7-389d31e8f9fe"),
+                "norad_id": 67369,
                 "norad_satellite_name": "BLACKCAT",
             },
         },
     ],
     "group": {
-        "id": uuid.UUID(""),
+        "id": uuid.UUID("ec136f65-ef3c-41e7-9723-1f1ef9c3f8f3"),
         "name": "BlackCAT Observatory",
         "short_name": "BlackCAT",
         "group_admin": {
-            "id": uuid.UUID(""),
+            "id": uuid.UUID("daf03ea5-66a1-47f5-9b3b-1991aa131d7d"),
             "name": "BlackCAT Group Admin",
         },
     },
