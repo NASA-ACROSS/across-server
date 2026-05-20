@@ -85,3 +85,21 @@ class TestBrokerEventRouter:
             assert (
                 res.json().get(field) is not None and len(res.json().get("items")) == 0
             )
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_localizations_when_include_localizations_is_true(
+            self,
+        ) -> None:
+            """GET many should return localization data when include_localizations parameter set to true"""
+            res = await self.client.get(self.endpoint + "?include_localizations=true")
+            observation = res.json()["items"][0]
+            assert len(observation["localizations"]) > 0
+
+        @pytest.mark.asyncio
+        async def test_many_should_not_return_localizations_when_include_localizations_is_false(
+            self,
+        ) -> None:
+            """GET many should not return localization data when include_localizations parameter set to false"""
+            res = await self.client.get(self.endpoint + "?include_localizations=false")
+            observation = res.json()["items"][0]
+            assert len(observation["localizations"]) == 0

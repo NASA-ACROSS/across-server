@@ -71,7 +71,7 @@ async def get_many(
             "page_limit": data.page_limit,
             "items": [
                 schemas.BrokerEvent.from_orm(
-                    broker_event,
+                    broker_event, include_localizations=data.include_localizations
                 )
                 for broker_event in broker_events
             ],

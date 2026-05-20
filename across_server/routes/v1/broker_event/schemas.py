@@ -46,12 +46,16 @@ class BrokerEventReadParams(PaginationParams):
         Begin datetime to search for event
     date_range_end: UTCDatetime, optional
         End datetime to search for event
+    include_localizations: bool
+        Include localization information with the returned event data.
+        Defaults to False.
     """
 
     type: list[BrokerEventType] | None = None
     name: str | None = None
     date_range_begin: UTCDatetime | None = None
     date_range_end: UTCDatetime | None = None
+    include_localizations: bool = False
 
 
 class BrokerEvent(BrokerEventBase):
@@ -75,14 +79,20 @@ class BrokerEvent(BrokerEventBase):
     broker_alerts: list[BrokerAlert]
 
     @classmethod
-    def from_orm(cls, obj: BrokerEventModel):  #  type: ignore
+    def from_orm(
+        cls,
+        obj: BrokerEventModel,
+        include_localizations: bool = False,
+    ) -> "BrokerEvent":
         """
         Method that converts a models.BrokerEvent record to a schemas.BrokerEvent
 
         Parameters
         ----------
         obj: BrokerEventModel
-        the models.BrokerEvent record
+            the models.BrokerEvent record
+        include_localizations: bool
+            Include localization information in the returned BrokerEvent. Defaults to False.
 
         Returns
         -------
@@ -99,7 +109,9 @@ class BrokerEvent(BrokerEventBase):
             localizations=[
                 Localization.from_orm(localization)
                 for localization in obj.localizations
-            ],
+            ]
+            if include_localizations
+            else [],
         )
 
 
