@@ -1,8 +1,8 @@
 """add broker events and alerts
 
 Revision ID: 89e86b4acb06
-Revises: d7412770b0be
-Create Date: 2026-05-15 14:56:15.412358
+Revises: 15fb704e6b6a
+Create Date: 2026-05-20 14:56:15.412358
 
 """
 
@@ -18,7 +18,7 @@ import migrations.versions.model_snapshots.models_2026_05_15 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "89e86b4acb06"
-down_revision: Union[str, None] = "d7412770b0be"
+down_revision: Union[str, None] = "15fb704e6b6a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
