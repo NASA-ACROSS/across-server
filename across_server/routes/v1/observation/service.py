@@ -25,7 +25,7 @@ from .exceptions import (
     InvalidObservationReadParametersException,
     ObservationNotFoundException,
 )
-from .schemas import ObservationRead, PointOverlapRead
+from .schemas import ObservationRead, PointOverlapReadParams
 
 
 class ObservationService:
@@ -276,14 +276,14 @@ class ObservationService:
 
         return noload(models.Observation.footprints)  # type: ignore
 
-    def _get_point_overlap_filter(self, data: PointOverlapRead) -> list:
+    def _get_point_overlap_filter(self, data: PointOverlapReadParams) -> list:
         """
-        Retrieve the Observation record with the given checksum.
+        Retrieve the Observation records that overlap with the requested coordinate.
 
         Parameters
         ----------
-        data : schemas.PointOverlapRead
-            the PointOverlapRead data
+        data : schemas.PointOverlapReadParams
+            the PointOverlapReadParams data
 
         Returns
         -------
@@ -432,7 +432,7 @@ class ObservationService:
         return data_filter
 
     async def get_overlap_point(
-        self, data: PointOverlapRead
+        self, data: PointOverlapReadParams
     ) -> Sequence[Tuple[models.Observation, int]]:
         """
         Retrieve the Observation records whose footprints overlap with a given RA/DEC.

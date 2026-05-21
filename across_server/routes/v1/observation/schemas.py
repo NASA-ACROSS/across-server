@@ -200,37 +200,18 @@ class ObservationCreate(ObservationBase):
         return self.orm_model(**data)
 
 
-class ObservationRead(PaginationParams):
-    external_id: str | None = None
-    schedule_ids: list[uuid.UUID] | None = None
-    observatory_ids: list[uuid.UUID] | None = None
-    telescope_ids: list[uuid.UUID] | None = None
-    instrument_ids: list[uuid.UUID] | None = None
-    status: ObservationStatus | None = None
-    proposal: str | None = None
-    object_name: str | None = None
-    date_range_begin: UTCDatetime | None = None
-    date_range_end: UTCDatetime | None = None
-    bandpass_min: float | None = None
-    bandpass_max: float | None = None
-    bandpass_type: (
-        tools_enums.WavelengthUnit
-        | tools_enums.EnergyUnit
-        | tools_enums.FrequencyUnit
-        | None
-    ) = None
+class ConeSearchParams(BaseSchema):
     cone_search_ra: float | None = Field(default=None, ge=0.0, lt=360.0)
     cone_search_dec: float | None = Field(default=None, ge=-90.0, le=90.0)
     cone_search_radius: float | None = Field(default=None, gt=0.0)
-    type: ObservationType | None = None
-    depth_value: float | None = None
-    depth_unit: DepthUnit | None = None
-    include_footprints: bool = False
 
 
-class PointOverlapRead(PaginationParams):
-    ra: float = Field(ge=0.0, lt=360.0)  # required
-    dec: float = Field(ge=-90.0, le=90.0)  # required
+class PointOverlapParams(BaseSchema):
+    ra: float = Field(ge=0.0, lt=360.0)
+    dec: float = Field(ge=-90.0, le=90.0)
+
+
+class ObservationReadBase(PaginationParams):
     external_id: str | None = None
     schedule_ids: list[uuid.UUID] | None = None
     observatory_ids: list[uuid.UUID] | None = None
@@ -253,3 +234,11 @@ class PointOverlapRead(PaginationParams):
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
     include_footprints: bool = False
+
+
+class ObservationRead(ConeSearchParams, ObservationReadBase):
+    pass
+
+
+class PointOverlapReadParams(PointOverlapParams, ObservationReadBase):
+    pass
