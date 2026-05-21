@@ -25,7 +25,7 @@ from .exceptions import (
     InvalidObservationReadParametersException,
     ObservationNotFoundException,
 )
-from .schemas import ObservationRead, PointOverlapReadParams
+from .schemas import ObservationRead, ObservationReadBase, PointOverlapReadParams
 
 
 class ObservationService:
@@ -71,7 +71,7 @@ class ObservationService:
 
         return observation
 
-    def _get_observation_filter(self, data: ObservationRead) -> list:
+    def _get_observation_base_filter(self, data: ObservationReadBase) -> list:
         """
         Retrieve the Observation record with the given checksum.
 
@@ -189,6 +189,36 @@ class ObservationService:
                 models.Observation.max_wavelength <= wavelength_bandpass.max
             )
 
+        if data.type:
+            data_filter.append(models.Observation.type == data.type.value)
+
+        depth_params = [data.depth_value, data.depth_unit]
+        if any(depth_params) and not all(depth_params):
+            raise InvalidObservationReadParametersException(
+                message="Depth parameters are not complete. Please provide all depth parameters."
+            )
+        elif all(depth_params):
+            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
+            data_filter.append(models.Observation.depth_value <= data.depth_value)
+
+        return data_filter
+
+    def _get_cone_search_filter(self, data: ObservationRead) -> list:
+        """
+        Retrieve the Observation records that overlap with the requested cone search parameters.
+
+        Parameters
+        ----------
+        data : schemas.ObservationRead
+            the ObservationRead data
+
+        Returns
+        -------
+        list
+            returns a list of filters for the Observation record
+        """
+        data_filter = []
+
         cone_search_params = [
             data.cone_search_ra,
             data.cone_search_dec,
@@ -219,66 +249,13 @@ class ObservationService:
                 )
             )
 
-        if data.type:
-            data_filter.append(models.Observation.type == data.type.value)
-
-        depth_params = [data.depth_value, data.depth_unit]
-        if any(depth_params) and not all(depth_params):
-            raise InvalidObservationReadParametersException(
-                message="Depth parameters are not complete. Please provide all depth parameters."
-            )
-        elif all(depth_params):
-            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
-            data_filter.append(models.Observation.depth_value <= data.depth_value)
-
         return data_filter
 
-    async def get_many(
-        self, data: ObservationRead
-    ) -> Sequence[Tuple[models.Observation, int]]:
+    def _get_observation_contains_point_filter(
+        self, data: PointOverlapReadParams
+    ) -> list:
         """
-        Retrieve the Observation records with the given filters.
-
-        Parameters
-        ----------
-        data : schemas.ObservationRead
-            the ObservationRead data
-
-        Returns
-        -------
-        Sequence[models.Observation]
-            The Observations within the given filters
-        """
-
-        query_options = self._get_observation_query_options(
-            include_footprints=data.include_footprints
-        )
-
-        query = (
-            select(models.Observation, func.count().over().label("count"))
-            .where(*self._get_observation_filter(data))
-            .order_by(models.Observation.created_on.desc())
-            .limit(data.page_limit)
-            .offset(data.offset)
-            .options(query_options)  # type: ignore
-        )
-
-        result = await self.db.execute(query)
-        observations = result.tuples().all()
-
-        return observations
-
-    def _get_observation_query_options(
-        self, include_footprints: bool | None
-    ) -> list[tuple]:
-        if include_footprints:
-            return selectinload(models.Observation.footprints)  # type: ignore
-
-        return noload(models.Observation.footprints)  # type: ignore
-
-    def _get_point_overlap_filter(self, data: PointOverlapReadParams) -> list:
-        """
-        Retrieve the Observation records that overlap with the requested coordinate.
+        Retrieve the Observation records that contain the requested point.
 
         Parameters
         ----------
@@ -291,120 +268,6 @@ class ObservationService:
             returns a list of filters for the Observation record
         """
         data_filter = []
-
-        if data.external_id:
-            data_filter.append(
-                func.lower(models.Observation.external_observation_id).contains(
-                    str.lower(data.external_id)
-                )
-            )
-
-        if data.schedule_ids:
-            data_filter.append(models.Observation.schedule_id.in_(data.schedule_ids))
-
-        if data.observatory_ids:
-            data_filter.append(
-                models.Observation.schedule.has(
-                    models.Schedule.telescope.has(
-                        models.Telescope.observatory_id.in_(data.observatory_ids)
-                    )
-                )
-            )
-
-        if data.telescope_ids:
-            data_filter.append(
-                models.Observation.schedule.has(
-                    models.Schedule.telescope_id.in_(data.telescope_ids)
-                )
-            )
-
-        if data.instrument_ids:
-            data_filter.append(
-                models.Observation.instrument_id.in_(data.instrument_ids)
-            )
-
-        if data.status:
-            data_filter.append(models.Observation.status == data.status.value)
-
-        if data.proposal:
-            data_filter.append(
-                func.lower(models.Observation.proposal_reference).contains(
-                    str.lower(data.proposal)
-                )
-            )
-
-        if data.object_name:
-            data_filter.append(
-                func.lower(models.Observation.object_name).contains(
-                    str.lower(data.object_name)
-                )
-            )
-
-        if data.date_range_begin:
-            data_filter.append(
-                models.Observation.date_range_end >= data.date_range_begin
-            )
-        if data.date_range_end:
-            data_filter.append(
-                models.Observation.date_range_begin <= data.date_range_end
-            )
-
-        bandpass_params = [data.bandpass_min, data.bandpass_max, data.bandpass_type]
-        if any(param is not None for param in bandpass_params) and not all(
-            param is not None for param in bandpass_params
-        ):
-            raise InvalidObservationReadParametersException(
-                message="Bandpass parameters are not complete. Please provide all bandpass parameters."
-            )
-
-        elif all(param is not None for param in bandpass_params):
-            try:
-                if data.bandpass_type in tools_enums.WavelengthUnit:
-                    wavelength_bandpass = WavelengthBandpass(
-                        min=data.bandpass_min,
-                        max=data.bandpass_max,
-                        unit=tools_enums.WavelengthUnit(data.bandpass_type.value),  # type: ignore
-                    )
-
-                elif data.bandpass_type in tools_enums.EnergyUnit:
-                    energy_bandpass = EnergyBandpass(
-                        min=data.bandpass_min,
-                        max=data.bandpass_max,
-                        unit=tools_enums.EnergyUnit(data.bandpass_type.value),  # type: ignore
-                    )
-                    wavelength_bandpass = convert_to_wave(energy_bandpass)
-
-                elif data.bandpass_type in tools_enums.FrequencyUnit:
-                    frequency_bandpass = FrequencyBandpass(
-                        min=data.bandpass_min,
-                        max=data.bandpass_max,
-                        unit=tools_enums.FrequencyUnit(data.bandpass_type.value),  # type: ignore
-                    )
-                    wavelength_bandpass = convert_to_wave(frequency_bandpass)
-
-            except Exception as e:
-                raise InvalidObservationReadParametersException(
-                    message=f"Invalid bandpass parameters: {e}"
-                )
-            data_filter.append(
-                models.Observation.min_wavelength >= wavelength_bandpass.min
-            )
-
-            data_filter.append(
-                models.Observation.max_wavelength <= wavelength_bandpass.max
-            )
-
-        if data.type:
-            data_filter.append(models.Observation.type == data.type.value)
-
-        depth_params = [data.depth_value, data.depth_unit]
-        if any(depth_params) and not all(depth_params):
-            raise InvalidObservationReadParametersException(
-                message="Depth parameters are not complete. Please provide all depth parameters."
-            )
-        elif all(depth_params):
-            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
-            data_filter.append(models.Observation.depth_value <= data.depth_value)
 
         coordinate_of_interest = from_shape(
             Point(data.ra, data.dec),  # type: ignore
@@ -431,6 +294,53 @@ class ObservationService:
 
         return data_filter
 
+    async def get_many(
+        self, data: ObservationRead
+    ) -> Sequence[Tuple[models.Observation, int]]:
+        """
+        Retrieve the Observation records with the given filters.
+
+        Parameters
+        ----------
+        data : schemas.ObservationRead
+            the ObservationRead data
+
+        Returns
+        -------
+        Sequence[models.Observation]
+            The Observations within the given filters
+        """
+
+        query_options = self._get_observation_query_options(
+            include_footprints=data.include_footprints
+        )
+
+        query_filter = self._get_observation_base_filter(
+            data
+        ) + self._get_cone_search_filter(data)
+
+        query = (
+            select(models.Observation, func.count().over().label("count"))
+            .where(*query_filter)
+            .order_by(models.Observation.created_on.desc())
+            .limit(data.page_limit)
+            .offset(data.offset)
+            .options(query_options)  # type: ignore
+        )
+
+        result = await self.db.execute(query)
+        observations = result.tuples().all()
+
+        return observations
+
+    def _get_observation_query_options(
+        self, include_footprints: bool | None
+    ) -> list[tuple]:
+        if include_footprints:
+            return selectinload(models.Observation.footprints)  # type: ignore
+
+        return noload(models.Observation.footprints)  # type: ignore
+
     async def get_overlap_point(
         self, data: PointOverlapReadParams
     ) -> Sequence[Tuple[models.Observation, int]]:
@@ -452,9 +362,13 @@ class ObservationService:
             include_footprints=data.include_footprints
         )
 
+        query_filter = self._get_observation_base_filter(
+            data
+        ) + self._get_observation_contains_point_filter(data)
+
         query = (
             select(models.Observation, func.count().over().label("count"))
-            .where(*self._get_point_overlap_filter(data))
+            .where(*query_filter)
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
