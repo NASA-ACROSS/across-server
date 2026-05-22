@@ -84,9 +84,9 @@ async def get(
 
 @router.get(
     "/search/contains-point/",
-    summary="Read many observations whose footprints overlap with a given RA/DEC",
-    description="Read many observations whose footprints overlap with a given RA/DEC",
-    operation_id="overlap_point",
+    summary="Read many observations whose footprints contains a given RA/DEC",
+    description="Read many observations whose footprints contains a given RA/DEC",
+    operation_id="contains_point",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {
@@ -95,11 +95,11 @@ async def get(
         },
     },
 )
-async def get_overlap_point_observations(
+async def get_observations_containing_point(
     service: Annotated[ObservationService, Depends(ObservationService)],
-    data: Annotated[schemas.PointOverlapReadParams, Query()],
+    data: Annotated[schemas.ContainsPointReadParams, Query()],
 ) -> Page[schemas.Observation]:
-    observation_tuples = await service.get_overlap_point(data=data)
+    observation_tuples = await service.get_contains_point(data=data)
 
     total_number = observation_tuples[0][1] if observation_tuples else 0
     observations = [tuple[0] for tuple in observation_tuples]

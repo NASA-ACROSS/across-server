@@ -58,7 +58,7 @@ def fake_observation_many(
 
 
 @pytest.fixture()
-def fake_observation_overlap_many(
+def fake_observation_contains_point_many(
     fake_observation_data_with_footprint: Observation,
 ) -> Sequence[Tuple[Observation, int]]:
     return [
@@ -92,13 +92,15 @@ def mock_observation_create() -> ObservationCreate:
 def mock_observation_service(
     fake_observation_data_with_footprint: None,
     fake_observation_many: None,
-    fake_observation_overlap_many: None,
+    fake_observation_contains_point_many: None,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
     mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
     mock.get_many = AsyncMock(return_value=fake_observation_many)
-    mock.get_overlap_point = AsyncMock(return_value=fake_observation_overlap_many)
+    mock.get_overlap_point = AsyncMock(
+        return_value=fake_observation_contains_point_many
+    )
 
     yield mock
 

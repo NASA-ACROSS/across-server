@@ -36,11 +36,11 @@ class SetupMany:
 class SetupOverlapPoint:
     @pytest_asyncio.fixture(autouse=True, scope="function")
     async def setup(
-        self, async_client: AsyncClient, fake_observation_overlap_many: None
+        self, async_client: AsyncClient, fake_observation_contains_point_many: None
     ) -> None:
         self.client = async_client
         self.endpoint = "/observation/search/contains-point/"
-        self.get_data = fake_observation_overlap_many
+        self.get_data = fake_observation_contains_point_many
 
 
 class TestObservationRouterGet:

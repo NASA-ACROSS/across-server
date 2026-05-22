@@ -25,7 +25,7 @@ from .exceptions import (
     InvalidObservationReadParametersException,
     ObservationNotFoundException,
 )
-from .schemas import ObservationRead, ObservationReadBase, PointOverlapReadParams
+from .schemas import ContainsPointReadParams, ObservationRead, ObservationReadBase
 
 
 class ObservationService:
@@ -252,7 +252,7 @@ class ObservationService:
         return data_filter
 
     def _get_observation_contains_point_filter(
-        self, data: PointOverlapReadParams
+        self, data: ContainsPointReadParams
     ) -> list:
         """
         Retrieve the Observation records that contain the requested point.
@@ -341,11 +341,11 @@ class ObservationService:
 
         return noload(models.Observation.footprints)  # type: ignore
 
-    async def get_overlap_point(
-        self, data: PointOverlapReadParams
+    async def get_contains_point(
+        self, data: ContainsPointReadParams
     ) -> Sequence[Tuple[models.Observation, int]]:
         """
-        Retrieve the Observation records whose footprints overlap with a given RA/DEC.
+        Retrieve the Observation records whose footprints contains a given RA/DEC.
 
         Parameters
         ----------
@@ -355,7 +355,7 @@ class ObservationService:
         Returns
         -------
         Sequence[models.Observation]
-            The Observations whose footprints overlap with the given RA/DEC
+            The Observations whose footprints contain the given RA/DEC
         """
 
         query_options = self._get_observation_query_options(

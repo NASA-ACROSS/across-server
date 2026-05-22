@@ -9,8 +9,8 @@ from across_server.routes.v1.observation.exceptions import (
     ObservationNotFoundException,
 )
 from across_server.routes.v1.observation.schemas import (
+    ContainsPointReadParams,
     ObservationRead,
-    PointOverlapReadParams,
 )
 from across_server.routes.v1.observation.service import ObservationService
 
@@ -61,8 +61,8 @@ class TestObservationService:
             mock_result.tuples.return_value.all.return_value = []
 
             service = ObservationService(mock_db)
-            params = PointOverlapReadParams(ra=123.456, dec=-87.65)
-            values = await service.get_overlap_point(params)
+            params = ContainsPointReadParams(ra=123.456, dec=-87.65)
+            values = await service.get_contains_point(params)
             assert len(values) == 0
 
         @pytest.mark.asyncio
@@ -78,8 +78,8 @@ class TestObservationService:
             ]
 
             service = ObservationService(mock_db)
-            params = PointOverlapReadParams(ra=123.456, dec=-87.65)
-            values = await service.get_overlap_point(params)
+            params = ContainsPointReadParams(ra=123.456, dec=-87.65)
+            values = await service.get_contains_point(params)
             assert len(values) == 1
 
         @pytest.mark.asyncio
@@ -88,8 +88,8 @@ class TestObservationService:
         ) -> None:
             """Should raise InvalidObservationReadParametersException with bad params"""
             service = ObservationService(mock_db)
-            params = PointOverlapReadParams(
+            params = ContainsPointReadParams(
                 ra=123.456, dec=-87.65, **bad_point_overlap_filter
             )
             with pytest.raises(InvalidObservationReadParametersException):
-                await service.get_overlap_point(params)
+                await service.get_contains_point(params)

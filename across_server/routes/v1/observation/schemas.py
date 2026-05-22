@@ -206,7 +206,7 @@ class ConeSearchParams(BaseSchema):
     cone_search_radius: float | None = Field(default=None, gt=0.0)
 
 
-class PointOverlapParams(BaseSchema):
+class ContainsPointParams(BaseSchema):
     ra: float = Field(ge=0.0, lt=360.0)
     dec: float = Field(ge=-90.0, le=90.0)
 
@@ -240,5 +240,5 @@ class ObservationRead(ConeSearchParams, ObservationReadBase):
     pass
 
 
-class PointOverlapReadParams(PointOverlapParams, ObservationReadBase):
+class ContainsPointReadParams(ContainsPointParams, ObservationReadBase):
     pass
