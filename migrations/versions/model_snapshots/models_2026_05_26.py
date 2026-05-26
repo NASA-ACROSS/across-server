@@ -691,7 +691,7 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     science_justification: Mapped[str] = mapped_column(String(), nullable=False)
     object_ra: Mapped[float] = mapped_column(Float, nullable=False)
     object_dec: Mapped[float] = mapped_column(Float, nullable=False)
-    object_position_error: Mapped[float] = mapped_column(Float, nullable=False)
+    object_position_error: Mapped[float] = mapped_column(Float, nullable=True)
     object_position: Mapped[WKBElement] = mapped_column(
         Geography("POINT", srid=4326), nullable=False
     )
