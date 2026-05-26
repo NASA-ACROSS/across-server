@@ -12,6 +12,7 @@ from .seeds.group_roles import group_roles
 from .seeds.groups import groups
 from .seeds.instruments import instruments
 from .seeds.observation_footprints import observation_footprints
+from .seeds.observation_requests import observation_requests
 from .seeds.observations import observations
 from .seeds.observatories import (
     earth_location_parameters,
@@ -21,6 +22,7 @@ from .seeds.observatories import (
     spice_kernel_parameters,
     tle_parameters,
 )
+from .seeds.proposals import proposals
 from .seeds.roles import roles
 from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
@@ -47,6 +49,8 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.JPLEphemerisParameters, jpl_parameters),
     (models.SpiceKernelParameters, spice_kernel_parameters),
     (models.EarthLocationParameters, earth_location_parameters),
+    (models.Proposal, proposals),
+    (models.ObservationRequest, observation_requests),
 ]
 
 

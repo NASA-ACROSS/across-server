@@ -696,6 +696,7 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         Geography("POINT", srid=4326), nullable=False
     )
     object_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    object_apparent_magnitude: Mapped[float] = mapped_column(Float, nullable=False)
     date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     exposure_time: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -705,7 +706,7 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("observation_request.id"), nullable=True
     )
-    anonymized: Mapped[bool] = mapped_column(Boolean, default=False)
+    anonymized: Mapped[bool] = mapped_column(Boolean, default=True)
     instrument_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=True
     )

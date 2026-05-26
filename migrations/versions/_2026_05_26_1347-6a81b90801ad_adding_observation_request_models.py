@@ -39,11 +39,12 @@ def upgrade() -> None:
     op.create_table(
         "observation_request",
         sa.Column("status", sa.String(length=50), nullable=False),
-        sa.Column("status_reason", sa.String(), nullable=False),
+        sa.Column("status_reason", sa.String(), nullable=True),
         sa.Column("science_justification", sa.String(), nullable=False),
         sa.Column("object_ra", sa.Float(), nullable=False),
         sa.Column("object_dec", sa.Float(), nullable=False),
-        sa.Column("object_position_error", sa.Float(), nullable=False),
+        sa.Column("object_position_error", sa.Float(), nullable=True),
+        sa.Column("object_apparent_magnitude", sa.Float(), nullable=False),
         sa.Column(
             "object_position",
             Geography(

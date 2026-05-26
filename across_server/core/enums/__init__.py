@@ -5,6 +5,7 @@ from .instrument_fov import InstrumentFOV
 from .instrument_type import InstrumentType
 from .ivoa_obs_category import IVOAObsCategory
 from .ivoa_obs_tracking_type import IVOAObsTrackingType
+from .observation_request_status import ObservationRequestStatus
 from .observation_status import ObservationStatus
 from .observation_type import ObservationType
 from .observatory_type import ObservatoryType
@@ -24,4 +25,5 @@ __all__ = [
     "EphemerisType",
     "InstrumentType",
     "InstrumentFOV",
+    "ObservationRequestStatus",
 ]
