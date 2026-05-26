@@ -23,6 +23,7 @@ krusty_too = ObservationRequest(
     proposal=sandy_proposal,
     parent_id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
     anonymized=False,
+    is_too=True,
 )
 
 observation_requests = [krusty_too]
