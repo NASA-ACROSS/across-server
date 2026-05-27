@@ -136,6 +136,17 @@ instrument_constraint = Table(
     Column("constraint_id", ForeignKey("constraint.id"), primary_key=True),
 )
 
+localization_localization_contour = Table(
+    "localization_localization_contour",
+    Base.metadata,
+    Column("localization_id", ForeignKey("localization.id"), primary_key=True),
+    Column(
+        "localization_contour_id",
+        ForeignKey("localization_contour.id"),
+        primary_key=True,
+    ),
+)
+
 
 class EarthLocationParameters(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "earth_location_parameters"
@@ -669,6 +680,84 @@ class Constraint(Base, CreatableMixin, ModifiableMixin):
         secondary=instrument_constraint,
         back_populates="constraints",
         lazy="selectin",
+    )
+
+
+class BrokerEvent(Base, CreatableMixin):
+    __tablename__ = "broker_event"
+
+    event_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    broker_alerts: Mapped[list["BrokerAlert"]] = relationship(
+        back_populates="broker_event", lazy="selectin", cascade="all,delete"
+    )
+    localizations: Mapped[list["Localization"]] = relationship(
+        back_populates="broker_event", lazy="selectin", cascade="all,delete"
+    )
+
+
+class BrokerAlert(Base, CreatableMixin):
+    __tablename__ = "broker_alert"
+
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    checksum: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    broker_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    data_source: Mapped[str] = mapped_column(String(100), nullable=False)
+    external_event_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    broker_received_on: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    broker_event_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerEvent.id)
+    )
+    broker_event: Mapped["BrokerEvent"] = relationship(
+        back_populates="broker_alerts", lazy="selectin", cascade="all,delete"
+    )
+    localizations: Mapped[list["Localization"]] = relationship(
+        back_populates="broker_alert", lazy="selectin", cascade="all,delete"
+    )
+
+
+class Localization(Base, CreatableMixin):
+    __tablename__ = "localization"
+
+    ra: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    dec: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    probability_enclosed: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    contours: Mapped[list["LocalizationContour"] | None] = relationship(
+        secondary=localization_localization_contour,
+        back_populates="localization",
+        lazy="selectin",
+        cascade="all,delete",
+    )
+    broker_alert_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerAlert.id)
+    )
+    broker_event_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerEvent.id)
+    )
+    broker_event: Mapped["BrokerEvent"] = relationship(
+        back_populates="localizations", lazy="selectin", cascade="all,delete"
+    )
+    broker_alert: Mapped["BrokerAlert"] = relationship(
+        back_populates="localizations", lazy="selectin", cascade="all,delete"
+    )
+
+
+class LocalizationContour(Base):
+    __tablename__ = "localization_contour"
+
+    contour: Mapped[WKBElement] = mapped_column(
+        Geography("POLYGON", srid=4326, spatial_index=True), nullable=False
+    )
+    localization: Mapped["Localization"] = relationship(
+        secondary=localization_localization_contour,
+        back_populates="contours",
+        lazy="selectin",
+    )
+
+    __table_args__ = (
+        Index("idx_localization_contour_contour", "contour", postgresql_using="gist"),
     )
 
 
