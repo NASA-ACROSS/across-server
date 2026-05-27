@@ -10,6 +10,7 @@ from across.tools import enums as tools_enums
 from fastapi import FastAPI
 from geoalchemy2 import WKTElement
 
+from across_server.core.enums.depth_unit import DepthUnit
 from across_server.core.enums.observation_status import ObservationStatus
 from across_server.core.enums.observation_type import ObservationType
 from across_server.core.schemas.coordinate import Coordinate
@@ -56,6 +57,18 @@ def fake_observation_many(
     ]
 
 
+@pytest.fixture()
+def fake_observation_contains_point_many(
+    fake_observation_data_with_footprint: Observation,
+) -> Sequence[Tuple[Observation, int]]:
+    return [
+        (
+            fake_observation_data_with_footprint,
+            1,
+        )
+    ]
+
+
 @pytest.fixture
 def mock_observation_create() -> ObservationCreate:
     return ObservationCreate(
@@ -77,12 +90,17 @@ def mock_observation_create() -> ObservationCreate:
 
 @pytest.fixture(scope="function")
 def mock_observation_service(
-    fake_observation_data_with_footprint: None, fake_observation_many: None
+    fake_observation_data_with_footprint: None,
+    fake_observation_many: None,
+    fake_observation_contains_point_many: None,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
     mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
     mock.get_many = AsyncMock(return_value=fake_observation_many)
+    mock.get_overlap_point = AsyncMock(
+        return_value=fake_observation_contains_point_many
+    )
 
     yield mock
 
@@ -113,4 +131,18 @@ def bad_observation_filter(request: pytest.FixtureRequest) -> Any:
     """
     Parameters pop in the get_many routine to trigger 422
     """
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        {"bandpass_min": 2000},
+        {"bandpass_max": 4000},
+        {"bandpass_type": tools_enums.WavelengthUnit.ANGSTROM},
+        {"depth_value": 20},
+        {"depth_unit": DepthUnit.AB_MAG},
+    ]
+)
+def bad_point_overlap_filter(request: pytest.FixtureRequest) -> Any:
+    """Parameters used in get_overlap_point to trigger InvalidObservationReadParametersException."""
     return request.param
