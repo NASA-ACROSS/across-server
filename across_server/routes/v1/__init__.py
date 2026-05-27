@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from ... import __version__, auth
 from ...core import config
 from . import (
+    broker_alert,
+    broker_event,
     filter,
     group,
     instrument,
@@ -43,3 +45,5 @@ api.include_router(observation.router)
 api.include_router(filter.router)
 api.include_router(system_service_account.router)
 api.include_router(tools.router)
+api.include_router(broker_event.router)
+api.include_router(broker_alert.router)
