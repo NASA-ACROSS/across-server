@@ -696,17 +696,20 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         Geography("POINT", srid=4326), nullable=False
     )
     object_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    object_apparent_magnitude: Mapped[float] = mapped_column(Float, nullable=False)
+    object_brightness: Mapped[float] = mapped_column(Float, nullable=False)
+    object_brightness_unit: Mapped[str] = mapped_column(
+        String(25), nullable=False
+    )  # Depth Unit Enum
     date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     exposure_time: Mapped[float | None] = mapped_column(Float, nullable=True)
     proposal_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Proposal.id)
+        PG_UUID(as_uuid=True), ForeignKey(Proposal.id), nullable=True
     )
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("observation_request.id"), nullable=True
+        PG_UUID(as_uuid=True), ForeignKey("observation_request.id"), nullable=False
     )
-    anonymized: Mapped[bool] = mapped_column(Boolean, default=True)
+    anonymize: Mapped[bool] = mapped_column(Boolean, default=True)
     instrument_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=True
     )
