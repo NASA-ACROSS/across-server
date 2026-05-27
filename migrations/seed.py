@@ -7,10 +7,13 @@ from sqlalchemy.orm import DeclarativeBase
 
 from across_server.db import config, models
 
+from .seeds.broker_alerts import broker_alerts
+from .seeds.broker_events import broker_events
 from .seeds.footprints import footprints
 from .seeds.group_roles import group_roles
 from .seeds.groups import groups
 from .seeds.instruments import instruments
+from .seeds.localizations import localizations
 from .seeds.observation_footprints import observation_footprints
 from .seeds.observation_requests import observation_requests
 from .seeds.observations import observations
@@ -49,6 +52,9 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.JPLEphemerisParameters, jpl_parameters),
     (models.SpiceKernelParameters, spice_kernel_parameters),
     (models.EarthLocationParameters, earth_location_parameters),
+    (models.BrokerEvent, broker_events),
+    (models.BrokerAlert, broker_alerts),
+    (models.Localization, localizations),
     (models.Proposal, proposals),
     (models.ObservationRequest, observation_requests),
 ]

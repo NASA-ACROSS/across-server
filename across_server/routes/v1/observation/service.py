@@ -10,10 +10,11 @@ from across.tools import (
 )
 from across.tools import enums as tools_enums
 from fastapi import Depends
-from geoalchemy2.functions import ST_DWithin
+from geoalchemy2 import Geometry
+from geoalchemy2.functions import ST_Contains, ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, selectinload
 
@@ -24,7 +25,7 @@ from .exceptions import (
     InvalidObservationReadParametersException,
     ObservationNotFoundException,
 )
-from .schemas import ObservationRead
+from .schemas import ContainsPointReadParams, ObservationRead, ObservationReadBase
 
 
 class ObservationService:
@@ -70,7 +71,7 @@ class ObservationService:
 
         return observation
 
-    def _get_observation_filter(self, data: ObservationRead) -> list:
+    def _get_observation_base_filter(self, data: ObservationReadBase) -> list:
         """
         Retrieve the Observation record with the given checksum.
 
@@ -188,6 +189,36 @@ class ObservationService:
                 models.Observation.max_wavelength <= wavelength_bandpass.max
             )
 
+        if data.type:
+            data_filter.append(models.Observation.type == data.type.value)
+
+        depth_params = [data.depth_value, data.depth_unit]
+        if any(depth_params) and not all(depth_params):
+            raise InvalidObservationReadParametersException(
+                message="Depth parameters are not complete. Please provide all depth parameters."
+            )
+        elif all(depth_params):
+            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
+            data_filter.append(models.Observation.depth_value <= data.depth_value)
+
+        return data_filter
+
+    def _get_cone_search_filter(self, data: ObservationRead) -> list:
+        """
+        Retrieve the Observation records that overlap with the requested cone search parameters.
+
+        Parameters
+        ----------
+        data : schemas.ObservationRead
+            the ObservationRead data
+
+        Returns
+        -------
+        list
+            returns a list of filters for the Observation record
+        """
+        data_filter = []
+
         cone_search_params = [
             data.cone_search_ra,
             data.cone_search_dec,
@@ -218,17 +249,48 @@ class ObservationService:
                 )
             )
 
-        if data.type:
-            data_filter.append(models.Observation.type == data.type.value)
+        return data_filter
 
-        depth_params = [data.depth_value, data.depth_unit]
-        if any(depth_params) and not all(depth_params):
-            raise InvalidObservationReadParametersException(
-                message="Depth parameters are not complete. Please provide all depth parameters."
+    def _get_observation_contains_point_filter(
+        self, data: ContainsPointReadParams
+    ) -> list:
+        """
+        Retrieve the Observation records that contain the requested point.
+
+        Parameters
+        ----------
+        data : schemas.PointOverlapReadParams
+            the PointOverlapReadParams data
+
+        Returns
+        -------
+        list
+            returns a list of filters for the Observation record
+        """
+        data_filter = []
+
+        coordinate_of_interest = from_shape(
+            Point(data.ra, data.dec),  # type: ignore
+            srid=4326,
+        )
+
+        footprint_polygon_geom = cast(
+            models.ObservationFootprint.polygon,
+            Geometry(geometry_type="POLYGON", srid=4326),
+        )
+        coordinate_of_interest_geom = cast(
+            coordinate_of_interest,
+            Geometry(geometry_type="POINT", srid=4326),
+        )
+
+        data_filter.append(
+            models.Observation.footprints.any(
+                ST_Contains(
+                    footprint_polygon_geom,
+                    coordinate_of_interest_geom,
+                )
             )
-        elif all(depth_params):
-            data_filter.append(models.Observation.depth_unit == data.depth_unit.value)  # type: ignore
-            data_filter.append(models.Observation.depth_value <= data.depth_value)
+        )
 
         return data_filter
 
@@ -253,9 +315,13 @@ class ObservationService:
             include_footprints=data.include_footprints
         )
 
+        query_filter = self._get_observation_base_filter(
+            data
+        ) + self._get_cone_search_filter(data)
+
         query = (
             select(models.Observation, func.count().over().label("count"))
-            .where(*self._get_observation_filter(data))
+            .where(*query_filter)
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
@@ -274,3 +340,42 @@ class ObservationService:
             return selectinload(models.Observation.footprints)  # type: ignore
 
         return noload(models.Observation.footprints)  # type: ignore
+
+    async def get_contains_point(
+        self, data: ContainsPointReadParams
+    ) -> Sequence[Tuple[models.Observation, int]]:
+        """
+        Retrieve the Observation records whose footprints contains a given RA/DEC.
+
+        Parameters
+        ----------
+        data : schemas.PointOverlapRead
+            the PointOverlapRead data
+
+        Returns
+        -------
+        Sequence[models.Observation]
+            The Observations whose footprints contain the given RA/DEC
+        """
+
+        query_options = self._get_observation_query_options(
+            include_footprints=data.include_footprints
+        )
+
+        query_filter = self._get_observation_base_filter(
+            data
+        ) + self._get_observation_contains_point_filter(data)
+
+        query = (
+            select(models.Observation, func.count().over().label("count"))
+            .where(*query_filter)
+            .order_by(models.Observation.created_on.desc())
+            .limit(data.page_limit)
+            .offset(data.offset)
+            .options(query_options)  # type: ignore
+        )
+
+        result = await self.db.execute(query)
+        observations = result.tuples().all()
+
+        return observations
