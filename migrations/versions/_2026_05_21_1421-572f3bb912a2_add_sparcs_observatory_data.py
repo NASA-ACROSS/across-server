@@ -1,7 +1,7 @@
 """add sparcs observatory data
 
 Revision ID: 572f3bb912a2
-Revises: 15fb704e6b6a
+Revises: 89e86b4acb06
 Create Date: 2026-05-21 14:21:15.688059
 
 """
@@ -13,11 +13,15 @@ from typing import Sequence, Union
 from across.tools import WavelengthBandpass
 from across.tools import enums as tools_enums
 from across.tools.core.enums import ConstraintType
-from across.tools.visibility.constraints import SunAngleConstraint
+from across.tools.visibility.constraints import (
+    EarthLimbConstraint,
+    MoonAngleConstraint,
+    SunAngleConstraint,
+)
 from alembic import op
 from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2026_04_21 as snapshot_models
+import migrations.versions.model_snapshots.models_2026_05_15 as snapshot_models
 from across_server.core.enums import EphemerisType, InstrumentFOV, InstrumentType
 from across_server.core.enums.observation_strategy import ObservationStrategy
 from across_server.core.enums.observatory_type import ObservatoryType
@@ -30,7 +34,7 @@ from migrations.util.footprint_util import (
 
 # revision identifiers, used by Alembic.
 revision: str = "572f3bb912a2"
-down_revision: Union[str, None] = "15fb704e6b6a"
+down_revision: Union[str, None] = "89e86b4acb06"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -116,11 +120,26 @@ OBSERVATORY: dict = {
                 # SPARCS's pointing is primarily constrained by the angle between the solar panel normal vector
                 # and the sun, which must be no more than 40 degrees. Given the configuration of the telescope and
                 # its sun synchronous orbit, this is equivalent to a sun angle constraint with a minimum angle of 140 degrees.
+                # We'll also include standard Moon angle and Earth limb constraints.
                 {
                     "id": uuid.UUID("9803a943-3125-49da-8a83-2c081dda638e"),
                     "constraint_type": ConstraintType.SUN,
                     "constraint_parameters": SunAngleConstraint(
                         min_angle=140.0,
+                    ).model_dump(),
+                },
+                {
+                    "id": uuid.UUID("250ccf66-4474-4b48-a617-5d66c8246365"),
+                    "constraint_type": ConstraintType.MOON,
+                    "constraint_parameters": MoonAngleConstraint(
+                        min_angle=20.0,
+                    ).model_dump(),
+                },
+                {
+                    "id": uuid.UUID("5b0adcf4-3ccb-4799-9527-f98721ed873c"),
+                    "constraint_type": ConstraintType.EARTH,
+                    "constraint_parameters": EarthLimbConstraint(
+                        min_angle=20.0,
                     ).model_dump(),
                 },
             ],
