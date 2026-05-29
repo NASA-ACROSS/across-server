@@ -442,7 +442,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     )
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
-    can_accept_toos: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_observation_request_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
@@ -470,7 +470,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     field_of_view: Mapped[str] = mapped_column(String(50))
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
-    can_accept_toos: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_observation_request_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     observation_strategy: Mapped[str] = mapped_column(String(50))
 
     telescope: Mapped["Telescope"] = relationship(
@@ -761,14 +761,14 @@ class LocalizationContour(Base):
     )
 
 
-class Proposal(Base, CreatableMixin, ModifiableMixin):
-    __tablename__ = "proposal"
+class ObservingProposal(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "observing_proposal"
 
     name: Mapped[str] = mapped_column(String(), nullable=False)
-    code: Mapped[str] = mapped_column(String(50), nullable=False)
+    code: Mapped[str] = mapped_column(String(128), nullable=False)
 
     observation_requests: Mapped[list["ObservationRequest"]] = relationship(
-        back_populates="proposal", lazy="selectin"
+        back_populates="observing_proposal", lazy="selectin"
     )
 
 
@@ -776,11 +776,11 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "observation_request"
 
     status: Mapped[str] = mapped_column(String(50), nullable=False)  # Enum
-    status_reason: Mapped[str] = mapped_column(String())
+    status_reason: Mapped[str | None] = mapped_column(String(), nullable=True)
     science_justification: Mapped[str] = mapped_column(String(), nullable=False)
     object_ra: Mapped[float] = mapped_column(Float, nullable=False)
     object_dec: Mapped[float] = mapped_column(Float, nullable=False)
-    object_position_error: Mapped[float] = mapped_column(Float, nullable=True)
+    object_position_error: Mapped[float | None] = mapped_column(Float, nullable=True)
     object_position: Mapped[WKBElement] = mapped_column(
         Geography("POINT", srid=4326), nullable=False
     )
@@ -790,34 +790,34 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         String(25), nullable=False
     )  # Depth Unit Enum
     date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_range_end: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    exposure_time: Mapped[float | None] = mapped_column(Float, nullable=True)
-    proposal_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Proposal.id), nullable=True
+    date_range_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    exposure_time: Mapped[float] = mapped_column(Float, nullable=False)
+    proposal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(ObservingProposal.id), nullable=True
     )
-    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+    parent_id: Mapped[uuid.UUID] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("observation_request.id"), nullable=False
     )
     anonymize: Mapped[bool] = mapped_column(Boolean, default=True)
-    instrument_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=True
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=False
     )
     instrument_configuration: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     is_too: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    proposal: Mapped["Proposal"] = relationship(
+    observing_proposal: Mapped["ObservingProposal"] = relationship(
         back_populates="observation_requests", lazy="selectin"
     )
     instrument: Mapped["Instrument"] = relationship(
         back_populates="observation_requests", lazy="selectin"
     )
-    parent_request: Mapped["ObservationRequest"] = relationship(
+    original_request: Mapped["ObservationRequest"] = relationship(
         back_populates="related_requests",
         lazy="selectin",
         remote_side="ObservationRequest.id",
     )
     related_requests: Mapped[list["ObservationRequest"]] = relationship(
-        back_populates="parent_request", lazy="selectin"
+        back_populates="original_request", lazy="selectin"
     )
 
     __table_args__ = (

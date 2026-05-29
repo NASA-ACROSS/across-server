@@ -5,7 +5,7 @@ from across_server.core.enums import DepthUnit, ObservationRequestStatus
 from across_server.db.models import ObservationRequest
 
 from .instruments import sandy_instrument_calorimeter
-from .proposals import sandy_proposal
+from .observing_proposal import sandy_proposal
 
 krusty_too = ObservationRequest(
     id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
@@ -21,7 +21,7 @@ krusty_too = ObservationRequest(
     date_range_end=datetime.now() + timedelta(days=1.0),
     status=ObservationRequestStatus.PENDING.value,
     status_reason="Awaiting review",
-    proposal=sandy_proposal,
+    observing_proposal=sandy_proposal,
     parent_id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
     anonymize=False,
     is_too=True,

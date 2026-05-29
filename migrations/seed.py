@@ -25,7 +25,7 @@ from .seeds.observatories import (
     spice_kernel_parameters,
     tle_parameters,
 )
-from .seeds.proposals import proposals
+from .seeds.observing_proposal import observing_proposals
 from .seeds.roles import roles
 from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
@@ -55,7 +55,7 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.BrokerEvent, broker_events),
     (models.BrokerAlert, broker_alerts),
     (models.Localization, localizations),
-    (models.Proposal, proposals),
+    (models.ObservingProposal, observing_proposals),
     (models.ObservationRequest, observation_requests),
 ]
 
