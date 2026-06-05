@@ -12,3 +12,8 @@ class DateRange(BaseModel, PrefixMixin):
 class NullableDateRange(BaseModel, PrefixMixin):
     begin: UTCDatetime | None
     end: UTCDatetime | None
+
+
+class NullableEndDateRange(BaseModel, PrefixMixin):
+    begin: UTCDatetime
+    end: UTCDatetime | None
