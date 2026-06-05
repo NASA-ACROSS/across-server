@@ -42,7 +42,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 ## Mixins ##
 class CreatableMixin:
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), nullable=True
+        PG_UUID(as_uuid=True), nullable=True, index=True
     )
     created_on: Mapped[datetime] = mapped_column(
         DateTime,
@@ -804,6 +804,7 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     )
     instrument_configuration: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     is_too: Mapped[bool] = mapped_column(Boolean, default=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=True)
 
     observing_proposal: Mapped["ObservingProposal"] = relationship(
         back_populates="observation_requests", lazy="selectin"

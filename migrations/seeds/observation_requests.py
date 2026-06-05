@@ -25,6 +25,7 @@ krusty_too = ObservationRequest(
     parent_id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
     anonymize=False,
     is_too=True,
+    exposure_time=3600.0,
 )
 
 observation_requests = [krusty_too]
