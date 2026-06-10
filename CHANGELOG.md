@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/NASA-ACROSS/across-server/compare/v1.5.0...v1.5.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* add schedule id idx on observation ([#622](https://github.com/NASA-ACROSS/across-server/issues/622)) ([bea91f6](https://github.com/NASA-ACROSS/across-server/commit/bea91f680bca80604c6d53f8a92b84e25834058f))
+
 ## [1.5.0](https://github.com/NASA-ACROSS/across-server/compare/v1.4.0...v1.5.0) (2026-05-27)
 
 
