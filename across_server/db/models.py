@@ -579,7 +579,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
     )
     schedule_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
+        PG_UUID(as_uuid=True),
+        ForeignKey(Schedule.id),
+        index=True,
     )
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float | None] = mapped_column(REAL())
