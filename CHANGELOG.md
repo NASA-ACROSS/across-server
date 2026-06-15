@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/NASA-ACROSS/across-server/compare/v1.5.1...v1.6.0) (2026-06-15)
+
+
+### Features
+
+* add group to group role read schema, rename snake case routes to kebab case ([#561](https://github.com/NASA-ACROSS/across-server/issues/561)) ([f9402d3](https://github.com/NASA-ACROSS/across-server/commit/f9402d3202fd3630595b070aadf2e949c78b7c0e))
+
 ## [1.5.1](https://github.com/NASA-ACROSS/across-server/compare/v1.5.0...v1.5.1) (2026-06-10)
 
 
