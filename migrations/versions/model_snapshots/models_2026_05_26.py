@@ -789,8 +789,12 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     object_brightness_unit: Mapped[str] = mapped_column(
         String(25), nullable=False
     )  # Depth Unit Enum
-    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_range_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    date_range_begin: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, index=True
+    )
+    date_range_end: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )
     exposure_time: Mapped[float] = mapped_column(Float, nullable=False)
     proposal_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
@@ -836,6 +840,4 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         Index(
             "ix_observation_request_date_range", "date_range_begin", "date_range_end"
         ),
-        Index("ix_observation_request_date_range_begin", "date_range_begin"),
-        Index("ix_observation_request_date_range_end", "date_range_end"),
     )
