@@ -156,7 +156,7 @@ mfa: ## Auth with AWS through MFA
 start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
 
 dev: local_only ## Start the server in the terminal
-	@$(VENV_BIN)/fastapi dev across_server/main.py
+	@$(VENV_BIN)/fastapi dev across_server/main.py --proxy-headers
 
 stop: local_only ## Stop the server container
 	@$(DOCKER_COMPOSE) down app
