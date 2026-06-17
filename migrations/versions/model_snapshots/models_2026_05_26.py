@@ -26,8 +26,8 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from ..core.enums.visibility_type import VisibilityType
-from .config import config
+from across_server.core.enums.visibility_type import VisibilityType
+from across_server.db.config import config
 
 base_metadata = MetaData(schema=config.ACROSS_DB_NAME, quote_schema=True)
 
@@ -584,9 +584,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
     )
     schedule_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True),
-        ForeignKey(Schedule.id),
-        index=True,
+        PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
     )
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float | None] = mapped_column(REAL())

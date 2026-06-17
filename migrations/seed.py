@@ -15,6 +15,7 @@ from .seeds.groups import groups
 from .seeds.instruments import instruments
 from .seeds.localizations import localizations
 from .seeds.observation_footprints import observation_footprints
+from .seeds.observation_requests import observation_requests
 from .seeds.observations import observations
 from .seeds.observatories import (
     earth_location_parameters,
@@ -24,6 +25,7 @@ from .seeds.observatories import (
     spice_kernel_parameters,
     tle_parameters,
 )
+from .seeds.observing_proposal import observing_proposals
 from .seeds.roles import roles
 from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
@@ -53,6 +55,8 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.BrokerEvent, broker_events),
     (models.BrokerAlert, broker_alerts),
     (models.Localization, localizations),
+    (models.ObservingProposal, observing_proposals),
+    (models.ObservationRequest, observation_requests),
 ]
 
 
