@@ -1,7 +1,7 @@
 """add observation schedule id idx
 
 Revision ID: f24460b144c4
-Revises: 572f3bb912a2
+Revises: 6a81b90801ad
 Create Date: 2026-06-10 13:19:22.539991
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f24460b144c4"
-down_revision: Union[str, None] = "572f3bb912a2"
+down_revision: Union[str, None] = "6a81b90801ad"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
