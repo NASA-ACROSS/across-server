@@ -37,7 +37,7 @@ def upgrade() -> None:
     sun_angle_update = (
         update(models.Constraint)
         .where(models.Constraint.id == "86398a06-4d2c-4765-aece-be1697cefd82")
-        .values(constraint_parameters=SunAngleConstraint(min_angle=90).model_dump())
+        .values(constraint_parameters=SunAngleConstraint(min_angle=90).model_dump())  # type: ignore
     )
     earth_limb_update = (
         update(models.Constraint)
