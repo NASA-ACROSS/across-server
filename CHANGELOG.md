@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.6.0](https://github.com/NASA-ACROSS/across-server/compare/v1.5.1...v1.6.0) (2026-06-15)
+
+
+### Features
+
+* add group to group role read schema, rename snake case routes to kebab case ([#561](https://github.com/NASA-ACROSS/across-server/issues/561)) ([f9402d3](https://github.com/NASA-ACROSS/across-server/commit/f9402d3202fd3630595b070aadf2e949c78b7c0e))
+
+## [1.5.1](https://github.com/NASA-ACROSS/across-server/compare/v1.5.0...v1.5.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* add schedule id idx on observation ([#622](https://github.com/NASA-ACROSS/across-server/issues/622)) ([bea91f6](https://github.com/NASA-ACROSS/across-server/commit/bea91f680bca80604c6d53f8a92b84e25834058f))
+
+## [1.5.0](https://github.com/NASA-ACROSS/across-server/compare/v1.4.0...v1.5.0) (2026-05-27)
+
+
+### Features
+
+* add BrokerEvent and BrokerAlert models and endpoints ([#568](https://github.com/NASA-ACROSS/across-server/issues/568)) ([0326a44](https://github.com/NASA-ACROSS/across-server/commit/0326a44d6c162fef86b4eb3fdf7ed462e2358ae1))
+* add frontend service account ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+* add SPARCS observatory data migration ([#608](https://github.com/NASA-ACROSS/across-server/issues/608)) ([a7d6148](https://github.com/NASA-ACROSS/across-server/commit/a7d6148b8fe3a70a66b36ba18b4a3c14babc6db6))
+* **auth:** add frontend system service account ([#515](https://github.com/NASA-ACROSS/across-server/issues/515)) ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+* **observation:** add point overlap observation footprint endpoint ([#587](https://github.com/NASA-ACROSS/across-server/issues/587)) ([867f4bb](https://github.com/NASA-ACROSS/across-server/commit/867f4bb20038372e2dba070f7b6755d72db998d0))
+* **telescope:** adding observatory qps to telescope get many ([#595](https://github.com/NASA-ACROSS/across-server/issues/595)) ([7fae08c](https://github.com/NASA-ACROSS/across-server/commit/7fae08c9b8e21b8f7c6e112f2d7fe868b7bfa7c1))
+
+
+### Bug Fixes
+
+* **auth:** 401 auth error code for mismatch creds ([#553](https://github.com/NASA-ACROSS/across-server/issues/553)) ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+
 ## [1.4.0](https://github.com/NASA-ACROSS/across-server/compare/v1.3.2...v1.4.0) (2026-05-11)
 
 
