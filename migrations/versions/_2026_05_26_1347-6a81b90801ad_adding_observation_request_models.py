@@ -405,12 +405,6 @@ def downgrade() -> None:
         schema="across",
     )
     op.drop_index(
-        "idx_across_observation_request_object_position",
-        table_name="observation_request",
-        schema="across",
-        postgresql_using="gist",
-    )
-    op.drop_index(
         op.f("ix_across_user_created_by_id"), table_name="user", schema="across"
     )
     op.drop_index(
@@ -449,11 +443,11 @@ def downgrade() -> None:
         table_name="permission",
         schema="across",
     )
-    op.drop_index(
-        op.f("ix_across_observing_proposal_created_by_id"),
-        table_name="observing_proposal",
-        schema="across",
-    )
+    # op.drop_index(
+    #     op.f("ix_across_observing_proposal_created_by_id"),
+    #     table_name="observing_proposal",
+    #     schema="across",
+    # )
     op.drop_index(
         op.f("ix_across_observatory_created_by_id"),
         table_name="observatory",
