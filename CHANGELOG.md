@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/NASA-ACROSS/across-server/compare/v1.6.0...v1.7.0) (2026-06-18)
+
+
+### Features
+
+* **db:** add observation request tables to models ([#614](https://github.com/NASA-ACROSS/across-server/issues/614)) ([e99dc05](https://github.com/NASA-ACROSS/across-server/commit/e99dc0554190796a797fa9e002e39a55bc9769e7))
+* enable proxy-headers ([#626](https://github.com/NASA-ACROSS/across-server/issues/626)) ([d880d37](https://github.com/NASA-ACROSS/across-server/commit/d880d37c5a923a23cdebcbd47cd45bf5d51f0c58))
+
+
+### Bug Fixes
+
+* **migrations:** update the pandora data migration ([#629](https://github.com/NASA-ACROSS/across-server/issues/629)) ([a9a71f7](https://github.com/NASA-ACROSS/across-server/commit/a9a71f7c922d30932af32e94e5d5b8c2949ddc5a))
+
 ## [1.6.0](https://github.com/NASA-ACROSS/across-server/compare/v1.5.1...v1.6.0) (2026-06-15)
 
 
