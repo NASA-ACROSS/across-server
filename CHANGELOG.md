@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/NASA-ACROSS/across-server/compare/v1.7.1...v1.7.2) (2026-06-18)
+
+
+### Bug Fixes
+
+* **auth:** pull secrets from ssm ([#632](https://github.com/NASA-ACROSS/across-server/issues/632)) ([67fef96](https://github.com/NASA-ACROSS/across-server/commit/67fef96eac46591554c447f7a29ee125ba5d3aae))
+
 ## [1.7.1](https://github.com/NASA-ACROSS/across-server/compare/v1.7.0...v1.7.1) (2026-06-18)
 
 
