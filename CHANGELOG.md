@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/NASA-ACROSS/across-server/compare/v1.7.0...v1.7.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* revise migrations to be rerun on deploy ([#630](https://github.com/NASA-ACROSS/across-server/issues/630)) ([61bf38a](https://github.com/NASA-ACROSS/across-server/commit/61bf38a747aa5f720ebebe05999dda50f3d6c38d))
+
 ## [1.7.0](https://github.com/NASA-ACROSS/across-server/compare/v1.6.0...v1.7.0) (2026-06-18)
 
 
