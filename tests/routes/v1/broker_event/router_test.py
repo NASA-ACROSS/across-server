@@ -1,0 +1,105 @@
+from unittest.mock import AsyncMock
+from uuid import uuid4
+
+import fastapi
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+
+from across_server.routes.v1.broker_event.exceptions import BrokerEventNotFoundException
+from across_server.routes.v1.broker_event.schemas import BrokerEvent
+
+
+class Setup:
+    @pytest_asyncio.fixture(autouse=True)
+    async def setup(
+        self,
+        async_client: AsyncClient,
+    ) -> None:
+        self.client = async_client
+        self.endpoint = "/broker-event/"
+
+
+class TestBrokerEventRouter:
+    class TestGet(Setup):
+        @pytest.mark.asyncio
+        async def test_should_return_broker_event(self) -> None:
+            """GET Should return broker event when successful"""
+            endpoint = self.endpoint + f"{uuid4()}"
+            res = await self.client.get(endpoint)
+            assert BrokerEvent.model_validate(res.json())
+
+        @pytest.mark.asyncio
+        async def test_should_return_200(self) -> None:
+            """GET should return 200 when successful"""
+            endpoint = self.endpoint + f"{uuid4()}"
+            res = await self.client.get(endpoint)
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_should_return_404_if_no_broker_event_found(
+            self, mock_broker_event_service: AsyncMock
+        ) -> None:
+            """GET should return 404 if cannot find broker event"""
+            mock_broker_event_service.get.side_effect = BrokerEventNotFoundException(
+                uuid4()
+            )
+            endpoint = self.endpoint + f"{uuid4()}"
+            res = await self.client.get(endpoint)
+            assert res.status_code == fastapi.status.HTTP_404_NOT_FOUND
+
+    class TestGetMany(Setup):
+        @pytest.mark.asyncio
+        async def test_many_should_return_many(self) -> None:
+            """GET many should return multiple when successful"""
+            res = await self.client.get(self.endpoint)
+            assert len(res.json()["items"])
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_many_broker_events(self) -> None:
+            """GET many should return multiple broker events when successful"""
+            res = await self.client.get(self.endpoint)
+            assert all(
+                [BrokerEvent.model_validate(json) for json in res.json()["items"]]
+            )
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_200(self) -> None:
+            """GET many should return 200 when successful"""
+            res = await self.client.get(self.endpoint)
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.parametrize(
+            "field",
+            ["total_number", "page", "page_limit", "items"],
+        )
+        @pytest.mark.asyncio
+        async def test_many_should_return_empty_items_with_pagination_metadata(
+            self,
+            mock_broker_event_service: AsyncMock,
+            field: str,
+        ) -> None:
+            """GET many should return empty items with pagination metadata when no results"""
+            mock_broker_event_service.get_many = AsyncMock(return_value=[])
+            res = await self.client.get(self.endpoint)
+            assert (
+                res.json().get(field) is not None and len(res.json().get("items")) == 0
+            )
+
+        @pytest.mark.asyncio
+        async def test_many_should_return_localizations_when_include_localizations_is_true(
+            self,
+        ) -> None:
+            """GET many should return localization data when include_localizations parameter set to true"""
+            res = await self.client.get(self.endpoint + "?include_localizations=true")
+            observation = res.json()["items"][0]
+            assert len(observation["localizations"]) > 0
+
+        @pytest.mark.asyncio
+        async def test_many_should_not_return_localizations_when_include_localizations_is_false(
+            self,
+        ) -> None:
+            """GET many should not return localization data when include_localizations parameter set to false"""
+            res = await self.client.get(self.endpoint + "?include_localizations=false")
+            observation = res.json()["items"][0]
+            assert len(observation["localizations"]) == 0

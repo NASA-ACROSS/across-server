@@ -8,78 +8,62 @@ import pytest
 from across.tools import WavelengthBandpass
 from across.tools import enums as tools_enums
 from fastapi import FastAPI
+from geoalchemy2 import WKTElement
 
+from across_server.core.enums.depth_unit import DepthUnit
 from across_server.core.enums.observation_status import ObservationStatus
 from across_server.core.enums.observation_type import ObservationType
 from across_server.core.schemas.coordinate import Coordinate
 from across_server.core.schemas.date_range import DateRange
-from across_server.db.models import Observation
+from across_server.db.models import Observation, ObservationFootprint
 from across_server.routes.v1.observation.schemas import ObservationCreate
 from across_server.routes.v1.observation.service import ObservationService
 
 
 @pytest.fixture()
-def mock_observation_data() -> Observation:
-    coordinate = Coordinate(
-        ra=123.456,
-        dec=-87.65,
-    )
-    return Observation(
+def fake_observation_footprint() -> ObservationFootprint:
+    """Fixture that creates a mock ObservationFootprint"""
+    return ObservationFootprint(
         id=uuid4(),
-        instrument_id=uuid4(),
-        schedule_id=uuid4(),
-        object_name="Test Object",
-        pointing_position=coordinate.create_gis_point(),
-        pointing_ra=123.456,
-        pointing_dec=-87.65,
-        object_position=coordinate.create_gis_point(),
-        object_ra=123.456,
-        object_dec=-87.65,
-        exposure_time=3600,
-        min_wavelength=2000,
-        max_wavelength=4000,
-        peak_wavelength=3000,
-        filter_name="Test Filter",
-        date_range_begin=datetime(2024, 12, 16, 11, 0),
-        date_range_end=datetime(2024, 12, 17, 11, 0),
-        external_observation_id="test-external-obsid",
-        type="imaging",
-        status="planned",
-        created_on=datetime.now(),
+        observation_id=uuid4(),  # Will be overridden when attached to observation
+        polygon=WKTElement(
+            "POLYGON((123.0 -88.0, 124.0 -88.0, 124.0 -87.0, 123.0 -87.0, 123.0 -88.0))",
+            srid=4326,
+        ),
     )
 
 
 @pytest.fixture()
-def mock_observation_many() -> Sequence[Tuple[Observation, int]]:
-    coordinate = Coordinate(
-        ra=123.456,
-        dec=-87.65,
-    )
+def fake_observation_data_with_footprint(
+    fake_observation_footprint: ObservationFootprint,
+    fake_observation_data: Observation,
+) -> Observation:
+    # Add footprint to observation
+    fake_observation_footprint.observation_id = fake_observation_data.id
+    fake_observation_data.footprints = [fake_observation_footprint]
+
+    return fake_observation_data
+
+
+@pytest.fixture()
+def fake_observation_many(
+    fake_observation_data_with_footprint: Observation,
+) -> Sequence[Tuple[Observation, int]]:
     return [
         (
-            Observation(
-                id=uuid4(),
-                instrument_id=uuid4(),
-                schedule_id=uuid4(),
-                object_name="Test Object",
-                pointing_position=coordinate.create_gis_point(),
-                pointing_ra=123.456,
-                pointing_dec=-87.65,
-                object_position=coordinate.create_gis_point(),
-                object_ra=123.456,
-                object_dec=-87.65,
-                exposure_time=1800,
-                min_wavelength=2000,
-                max_wavelength=4000,
-                peak_wavelength=3000,
-                filter_name="Test Filter",
-                date_range_begin=datetime(2024, 12, 16, 11, 0),
-                date_range_end=datetime(2024, 12, 17, 11, 0),
-                external_observation_id="test-external-obsid",
-                type="imaging",
-                status="planned",
-                created_on=datetime.now(),
-            ),
+            fake_observation_data_with_footprint,
+            1,
+        )
+    ]
+
+
+@pytest.fixture()
+def fake_observation_contains_point_many(
+    fake_observation_data_with_footprint: Observation,
+) -> Sequence[Tuple[Observation, int]]:
+    return [
+        (
+            fake_observation_data_with_footprint,
             1,
         )
     ]
@@ -106,12 +90,17 @@ def mock_observation_create() -> ObservationCreate:
 
 @pytest.fixture(scope="function")
 def mock_observation_service(
-    mock_observation_data: None, mock_observation_many: None
+    fake_observation_data_with_footprint: None,
+    fake_observation_many: None,
+    fake_observation_contains_point_many: None,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(ObservationService)
 
-    mock.get = AsyncMock(return_value=mock_observation_data)
-    mock.get_many = AsyncMock(return_value=mock_observation_many)
+    mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
+    mock.get_many = AsyncMock(return_value=fake_observation_many)
+    mock.get_overlap_point = AsyncMock(
+        return_value=fake_observation_contains_point_many
+    )
 
     yield mock
 
@@ -142,4 +131,18 @@ def bad_observation_filter(request: pytest.FixtureRequest) -> Any:
     """
     Parameters pop in the get_many routine to trigger 422
     """
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        {"bandpass_min": 2000},
+        {"bandpass_max": 4000},
+        {"bandpass_type": tools_enums.WavelengthUnit.ANGSTROM},
+        {"depth_value": 20},
+        {"depth_unit": DepthUnit.AB_MAG},
+    ]
+)
+def bad_point_overlap_filter(request: pytest.FixtureRequest) -> Any:
+    """Parameters used in get_overlap_point to trigger InvalidObservationReadParametersException."""
     return request.param

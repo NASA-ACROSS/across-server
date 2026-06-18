@@ -1,5 +1,132 @@
 # Changelog
 
+## [1.7.0](https://github.com/NASA-ACROSS/across-server/compare/v1.6.0...v1.7.0) (2026-06-18)
+
+
+### Features
+
+* **db:** add observation request tables to models ([#614](https://github.com/NASA-ACROSS/across-server/issues/614)) ([e99dc05](https://github.com/NASA-ACROSS/across-server/commit/e99dc0554190796a797fa9e002e39a55bc9769e7))
+* enable proxy-headers ([#626](https://github.com/NASA-ACROSS/across-server/issues/626)) ([d880d37](https://github.com/NASA-ACROSS/across-server/commit/d880d37c5a923a23cdebcbd47cd45bf5d51f0c58))
+
+
+### Bug Fixes
+
+* **migrations:** update the pandora data migration ([#629](https://github.com/NASA-ACROSS/across-server/issues/629)) ([a9a71f7](https://github.com/NASA-ACROSS/across-server/commit/a9a71f7c922d30932af32e94e5d5b8c2949ddc5a))
+
+## [1.6.0](https://github.com/NASA-ACROSS/across-server/compare/v1.5.1...v1.6.0) (2026-06-15)
+
+
+### Features
+
+* add group to group role read schema, rename snake case routes to kebab case ([#561](https://github.com/NASA-ACROSS/across-server/issues/561)) ([f9402d3](https://github.com/NASA-ACROSS/across-server/commit/f9402d3202fd3630595b070aadf2e949c78b7c0e))
+
+## [1.5.1](https://github.com/NASA-ACROSS/across-server/compare/v1.5.0...v1.5.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* add schedule id idx on observation ([#622](https://github.com/NASA-ACROSS/across-server/issues/622)) ([bea91f6](https://github.com/NASA-ACROSS/across-server/commit/bea91f680bca80604c6d53f8a92b84e25834058f))
+
+## [1.5.0](https://github.com/NASA-ACROSS/across-server/compare/v1.4.0...v1.5.0) (2026-05-27)
+
+
+### Features
+
+* add BrokerEvent and BrokerAlert models and endpoints ([#568](https://github.com/NASA-ACROSS/across-server/issues/568)) ([0326a44](https://github.com/NASA-ACROSS/across-server/commit/0326a44d6c162fef86b4eb3fdf7ed462e2358ae1))
+* add frontend service account ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+* add SPARCS observatory data migration ([#608](https://github.com/NASA-ACROSS/across-server/issues/608)) ([a7d6148](https://github.com/NASA-ACROSS/across-server/commit/a7d6148b8fe3a70a66b36ba18b4a3c14babc6db6))
+* **auth:** add frontend system service account ([#515](https://github.com/NASA-ACROSS/across-server/issues/515)) ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+* **observation:** add point overlap observation footprint endpoint ([#587](https://github.com/NASA-ACROSS/across-server/issues/587)) ([867f4bb](https://github.com/NASA-ACROSS/across-server/commit/867f4bb20038372e2dba070f7b6755d72db998d0))
+* **telescope:** adding observatory qps to telescope get many ([#595](https://github.com/NASA-ACROSS/across-server/issues/595)) ([7fae08c](https://github.com/NASA-ACROSS/across-server/commit/7fae08c9b8e21b8f7c6e112f2d7fe868b7bfa7c1))
+
+
+### Bug Fixes
+
+* **auth:** 401 auth error code for mismatch creds ([#553](https://github.com/NASA-ACROSS/across-server/issues/553)) ([ab7c2d8](https://github.com/NASA-ACROSS/across-server/commit/ab7c2d898a0fda597941216fa00558b49c3a96b6))
+
+## [1.4.0](https://github.com/NASA-ACROSS/across-server/compare/v1.3.2...v1.4.0) (2026-05-11)
+
+
+### Features
+
+* add euclid observatory data migration ([#575](https://github.com/NASA-ACROSS/across-server/issues/575)) ([1d30299](https://github.com/NASA-ACROSS/across-server/commit/1d302994b4267f2447aace0b2539ce148955250f))
+* add frontend service account ([f5e1509](https://github.com/NASA-ACROSS/across-server/commit/f5e1509cab713da9854afe7bd437477ca7a1f232))
+* add spherex data migration ([#573](https://github.com/NASA-ACROSS/across-server/issues/573)) ([58e061f](https://github.com/NASA-ACROSS/across-server/commit/58e061f1a6ed278629af296823b0c943214f5078))
+* add xrism observatory data ([#581](https://github.com/NASA-ACROSS/across-server/issues/581)) ([6e9b83c](https://github.com/NASA-ACROSS/across-server/commit/6e9b83cb15610309707a9c0ef6116bcbe85fa614))
+* **auth:** add frontend system service account ([#515](https://github.com/NASA-ACROSS/across-server/issues/515)) ([f5e1509](https://github.com/NASA-ACROSS/across-server/commit/f5e1509cab713da9854afe7bd437477ca7a1f232))
+* **config:** remove api root path prefix to support new domain ([#585](https://github.com/NASA-ACROSS/across-server/issues/585)) ([ab3c6fb](https://github.com/NASA-ACROSS/across-server/commit/ab3c6fbe9321095598888c1e1599f659fc9b7859))
+* **migrations:** adding pandora observatory migration ([#574](https://github.com/NASA-ACROSS/across-server/issues/574)) ([5490eae](https://github.com/NASA-ACROSS/across-server/commit/5490eae6e7f2c0b31d20f3b52fe9d702a1c38997))
+
+
+### Bug Fixes
+
+* **api:** stop across-tools custom types leaking into openapi.json ([#551](https://github.com/NASA-ACROSS/across-server/issues/551)) ([b9c5445](https://github.com/NASA-ACROSS/across-server/commit/b9c5445b9f3a7d8bdb672b8a7482a7ba9abfdefa))
+* **schema:** remove across-tools coordinate from api router ([#536](https://github.com/NASA-ACROSS/across-server/issues/536)) ([80478b1](https://github.com/NASA-ACROSS/across-server/commit/80478b13c615a7680e504d789c4a9046c5187fce))
+* set default page and page_limit for pagination ([#542](https://github.com/NASA-ACROSS/across-server/issues/542)) ([cb09ef9](https://github.com/NASA-ACROSS/across-server/commit/cb09ef9ca1c15b990e54e67631394cfbd71bdda8))
+* update branch name to main ([cd9cbaa](https://github.com/NASA-ACROSS/across-server/commit/cd9cbaa884e005e4b546243dbbc7a40edd177011))
+* update escpresso-feature-branch workflow back to main ([#586](https://github.com/NASA-ACROSS/across-server/issues/586)) ([cd9cbaa](https://github.com/NASA-ACROSS/across-server/commit/cd9cbaa884e005e4b546243dbbc7a40edd177011))
+
+## [1.3.2](https://github.com/NASA-ACROSS/across-server/compare/v1.3.1...v1.3.2) (2026-03-25)
+
+
+### Bug Fixes
+
+* add migration to roll back daytime constraints ([#531](https://github.com/NASA-ACROSS/across-server/issues/531)) ([e7ee2f9](https://github.com/NASA-ACROSS/across-server/commit/e7ee2f9c83955feb7c4c41c9fa9617fc945a19bb))
+
+## [1.3.1](https://github.com/NASA-ACROSS/across-server/compare/v1.3.0...v1.3.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **hotfix:** configure astropy to not download files ([#528](https://github.com/NASA-ACROSS/across-server/issues/528)) ([0f547eb](https://github.com/NASA-ACROSS/across-server/commit/0f547eb4a999e1d6317cb39614f116bda1e8e422))
+
+## [1.3.0](https://github.com/NASA-ACROSS/across-server/compare/v1.2.0...v1.3.0) (2026-03-20)
+
+
+### Features
+
+* **data:** add daytime constraints for ground-based instruments ([#522](https://github.com/NASA-ACROSS/across-server/issues/522)) ([750da12](https://github.com/NASA-ACROSS/across-server/commit/750da12e581669c797e036f78eb84f38a48e430b))
+* **login:** only send magic_link to webserver when running locally for development ([#494](https://github.com/NASA-ACROSS/across-server/issues/494)) ([00d0f15](https://github.com/NASA-ACROSS/across-server/commit/00d0f15b73bcca1bddbefc18f8677a05f9308672))
+* **observation:** add footprints to observation table ([#489](https://github.com/NASA-ACROSS/across-server/issues/489)) ([0db8437](https://github.com/NASA-ACROSS/across-server/commit/0db84372b645a233ff0e461250920c5f347f4f74))
+* **visibility:** add pointing constraint functionality to visibility service ([#498](https://github.com/NASA-ACROSS/across-server/issues/498)) ([54befed](https://github.com/NASA-ACROSS/across-server/commit/54befeda15b73d327c39df2fe4114f197f81c1bf))
+
+
+### Bug Fixes
+
+* **cicd:** use updated shared workflows to simplify cicd pipeline ([#519](https://github.com/NASA-ACROSS/across-server/issues/519)) ([4cd625b](https://github.com/NASA-ACROSS/across-server/commit/4cd625b428b908f6de79013df328ef300d19bdc3))
+* convert timezone containing date strings to naive UTC datetimes ([#517](https://github.com/NASA-ACROSS/across-server/issues/517)) ([3267f2c](https://github.com/NASA-ACROSS/across-server/commit/3267f2c21bbd4edb996bc40600f8222e2c7672f4))
+* **data:** add missing schedule cadences ([#512](https://github.com/NASA-ACROSS/across-server/issues/512)) ([3f35e6b](https://github.com/NASA-ACROSS/across-server/commit/3f35e6b2ccbe0f30593ed2c254fdf830b3cf4d14))
+* **db:** fix multiple head revisions ([#521](https://github.com/NASA-ACROSS/across-server/issues/521)) ([210ad7c](https://github.com/NASA-ACROSS/across-server/commit/210ad7cadd33b879b3de40530d6b2ed9761bfee1))
+* **db:** resolve drift of models to migrations ([#501](https://github.com/NASA-ACROSS/across-server/issues/501)) ([61657d5](https://github.com/NASA-ACROSS/across-server/commit/61657d5fce1c4dd55dc145859830b9f910de30ef))
+* **deprecation:** update deprecated 422 constant ([#508](https://github.com/NASA-ACROSS/across-server/issues/508)) ([57c5ff7](https://github.com/NASA-ACROSS/across-server/commit/57c5ff7211295eaca6a583b191eaf9dc1b86dba0))
+* hydrate null instrument values in /telescope endpoint ([b0404df](https://github.com/NASA-ACROSS/across-server/commit/b0404df717593349474e8541100d2136851d815e))
+* **schedule:** fix indexing and identify duplicate schedules in bulk create ([#504](https://github.com/NASA-ACROSS/across-server/issues/504)) ([1b7abce](https://github.com/NASA-ACROSS/across-server/commit/1b7abce5ece6e5d9dd0092e49eab15e095fd748a))
+* **telescope:** hydrate null instrument values in /telescope endpoint ([#524](https://github.com/NASA-ACROSS/across-server/issues/524)) ([b0404df](https://github.com/NASA-ACROSS/across-server/commit/b0404df717593349474e8541100d2136851d815e))
+* **visibility:** add min_visibility_duration to joint visibility calculator ([#506](https://github.com/NASA-ACROSS/across-server/issues/506)) ([7784347](https://github.com/NASA-ACROSS/across-server/commit/778434736b2cf7e02549bc0306b32fb0137a0051))
+
+## [1.2.0](https://github.com/NASA-ACROSS/across-server/compare/v1.1.0...v1.2.0) (2026-02-23)
+
+
+### Features
+
+* add ephemeris visibility type to LSSTCam ([#490](https://github.com/NASA-ACROSS/across-server/issues/490)) ([85af04d](https://github.com/NASA-ACROSS/across-server/commit/85af04d5af6e04047d90af931fdaf4996ae18b7e))
+* add target name resolver ([#448](https://github.com/NASA-ACROSS/across-server/issues/448)) ([5f3c40e](https://github.com/NASA-ACROSS/across-server/commit/5f3c40e8cc2442d1d3c8cd1f7752afef23e4dd48))
+* upgrading to across-tools==1.3.0 ([#495](https://github.com/NASA-ACROSS/across-server/issues/495)) ([749628e](https://github.com/NASA-ACROSS/across-server/commit/749628e66aca04a9e4ba4c22bf6dc5574703bc8a))
+* **user:** soft delete user accounts ([#454](https://github.com/NASA-ACROSS/across-server/issues/454)) ([860fdfe](https://github.com/NASA-ACROSS/across-server/commit/860fdfe2b21a64f5907a28e1fd80a1b2af455497))
+
+
+### Bug Fixes
+
+* adding lsst schedule cadence ([#484](https://github.com/NASA-ACROSS/across-server/issues/484)) ([d3fc732](https://github.com/NASA-ACROSS/across-server/commit/d3fc732a0b1bfc759f86f4e892f86a61643a624f))
+* **auth:** use correct return type for rotate key ([#438](https://github.com/NASA-ACROSS/across-server/issues/438)) ([553d924](https://github.com/NASA-ACROSS/across-server/commit/553d924f5e969bc70d929924d297041dfff61678))
+* correct filter values calculated with bandwidths ([#470](https://github.com/NASA-ACROSS/across-server/issues/470)) ([ebe4613](https://github.com/NASA-ACROSS/across-server/commit/ebe461393b19860284592379a3edbdee69bed85f))
+* **data:** change fermi lat observation types to slew ([#487](https://github.com/NASA-ACROSS/across-server/issues/487)) ([c49359a](https://github.com/NASA-ACROSS/across-server/commit/c49359a2b8ba55b640623c0004dc1fba2701f9ad))
+* ra must be less than 360 ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* remove comment ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* undo change for depth_params ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** don't error out on ra/dec = 0, validate range ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+* **validation:** observations endpoint, don't error out on ra/dec = 0, validate range ([#462](https://github.com/NASA-ACROSS/across-server/issues/462)) ([b0a6e20](https://github.com/NASA-ACROSS/across-server/commit/b0a6e206fe46cb1093af4f243c314969cbcd0ed8))
+
 ## [1.1.0](https://github.com/NASA-ACROSS/across-server/compare/v1.0.0...v1.1.0) (2026-01-07)
 
 

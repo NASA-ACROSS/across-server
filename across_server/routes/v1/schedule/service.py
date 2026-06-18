@@ -1,7 +1,6 @@
 from typing import Annotated, Sequence, Tuple
 from uuid import UUID, uuid4
 
-import numpy as np
 from fastapi import Depends
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,7 +48,10 @@ class ScheduleService:
         self.db = db
 
     async def get(
-        self, schedule_id: UUID, include_observations: bool = False
+        self,
+        schedule_id: UUID,
+        include_observations: bool = False,
+        include_observations_footprints: bool = False,
     ) -> models.Schedule:
         """
         Retrieve the Schedule record with the given checksum.
@@ -58,6 +60,10 @@ class ScheduleService:
         ----------
         schedule_id : UUID
             the Schedule id
+        include_observations: bool, optional
+            Whether to include observations in the returned schedule
+        include_observations_footprints: bool, optional
+            Whether to include observation footprints in the returned schedule if observations are included
 
         Returns
         -------
@@ -69,7 +75,8 @@ class ScheduleService:
         ScheduleNotFoundException
         """
         query_options = self._get_schedule_query_options(
-            include_observations=include_observations
+            include_observations=include_observations,
+            include_observations_footprints=include_observations_footprints,
         )
 
         query = (
@@ -106,7 +113,8 @@ class ScheduleService:
         schedule_filter = self._get_schedule_filter(data=data)
 
         query_options = self._get_schedule_query_options(
-            include_observations=data.include_observations
+            include_observations=data.include_observations,
+            include_observations_footprints=data.include_observations_footprints,
         )
 
         schedule_query = (
@@ -159,7 +167,8 @@ class ScheduleService:
         """
         schedule_filter = self._get_schedule_filter(data=data)
         query_options = self._get_schedule_query_options(
-            include_observations=data.include_observations
+            include_observations=data.include_observations,
+            include_observations_footprints=data.include_observations_footprints,
         )
 
         schedule_query = (
@@ -245,9 +254,14 @@ class ScheduleService:
             instrument = instrument_dict[observation_create.instrument_id]
             fov = InstrumentFOV(instrument.field_of_view)
             observation = observation_create.to_orm(instrument_fov=fov)
+            observation.id = uuid4()
             observation.schedule_id = schedule.id
             observation.created_by_id = created_by_id
             self.db.add(observation)
+            for footprint_create in observation_create.footprint or []:
+                footprint = footprint_create.to_orm()
+                footprint.observation_id = observation.id
+                self.db.add(footprint)
 
         await self.db.commit()
         return schedule.id
@@ -272,58 +286,60 @@ class ScheduleService:
         )
 
         # Get array of schedule_ids for existing schedules to append to and return
-        schedule_ids = [schedule.id for schedule in np.asarray(existing_schedules)]
+        schedule_ids = [schedule.id for schedule in existing_schedules]
 
         # Get array of checksums of existing schedules to compare against the schedules being added
-        existing_schedules_checksums = [
+        existing_schedules_checksums = {
             schedule.checksum for schedule in existing_schedules
-        ]
-
-        # Make filter for existing schedules
-        schedule_filter = np.asarray(
-            [
-                schedule.checksum in existing_schedules_checksums
-                for schedule in schedules
-            ]
-        )
+        }
 
         # For the schedules that don't exist yet, iterate over them,
         # create arrays of schedules and observations to bulk add
         schedules_to_add = []
         observations_to_add = []
-        for i, schedule in enumerate(
-            np.asarray(schedules)[np.logical_not(schedule_filter)]
-        ):
-            schedule_create = schedule_create_many.schedules[i]
-            schedule_instrument_ids = list(
-                set(
-                    [
-                        observation.instrument_id
-                        for observation in schedule_create.observations
-                    ]
+        observation_footprints_to_add = []
+        for i, schedule in enumerate(schedules):
+            if schedule.checksum not in existing_schedules_checksums:
+                schedule_create = schedule_create_many.schedules[i]
+                schedule_instrument_ids = {
+                    observation.instrument_id
+                    for observation in schedule_create.observations
+                }
+
+                for schedule_instrument_id in schedule_instrument_ids:
+                    if not instrument_dict.get(schedule_instrument_id):
+                        raise ScheduleInstrumentNotFoundException(
+                            instrument_id=schedule_instrument_id,
+                            telescope_id=schedule.telescope_id,
+                        )
+
+                schedule.id = uuid4()
+                schedules_to_add.append(schedule)
+                schedule_ids.append(schedule.id)
+                existing_schedules_checksums.add(schedule.checksum)
+
+                for observation_create in schedule_create.observations:
+                    instrument = instrument_dict[observation_create.instrument_id]
+                    fov = InstrumentFOV(instrument.field_of_view)
+                    observation = observation_create.to_orm(instrument_fov=fov)
+                    observation.id = uuid4()
+                    observation.schedule_id = schedule.id
+                    observation.created_by_id = created_by_id
+                    for footprint_create in observation_create.footprint or []:
+                        footprint = footprint_create.to_orm()
+                        footprint.observation_id = observation.id
+                        observation_footprints_to_add.append(footprint)
+                    observations_to_add.append(observation)
+
+        self.db.add_all(
+            list(
+                (
+                    *schedules_to_add,
+                    *observations_to_add,
+                    *observation_footprints_to_add,
                 )
             )
-
-            for schedule_instrument_id in schedule_instrument_ids:
-                if not instrument_dict.get(schedule_instrument_id):
-                    raise ScheduleInstrumentNotFoundException(
-                        instrument_id=schedule_instrument_id,
-                        telescope_id=schedule.telescope_id,
-                    )
-
-            schedule.id = uuid4()
-            schedules_to_add.append(schedule)
-            schedule_ids.append(schedule.id)
-
-            for observation_create in schedule_create.observations:
-                instrument = instrument_dict[observation_create.instrument_id]
-                fov = InstrumentFOV(instrument.field_of_view)
-                observation = observation_create.to_orm(instrument_fov=fov)
-                observation.schedule_id = schedule.id
-                observation.created_by_id = created_by_id
-                observations_to_add.append(observation)
-
-        self.db.add_all(list((*schedules_to_add, *observations_to_add)))
+        )
         await self.db.commit()
         return schedule_ids
 
@@ -455,9 +471,15 @@ class ScheduleService:
         return data_filter
 
     def _get_schedule_query_options(
-        self, include_observations: bool | None
+        self,
+        include_observations: bool | None,
+        include_observations_footprints: bool | None = False,
     ) -> list[tuple]:
         if include_observations:
+            if include_observations_footprints:
+                return selectinload(models.Schedule.observations).selectinload(
+                    models.Observation.footprints
+                )  # type: ignore
             return selectinload(models.Schedule.observations)  # type: ignore
 
         return noload(models.Schedule.observations)  # type: ignore

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from pydantic import EmailStr
-from sqlalchemy import select
+from sqlalchemy import false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....db import models
@@ -25,13 +25,21 @@ class UserService:
         self.db = db
 
     async def get_many(self) -> Sequence[models.User]:
-        result = await self.db.scalars(select(models.User))
+        result = await self.db.scalars(
+            select(models.User).where(models.User.is_deleted == false())
+        )
         users = result.all()
 
         return users
 
     async def get(self, user_id: UUID) -> models.User:
-        user = await self.db.get(models.User, user_id)
+        result = await self.db.scalars(
+            select(models.User)
+            .where(models.User.id == user_id)
+            .where(models.User.is_deleted == false())
+        )
+
+        user = result.one_or_none()
 
         if user is None:
             raise UserNotFoundException(user_id)
@@ -40,9 +48,11 @@ class UserService:
 
     async def get_by_email(self, email: str) -> models.User:
         result = await self.db.scalars(
-            select(models.User).where(
-                models.User.email.ilike(email)
-            )  # case insensitive email lookup
+            select(models.User)
+            .where(
+                models.User.email.ilike(email)  # case insensitive email lookup
+            )
+            .where(models.User.is_deleted == false())
         )
 
         user = result.one_or_none()
@@ -75,13 +85,12 @@ class UserService:
         if exists:
             raise DuplicateUserException(field_name="email", field_value=data.email)
 
-        user = models.User(**data.model_dump(exclude_unset=True))
+        new_user = models.User(**data.model_dump(exclude_unset=True))
+        self.db.add(new_user)
 
-        self.db.add(user)
         await self.db.commit()
-        await self.db.refresh(user)
-
-        return user
+        await self.db.refresh(new_user)
+        return new_user
 
     async def update(
         self,
@@ -106,7 +115,8 @@ class UserService:
     async def delete(self, user_id: UUID) -> models.User:
         user = await self.get(user_id)
 
-        await self.db.delete(user)
+        user.is_deleted = True
+        user.modified_by_id = user.id
         await self.db.commit()
 
         return user

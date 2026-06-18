@@ -13,7 +13,7 @@ class Setup:
     async def setup(self, async_client: AsyncClient) -> None:
         user_id = uuid.uuid4()
         self.client = async_client
-        self.endpoint = f"/user/{user_id}/service_account/"
+        self.endpoint = f"/user/{user_id}/service-account/"
         self.post_data = {
             "name": "service account name",
             "description": "test service account description",
@@ -47,7 +47,7 @@ class TestServiceAccountRouter:
             data.pop("name")
             res = await self.client.post(self.endpoint, json=self.post_data)
 
-            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY
+            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
     class TestGet(Setup):
         @pytest.mark.asyncio

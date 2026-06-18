@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Annotated, ClassVar
+from typing import ClassVar
 
 from across.tools import EnergyBandpass, FrequencyBandpass, WavelengthBandpass
 from across.tools import enums as tools_enums
-from pydantic import BeforeValidator
+from pydantic import Field
 
-from ....core.date_utils import convert_to_utc
+from ....core.date_utils import UTCDatetime
 from ....core.enums import (
     DepthUnit,
     IVOAObsCategory,
@@ -25,6 +25,10 @@ from ....core.schemas.base import (
 )
 from ....core.schemas.pagination import PaginationParams
 from ....db.models import Observation as ObservationModel
+from ..observation_footprint.schemas import (
+    ObservationFootprint,
+    ObservationFootprintCreate,
+)
 
 
 class ObservationBase(
@@ -63,9 +67,12 @@ class Observation(ObservationBase):
     schedule_id: uuid.UUID
     created_on: datetime
     created_by_id: uuid.UUID | None = None
+    footprint: list[ObservationFootprint] = []
 
     @classmethod
-    def from_orm(cls, obj: ObservationModel) -> Observation:
+    def from_orm(
+        cls, obj: ObservationModel, include_footprints: bool = False
+    ) -> Observation:
         if obj.depth_unit and obj.depth_value:
             depth = UnitValue[DepthUnit](
                 unit=DepthUnit(obj.depth_unit), value=obj.depth_value
@@ -116,12 +123,19 @@ class Observation(ObservationBase):
             priority=obj.priority,
             created_on=obj.created_on,
             tracking_type=tracking_type,
+            footprint=[
+                ObservationFootprint.from_orm(footprint) for footprint in obj.footprints
+            ]
+            if include_footprints and obj.footprints
+            else [],
         )
 
 
 class ObservationCreate(ObservationBase):
-    created_on: Annotated[datetime | None, BeforeValidator(convert_to_utc)] = None
+    created_on: UTCDatetime | None = None
     created_by_id: uuid.UUID | None = None
+
+    footprint: list[ObservationFootprintCreate] = []
 
     return_schema: ClassVar = Observation
 
@@ -180,10 +194,24 @@ class ObservationCreate(ObservationBase):
         if "bandpass" in data.keys():
             del data["bandpass"]
 
+        if "footprint" in data.keys():
+            del data["footprint"]
+
         return self.orm_model(**data)
 
 
-class ObservationRead(PaginationParams):
+class ConeSearchParams(BaseSchema):
+    cone_search_ra: float | None = Field(default=None, ge=0.0, lt=360.0)
+    cone_search_dec: float | None = Field(default=None, ge=-90.0, le=90.0)
+    cone_search_radius: float | None = Field(default=None, gt=0.0)
+
+
+class ContainsPointParams(BaseSchema):
+    ra: float = Field(ge=0.0, lt=360.0)
+    dec: float = Field(ge=-90.0, le=90.0)
+
+
+class ObservationReadBase(PaginationParams):
     external_id: str | None = None
     schedule_ids: list[uuid.UUID] | None = None
     observatory_ids: list[uuid.UUID] | None = None
@@ -192,8 +220,8 @@ class ObservationRead(PaginationParams):
     status: ObservationStatus | None = None
     proposal: str | None = None
     object_name: str | None = None
-    date_range_begin: datetime | None = None
-    date_range_end: datetime | None = None
+    date_range_begin: UTCDatetime | None = None
+    date_range_end: UTCDatetime | None = None
     bandpass_min: float | None = None
     bandpass_max: float | None = None
     bandpass_type: (
@@ -202,9 +230,15 @@ class ObservationRead(PaginationParams):
         | tools_enums.FrequencyUnit
         | None
     ) = None
-    cone_search_ra: float | None = None
-    cone_search_dec: float | None = None
-    cone_search_radius: float | None = None
     type: ObservationType | None = None
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
+    include_footprints: bool = False
+
+
+class ObservationRead(ConeSearchParams, ObservationReadBase):
+    pass
+
+
+class ContainsPointReadParams(ContainsPointParams, ObservationReadBase):
+    pass

@@ -2,9 +2,10 @@ from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Form, Response, status
+from fastapi import APIRouter, Depends, Form, Response, Security, status
 from pydantic import EmailStr
 
+from ..core import config
 from ..util.decorators import local_only_route
 from ..util.email import EmailService
 from . import enums, magic_link, schemas, strategies, tokens
@@ -62,13 +63,13 @@ async def local_token(
 @router.post(
     "/login",
     operation_id="login",
-    dependencies=[Depends(strategies.webserver_access)],
+    dependencies=[Security(strategies.webserver_access, scopes=["system:login:write"])],
 )
 async def login(
     email: EmailStr,
     email_service: Annotated[EmailService, Depends(EmailService)],
     auth_service: Annotated[AuthService, Depends(AuthService)],
-) -> dict:
+) -> dict | None:
     user = await auth_service.get_authenticated_user(email=email)
 
     link = magic_link.generate(email)
@@ -82,7 +83,9 @@ async def login(
         content_html=login_email_body,
     )
 
-    return {"message": "Magic link sent", "magic_link": link, "user": user}
+    if config.is_local():
+        return {"magic_link": link}
+    return None
 
 
 @router.get("/verify", operation_id="verify")

@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import model_validator
 
+from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservatoryType
 from ....core.enums.ephemeris_type import EphemerisType
 from ....core.schemas.base import BaseSchema, IDNameSchema
@@ -127,4 +128,4 @@ class ObservatoryRead(BaseSchema):
     telescope_name: str | None = None
     telescope_id: uuid.UUID | None = None
     ephemeris_type: list[EphemerisType] | None = None
-    created_on: datetime | None = None
+    created_on: UTCDatetime | None = None

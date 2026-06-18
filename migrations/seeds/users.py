@@ -4,7 +4,7 @@ from across_server.db.models import User
 
 from .group_roles import treedome_group_admin, treedome_schedule_operations
 from .groups import treedome_space_group
-from .roles import across_admin_role, system_role
+from .roles import across_admin_role
 
 dev = User(
     id=uuid.UUID("173e35fa-9544-49e8-b5b9-d04ea884defb"),
@@ -14,7 +14,7 @@ dev = User(
     last_name="dev",
     created_by_id=None,
     modified_by_id=None,
-    roles=[across_admin_role, system_role],
+    roles=[across_admin_role],
 )
 
 sandy = User(
@@ -29,7 +29,20 @@ sandy = User(
     groups=[treedome_space_group],
 )
 
+spongebob = User(
+    id=uuid.UUID("c1a7c8f3-fa5c-4fce-b6ac-a53457bd75e6"),
+    email="spongebob@krustykrab.com",
+    username="SpongeBob",
+    first_name="Spongebob",
+    last_name="SquarePants",
+    created_by_id=None,
+    modified_by_id=None,
+    group_roles=[treedome_schedule_operations],
+    groups=[treedome_space_group],
+)
+
 users = [
     dev,
     sandy,
+    spongebob,
 ]

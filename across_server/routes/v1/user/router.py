@@ -2,9 +2,10 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Security, status
 
 from .... import auth, db
+from ....core.config import config
 from ....util.decorators import local_only_route
 from ....util.email.service import EmailService
 from ..group.invite.service import GroupInviteService
@@ -12,6 +13,7 @@ from ..group.service import GroupService
 from ..user.invite.service import UserInviteService
 from . import schemas
 from .service import UserService
+from .service_account.service import ServiceAccountService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
@@ -75,14 +77,16 @@ async def get(
     responses={
         status.HTTP_201_CREATED: {},
     },
-    dependencies=[Depends(auth.strategies.webserver_access)],
+    dependencies=[
+        Security(auth.strategies.webserver_access, scopes=["system:user:write"])
+    ],
 )
 async def create(
     user_service: Annotated[UserService, Depends(UserService)],
     auth_service: Annotated[auth.AuthService, Depends(auth.AuthService)],
     email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
-) -> None:
+) -> dict | None:
     user = await user_service.create(data)
     magic_link = auth_service.generate_magic_link(user.email)
     verification_email_body = email_service.construct_verification_email(
@@ -97,6 +101,10 @@ async def create(
         )
     except Exception as e:
         logger.error("Email service failed to send user registration email", e=e)
+
+    if config.is_local():
+        return {"magic_link": magic_link}
+    return None
 
 
 @router.patch(
@@ -130,9 +138,9 @@ async def update(
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_200_OK,
-    summary="Delete a user",
+    summary="Deactivate a user",
     operation_id="delete_user",
-    description="Permanently delete a user from the ACROSS system. This will also delete all associated relations for the user.",
+    description="Deactivate a user in the ACROSS system. This will also deactivate all associated relations for the user and expire existing service accounts.",
     response_model=schemas.User,
     responses={
         status.HTTP_200_OK: {
@@ -145,9 +153,24 @@ async def update(
 async def delete(
     service: Annotated[UserService, Depends(UserService)],
     user_id: uuid.UUID,
+    service_account_service: Annotated[
+        ServiceAccountService, Depends(ServiceAccountService)
+    ],
+    group_service: Annotated[GroupService, Depends(GroupService)],
 ) -> schemas.User:
-    user_model = await service.delete(user_id)
-    return schemas.User.model_validate(user_model)
+    user = await service.get(user_id)
+
+    # expire the user's service accounts before user deactivation
+    service_accounts = await service_account_service.get_many(user_id)
+    for service_account in service_accounts:
+        await service_account_service.expire_key(service_account.id, user_id)
+
+    # remove the user from all groups, cascade deletes all group roles from user and all service accounts
+    for group in user.groups:
+        await group_service.remove_user(user, group.id)
+
+    user = await service.delete(user_id)
+    return schemas.User.model_validate(user)
 
 
 # Invites

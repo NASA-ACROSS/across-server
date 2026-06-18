@@ -7,10 +7,15 @@ from sqlalchemy.orm import DeclarativeBase
 
 from across_server.db import config, models
 
+from .seeds.broker_alerts import broker_alerts
+from .seeds.broker_events import broker_events
 from .seeds.footprints import footprints
 from .seeds.group_roles import group_roles
 from .seeds.groups import groups
 from .seeds.instruments import instruments
+from .seeds.localizations import localizations
+from .seeds.observation_footprints import observation_footprints
+from .seeds.observation_requests import observation_requests
 from .seeds.observations import observations
 from .seeds.observatories import (
     earth_location_parameters,
@@ -20,6 +25,7 @@ from .seeds.observatories import (
     spice_kernel_parameters,
     tle_parameters,
 )
+from .seeds.observing_proposal import observing_proposals
 from .seeds.roles import roles
 from .seeds.schedules import schedules
 from .seeds.telescopes import telescopes
@@ -40,11 +46,17 @@ seed_order: list[tuple[Type[DeclarativeBase], Sequence[DeclarativeBase]]] = [
     (models.Footprint, footprints),
     (models.Schedule, schedules),
     (models.Observation, observations),
+    (models.ObservationFootprint, observation_footprints),
     (models.TLE, tles),
     (models.TLEParameters, tle_parameters),
     (models.JPLEphemerisParameters, jpl_parameters),
     (models.SpiceKernelParameters, spice_kernel_parameters),
     (models.EarthLocationParameters, earth_location_parameters),
+    (models.BrokerEvent, broker_events),
+    (models.BrokerAlert, broker_alerts),
+    (models.Localization, localizations),
+    (models.ObservingProposal, observing_proposals),
+    (models.ObservationRequest, observation_requests),
 ]
 
 

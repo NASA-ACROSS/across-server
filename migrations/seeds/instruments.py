@@ -7,7 +7,12 @@ from across.tools.visibility.constraints import (
     SunAngleConstraint,
 )
 
-from across_server.core.enums import InstrumentFOV, InstrumentType, visibility_type
+from across_server.core.enums import (
+    InstrumentFOV,
+    InstrumentType,
+    observation_strategy,
+    visibility_type,
+)
 from across_server.db.models import Constraint, Instrument
 
 from .telescopes import sandy_smaller_telescope, sandy_telescope
@@ -52,6 +57,7 @@ sandy_instrument_calorimeter = Instrument(
         moon20constraint,
         earth10constraint,
     ],
+    observation_strategy=observation_strategy.ObservationStrategy.POINTED,
 )
 
 sandy_all_sky_instrument = Instrument(
@@ -64,6 +70,7 @@ sandy_all_sky_instrument = Instrument(
     is_operational=True,
     visibility_type=visibility_type.VisibilityType.EPHEMERIS,
     constraints=[earth0constraint],
+    observation_strategy=observation_strategy.ObservationStrategy.SURVEY,
 )
 
 sandy_optical_instrument = Instrument(
@@ -76,6 +83,7 @@ sandy_optical_instrument = Instrument(
     is_operational=True,
     visibility_type=visibility_type.VisibilityType.EPHEMERIS,
     constraints=[sun45constraint, moon20constraint, earth20constraint],
+    observation_strategy=observation_strategy.ObservationStrategy.POINTED,
 )
 
 instruments = [

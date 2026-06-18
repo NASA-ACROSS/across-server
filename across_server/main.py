@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
+from astropy.utils import iers  # type: ignore
 from fastapi import FastAPI, status
 from fastapi.responses import FileResponse, RedirectResponse
 from ratelimit import RateLimitMiddleware
@@ -18,6 +19,10 @@ from . import __version__
 from .core import config, limiter, logging
 from .core.middleware import LoggingMiddleware
 from .routes import v1
+
+# Disable auto-downloading of IERS data
+iers.conf.auto_download = False
+iers.conf.auto_max_age = None
 
 # Configure UTC system time
 os.environ["TZ"] = "UTC"

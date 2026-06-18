@@ -65,7 +65,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
         Returns
         -------
         list[sqlalchemy.filters]
@@ -82,6 +82,21 @@ class TelescopeService:
             data_filter.append(
                 func.lower(models.Telescope.name).contains(str.lower(data.name))
                 | func.lower(models.Telescope.short_name).contains(str.lower(data.name))
+            )
+
+        if data.observatory_id:
+            data_filter.append(models.Telescope.observatory_id == data.observatory_id)
+
+        if data.observatory_name:
+            data_filter.append(
+                models.Telescope.observatory.has(
+                    func.lower(models.Observatory.name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                    | func.lower(models.Observatory.short_name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                )
             )
 
         if data.instrument_id:
@@ -115,7 +130,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
 
         Returns
         -------

@@ -8,6 +8,7 @@ from pydantic import BaseModel, BeforeValidator, EmailStr
 
 from ....core.schemas import Permission
 from ....core.schemas.base import BaseSchema
+from ..group.schemas import GroupBase
 from ..role.schemas import RoleBase
 
 # Regular expression to detect HTML tags
@@ -18,7 +19,7 @@ def validate_no_html(value: str) -> str:
     """Ensure the string contains no HTML tags or other special characters."""
     if HTML_TAG_REGEX.search(value):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid format."
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid format."
         )
     return value
 
@@ -58,6 +59,7 @@ class GroupRole(BaseSchema):
     id: uuid.UUID
     name: str
     permissions: list[Permission]
+    group: GroupBase
 
 
 class Group(BaseSchema):

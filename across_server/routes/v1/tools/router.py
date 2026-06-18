@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from across_server.routes.v1.tools import visibility_calculator
+from across_server.routes.v1.tools import resolve_object, visibility_calculator
 
 router = APIRouter(
     prefix="/tools",
@@ -12,4 +12,5 @@ router = APIRouter(
     },
 )
 
+router.include_router(resolve_object.router)
 router.include_router(visibility_calculator.router)
