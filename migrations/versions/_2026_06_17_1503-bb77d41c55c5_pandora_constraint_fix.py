@@ -1,7 +1,7 @@
 """pandora constraint fix
 
 Revision ID: bb77d41c55c5
-Revises: f24460b144c4
+Revises: 572f3bb912a2
 Create Date: 2026-06-17 15:03:44.853744
 
 """
@@ -20,7 +20,7 @@ import migrations.versions.model_snapshots.models_2026_05_26 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "bb77d41c55c5"
-down_revision: Union[str, None] = "f24460b144c4"
+down_revision: Union[str, None] = "572f3bb912a2"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

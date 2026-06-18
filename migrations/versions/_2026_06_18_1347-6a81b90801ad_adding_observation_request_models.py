@@ -1,7 +1,7 @@
 """adding observation request models
 
 Revision ID: 6a81b90801ad
-Revises: 572f3bb912a2
+Revises: 43f24460b144
 Create Date: 2026-05-26 13:47:37.611210
 
 """
@@ -17,7 +17,7 @@ import migrations.versions.model_snapshots.models_2026_05_26 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "6a81b90801ad"
-down_revision: Union[str, None] = "572f3bb912a2"
+down_revision: Union[str, None] = "43f24460b144"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
