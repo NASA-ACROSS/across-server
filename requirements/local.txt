@@ -82,7 +82,7 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.128.0
+fastapi[standard]==0.129.0
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
@@ -367,6 +367,7 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via
+    #   fastapi
     #   pydantic
     #   pydantic-settings
 urllib3==2.6.3
