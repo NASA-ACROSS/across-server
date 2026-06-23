@@ -2,7 +2,7 @@
 
 aiosmtplib >=4.0.0
 alembic >=1.15.1
-asgi-correlation-id >=4.3.4
+asgi-correlation-id >=5.0.1
 boto3 >=1.37.9
 fastapi >=0.115.11
 httpx >=0.28.1
