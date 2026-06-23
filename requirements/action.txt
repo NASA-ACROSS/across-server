@@ -203,7 +203,7 @@ pyerfa==2.0.1.5
     # via astropy
 pygments==2.19.2
     # via pytest
-pyjwt==2.10.1
+pyjwt==2.13.0
     # via -r requirements/base.in
 pytest==9.0.2
     # via
