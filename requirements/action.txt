@@ -292,7 +292,7 @@ types-requests==2.33.0.20260518
     # via -r requirements/types.in
 types-s3transfer==0.16.0
     # via types-boto3
-types-shapely==2.1.0.20250917
+types-shapely==2.1.0.20260603
     # via -r requirements/types.in
 typing-extensions==4.15.0
     # via
