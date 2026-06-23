@@ -21,7 +21,9 @@ argon2-cffi-bindings==25.1.0
 asgi-correlation-id==4.3.4
     # via -r base.in
 asgi-ratelimit==0.10.0
-    # via -r base.in
+    # via -r requirements/base.in
+ast-serialize==0.5.0
+    # via mypy
 astropy==7.2.0
     # via
     #   across-tools
@@ -126,7 +128,7 @@ jmespath==1.0.1
     #   botocore
 keyring==25.7.0
     # via astroquery
-librt==0.7.4
+librt==0.11.0
     # via mypy
 logbook==1.9.2
     # via spacetrack
@@ -140,8 +142,8 @@ more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.19.1
-    # via -r types.in
+mypy==2.1.0
+    # via -r requirements/types.in
 mypy-extensions==1.1.0
     # via mypy
 narwhals==2.17.0
@@ -168,7 +170,7 @@ packaging==25.0
     #   geoalchemy2
     #   plotly
     #   pytest
-pathspec==0.12.1
+pathspec==1.1.1
     # via mypy
 platformdirs==4.5.1
     # via
