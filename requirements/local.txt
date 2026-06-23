@@ -237,7 +237,7 @@ pygments==2.19.2
     #   rich
 pyjwt==2.13.0
     # via -r requirements/base.in
-pytest==9.0.2
+pytest==9.1.1
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
