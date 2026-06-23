@@ -206,7 +206,7 @@ spacetrack==1.4.0
     # via across-tools
 spiceypy==8.0.0
     # via across-tools
-sqlalchemy[asyncio]==2.0.45
+sqlalchemy[asyncio]==2.0.51
     # via
     #   -r requirements/base.in
     #   alembic
