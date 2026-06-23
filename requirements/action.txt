@@ -276,13 +276,13 @@ structlog==26.1.0
     # via -r requirements/base.in
 types-awscrt==0.30.0
     # via botocore-stubs
-types-boto3[rds,ssm,sts]==1.42.13
+types-boto3[rds,ssm,sts]==1.43.36
     # via -r requirements/types.in
-types-boto3-rds==1.42.5
+types-boto3-rds==1.43.30
     # via types-boto3
-types-boto3-ssm==1.42.3
+types-boto3-ssm==1.43.0
     # via types-boto3
-types-boto3-sts==1.42.3
+types-boto3-sts==1.43.0
     # via types-boto3
 types-pyasn1==0.6.0.20250914
     # via types-python-jose
