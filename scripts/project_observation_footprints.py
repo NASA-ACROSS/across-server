@@ -10,9 +10,9 @@ from itertools import batched
 import structlog
 from geoalchemy2 import shape
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from across_server.db import config, models
+from across_server import db
+from across_server.db import database, models
 from migrations.util import footprint_util
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
@@ -24,11 +24,9 @@ async def project_observation_footprints() -> None:
     logger.info("Starting project_observation_footprints")
     start_time = time.perf_counter()
 
-    engine = create_async_engine(config.DB_URI)
+    db.init()
 
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
-
-    async with async_session() as session:
+    async with database.async_session() as session:
         # Get all observations for each instrument
         instrument_query = select(models.Instrument)
         result = await session.execute(instrument_query)
