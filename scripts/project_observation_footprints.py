@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 import time
+from itertools import batched
 
 import structlog
 from geoalchemy2 import shape
@@ -85,8 +86,8 @@ async def project_observation_footprints() -> None:
                     records.append(observation_footprint)
 
         logger.info("Committing to db")
-        for i in range(0, len(records), MAX_RECORDS_PER_WRITE):
-            chunk = records[i : i + MAX_RECORDS_PER_WRITE]
+        chunks = batched(records, MAX_RECORDS_PER_WRITE)
+        for _, chunk in enumerate(chunks):
             session.add_all(chunk)
             await session.commit()
 
