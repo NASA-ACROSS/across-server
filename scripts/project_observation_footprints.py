@@ -2,6 +2,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from itertools import batched
+from uuid import UUID
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -23,12 +24,12 @@ PROJECTION_BATCH_SIZE = 256
 
 
 def _project_observation_footprint(
-    observation_id: int,
+    observation_id: UUID,
     pointing_ra: float,
     pointing_dec: float,
     pointing_angle: float,
     detectors: list[list[dict[str, float]]],
-) -> tuple[int, list]:
+) -> tuple[UUID, list]:
     projected_footprints = footprint_util.project_footprint(
         detectors,
         pointing_ra,
@@ -47,7 +48,9 @@ def _project_observation_footprint(
     return observation_id, geometries
 
 
-async def project_footprints(observations, detectors):
+async def project_footprints(
+    observations: list[models.Observation], detectors: list[list[dict[str, float]]]
+) -> list:
     if not observations:
         return []
 
@@ -61,7 +64,7 @@ async def project_footprints(observations, detectors):
                 *[
                     loop.run_in_executor(
                         executor,
-                        _project_observation_footprint,
+                        _project_observation_footprint,  # type: ignore[arg-type]
                         observation.id,
                         observation.pointing_ra,
                         observation.pointing_dec,
