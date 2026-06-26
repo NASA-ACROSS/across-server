@@ -5,6 +5,7 @@ from across_server.db.models import User
 from .group_roles import treedome_group_admin, treedome_schedule_operations
 from .groups import treedome_space_group
 from .roles import across_admin_role
+from .service_accounts import treedome_automation_service_account
 
 dev = User(
     id=uuid.UUID("173e35fa-9544-49e8-b5b9-d04ea884defb"),
@@ -27,6 +28,7 @@ sandy = User(
     modified_by_id=None,
     group_roles=[treedome_group_admin, treedome_schedule_operations],
     groups=[treedome_space_group],
+    service_accounts=[treedome_automation_service_account],
 )
 
 spongebob = User(
