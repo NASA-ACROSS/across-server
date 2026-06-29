@@ -68,7 +68,7 @@ class ObservationRequestCreate(ObservationRequestBase):
         return self.orm_model(**data)
 
 
-class ObservationRequestPut(ObservationRequestBase):
+class ObservationRequestUpdate(ObservationRequestBase):
     id: uuid.UUID
     status: ObservationRequestStatus
     status_reason: str | None = None
@@ -134,3 +134,4 @@ class ObservationRequestReadParams(PaginationParams):
     proposal_ids: list[str] | None = None
     is_too: bool = True
     parent_id: uuid.UUID | None = None
+    include_history: bool = False
