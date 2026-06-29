@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, Security, status
 from ....auth.schemas import AuthUser
 from ....auth.strategies import global_access
 from ....core.schemas import Page  # ListResponse
+from ....db.models import ObservationRequest
 from . import schemas
 from .access import observation_request_access, observation_request_redaction
 
@@ -92,7 +93,9 @@ async def get_many(
     # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     data: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
-    observation_request_tuples = []  # await service.get_many(data=data, include_history=include_history)
+    observation_request_tuples: list[
+        tuple[ObservationRequest, int]
+    ] = []  # await service.get_many(data=data, include_history=include_history)
 
     total_number = observation_request_tuples[0][1] if observation_request_tuples else 0
 
