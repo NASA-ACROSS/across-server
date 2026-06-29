@@ -419,7 +419,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     group: Mapped["Group"] = relationship(
         secondary=group_observatory,
         back_populates="observatories",
-        lazy="selectin",
+        lazy="noload",
     )
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
