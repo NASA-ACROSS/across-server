@@ -60,7 +60,7 @@ class ObservationService:
         query = (
             select(models.Observation)
             .where(models.Observation.id == observation_id)
-            .options(query_options)  # type: ignore
+            .options(query_options, noload(models.Observation.schedule))  # type: ignore
         )
 
         result = await self.db.execute(query)
@@ -325,7 +325,7 @@ class ObservationService:
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
-            .options(query_options)  # type: ignore
+            .options(query_options, noload(models.Observation.schedule))  # type: ignore
         )
 
         result = await self.db.execute(query)
@@ -372,7 +372,7 @@ class ObservationService:
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
             .offset(data.offset)
-            .options(query_options)  # type: ignore
+            .options(query_options, noload(models.Observation.schedule))  # type: ignore
         )
 
         result = await self.db.execute(query)

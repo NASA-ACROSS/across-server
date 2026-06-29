@@ -630,7 +630,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         back_populates="observations", lazy="noload"
     )
     schedule: Mapped["Schedule"] = relationship(
-        back_populates="observations", lazy="selectin"
+        back_populates="observations", lazy="noload"
     )
     footprints: Mapped[list["ObservationFootprint"]] = relationship(
         back_populates="observation", lazy="selectin", cascade="all,delete"
