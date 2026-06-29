@@ -1,6 +1,6 @@
 # Core dependencies
 
-aiosmtplib >=4.0.0
+aiosmtplib >=5.1.2
 alembic >=1.15.1
 asgi-correlation-id >=5.0.1
 alembic >=1.18.4
