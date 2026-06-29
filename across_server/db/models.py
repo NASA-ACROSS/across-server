@@ -42,7 +42,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 ## Mixins ##
 class CreatableMixin:
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), nullable=True
+        PG_UUID(as_uuid=True), nullable=True, index=True
     )
     created_on: Mapped[datetime] = mapped_column(
         DateTime,
@@ -584,7 +584,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
     )
     schedule_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
+        PG_UUID(as_uuid=True),
+        ForeignKey(Schedule.id),
+        index=True,
     )
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float | None] = mapped_column(REAL())
@@ -775,7 +777,7 @@ class ObservingProposal(Base, CreatableMixin, ModifiableMixin):
 class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     __tablename__ = "observation_request"
 
-    status: Mapped[str] = mapped_column(String(50), nullable=False)  # Enum
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)  # Enum
     status_reason: Mapped[str | None] = mapped_column(String(), nullable=True)
     science_justification: Mapped[str] = mapped_column(String(), nullable=False)
     object_ra: Mapped[float] = mapped_column(Float, nullable=False)
@@ -789,21 +791,32 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     object_brightness_unit: Mapped[str] = mapped_column(
         String(25), nullable=False
     )  # Depth Unit Enum
-    date_range_begin: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    date_range_end: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    date_range_begin: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, index=True
+    )
+    date_range_end: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )
     exposure_time: Mapped[float] = mapped_column(Float, nullable=False)
     proposal_id: Mapped[uuid.UUID | None] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(ObservingProposal.id), nullable=True
+        PG_UUID(as_uuid=True),
+        ForeignKey(ObservingProposal.id),
+        nullable=True,
+        index=True,
     )
     parent_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("observation_request.id"), nullable=False
+        PG_UUID(as_uuid=True),
+        ForeignKey("observation_request.id"),
+        nullable=False,
+        index=True,
     )
     anonymize: Mapped[bool] = mapped_column(Boolean, default=True)
     instrument_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=False
+        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=False, index=True
     )
     instrument_configuration: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     is_too: Mapped[bool] = mapped_column(Boolean, default=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=True)
 
     observing_proposal: Mapped["ObservingProposal"] = relationship(
         back_populates="observation_requests", lazy="selectin"
@@ -821,7 +834,6 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     )
 
     __table_args__ = (
-        Index("ix_observation_request_created_by_id", "created_by_id"),
         Index(
             "ix_observation_request_object_position",
             "object_position",
@@ -830,10 +842,4 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         Index(
             "ix_observation_request_date_range", "date_range_begin", "date_range_end"
         ),
-        Index("ix_observation_request_date_range_begin", "date_range_begin"),
-        Index("ix_observation_request_date_range_end", "date_range_end"),
-        Index("ix_observation_request_status", "status"),
-        Index("ix_observation_request_instrument_id", "instrument_id"),
-        Index("ix_observation_request_proposal_id", "proposal_id"),
-        Index("ix_observation_request_parent_id", "parent_id"),
     )

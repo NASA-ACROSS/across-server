@@ -8,7 +8,7 @@ from . import schemas
 from .service import ServiceAccountService
 
 router = APIRouter(
-    prefix="/user/{user_id}/service_account",
+    prefix="/user/{user_id}/service-account",
     tags=["ServiceAccount"],
     responses={
         status.HTTP_404_NOT_FOUND: {
@@ -119,7 +119,7 @@ async def delete(
 
 
 @router.patch(
-    "/{service_account_id}/rotate_key",
+    "/{service_account_id}/rotate-key",
     summary="Rotate a service account key",
     description="Rotate service account key and reset expiration based on expiration_duration",
     operation_id="user_service_account_rotate_key",
