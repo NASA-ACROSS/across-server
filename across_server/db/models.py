@@ -47,6 +47,7 @@ class CreatableMixin:
     created_on: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
+        index=True,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -58,6 +59,7 @@ class ModifiableMixin:
     modified_on: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
+        index=True,
         onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -477,14 +479,14 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         back_populates="instruments", lazy="selectin"
     )
     footprints: Mapped[list["Footprint"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
 
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="noload"
     )
     filters: Mapped[list["Filter"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     observation_requests: Mapped[list["ObservationRequest"]] = relationship(

@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ....db import models
 from ....db.database import get_session
@@ -45,7 +46,15 @@ class InstrumentService:
         ------
         InstrumentNotFoundException
         """
-        query = select(models.Instrument).where(models.Instrument.id == instrument_id)
+        options = [
+            selectinload(models.Instrument.footprints),
+            selectinload(models.Instrument.filters),
+        ]
+        query = (
+            select(models.Instrument)
+            .where(models.Instrument.id == instrument_id)
+            .options(*options)
+        )
 
         result = await self.db.execute(query)
         instrument = result.scalar_one_or_none()
@@ -56,7 +65,11 @@ class InstrumentService:
         return instrument
 
     async def has_footprint(self, instrument_id: UUID) -> bool:
-        query = select(models.Instrument).where(models.Instrument.id == instrument_id)
+        query = (
+            select(models.Instrument)
+            .where(models.Instrument.id == instrument_id)
+            .options(selectinload(models.Instrument.footprints))
+        )
 
         result = await self.db.execute(query)
         instrument = result.scalar_one_or_none()
@@ -129,7 +142,13 @@ class InstrumentService:
         """
         instrument_filter = self._get_filter(data=data)
 
-        instrument_query = select(models.Instrument).filter(*instrument_filter)
+        options = [
+            selectinload(models.Instrument.footprints),
+            selectinload(models.Instrument.filters),
+        ]
+        instrument_query = (
+            select(models.Instrument).filter(*instrument_filter).options(*options)
+        )
 
         result = await self.db.execute(instrument_query)
 
