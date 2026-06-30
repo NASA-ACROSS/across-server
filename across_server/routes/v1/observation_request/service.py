@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Annotated, Any, Tuple
 from uuid import UUID, uuid4
 
@@ -237,6 +238,7 @@ class ObservationRequestService:
         self.db.expunge(observation_request)
         make_transient(observation_request)
         observation_request.id = uuid4()
+        observation_request.created_on = datetime.now()
         # Update the fields of the ObservationRequest with the new values
         for field, value in data.model_dump(exclude_none=True).items():
             setattr(observation_request, field, value)

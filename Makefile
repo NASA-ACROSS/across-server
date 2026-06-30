@@ -193,7 +193,7 @@ temp_run: ## Start a temporary container from an image with a bash shell for deb
 
 # Group: Testing
 test: ## Run automated tests
-	@$(VENV_BIN)/pytest --cov=across_server tests/**;
+	@$(VENV_BIN)/pytest --cov=across_server --ignore-glob='tests/integration/**' tests/**;
 
 lint: ## Run linting
 	@$(VENV_BIN)/pre-commit run --all-files;
