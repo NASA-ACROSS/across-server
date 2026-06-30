@@ -83,7 +83,7 @@ class TestObservationRouterGet:
             self, mock_observation_service: Generator[AsyncMock]
         ) -> None:
             """GET many should return empty items with pagination metadata when no results"""
-            mock_observation_service.get_many = AsyncMock(return_value=[])  # type: ignore
+            mock_observation_service.get_many = AsyncMock(return_value=([], 0))  # type: ignore
             res = await self.client.get(self.endpoint)
             assert len(res.json()["items"]) == 0
 
@@ -125,7 +125,9 @@ class TestObservationRouterOverlapPoint:
             self, mock_observation_service: Generator[AsyncMock]
         ) -> None:
             """GET overlap-point should return empty items with pagination metadata when no results"""
-            mock_observation_service.get_overlap_point = AsyncMock(return_value=[])  # type: ignore
+            mock_observation_service.get_contains_point = AsyncMock(
+                return_value=([], 0)
+            )  # type: ignore
             res = await self.client.get(self.endpoint + "?ra=123.456&dec=-87.65")
             assert len(res.json()["items"]) == 0
 

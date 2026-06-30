@@ -1,6 +1,6 @@
 from collections.abc import Callable, Generator, Sequence
 from datetime import datetime
-from typing import Any, Tuple
+from typing import Any
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -48,25 +48,15 @@ def fake_observation_data_with_footprint(
 @pytest.fixture()
 def fake_observation_many(
     fake_observation_data_with_footprint: Observation,
-) -> Sequence[Tuple[Observation, int]]:
-    return [
-        (
-            fake_observation_data_with_footprint,
-            1,
-        )
-    ]
+) -> tuple[Sequence[Observation], int]:
+    return ([fake_observation_data_with_footprint], 1)
 
 
 @pytest.fixture()
 def fake_observation_contains_point_many(
     fake_observation_data_with_footprint: Observation,
-) -> Sequence[Tuple[Observation, int]]:
-    return [
-        (
-            fake_observation_data_with_footprint,
-            1,
-        )
-    ]
+) -> tuple[Sequence[Observation], int]:
+    return ([fake_observation_data_with_footprint], 1)
 
 
 @pytest.fixture
@@ -98,7 +88,7 @@ def mock_observation_service(
 
     mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
     mock.get_many = AsyncMock(return_value=fake_observation_many)
-    mock.get_overlap_point = AsyncMock(
+    mock.get_contains_point = AsyncMock(
         return_value=fake_observation_contains_point_many
     )
 

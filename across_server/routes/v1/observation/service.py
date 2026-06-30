@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Annotated, Tuple
+from typing import Annotated
 from uuid import UUID
 
 from across.tools import (
@@ -296,7 +296,7 @@ class ObservationService:
 
     async def get_many(
         self, data: ObservationRead
-    ) -> Sequence[Tuple[models.Observation, int]]:
+    ) -> tuple[Sequence[models.Observation], int]:
         """
         Retrieve the Observation records with the given filters.
 
@@ -307,8 +307,8 @@ class ObservationService:
 
         Returns
         -------
-        Sequence[models.Observation]
-            The Observations within the given filters
+        tuple[Sequence[models.Observation], int]
+            The Observations within the given filters and the total count
         """
 
         query_options = self._get_observation_query_options(
@@ -319,8 +319,13 @@ class ObservationService:
             data
         ) + self._get_cone_search_filter(data)
 
-        query = (
-            select(models.Observation, func.count().over().label("count"))
+        count_query = (
+            select(func.count()).select_from(models.Observation).where(*query_filter)
+        )
+        total_count = (await self.db.execute(count_query)).scalar_one()
+
+        data_query = (
+            select(models.Observation)
             .where(*query_filter)
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
@@ -328,10 +333,10 @@ class ObservationService:
             .options(query_options)  # type: ignore
         )
 
-        result = await self.db.execute(query)
-        observations = result.tuples().all()
+        result = await self.db.execute(data_query)
+        observations = result.scalars().all()
 
-        return observations
+        return observations, total_count
 
     def _get_observation_query_options(
         self, include_footprints: bool | None
@@ -343,7 +348,7 @@ class ObservationService:
 
     async def get_contains_point(
         self, data: ContainsPointReadParams
-    ) -> Sequence[Tuple[models.Observation, int]]:
+    ) -> tuple[Sequence[models.Observation], int]:
         """
         Retrieve the Observation records whose footprints contains a given RA/DEC.
 
@@ -354,8 +359,8 @@ class ObservationService:
 
         Returns
         -------
-        Sequence[models.Observation]
-            The Observations whose footprints contain the given RA/DEC
+        tuple[Sequence[models.Observation], int]
+            The Observations whose footprints contain the given RA/DEC and the total count
         """
 
         query_options = self._get_observation_query_options(
@@ -366,8 +371,13 @@ class ObservationService:
             data
         ) + self._get_observation_contains_point_filter(data)
 
-        query = (
-            select(models.Observation, func.count().over().label("count"))
+        count_query = (
+            select(func.count()).select_from(models.Observation).where(*query_filter)
+        )
+        total_count = (await self.db.execute(count_query)).scalar_one()
+
+        data_query = (
+            select(models.Observation)
             .where(*query_filter)
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
@@ -375,7 +385,7 @@ class ObservationService:
             .options(query_options)  # type: ignore
         )
 
-        result = await self.db.execute(query)
-        observations = result.tuples().all()
+        result = await self.db.execute(data_query)
+        observations = result.scalars().all()
 
-        return observations
+        return observations, total_count
