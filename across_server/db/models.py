@@ -488,7 +488,7 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     observation_requests: Mapped[list["ObservationRequest"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     constraints: Mapped[list["Constraint"]] = relationship(
         secondary=instrument_constraint,
