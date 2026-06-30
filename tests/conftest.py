@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 from across_server.auth import strategies
-from across_server.db.models import Filter, Instrument, Observatory, Telescope
+from across_server.db.models import Filter, Group, Instrument, Observatory, Telescope
 from across_server.util.email.service import EmailService
 
 
@@ -153,13 +153,14 @@ def mock_self_access() -> Generator[MagicMock]:
 
 
 @pytest.fixture()
-def mock_observatory_data() -> Observatory:
+def mock_observatory_data(fake_group: Group) -> Observatory:
     return Observatory(
         id=uuid4(),
         name="Test Observatory",
         short_name="TO",
         type="GROUND_BASED",
         created_on=datetime.now(),
+        group=fake_group,
     )
 
 

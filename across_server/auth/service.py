@@ -168,9 +168,12 @@ class AuthService:
                         for perm in role.permissions
                     }
                 )
+                is_admin = True if "group:all:write" in unique_group_perms else False
 
                 auth_user.groups.append(
-                    schemas.Group(id=group.id, scopes=unique_group_perms)
+                    schemas.Group(
+                        id=group.id, scopes=unique_group_perms, is_admin=is_admin
+                    )
                 )
 
         return auth_user
