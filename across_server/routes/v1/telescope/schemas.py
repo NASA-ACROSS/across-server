@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from across_server.core.enums.observation_strategy import ObservationStrategy
+
 from ....core.date_utils import UTCDatetime
 from ....core.enums.schedule_status import ScheduleStatus
 from ....core.schemas.base import BaseSchema, IDNameSchema
@@ -175,7 +177,7 @@ class TelescopeInstrument(InstrumentBase):
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
             visibility_type=obj.visibility_type,
-            observation_strategy=obj.observation_strategy,
+            observation_strategy=ObservationStrategy(obj.observation_strategy),
         )
 
 

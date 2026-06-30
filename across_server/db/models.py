@@ -633,7 +633,7 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         back_populates="observations", lazy="noload"
     )
     footprints: Mapped[list["ObservationFootprint"]] = relationship(
-        back_populates="observation", lazy="selectin", cascade="all,delete"
+        back_populates="observation", lazy="noload", cascade="all,delete"
     )
 
 
