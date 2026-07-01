@@ -1,4 +1,3 @@
-from collections.abc import Generator
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -80,7 +79,7 @@ class TestObservationRouterGet:
 
         @pytest.mark.asyncio
         async def test_many_should_return_empty_items_with_pagination_metadata(
-            self, mock_observation_service: Generator[AsyncMock]
+            self, mock_observation_service: AsyncMock
         ) -> None:
             """GET many should return empty items with pagination metadata when no results"""
             mock_observation_service.get_many = AsyncMock(return_value=([], 0))  # type: ignore
@@ -122,7 +121,7 @@ class TestObservationRouterOverlapPoint:
 
         @pytest.mark.asyncio
         async def test_overlap_point_should_return_empty_items_with_pagination_metadata(
-            self, mock_observation_service: Generator[AsyncMock]
+            self, mock_observation_service: AsyncMock
         ) -> None:
             """GET overlap-point should return empty items with pagination metadata when no results"""
             mock_observation_service.get_contains_point = AsyncMock(

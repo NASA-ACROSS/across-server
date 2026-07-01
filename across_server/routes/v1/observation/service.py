@@ -1,3 +1,4 @@
+import typing
 from collections.abc import Sequence
 from typing import Annotated
 from uuid import UUID
@@ -387,7 +388,7 @@ class ObservationService:
         )
 
         result = await self.db.execute(hydrate_query)
-        observations = result.scalars().all()
+        observations = typing.cast(Sequence[models.Observation], result.scalars().all())
 
         return observations, total_count
 
