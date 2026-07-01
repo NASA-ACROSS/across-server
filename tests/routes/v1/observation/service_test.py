@@ -34,12 +34,12 @@ class TestObservationService:
             self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
             """Should return empty list when nothing matches params"""
-            mock_result.scalars.all.return_value = []
+            mock_result.scalars.return_value.all.return_value = []
 
             service = ObservationService(mock_db)
             params = ObservationRead()
-            values = await service.get_many(params)
-            assert len(values) == 0
+            observations, total_count = await service.get_many(params)
+            assert len(observations) == 0
 
         @pytest.mark.asyncio
         async def test_should_raise_422_with_bad_params(
@@ -58,12 +58,12 @@ class TestObservationService:
             self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
             """Should return empty list when nothing matches params"""
-            mock_result.tuples.return_value.all.return_value = []
+            mock_result.scalars.return_value.all.return_value = []
 
             service = ObservationService(mock_db)
             params = ContainsPointReadParams(ra=123.456, dec=-87.65)
-            values = await service.get_contains_point(params)
-            assert len(values) == 0
+            observations, total_count = await service.get_contains_point(params)
+            assert len(observations) == 0
 
         @pytest.mark.asyncio
         async def test_should_return_list_when_matches_found(
@@ -73,14 +73,14 @@ class TestObservationService:
             fake_observation_data_with_footprint: Any,
         ) -> None:
             """Should return list of tuples when matches are found"""
-            mock_result.tuples.return_value.all.return_value = [
-                (fake_observation_data_with_footprint, 1)
+            mock_result.scalars.return_value.all.return_value = [
+                fake_observation_data_with_footprint
             ]
 
             service = ObservationService(mock_db)
             params = ContainsPointReadParams(ra=123.456, dec=-87.65)
-            values = await service.get_contains_point(params)
-            assert len(values) == 1
+            observations, total_count = await service.get_contains_point(params)
+            assert len(observations) == 1
 
         @pytest.mark.asyncio
         async def test_should_raise_invalid_params_exception_with_bad_params(
