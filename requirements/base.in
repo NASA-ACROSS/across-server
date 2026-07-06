@@ -18,5 +18,5 @@ uvicorn >=0.34
 across-tools >= 1.6.1
 structlog >= 26.1.0
 argon2-cffi >= 25.1.0
-python-multipart >= 0.0.31
+python-multipart >= 0.0.32
 asgi-ratelimit >= 0.10.0

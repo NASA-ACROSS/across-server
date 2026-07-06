@@ -220,7 +220,7 @@ python-dateutil==2.9.0.post0
     # via botocore
 python-dotenv==1.2.2
     # via pydantic-settings
-python-multipart==0.0.31
+python-multipart==0.0.32
     # via -r requirements/base.in
 pyvo==1.8
     # via astroquery
