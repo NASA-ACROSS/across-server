@@ -2,14 +2,14 @@ import datetime
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Security, status
+from fastapi import APIRouter, Depends, Query, Security, status
 
 from ....auth.schemas import AuthUser
-from ....auth.strategies import global_access
+from ....auth.strategies import auth_user_or_none, global_access
 from ....core.schemas import Page  # ListResponse
 from ....db.models import ObservationRequest
 from . import schemas
-from .access import observation_request_access, observation_request_redaction
+from .access import observation_request_access, observation_request_status_access
 
 router = APIRouter(
     prefix="/observation-request",
@@ -38,13 +38,9 @@ router = APIRouter(
     },
 )
 async def get(
-    auth_user: Annotated[
-        AuthUser | None,
-        Security(observation_request_redaction, scopes=["observation_request:write"]),
-    ],
+    auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
     # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
-    include_history: Annotated[bool, Query()] = False,
 ) -> schemas.ObservationRequest:
     # observation_request = await service.get(
     #     observation_request_id, include_history
@@ -86,10 +82,7 @@ async def get(
     },
 )
 async def get_many(
-    auth_user: Annotated[
-        AuthUser | None,
-        Security(observation_request_redaction, scopes=["observation_request:write"]),
-    ],
+    auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
     # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     data: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
@@ -99,7 +92,7 @@ async def get_many(
 
     total_number = observation_request_tuples[0][1] if observation_request_tuples else 0
 
-    observation_requests = [tuple[0] for tuple in observation_request_tuples]
+    observation_requests = [t[0] for t in observation_request_tuples]
     return Page[schemas.ObservationRequest].model_validate(
         {
             "total_number": total_number,
@@ -113,6 +106,34 @@ async def get_many(
             ],
         }
     )
+
+
+@router.post(
+    "/bulk",
+    summary="Create many observation requests",
+    description="Create new observation requests for ACROSS.",
+    operation_id="create_observation_requests_bulk",
+    status_code=status.HTTP_201_CREATED,
+    response_model=uuid.UUID,
+    responses={
+        status.HTTP_201_CREATED: {
+            "model": uuid.UUID,
+            "description": "Created observation request id",
+        },
+        status.HTTP_409_CONFLICT: {"description": "Duplicate observation request"},
+    },
+)
+async def create_many(
+    auth_user: Annotated[
+        AuthUser, Security(global_access, scopes=["observation_request:write"])
+    ],
+    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    data: schemas.ObservationRequestBulkCreate,
+) -> uuid.UUID:
+    # return await service.create_many(
+    #     observation_requests=data, created_by_id=auth_user.id
+    # )
+    return uuid.uuid4()
 
 
 @router.post(
@@ -160,7 +181,7 @@ async def create(
 )
 async def update(
     auth_user: Annotated[
-        AuthUser | None,
+        AuthUser,
         Security(observation_request_access, scopes=["observation_request:write"]),
     ],
     # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
@@ -168,6 +189,40 @@ async def update(
     data: schemas.ObservationRequestUpdate,
 ) -> uuid.UUID:
     # return await service.update(
+    #     observation_request_id=observation_request_id,
+    #     observation_request_data=data,
+    #     modified_by_id=auth_user.id,
+    # )
+    return uuid.uuid4()
+
+
+@router.put(
+    "/{observation_request_id}/status",
+    summary="Update the status of an observation request",
+    description="Update the status of an existing observation request for ACROSS.",
+    operation_id="update_observation_request_status",
+    status_code=status.HTTP_200_OK,
+    response_model=uuid.UUID,
+    responses={
+        status.HTTP_200_OK: {
+            "model": uuid.UUID,
+            "description": "Updated observation request id",
+        },
+        status.HTTP_404_NOT_FOUND: {"description": "Observation request not found"},
+    },
+)
+async def update_status(
+    auth_user: Annotated[
+        AuthUser,
+        Security(
+            observation_request_status_access, scopes=["observation_request:write"]
+        ),
+    ],
+    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    observation_request_id: uuid.UUID,
+    data: schemas.ObservationRequestStatusUpdate,
+) -> uuid.UUID:
+    # return await service.update_status(
     #     observation_request_id=observation_request_id,
     #     observation_request_data=data,
     #     modified_by_id=auth_user.id,

@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from across_server.auth.strategies import auth_user_or_none, global_access
 from across_server.routes.v1.observation_request.access import (
     observation_request_access,
-    observation_request_redaction,
+    observation_request_status_access,
 )
 
 
@@ -32,7 +32,7 @@ def dep_override(
             auth_user_or_none: lambda: mock_observation_request_access,
             global_access: lambda: mock_observation_request_access,
             observation_request_access: lambda: mock_observation_request_access,
-            observation_request_redaction: lambda: mock_observation_request_access,
+            observation_request_status_access: lambda: mock_observation_request_access,
         }
     ):
         yield overrider

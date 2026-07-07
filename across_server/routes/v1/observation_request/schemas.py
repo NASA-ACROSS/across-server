@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import ClassVar
 
 from across_server.core.date_utils import UTCDatetime
 from across_server.core.schemas.base import BaseSchema
@@ -25,8 +24,6 @@ class ObservationRequestBase(BaseSchema):
     instrument_config: dict | None = None
     parent_id: uuid.UUID | None = None
     related_requests: list[ObservationRequest] | None = None
-
-    orm_model: ClassVar = ObservationRequestModel
 
 
 class ObservationRequestCreate(ObservationRequestBase):
@@ -65,11 +62,14 @@ class ObservationRequestCreate(ObservationRequestBase):
         del data["object_brightness"]
         data.update(depth_data)
 
-        return self.orm_model(**data)
+        return ObservationRequestModel(**data)
 
 
 class ObservationRequestUpdate(ObservationRequestBase):
-    id: uuid.UUID
+    pass
+
+
+class ObservationRequestStatusUpdate(BaseSchema):
     status: ObservationRequestStatus
     status_reason: str | None = None
 
@@ -135,3 +135,16 @@ class ObservationRequestReadParams(PaginationParams):
     is_too: bool = True
     parent_id: uuid.UUID | None = None
     include_history: bool = False
+
+
+class ObservationRequestBulkCreate(BaseSchema):
+    """
+    A Pydantic model class representing bulk observation request creation
+
+    Parameters
+    --------------
+    observation_requests: list[ObservationRequestCreate]
+        A list of ObservationRequestCreate objects to be added in bulk
+    """
+
+    observation_requests: list[ObservationRequestCreate]
