@@ -37,6 +37,8 @@ class ObservationRequestCreate(ObservationRequestBase):
         """
         data = self.model_dump(exclude_unset=True)
 
+        data["id"] = uuid.uuid4()
+
         # default parent_id to id
         data["parent_id"] = data["parent_id"] or data["id"]
 
