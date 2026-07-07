@@ -2,7 +2,7 @@ from collections.abc import Callable, Generator, Sequence
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from across.tools import WavelengthBandpass
@@ -43,6 +43,43 @@ def fake_observation_data_with_footprint(
     fake_observation_data.footprints = [fake_observation_footprint]
 
     return fake_observation_data
+
+
+@pytest.fixture()
+def fake_observation_pair(
+    fake_observation_data: Observation,
+) -> tuple[Observation, Observation, set[UUID]]:
+    instrument_id_B = uuid4()
+
+    obs_B = Observation(
+        id=uuid4(),
+        instrument_id=instrument_id_B,
+        schedule_id=fake_observation_data.schedule_id,
+        object_name=fake_observation_data.object_name,
+        pointing_position=fake_observation_data.pointing_position,
+        pointing_ra=fake_observation_data.pointing_ra,
+        pointing_dec=fake_observation_data.pointing_dec,
+        object_position=fake_observation_data.object_position,
+        object_ra=fake_observation_data.object_ra,
+        object_dec=fake_observation_data.object_dec,
+        exposure_time=fake_observation_data.exposure_time,
+        min_wavelength=fake_observation_data.min_wavelength,
+        max_wavelength=fake_observation_data.max_wavelength,
+        peak_wavelength=fake_observation_data.peak_wavelength,
+        filter_name=fake_observation_data.filter_name,
+        date_range_begin=fake_observation_data.date_range_begin,
+        date_range_end=fake_observation_data.date_range_end,
+        external_observation_id=fake_observation_data.external_observation_id,
+        type=fake_observation_data.type,
+        status=fake_observation_data.status,
+        created_on=fake_observation_data.created_on,
+    )
+
+    return (
+        fake_observation_data,
+        obs_B,
+        {fake_observation_data.instrument_id, instrument_id_B},
+    )
 
 
 @pytest.fixture()
