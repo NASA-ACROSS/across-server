@@ -373,18 +373,11 @@ class ObservationService:
             .subquery()
         )
 
-        ordered_subq = (
-            select(nested_id_subq.c.id, func.row_number().over().label("rn"))
-            .select_from(nested_id_subq)
-            .subquery()
-        )
-
         # hydrate the remaining info from ids returned from nested fast id retrieval
         hydrate_query = (
             select(models.Observation)
-            .join(ordered_subq, models.Observation.id == ordered_subq.c.id)
+            .join(nested_id_subq, models.Observation.id == nested_id_subq.c.id)
             .options(query_options)  # type: ignore
-            .order_by(ordered_subq.c.rn)
         )
 
         result = await self.db.execute(hydrate_query)
