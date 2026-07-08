@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import uuid
 
 from across_server.core.date_utils import UTCDatetime
@@ -21,9 +22,8 @@ class ObservationRequestBase(BaseSchema):
     anonymize: bool
     is_too: bool
     instrument_id: uuid.UUID
-    instrument_config: dict | None = None
+    instrument_configuration: dict | None = None
     parent_id: uuid.UUID | None = None
-    related_requests: list[ObservationRequest] | None = None
 
 
 class ObservationRequestCreate(ObservationRequestBase):
@@ -37,10 +37,14 @@ class ObservationRequestCreate(ObservationRequestBase):
         """
         data = self.model_dump(exclude_unset=True)
 
+        del data["proposal_name"]
+        del data["proposal_code"]
+
         data["id"] = uuid.uuid4()
 
         # default parent_id to id
-        data["parent_id"] = data["parent_id"] or data["id"]
+        if "parent_id" not in data.keys() or data["parent_id"] is None:
+            data["parent_id"] = data["id"]
 
         # coordinates
         object_coords = self.object_coordinates.model_dump_with_prefix(
@@ -62,12 +66,17 @@ class ObservationRequestCreate(ObservationRequestBase):
             prefix="object_brightness", data=self.object_brightness.model_dump()
         )
         del data["object_brightness"]
-        data.update(depth_data)
+
+        data["object_brightness"] = depth_data["object_brightness_value"]
+        data["object_brightness_unit"] = depth_data["object_brightness_unit"]
+
+        data["status"] = ObservationRequestStatus.PENDING.value
+        data["status_reason"] = "Awaiting review"
 
         return ObservationRequestModel(**data)
 
 
-class ObservationRequestUpdate(ObservationRequestBase):
+class ObservationRequestUpdate(ObservationRequestCreate):
     pass
 
 
@@ -80,10 +89,17 @@ class ObservationRequest(ObservationRequestBase):
     id: uuid.UUID
     status: ObservationRequestStatus
     status_reason: str | None
+    proposal_name: str | None = None
+    proposal_code: str | None = None
+    related_requests: list[ObservationRequest] | None = None
+    created_on: datetime.datetime
+    created_by_id: uuid.UUID | None
+    modified_on: datetime.datetime | None
+    modified_by_id: uuid.UUID | None
 
     @classmethod
     def from_orm(
-        cls, observation_request: ObservationRequestModel, include_history: bool = False
+        cls, observation_request: ObservationRequestModel
     ) -> ObservationRequest:
         return ObservationRequest(
             id=observation_request.id,
@@ -105,15 +121,19 @@ class ObservationRequest(ObservationRequestBase):
             anonymize=observation_request.anonymize,
             is_too=observation_request.is_too,
             instrument_id=observation_request.instrument_id,
-            instrument_config=observation_request.instrument_configuration,
+            instrument_configuration=observation_request.instrument_configuration,
             status=ObservationRequestStatus(observation_request.status),
             status_reason=observation_request.status_reason,
-            related_requests=[
-                ObservationRequest.from_orm(related_request, include_history=False)
-                for related_request in observation_request.related_requests
-            ]
-            if include_history
+            proposal_name=observation_request.observing_proposal.name
+            if observation_request.observing_proposal
             else None,
+            proposal_code=observation_request.observing_proposal.code
+            if observation_request.observing_proposal
+            else None,
+            created_on=observation_request.created_on,
+            created_by_id=observation_request.created_by_id,
+            modified_on=observation_request.modified_on,
+            modified_by_id=observation_request.modified_by_id,
         )
 
 
@@ -139,7 +159,7 @@ class ObservationRequestReadParams(PaginationParams):
     include_history: bool = False
 
 
-class ObservationRequestBulkCreate(BaseSchema):
+class ObservationRequestCreateMany(BaseSchema):
     """
     A Pydantic model class representing bulk observation request creation
 

@@ -824,14 +824,6 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     instrument: Mapped["Instrument"] = relationship(
         back_populates="observation_requests", lazy="selectin"
     )
-    original_request: Mapped["ObservationRequest"] = relationship(
-        back_populates="related_requests",
-        lazy="selectin",
-        remote_side="ObservationRequest.id",
-    )
-    related_requests: Mapped[list["ObservationRequest"]] = relationship(
-        back_populates="original_request", lazy="selectin"
-    )
 
     __table_args__ = (
         Index(

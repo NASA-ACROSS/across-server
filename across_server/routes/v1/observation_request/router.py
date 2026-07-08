@@ -1,15 +1,17 @@
-import datetime
 import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Security, status
 
+from across_server.core.enums.observation_request_status import ObservationRequestStatus
+from across_server.core.schemas.list_response import ListResponse
+
 from ....auth.schemas import AuthUser
-from ....auth.strategies import auth_user_or_none, global_access
+from ....auth.strategies import auth_user_or_none, authenticate_jwt
 from ....core.schemas import Page  # ListResponse
-from ....db.models import ObservationRequest
 from . import schemas
 from .access import observation_request_access, observation_request_status_access
+from .service import ObservationRequestService
 
 router = APIRouter(
     prefix="/observation-request",
@@ -39,32 +41,11 @@ router = APIRouter(
 )
 async def get(
     auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
 ) -> schemas.ObservationRequest:
-    # observation_request = await service.get(
-    #     observation_request_id, include_history
-    # )
-
-    # return schemas.ObservationRequest.from_orm(
-    #     observation_request, include_history=include_history
-    # )
-    return schemas.ObservationRequest(
-        id=uuid.uuid4(),
-        parent_id=uuid.uuid4(),
-        science_justification="Justification",
-        object_coordinates=schemas.Coordinate(ra=0.0, dec=0.0),
-        observation_window=schemas.NullableEndDateRange(
-            begin=datetime.datetime.now(), end=None
-        ),
-        object_brightness=schemas.UnitValue(value=0.0, unit="mag"),
-        object_name="Test Object",
-        exposure_time=1000.0,
-        anonymize=False,
-        is_too=False,
-        instrument_id=uuid.uuid4(),
-        status=schemas.ObservationRequestStatus.PENDING,
-        status_reason="Awaiting review   ",
+    return await service.get(
+        observation_request_id=observation_request_id, auth_user=auth_user
     )
 
 
@@ -83,12 +64,10 @@ async def get(
 )
 async def get_many(
     auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     data: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
-    observation_request_tuples: list[
-        tuple[ObservationRequest, int]
-    ] = []  # await service.get_many(data=data, include_history=include_history)
+    observation_request_tuples = await service.get_many(data=data, auth_user=auth_user)
 
     total_number = observation_request_tuples[0][1] if observation_request_tuples else 0
 
@@ -99,10 +78,7 @@ async def get_many(
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [
-                schemas.ObservationRequest.from_orm(
-                    observation_request,
-                )
-                for observation_request in observation_requests
+                observation_request for observation_request in observation_requests
             ],
         }
     )
@@ -114,26 +90,21 @@ async def get_many(
     description="Create new observation requests for ACROSS.",
     operation_id="create_observation_requests_bulk",
     status_code=status.HTTP_201_CREATED,
-    response_model=uuid.UUID,
+    response_model=list[uuid.UUID],
     responses={
         status.HTTP_201_CREATED: {
-            "model": uuid.UUID,
-            "description": "Created observation request id",
+            "model": ListResponse[uuid.UUID],
+            "description": "Created observation request ids",
         },
         status.HTTP_409_CONFLICT: {"description": "Duplicate observation request"},
     },
 )
 async def create_many(
-    auth_user: Annotated[
-        AuthUser, Security(global_access, scopes=["observation_request:write"])
-    ],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
-    data: schemas.ObservationRequestBulkCreate,
-) -> uuid.UUID:
-    # return await service.create_many(
-    #     observation_requests=data, created_by_id=auth_user.id
-    # )
-    return uuid.uuid4()
+    auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    data: schemas.ObservationRequestCreateMany,
+) -> list[uuid.UUID]:
+    return await service.create_many(data=data, created_by_id=auth_user.id)
 
 
 @router.post(
@@ -152,16 +123,11 @@ async def create_many(
     },
 )
 async def create(
-    auth_user: Annotated[
-        AuthUser, Security(global_access, scopes=["observation_request:write"])
-    ],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     data: schemas.ObservationRequestCreate,
 ) -> uuid.UUID:
-    # return await service.create(
-    #     observation_request_data=data, created_by_id=auth_user.id
-    # )
-    return uuid.uuid4()
+    return await service.create(data=data, created_by_id=auth_user.id)
 
 
 @router.put(
@@ -182,18 +148,17 @@ async def create(
 async def update(
     auth_user: Annotated[
         AuthUser,
-        Security(observation_request_access, scopes=["observation_request:write"]),
+        Security(observation_request_access),
     ],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
     data: schemas.ObservationRequestUpdate,
 ) -> uuid.UUID:
-    # return await service.update(
-    #     observation_request_id=observation_request_id,
-    #     observation_request_data=data,
-    #     modified_by_id=auth_user.id,
-    # )
-    return uuid.uuid4()
+    return await service.modify(
+        observation_request_id=observation_request_id,
+        data=data,
+        modified_by_id=auth_user.id,
+    )
 
 
 @router.put(
@@ -214,20 +179,17 @@ async def update(
 async def update_status(
     auth_user: Annotated[
         AuthUser,
-        Security(
-            observation_request_status_access, scopes=["observation_request:write"]
-        ),
+        Security(observation_request_status_access),
     ],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
     data: schemas.ObservationRequestStatusUpdate,
 ) -> uuid.UUID:
-    # return await service.update_status(
-    #     observation_request_id=observation_request_id,
-    #     observation_request_data=data,
-    #     modified_by_id=auth_user.id,
-    # )
-    return uuid.uuid4()
+    return await service.update_status(
+        observation_request_id=observation_request_id,
+        data=data,
+        modified_by_id=auth_user.id,
+    )
 
 
 @router.delete(
@@ -245,13 +207,18 @@ async def update_status(
 )
 async def delete(
     auth_user: Annotated[
-        AuthUser | None,
-        Security(observation_request_access, scopes=["observation_request:write"]),
+        AuthUser,
+        Security(observation_request_access),
     ],
-    # service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
 ) -> None:
-    # await service.delete(
-    #     observation_request_id=observation_request_id, modified_by_id=auth_user.id
-    # )
+    await service.update_status(
+        observation_request_id=observation_request_id,
+        data=schemas.ObservationRequestStatusUpdate(
+            status=ObservationRequestStatus.ARCHIVED,
+            status_reason="Deleted by user",
+        ),
+        modified_by_id=auth_user.id,
+    )
     return None

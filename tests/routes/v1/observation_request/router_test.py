@@ -131,7 +131,7 @@ class TestObservationRequestRouter:
             res = await self.client.post(
                 self.endpoint + "bulk", json=self.post_many_data
             )
-            assert UUID(res.json())
+            assert all(UUID(id) for id in res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_201(self) -> None:

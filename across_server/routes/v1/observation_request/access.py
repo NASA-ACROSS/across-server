@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Body, Depends
+from fastapi import Depends, Path
 from fastapi.security import SecurityScopes
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -33,7 +33,7 @@ async def observation_request_access(
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
     db: Annotated[AsyncSession, Depends(get_session)],
     data: Annotated[
-        ObservationRequestAccess, Body(title="UUID of the observation request")
+        ObservationRequestAccess, Path(title="UUID of the observation request")
     ],
 ) -> AuthUser:
     """
@@ -76,7 +76,7 @@ async def observation_request_status_access(
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
     db: Annotated[AsyncSession, Depends(get_session)],
     data: Annotated[
-        ObservationRequestAccess, Body(title="UUID of the observation request")
+        ObservationRequestAccess, Path(title="UUID of the observation request")
     ],
 ) -> AuthUser:
     """

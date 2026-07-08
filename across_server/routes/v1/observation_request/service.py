@@ -1,21 +1,21 @@
-from collections.abc import Sequence
 from datetime import datetime
-from typing import Annotated, Any, Tuple
-from uuid import UUID, uuid4
+from typing import Annotated, Tuple
+from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import func, or_, select
+from sqlalchemy import ColumnElement, False_, false, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import make_transient, noload, selectinload
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from ....db import models
 from ....db.database import get_session
+from . import schemas
 from .exceptions import (
+    InvalidObservationRequestCreateParametersException,
     InvalidObservationRequestReadParametersException,
     ObservationRequestNotFoundException,
 )
@@ -54,7 +54,7 @@ class ObservationRequestService:
         self,
         observation_request_id: UUID,
         auth_user: AuthUser | None,
-    ) -> models.ObservationRequest:
+    ) -> schemas.ObservationRequest:
         """
         Retrieve the ObservationRequest record with the given id.
 
@@ -72,30 +72,51 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
-        query_options = self._get_observation_request_query_options(
-            include_history=True
-        )
-        query = (
-            select(models.ObservationRequest)
-            .where(models.ObservationRequest.id == observation_request_id)
-            .options(query_options)  # type: ignore
-        )
+        query = select(
+            models.ObservationRequest,
+            self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+        ).where(models.ObservationRequest.id == observation_request_id)
 
         result = await self.db.execute(query)
-        observation_request = result.scalar_one_or_none()
+        (observation_request, is_admin_or_creator) = result.one_or_none() or (
+            None,
+            False,
+        )
 
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
-        observation_request = self._redact(observation_request, auth_user)
+        related_request_query = (
+            select(
+                models.ObservationRequest,
+                self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+            )
+            .where(models.ObservationRequest.parent_id == observation_request.parent_id)
+            .order_by(models.ObservationRequest.created_on.desc())
+        )
+
+        related_request_result = await self.db.execute(related_request_query)
+
+        related_requests = related_request_result.tuples().all()
+
+        observation_request = schemas.ObservationRequest.from_orm(
+            self._redact(observation_request, is_admin_or_creator)
+        )
+
+        observation_request.related_requests = [
+            schemas.ObservationRequest.from_orm(
+                self._redact(related_request, is_admin_or_creator)
+            )
+            for related_request, is_admin_or_creator in related_requests
+        ]
 
         return observation_request
 
     async def get_many(
         self,
-        params: Any,
-        auth_user: AuthUser,
-    ) -> Sequence[Tuple[models.ObservationRequest, int]]:
+        data: schemas.ObservationRequestReadParams,
+        auth_user: AuthUser | None,
+    ) -> list[Tuple[schemas.ObservationRequest, int]]:
         """
         Retrieve a list of ObservationRequest records
         based on the query parameters.
@@ -108,19 +129,21 @@ class ObservationRequestService:
             the user making the request
         Returns
         -------
-        Sequence[Tuple[models.ObservationRequest, int]]
+        list[Tuple[models.ObservationRequest, int]]
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
-        observation_request_filter = self._get_filter(data=params)
+        observation_request_filter = self._get_filter(data=data)
 
-        query_options = self._get_observation_request_query_options(
-            include_history=params.include_history
-        )
+        if data.proposal_code or data.proposal_name or data.proposal_ids:
+            observation_request_filter.append(self._is_admin_or_creator(auth_user))
 
-        # TODO: Follow Kirill's PR for example
         observation_request_query = (
-            select(models.ObservationRequest, func.count().over().label("count"))
+            select(
+                models.ObservationRequest,
+                self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+                func.count().over().label("count"),
+            )
             .filter(*observation_request_filter)
             .distinct(
                 models.ObservationRequest.parent_id,
@@ -131,24 +154,63 @@ class ObservationRequestService:
                 models.ObservationRequest.parent_id,
             )
             .group_by(models.ObservationRequest.id)
-            .limit(params.page_limit)
-            .offset(params.offset)
-            .options(query_options)  # type: ignore
+            .limit(data.page_limit)
+            .offset(data.offset)
         )
 
         result = await self.db.execute(observation_request_query)
 
         observation_requests = result.tuples().all()
 
-        redacted_observation_requests: list[tuple[models.ObservationRequest, int]] = []
-        for observation_request, count in observation_requests:
-            redacted_observation_requests.append(
-                (self._redact(observation_request, auth_user), count)
+        related_request_dictionary: dict[UUID, list[schemas.ObservationRequest]] = {}
+
+        if data.include_history:
+            parent_ids = list(
+                set(
+                    [
+                        observation_request.parent_id
+                        for observation_request, _, _ in observation_requests
+                    ]
+                )
             )
+
+            related_request_query = (
+                select(
+                    models.ObservationRequest,
+                    self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+                ).where(models.ObservationRequest.parent_id.in_(parent_ids))
+            ).order_by(models.ObservationRequest.created_on.desc())
+
+            related_request_result = await self.db.execute(related_request_query)
+
+            related_requests = related_request_result.tuples().all()
+
+            for parent_id in parent_ids:
+                related_request_dictionary[parent_id] = [
+                    schemas.ObservationRequest.from_orm(
+                        self._redact(related_request, is_admin_or_creator)
+                    )
+                    for related_request, is_admin_or_creator in related_requests
+                    if related_request.parent_id == parent_id
+                ]
+
+        redacted_observation_requests: list[tuple[schemas.ObservationRequest, int]] = []
+        for observation_request, is_admin_or_creator, count in observation_requests:
+            redacted_observation_request = schemas.ObservationRequest.from_orm(
+                self._redact(observation_request, is_admin_or_creator)
+            )
+            redacted_observation_request.related_requests = (
+                related_request_dictionary.get(observation_request.parent_id, [])
+                if observation_request.parent_id in related_request_dictionary.keys()
+                else []
+            )
+            redacted_observation_requests.append((redacted_observation_request, count))
 
         return redacted_observation_requests
 
-    async def create(self, data: Any, created_by_id: UUID) -> UUID:
+    async def create(
+        self, data: schemas.ObservationRequestCreate, created_by_id: UUID
+    ) -> UUID:
         """
         Create a new ObservationRequest record in the database.
 
@@ -163,6 +225,17 @@ class ObservationRequestService:
         UUID:
             The id of the newly created ObservationRequest
         """
+        instrument_query = select(models.Instrument).where(
+            models.Instrument.id == data.instrument_id
+        )
+        result = await self.db.execute(instrument_query)
+        instrument = result.scalar_one_or_none()
+
+        if instrument is None or not instrument.is_observation_request_enabled:
+            raise InvalidObservationRequestCreateParametersException(
+                message="The instrument does not allow observation requests."
+            )
+
         query = select(models.ObservingProposal).where(
             models.ObservingProposal.name == data.proposal_name,
             models.ObservingProposal.code == data.proposal_code,
@@ -189,7 +262,9 @@ class ObservationRequestService:
 
         return observation_request.id
 
-    async def create_many(self, data: Any, created_by_id: UUID) -> list[UUID]:
+    async def create_many(
+        self, data: schemas.ObservationRequestCreateMany, created_by_id: UUID
+    ) -> list[UUID]:
         """
         Create many new ObservationRequest records in the database.
 
@@ -204,9 +279,40 @@ class ObservationRequestService:
         list[UUID]:
             The ids of the newly created ObservationRequests
         """
-        observation_requests = [
-            observation_request.to_orm() for observation_request in data
+
+        proposal_names = [
+            observation_request.proposal_name
+            for observation_request in data.observation_requests
         ]
+
+        observing_proposal_query = select(models.ObservingProposal).where(
+            models.ObservingProposal.name.in_(proposal_names)
+        )
+        observing_proposal_result = await self.db.execute(observing_proposal_query)
+        observing_proposals = observing_proposal_result.scalars().all()
+
+        observation_requests: list[models.ObservationRequest] = []
+        for observation_request in data.observation_requests:
+            observing_proposal = next(
+                (
+                    proposal
+                    for proposal in observing_proposals
+                    if proposal.name == observation_request.proposal_name
+                ),
+                None,
+            )
+            observation_request_model = observation_request.to_orm()
+            if observing_proposal is None:
+                new_observing_proposal = models.ObservingProposal(
+                    name=observation_request.proposal_name,
+                    code=observation_request.proposal_code,
+                )
+                self.db.add(new_observing_proposal)
+                await self.db.flush()
+                observation_request_model.proposal_id = new_observing_proposal.id
+            else:
+                observation_request_model.proposal_id = observing_proposal.id
+            observation_requests.append(observation_request_model)
 
         # Get list of instrument IDs from the requests to check if the submitter
         # can submit ToOs to all of them
@@ -228,7 +334,9 @@ class ObservationRequestService:
             instrument.is_observation_request_enabled for instrument in instruments
         )
         if not can_submit_to_instruments:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise InvalidObservationRequestCreateParametersException(
+                message="One or more instruments do not allow observation requests."
+            )
 
         # Bulk add the ObservationRequest records to the database
         observation_request_records = []
@@ -241,8 +349,11 @@ class ObservationRequestService:
         return [observation_request.id for observation_request in observation_requests]
 
     async def modify(
-        self, observation_request_id: UUID, data: Any, modified_by_id: UUID
-    ) -> models.ObservationRequest:
+        self,
+        observation_request_id: UUID,
+        data: schemas.ObservationRequestUpdate,
+        modified_by_id: UUID,
+    ) -> UUID:
         """
         Modify an ObservationRequest given some changes.
         Upon modification, a new ObservationRequest is created with the changes,
@@ -252,7 +363,7 @@ class ObservationRequestService:
         ----------
         observation_request_id: UUID
             the ID of the ObservationRequest to modify
-        data : ObservationRequestPut
+        data : schemas.ObservationRequestUpdate
             the changes to the ObservationRequest
         modified_by_id: UUID
             the ID of the user making the request
@@ -261,8 +372,23 @@ class ObservationRequestService:
         models.ObservationRequest
             The ObservationRequest with the modifications
         """
-        # TODO: This should build the ORM model from the Pydantic model
-        observation_request = data.to_orm()
+
+        query = select(models.ObservingProposal).where(
+            models.ObservingProposal.name == data.proposal_name,
+            models.ObservingProposal.code == data.proposal_code,
+        )
+        result = await self.db.execute(query)
+        observing_proposal = result.scalar_one_or_none()
+
+        if observing_proposal is None:
+            new_observing_proposal = models.ObservingProposal(
+                name=data.proposal_name, code=data.proposal_code
+            )
+            self.db.add(new_observing_proposal)
+            await self.db.flush()
+            proposal_id = new_observing_proposal.id
+        else:
+            proposal_id = observing_proposal.id
 
         query = select(models.ObservationRequest).where(
             models.ObservationRequest.id == observation_request_id
@@ -273,32 +399,27 @@ class ObservationRequestService:
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
-        # Copy the existing observation request, change the values and commit
-        # Expunge removes the existing record from the session so it can be acted on
-        # without changes affecting the existing record.
-        self.db.expunge(observation_request)
+        data.parent_id = observation_request.parent_id or observation_request.id
 
-        # allow sqlalchemy to use the existing record/model to create a new record
-        make_transient(observation_request)
+        new_observation_request = data.to_orm()
+        new_observation_request.created_by_id = observation_request.created_by_id
+        new_observation_request.modified_by_id = modified_by_id
+        new_observation_request.proposal_id = proposal_id
+        new_observation_request.modified_on = datetime.now()
+        new_observation_request.created_on = datetime.now()
 
-        # Generate a new id and created_on
-        observation_request.id = uuid4()
-        observation_request.created_on = datetime.now()
-        # Update the fields of the ObservationRequest with the new values
-        # TODO: Check if we can do this based on the final `ObservationRequestUpdate` schema
-        for field, value in data.model_dump(exclude_none=True).items():
-            setattr(observation_request, field, value)
-
-        self.db.add(observation_request)
+        self.db.add(new_observation_request)
         await self.db.commit()
-        return observation_request
+        return new_observation_request.id
 
     async def update_status(
-        self, observation_request_id: UUID, data: Any, modified_by_id: UUID
+        self,
+        observation_request_id: UUID,
+        data: schemas.ObservationRequestStatusUpdate,
+        modified_by_id: UUID,
     ) -> UUID:
         """
-        Delete an ObservationRequest by ID.
-        Instead of deleting the record, this method sets the status to "archived".
+        Update the status of an ObservationRequest by ID.
 
         Parameters
         ----------
@@ -307,11 +428,11 @@ class ObservationRequestService:
         data: schemas.ObservationRequestStatusUpdate
             the new status and reason for the ObservationRequest
         modified_by_id: UUID
-            the UUID of the user deleting the ObservationRequest
+            the UUID of the user updating the ObservationRequest
         Returns
         -------
         UUID
-            The ID of the deleted ObservationRequest
+            The ID of the updated ObservationRequest
         """
         query = select(models.ObservationRequest).where(
             models.ObservationRequest.id == observation_request_id
@@ -322,60 +443,16 @@ class ObservationRequestService:
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
-        # TODO: This shouldn't add a new record
-
         observation_request.status = data.status
         observation_request.status_reason = data.status_reason
         observation_request.modified_by_id = modified_by_id
+        observation_request.modified_on = datetime.now()
 
-        self.db.add(observation_request)
         await self.db.commit()
 
         return observation_request.id
 
-    async def get_history(
-        self, params: Any
-    ) -> Sequence[Tuple[models.ObservationRequest, int]]:
-        """
-        Get all ObservationRequests associated with the given ObservationRequest ID.
-
-        Parameters
-        ----------
-        params : ObservationRequestHistoryParams
-            PaginationParams containing the ObservationRequest ID
-        Returns
-        -------
-        Sequence[Tuple[models.ObservationRequest, int]]
-            The list of ObservationRequest records and the total number of records
-            as a tuple
-        """
-        query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == params.observation_request_id
-        )
-        result = await self.db.execute(query)
-        observation_request = result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(params.observation_request_id)
-
-        # TODO: Update this to follow Kirill's PR
-        observation_request_history_query = (
-            select(models.ObservationRequest, func.count().over().label("count"))
-            .where(models.ObservationRequest.parent_id == observation_request.parent_id)
-            .order_by(models.ObservationRequest.created_on.desc())
-            .limit(params.page_limit)
-            .offset(params.offset)
-        )
-
-        observation_request_history_result = await self.db.execute(
-            observation_request_history_query
-        )
-        observation_requests = observation_request_history_result.tuples().all()
-
-        # TODO: Redact
-        return observation_requests
-
-    def _get_filter(self, data: Any) -> list:
+    def _get_filter(self, data: schemas.ObservationRequestReadParams) -> list:
         """
         Build the sqlalchemy filter list based on the passed in ObservationRequestReadParams.
         Parses whether or not any of the fields are populated, and constructs a list
@@ -392,6 +469,45 @@ class ObservationRequestService:
             list of ObservationRequest filter booleans
         """
         data_filter = []
+
+        if data.observatory_ids and len(data.observatory_ids):
+            data_filter.append(
+                models.ObservationRequest.instrument.has(
+                    models.Instrument.telescope.has(
+                        models.Telescope.observatory_id.in_(data.observatory_ids)
+                    )
+                )
+            )
+
+        if data.observatory_names and len(data.observatory_names):
+            observatory_name_or_filter = []
+
+            for observatory_name in data.observatory_names:
+                observatory_name_or_filter.append(
+                    models.ObservationRequest.instrument.has(
+                        models.Instrument.telescope.has(
+                            models.Telescope.observatory.has(
+                                func.lower(models.Observatory.name).contains(
+                                    str.lower(observatory_name)
+                                )
+                            )
+                        )
+                    )
+                )
+
+                observatory_name_or_filter.append(
+                    models.ObservationRequest.instrument.has(
+                        models.Instrument.telescope.has(
+                            models.Telescope.observatory.has(
+                                func.lower(models.Observatory.short_name).contains(
+                                    str.lower(observatory_name)
+                                )
+                            )
+                        )
+                    )
+                )
+
+            data_filter.append(or_(*observatory_name_or_filter))
 
         if data.telescope_ids and len(data.telescope_ids):
             data_filter.append(
@@ -417,7 +533,7 @@ class ObservationRequestService:
                 telescope_name_or_filter.append(
                     models.ObservationRequest.instrument.has(
                         models.Instrument.telescope.has(
-                            func.lower(models.Telescope.name).contains(
+                            func.lower(models.Telescope.short_name).contains(
                                 str.lower(telescope_name)
                             )
                         )
@@ -500,10 +616,6 @@ class ObservationRequestService:
                 models.ObservationRequest.date_range_begin < data.end_date
             )
 
-        # TODO: The proposal info needs to check auth user's permissions
-        # to see the requests against the anonymize field.
-        # Submitter + Admins can see all requests, but other users can only see non-anonymized requests
-        # when filtering by proposal info
         if data.proposal_name:
             data_filter.append(
                 models.ObservationRequest.observing_proposal.has(
@@ -533,75 +645,50 @@ class ObservationRequestService:
         if data.parent_id is not None:
             data_filter.append(models.ObservationRequest.parent_id == data.parent_id)
 
-        # TODO: Filter on status as well?
+        if data.status is not None:
+            data_filter.append(models.ObservationRequest.status == data.status.value)
 
-        # TODO: Get history
         return data_filter
 
-    def _is_requester(
-        self, data: models.ObservationRequest, auth_user: AuthUser
-    ) -> bool:
-        """
-        Check if the auth user is the submitter of the ObservationRequest.
-
-        Parameters
-        ----------
-        data : models.ObservationRequest
-            the ObservationRequest
-        auth_user: AuthUser
-            the user making the request
-        Returns
-        -------
-        bool
-        """
-        return auth_user.id == data.created_by_id
-
-    def _is_admin(self, data: models.ObservationRequest, auth_user: AuthUser) -> bool:
-        """
-        Check if the auth user has write privileges for the observatory group that the requested instrument belongs to.
-
-        Parameters
-        ----------
-        data : models.ObservationRequest
-            the ObservationRequest
-        auth_user: AuthUser
-            the user making the request
-        Returns
-        -------
-        bool
-        """
-        requested_group_id = data.instrument.telescope.observatory.group.id
-        for group in auth_user.groups:
-            if requested_group_id == group.id and (
-                group.is_admin
+    def _is_admin_or_creator(
+        self, auth_user: AuthUser | None
+    ) -> ColumnElement[bool] | False_:
+        is_admin_or_creator = false()
+        if auth_user is not None:
+            admin_group_ids = [
+                group.id
+                for group in auth_user.groups
+                if getattr(group, "is_admin", False)
                 or any(
-                    scope in group.scopes
+                    scope in getattr(group, "scopes", [])
                     for scope in [
                         "group:observation_request:write",
                         "group:observation_request:read",
                     ]
                 )
-            ):
-                return True
+            ]
 
-        return False
+            is_admin_or_creator = (
+                models.ObservationRequest.created_by_id == auth_user.id
+            )
 
-    def _get_observation_request_query_options(
-        self, include_history: bool | None
-    ) -> list[tuple]:
-        if include_history:
-            return selectinload(models.ObservationRequest.related_requests)  # type: ignore
-
-        return noload(models.ObservationRequest.related_requests)  # type: ignore
-
-    # TODO: Method to update status (and not create a new record)
-    # This should replace the delete method
-
-    # TODO: Should check "group:observation_request:write" and "group:observation_request:read"
-    # in addition to is_admin. Check granular permissions for read vs write requests
+            if admin_group_ids:
+                is_admin_or_creator = or_(
+                    is_admin_or_creator,
+                    models.ObservationRequest.instrument.has(
+                        models.Instrument.telescope.has(
+                            models.Telescope.observatory.has(
+                                models.Observatory.group.has(
+                                    models.Group.id.in_(admin_group_ids)
+                                )
+                            )
+                        )
+                    ),
+                )
+        return is_admin_or_creator
 
     def _redact(
-        self, observation_request: models.ObservationRequest, auth_user: AuthUser | None
+        self, observation_request: models.ObservationRequest, is_admin_or_creator: bool
     ) -> models.ObservationRequest:
         """
         Redact the ObservationRequest if the auth user is not the submitter or an admin.
@@ -617,18 +704,8 @@ class ObservationRequestService:
         models.ObservationRequest
             The redacted ObservationRequest
         """
-        is_admin = (
-            self._is_admin(observation_request, auth_user)
-            if auth_user is not None
-            else False
-        )
-        is_requester = (
-            self._is_requester(observation_request, auth_user)
-            if auth_user is not None
-            else False
-        )
 
-        if not is_admin and not is_requester:
+        if observation_request.anonymize and not is_admin_or_creator:
             # Redact the fields that should not be visible to non-admins and non-submitters
             observation_request.created_by_id = None  # type: ignore
             observation_request.proposal_id = None  # type: ignore

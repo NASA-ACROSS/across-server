@@ -121,20 +121,11 @@ class TestObservationRequestService:
     @pytest.mark.asyncio
     async def test_observation_request_get(self) -> None:
         """Should return the observation request with the given ID"""
-        obs_request = await self.service.get(self.observation_request_id)
+        obs_request = await self.service.get(
+            self.observation_request_id, self.submitter
+        )
 
         assert obs_request.id == self.observation_request_id
-
-    @pytest.mark.asyncio
-    async def test_observation_request_get_history(self) -> None:
-        """Should return list of observation requests ordered by created on desc"""
-        obs_requests = await self.service.get_observation_request_history(
-            FakeObservationHistoryParams(
-                observation_request_id=self.observation_request_id
-            )
-        )
-        # Should order by created on desc, so last one is the original request
-        assert obs_requests[-1][0].id == self.observation_request_id
 
     @pytest.mark.asyncio
     async def test_observation_request_create(self) -> None:
@@ -157,17 +148,19 @@ class TestObservationRequestService:
             status="pending",
         )
 
-        obs_request_id = await self.service.create(obs_request_create, self.submitter)
+        obs_request_id = await self.service.create(
+            obs_request_create, self.submitter.id
+        )
         assert isinstance(obs_request_id, UUID)
 
     @pytest.mark.asyncio
     async def test_observation_request_delete_admin(self) -> None:
         """Admins should be able to delete requests for their observatory group"""
-        obs_request_id = await self.service.delete(
-            self.observation_request_id, self.group_admin
+        obs_request_id = await self.service.update_status(
+            self.observation_request_id, self.group_admin.id
         )
         assert obs_request_id == self.observation_request_id
-        obs_request = await self.service.get(obs_request_id)
+        obs_request = await self.service.get(obs_request_id, self.group_admin)
         assert obs_request.status == "archived"
 
     @pytest.mark.asyncio
@@ -203,7 +196,7 @@ class TestObservationRequestService:
             status="pending",
         )
         submitted_obs_request_id = await self.service.create(
-            obs_request_create, self.submitter
+            obs_request_create, self.submitter.id
         )
         # Attempt to modify the status of the newly created request
         obs_request_modify = FakeObservationRequestModify(
@@ -211,7 +204,7 @@ class TestObservationRequestService:
             status="accepted",
             status_reason="Let me in!",
         )
-        obs_request = await self.service.modify(obs_request_modify, self.submitter)
+        obs_request = await self.service.modify(obs_request_modify, self.submitter.id)
         # Check that the submitter cannot change the status
         assert obs_request.status != "accepted"
 
@@ -242,5 +235,5 @@ class TestObservationRequestService:
             parent_id=self.observation_request_id, **{field: val}
         )
 
-        obs_requests = await self.service.get_many(read_params)
+        obs_requests = await self.service.get_many(read_params, self.submitter)
         assert isinstance(obs_requests, list)
