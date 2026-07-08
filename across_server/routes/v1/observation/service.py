@@ -305,11 +305,11 @@ class ObservationService:
 
         return data_filter
 
-    async def get_many(
+    async def _get_resolved_instrument_ids(
         self, data: ObservationRead
-    ) -> tuple[Sequence[models.Observation], int]:
+    ) -> set[UUID] | None:
         """
-        Retrieve the Observation records with the given filters.
+        Resolve data.observatory_ids and data.telescope_ids into a list of instrument_ids
 
         Parameters
         ----------
@@ -318,14 +318,9 @@ class ObservationService:
 
         Returns
         -------
-        tuple[Sequence[models.Observation], int]
-            The Observations within the given filters and the total count
+        (set[UUID] | None)
+            The set of resolved instrument_ids or None
         """
-
-        query_options = self._get_observation_query_options(
-            include_footprints=data.include_footprints
-        )
-
         resolved_instrument_ids: set[UUID] | None = None
 
         if data.observatory_ids or data.telescope_ids:
@@ -352,10 +347,37 @@ class ObservationService:
             else:
                 resolved_instrument_ids = set(data.instrument_ids)
 
+        return resolved_instrument_ids
+
+    async def get_many(
+        self, data: ObservationRead
+    ) -> tuple[Sequence[models.Observation], int]:
+        """
+        Retrieve the Observation records with the given filters.
+
+        Parameters
+        ----------
+        data : schemas.ObservationRead
+            the ObservationRead data
+
+        Returns
+        -------
+        tuple[Sequence[models.Observation], int]
+            The Observations within the given filters and the total count
+        """
+
+        query_options = self._get_observation_query_options(
+            include_footprints=data.include_footprints
+        )
+
+        # pre-resolve observatory_id and telescope_id into a list of instrument_ids
+        resolved_instrument_ids = await self._get_resolved_instrument_ids(data)
+
         query_filter = self._get_observation_base_filter(
             data, resolved_instrument_ids=resolved_instrument_ids
         ) + self._get_cone_search_filter(data)
 
+        # total_count query for pagination total result set info given filters
         count_query = (
             select(func.count()).select_from(models.Observation).where(*query_filter)
         )
