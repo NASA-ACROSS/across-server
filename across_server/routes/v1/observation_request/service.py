@@ -21,6 +21,42 @@ from .exceptions import (
 )
 
 
+def _is_creator(
+    auth_user: AuthUser | None,
+) -> ColumnElement[bool] | False_:
+    if auth_user is None:
+        return false()
+    return models.ObservationRequest.created_by_id == auth_user.id
+
+
+def _is_admin(
+    auth_user: AuthUser | None,
+) -> ColumnElement[bool] | False_:
+    if auth_user is None:
+        return false()
+
+    admin_group_ids = [
+        group.id
+        for group in auth_user.groups
+        if getattr(group, "is_admin", False)
+        or any(
+            scope in getattr(group, "scopes", [])
+            for scope in [
+                "group:observation_request:write",
+                "group:observation_request:read",
+            ]
+        )
+    ]
+
+    return models.ObservationRequest.instrument.has(
+        models.Instrument.telescope.has(
+            models.Telescope.observatory.has(
+                models.Observatory.group.has(models.Group.id.in_(admin_group_ids))
+            )
+        )
+    )
+
+
 class ObservationRequestService:
     """
     ObservationRequest service for managing observation requests in the ACROSS SSA system.
@@ -72,9 +108,12 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
+        is_creator = _is_creator(auth_user)
+        is_admin = _is_admin(auth_user)
+
         query = select(
             models.ObservationRequest,
-            self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+            or_(is_creator, is_admin).label("is_admin_or_creator"),
         ).where(models.ObservationRequest.id == observation_request_id)
 
         result = await self.db.execute(query)
@@ -89,7 +128,7 @@ class ObservationRequestService:
         related_request_query = (
             select(
                 models.ObservationRequest,
-                self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+                or_(is_creator, is_admin).label("is_admin_or_creator"),
             )
             .where(models.ObservationRequest.parent_id == observation_request.parent_id)
             .order_by(models.ObservationRequest.created_on.desc())
@@ -134,14 +173,17 @@ class ObservationRequestService:
             as a tuple
         """
         observation_request_filter = self._get_filter(data=data)
+        is_creator = _is_creator(auth_user)
+        is_admin = _is_admin(auth_user)
+        is_admin_or_creator_query = or_(is_creator, is_admin)
 
         if data.proposal_code or data.proposal_name or data.proposal_ids:
-            observation_request_filter.append(self._is_admin_or_creator(auth_user))
+            observation_request_filter.append(is_admin_or_creator_query)
 
         observation_request_query = (
             select(
                 models.ObservationRequest,
-                self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+                is_admin_or_creator_query.label("is_admin_or_creator"),
                 func.count().over().label("count"),
             )
             .filter(*observation_request_filter)
@@ -177,7 +219,7 @@ class ObservationRequestService:
             related_request_query = (
                 select(
                     models.ObservationRequest,
-                    self._is_admin_or_creator(auth_user).label("is_admin_or_creator"),
+                    is_admin_or_creator_query.label("is_admin_or_creator"),
                 ).where(models.ObservationRequest.parent_id.in_(parent_ids))
             ).order_by(models.ObservationRequest.created_on.desc())
 
@@ -649,43 +691,6 @@ class ObservationRequestService:
             data_filter.append(models.ObservationRequest.status == data.status.value)
 
         return data_filter
-
-    def _is_admin_or_creator(
-        self, auth_user: AuthUser | None
-    ) -> ColumnElement[bool] | False_:
-        is_admin_or_creator = false()
-        if auth_user is not None:
-            admin_group_ids = [
-                group.id
-                for group in auth_user.groups
-                if getattr(group, "is_admin", False)
-                or any(
-                    scope in getattr(group, "scopes", [])
-                    for scope in [
-                        "group:observation_request:write",
-                        "group:observation_request:read",
-                    ]
-                )
-            ]
-
-            is_admin_or_creator = (
-                models.ObservationRequest.created_by_id == auth_user.id
-            )
-
-            if admin_group_ids:
-                is_admin_or_creator = or_(
-                    is_admin_or_creator,
-                    models.ObservationRequest.instrument.has(
-                        models.Instrument.telescope.has(
-                            models.Telescope.observatory.has(
-                                models.Observatory.group.has(
-                                    models.Group.id.in_(admin_group_ids)
-                                )
-                            )
-                        )
-                    ),
-                )
-        return is_admin_or_creator
 
     def _redact(
         self, observation_request: models.ObservationRequest, is_admin_or_creator: bool
