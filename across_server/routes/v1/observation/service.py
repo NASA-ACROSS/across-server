@@ -1,5 +1,6 @@
+import typing
 from collections.abc import Sequence
-from typing import Annotated, Tuple
+from typing import Annotated
 from uuid import UUID
 
 from across.tools import (
@@ -14,7 +15,7 @@ from geoalchemy2 import Geometry
 from geoalchemy2.functions import ST_Contains, ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import cast, func, select
+from sqlalchemy import cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, selectinload
 
@@ -71,7 +72,11 @@ class ObservationService:
 
         return observation
 
-    def _get_observation_base_filter(self, data: ObservationReadBase) -> list:
+    def _get_observation_base_filter(
+        self,
+        data: ObservationReadBase,
+        resolved_instrument_ids: set[UUID] | None = None,
+    ) -> list:
         """
         Retrieve the Observation record with the given checksum.
 
@@ -97,26 +102,32 @@ class ObservationService:
         if data.schedule_ids:
             data_filter.append(models.Observation.schedule_id.in_(data.schedule_ids))
 
-        if data.observatory_ids:
-            data_filter.append(
-                models.Observation.schedule.has(
-                    models.Schedule.telescope.has(
-                        models.Telescope.observatory_id.in_(data.observatory_ids)
+        if resolved_instrument_ids is not None:
+            if resolved_instrument_ids:
+                data_filter.append(
+                    models.Observation.instrument_id.in_(list(resolved_instrument_ids))
+                )
+        else:
+            if data.observatory_ids:
+                data_filter.append(
+                    models.Observation.schedule.has(
+                        models.Schedule.telescope.has(
+                            models.Telescope.observatory_id.in_(data.observatory_ids)
+                        )
                     )
                 )
-            )
 
-        if data.telescope_ids:
-            data_filter.append(
-                models.Observation.schedule.has(
-                    models.Schedule.telescope_id.in_(data.telescope_ids)
+            if data.telescope_ids:
+                data_filter.append(
+                    models.Observation.schedule.has(
+                        models.Schedule.telescope_id.in_(data.telescope_ids)
+                    )
                 )
-            )
 
-        if data.instrument_ids:
-            data_filter.append(
-                models.Observation.instrument_id.in_(data.instrument_ids)
-            )
+            if data.instrument_ids:
+                data_filter.append(
+                    models.Observation.instrument_id.in_(data.instrument_ids)
+                )
 
         if data.status:
             data_filter.append(models.Observation.status == data.status.value)
@@ -294,9 +305,53 @@ class ObservationService:
 
         return data_filter
 
+    async def _get_resolved_instrument_ids(
+        self, data: ObservationRead
+    ) -> set[UUID] | None:
+        """
+        Resolve data.observatory_ids and data.telescope_ids into a list of instrument_ids
+
+        Parameters
+        ----------
+        data : schemas.ObservationRead
+            the ObservationRead data
+
+        Returns
+        -------
+        (set[UUID] | None)
+            The set of resolved instrument_ids or None
+        """
+        resolved_instrument_ids: set[UUID] | None = None
+
+        if data.observatory_ids or data.telescope_ids:
+            conditions = []
+            if data.observatory_ids:
+                conditions.append(
+                    models.Telescope.observatory_id.in_(data.observatory_ids)
+                )
+            if data.telescope_ids:
+                conditions.append(models.Telescope.id.in_(data.telescope_ids))
+            result = await self.db.execute(
+                select(models.Instrument.id)
+                .join(
+                    models.Telescope,
+                    models.Instrument.telescope_id == models.Telescope.id,
+                )
+                .where(or_(*conditions))
+            )
+            resolved_instrument_ids = set(result.scalars().all())
+
+        if data.instrument_ids:
+            if resolved_instrument_ids is not None:
+                resolved_instrument_ids |= set(data.instrument_ids)
+            else:
+                resolved_instrument_ids = set(data.instrument_ids)
+
+        return resolved_instrument_ids
+
     async def get_many(
         self, data: ObservationRead
-    ) -> Sequence[Tuple[models.Observation, int]]:
+    ) -> tuple[Sequence[models.Observation], int]:
         """
         Retrieve the Observation records with the given filters.
 
@@ -307,31 +362,50 @@ class ObservationService:
 
         Returns
         -------
-        Sequence[models.Observation]
-            The Observations within the given filters
+        tuple[Sequence[models.Observation], int]
+            The Observations within the given filters and the total count
         """
 
         query_options = self._get_observation_query_options(
             include_footprints=data.include_footprints
         )
 
+        # pre-resolve observatory_id and telescope_id into a list of instrument_ids
+        resolved_instrument_ids = await self._get_resolved_instrument_ids(data)
+
         query_filter = self._get_observation_base_filter(
-            data
+            data, resolved_instrument_ids=resolved_instrument_ids
         ) + self._get_cone_search_filter(data)
 
-        query = (
-            select(models.Observation, func.count().over().label("count"))
+        # total_count query for pagination total result set info given filters
+        count_query = (
+            select(func.count()).select_from(models.Observation).where(*query_filter)
+        )
+        total_count = (await self.db.execute(count_query)).scalar_one()
+
+        # query to find the ids quickly with indexes and leaf info
+        nested_id_subq = (
+            select(models.Observation.id)
             .where(*query_filter)
-            .order_by(models.Observation.created_on.desc())
+            .order_by(
+                models.Observation.created_on.desc(), models.Observation.id.desc()
+            )
             .limit(data.page_limit)
             .offset(data.offset)
+            .subquery()
+        )
+
+        # hydrate the remaining info from ids returned from nested fast id retrieval
+        hydrate_query = (
+            select(models.Observation)
+            .join(nested_id_subq, models.Observation.id == nested_id_subq.c.id)
             .options(query_options)  # type: ignore
         )
 
-        result = await self.db.execute(query)
-        observations = result.tuples().all()
+        result = await self.db.execute(hydrate_query)
+        observations = typing.cast(Sequence[models.Observation], result.scalars().all())
 
-        return observations
+        return observations, total_count
 
     def _get_observation_query_options(
         self, include_footprints: bool | None
@@ -343,7 +417,7 @@ class ObservationService:
 
     async def get_contains_point(
         self, data: ContainsPointReadParams
-    ) -> Sequence[Tuple[models.Observation, int]]:
+    ) -> tuple[Sequence[models.Observation], int]:
         """
         Retrieve the Observation records whose footprints contains a given RA/DEC.
 
@@ -354,8 +428,8 @@ class ObservationService:
 
         Returns
         -------
-        Sequence[models.Observation]
-            The Observations whose footprints contain the given RA/DEC
+        tuple[Sequence[models.Observation], int]
+            The Observations whose footprints contain the given RA/DEC and the total count
         """
 
         query_options = self._get_observation_query_options(
@@ -366,8 +440,13 @@ class ObservationService:
             data
         ) + self._get_observation_contains_point_filter(data)
 
-        query = (
-            select(models.Observation, func.count().over().label("count"))
+        count_query = (
+            select(func.count()).select_from(models.Observation).where(*query_filter)
+        )
+        total_count = (await self.db.execute(count_query)).scalar_one()
+
+        data_query = (
+            select(models.Observation)
             .where(*query_filter)
             .order_by(models.Observation.created_on.desc())
             .limit(data.page_limit)
@@ -375,7 +454,7 @@ class ObservationService:
             .options(query_options)  # type: ignore
         )
 
-        result = await self.db.execute(query)
-        observations = result.tuples().all()
+        result = await self.db.execute(data_query)
+        observations = result.scalars().all()
 
-        return observations
+        return observations, total_count

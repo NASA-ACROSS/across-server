@@ -1,8 +1,8 @@
 from collections.abc import Callable, Generator, Sequence
 from datetime import datetime
-from typing import Any, Tuple
+from typing import Any
 from unittest.mock import AsyncMock
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from across.tools import WavelengthBandpass
@@ -46,27 +46,54 @@ def fake_observation_data_with_footprint(
 
 
 @pytest.fixture()
+def fake_observation_pair(
+    fake_observation_data: Observation,
+) -> tuple[Observation, Observation, set[UUID]]:
+    instrument_id_B = uuid4()
+
+    obs_B = Observation(
+        id=uuid4(),
+        instrument_id=instrument_id_B,
+        schedule_id=fake_observation_data.schedule_id,
+        object_name=fake_observation_data.object_name,
+        pointing_position=fake_observation_data.pointing_position,
+        pointing_ra=fake_observation_data.pointing_ra,
+        pointing_dec=fake_observation_data.pointing_dec,
+        object_position=fake_observation_data.object_position,
+        object_ra=fake_observation_data.object_ra,
+        object_dec=fake_observation_data.object_dec,
+        exposure_time=fake_observation_data.exposure_time,
+        min_wavelength=fake_observation_data.min_wavelength,
+        max_wavelength=fake_observation_data.max_wavelength,
+        peak_wavelength=fake_observation_data.peak_wavelength,
+        filter_name=fake_observation_data.filter_name,
+        date_range_begin=fake_observation_data.date_range_begin,
+        date_range_end=fake_observation_data.date_range_end,
+        external_observation_id=fake_observation_data.external_observation_id,
+        type=fake_observation_data.type,
+        status=fake_observation_data.status,
+        created_on=fake_observation_data.created_on,
+    )
+
+    return (
+        fake_observation_data,
+        obs_B,
+        {fake_observation_data.instrument_id, instrument_id_B},
+    )
+
+
+@pytest.fixture()
 def fake_observation_many(
     fake_observation_data_with_footprint: Observation,
-) -> Sequence[Tuple[Observation, int]]:
-    return [
-        (
-            fake_observation_data_with_footprint,
-            1,
-        )
-    ]
+) -> tuple[Sequence[Observation], int]:
+    return ([fake_observation_data_with_footprint], 1)
 
 
 @pytest.fixture()
 def fake_observation_contains_point_many(
     fake_observation_data_with_footprint: Observation,
-) -> Sequence[Tuple[Observation, int]]:
-    return [
-        (
-            fake_observation_data_with_footprint,
-            1,
-        )
-    ]
+) -> tuple[Sequence[Observation], int]:
+    return ([fake_observation_data_with_footprint], 1)
 
 
 @pytest.fixture
@@ -98,7 +125,7 @@ def mock_observation_service(
 
     mock.get = AsyncMock(return_value=fake_observation_data_with_footprint)
     mock.get_many = AsyncMock(return_value=fake_observation_many)
-    mock.get_overlap_point = AsyncMock(
+    mock.get_contains_point = AsyncMock(
         return_value=fake_observation_contains_point_many
     )
 
