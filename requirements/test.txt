@@ -8,7 +8,7 @@ anyio==4.12.0
     # via starlette
 coverage[toml]==7.13.0
     # via pytest-cov
-fastapi==0.129.0
+fastapi==0.139.0
     # via pytest-fastapi-deps
 idna==3.15
     # via anyio
@@ -28,23 +28,26 @@ pygments==2.19.2
     # via pytest
 pytest==9.1.1
     # via
-    #   -r test.in
+    #   -r requirements/test.in
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-fastapi-deps
 pytest-asyncio==1.4.0
-    # via -r test.in
+    # via -r requirements/test.in
 pytest-cov==7.1.0
-    # via -r test.in
+    # via -r requirements/test.in
 pytest-fastapi-deps==0.2.3
-    # via -r test.in
+    # via -r requirements/test.in
 starlette==0.50.0
     # via fastapi
 typing-extensions==4.15.0
     # via
+    #   anyio
     #   fastapi
     #   pydantic
     #   pydantic-core
+    #   pytest-asyncio
+    #   starlette
     #   typing-inspection
 typing-inspection==0.4.2
     # via
