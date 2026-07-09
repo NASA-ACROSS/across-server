@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/NASA-ACROSS/across-server/compare/v1.7.2...v1.8.0) (2026-07-09)
+
+
+### Features
+
+* **seed:** add local treedome automation service account with schedule write for sandy seeded user ([443ac46](https://github.com/NASA-ACROSS/across-server/commit/443ac46685a617cd7aa94dcf8dabe3a7d9e3915d))
+* **seed:** add local treedome automation service account with schedule write for sandy seeded user ([#644](https://github.com/NASA-ACROSS/across-server/issues/644)) ([443ac46](https://github.com/NASA-ACROSS/across-server/commit/443ac46685a617cd7aa94dcf8dabe3a7d9e3915d))
+
+
+### Bug Fixes
+
+* **sql:** reduce sql cascades ([#657](https://github.com/NASA-ACROSS/across-server/issues/657)) ([d1b05cb](https://github.com/NASA-ACROSS/across-server/commit/d1b05cb4f6600dcb5b86da4fcfbe46b96b563bb1))
+
 ## [1.7.2](https://github.com/NASA-ACROSS/across-server/compare/v1.7.1...v1.7.2) (2026-06-18)
 
 
