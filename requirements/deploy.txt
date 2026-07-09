@@ -71,7 +71,7 @@ fastapi==0.129.0
     # via -r requirements/base.in
 filelock==3.20.3
     # via spacetrack
-geoalchemy2==0.18.3
+geoalchemy2==0.20.0
     # via -r requirements/base.in
 greenlet==3.3.0
     # via sqlalchemy
