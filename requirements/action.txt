@@ -275,7 +275,7 @@ structlog==26.1.0
     # via -r requirements/base.in
 types-awscrt==0.30.0
     # via botocore-stubs
-types-boto3[rds,ssm,sts]==1.43.36
+types-boto3[rds,ssm,sts]==1.43.44
     # via -r requirements/types.in
 types-boto3-rds==1.43.30
     # via types-boto3
