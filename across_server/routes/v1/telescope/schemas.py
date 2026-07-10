@@ -3,6 +3,8 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
+from across_server.core.enums.observation_strategy import ObservationStrategy
+
 from ....core.date_utils import UTCDatetime
 from ....core.enums.schedule_status import ScheduleStatus
 from ....core.schemas.base import BaseSchema, IDNameSchema
@@ -154,8 +156,16 @@ class TelescopeInstrument(InstrumentBase):
         -------
             schemas.Telescope
         """
-        footprints = [Footprint.from_orm(footprint) for footprint in obj.footprints]
-        filters = [Filter.model_validate(filter) for filter in obj.filters]
+        footprints = (
+            [Footprint.from_orm(footprint) for footprint in obj.footprints]
+            if include_footprints
+            else []
+        )
+        filters = (
+            [Filter.model_validate(filter) for filter in obj.filters]
+            if include_filters
+            else []
+        )
 
         return cls(
             id=obj.id,
@@ -175,7 +185,7 @@ class TelescopeInstrument(InstrumentBase):
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
             visibility_type=obj.visibility_type,
-            observation_strategy=obj.observation_strategy,
+            observation_strategy=ObservationStrategy(obj.observation_strategy),
         )
 
 

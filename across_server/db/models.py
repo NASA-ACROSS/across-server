@@ -47,6 +47,7 @@ class CreatableMixin:
     created_on: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
+        index=True,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -58,6 +59,7 @@ class ModifiableMixin:
     modified_on: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
+        index=True,
         onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -419,7 +421,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     group: Mapped["Group"] = relationship(
         secondary=group_observatory,
         back_populates="observatories",
-        lazy="selectin",
+        lazy="noload",
     )
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
@@ -477,18 +479,18 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
         back_populates="instruments", lazy="selectin"
     )
     footprints: Mapped[list["Footprint"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
 
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="noload"
     )
     filters: Mapped[list["Filter"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     observation_requests: Mapped[list["ObservationRequest"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     constraints: Mapped[list["Constraint"]] = relationship(
         secondary=instrument_constraint,
@@ -630,10 +632,10 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         back_populates="observations", lazy="noload"
     )
     schedule: Mapped["Schedule"] = relationship(
-        back_populates="observations", lazy="selectin"
+        back_populates="observations", lazy="noload"
     )
     footprints: Mapped[list["ObservationFootprint"]] = relationship(
-        back_populates="observation", lazy="selectin", cascade="all,delete"
+        back_populates="observation", lazy="noload", cascade="all,delete"
     )
 
 
