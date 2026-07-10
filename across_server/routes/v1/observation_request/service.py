@@ -355,20 +355,20 @@ class ObservationRequestService:
         observing_proposals = observing_proposal_result.scalars().all()
 
         observation_requests: list[models.ObservationRequest] = []
-        for observation_request in data.observation_requests:
+        for observation_request_create in data.observation_requests:
             observing_proposal = next(
                 (
                     proposal
                     for proposal in observing_proposals
-                    if proposal.name == observation_request.proposal_name
+                    if proposal.name == observation_request_create.proposal_name
                 ),
                 None,
             )
-            observation_request_model = observation_request.to_orm()
+            observation_request_model = observation_request_create.to_orm()
             if observing_proposal is None:
                 new_observing_proposal = models.ObservingProposal(
-                    name=observation_request.proposal_name,
-                    code=observation_request.proposal_code,
+                    name=observation_request_create.proposal_name,
+                    code=observation_request_create.proposal_code,
                 )
                 self.db.add(new_observing_proposal)
                 await self.db.flush()
@@ -439,20 +439,20 @@ class ObservationRequestService:
         instrument_query = select(models.Instrument).where(
             models.Instrument.id == data.instrument_id
         )
-        result = await self.db.execute(instrument_query)
-        instrument = result.scalar_one_or_none()
+        instrument_result = await self.db.execute(instrument_query)
+        instrument = instrument_result.scalar_one_or_none()
 
         if instrument is None or not instrument.is_observation_request_enabled:
             raise InvalidObservationRequestCreateParametersException(
                 message="The instrument does not allow observation requests."
             )
 
-        query = select(models.ObservingProposal).where(
+        proposal_query = select(models.ObservingProposal).where(
             models.ObservingProposal.name == data.proposal_name,
             models.ObservingProposal.code == data.proposal_code,
         )
-        result = await self.db.execute(query)
-        observing_proposal = result.scalar_one_or_none()
+        proposal_result = await self.db.execute(proposal_query)
+        observing_proposal = proposal_result.scalar_one_or_none()
 
         if observing_proposal is None:
             new_observing_proposal = models.ObservingProposal(
@@ -464,11 +464,11 @@ class ObservationRequestService:
         else:
             proposal_id = observing_proposal.id
 
-        query = select(models.ObservationRequest).where(
+        observation_request_query = select(models.ObservationRequest).where(
             models.ObservationRequest.id == observation_request_id
         )
-        result = await self.db.execute(query)
-        observation_request = result.scalar_one_or_none()
+        observation_request_result = await self.db.execute(observation_request_query)
+        observation_request = observation_request_result.scalar_one_or_none()
 
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
@@ -551,8 +551,7 @@ class ObservationRequestService:
         list[sqlalchemy.filters]
             list of ObservationRequest filter booleans
         """
-        data_filter = []
-        data_filter = []
+        data_filter: list = []
 
         if data.ids and len(data.ids):
             data_filter.append(models.ObservationRequest.id.in_(data.ids))
