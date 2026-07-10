@@ -827,11 +827,13 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
 
     __table_args__ = (
         Index(
-            "ix_observation_request_object_position",
+            "ix_across_observation_request_object_position",
             "object_position",
             postgresql_using="gist",
         ),
         Index(
-            "ix_observation_request_date_range", "date_range_begin", "date_range_end"
+            "ix_across_observation_request_date_range",
+            "date_range_begin",
+            "date_range_end",
         ),
     )

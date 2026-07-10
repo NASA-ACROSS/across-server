@@ -91,7 +91,7 @@ class ObservationRequest(ObservationRequestBase):
     status_reason: str | None
     proposal_name: str | None = None
     proposal_code: str | None = None
-    related_requests: list[ObservationRequest] | None = None
+    versions: list[ObservationRequest] | None = None
     created_on: datetime.datetime
     created_by_id: uuid.UUID | None
     modified_on: datetime.datetime | None
@@ -138,6 +138,7 @@ class ObservationRequest(ObservationRequestBase):
 
 
 class ObservationRequestReadParams(PaginationParams):
+    ids: list[uuid.UUID] | None = None
     observatory_names: list[str] | None = None
     observatory_ids: list[uuid.UUID] | None = None
     telescope_names: list[str] | None = None
@@ -156,7 +157,7 @@ class ObservationRequestReadParams(PaginationParams):
     proposal_ids: list[str] | None = None
     is_too: bool = True
     parent_id: uuid.UUID | None = None
-    include_history: bool = False
+    include_versions: bool = False
 
 
 class ObservationRequestCreateMany(BaseSchema):

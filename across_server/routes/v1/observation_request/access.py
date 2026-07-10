@@ -65,8 +65,7 @@ async def observation_request_status_access(
         is_admin_query.label("is_admin"),
     ).where(models.ObservationRequest.id == observation_request_id)
     result = await db.execute(observation_request_exists_query)
-    observation_request_exists, group_id, is_admin = result.one_or_none() or (
-        None,
+    observation_request_exists, is_admin = result.one_or_none() or (
         None,
         False,
     )

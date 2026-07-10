@@ -67,14 +67,13 @@ async def get_many(
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     data: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
-    observation_request_tuples = await service.get_many(data=data, auth_user=auth_user)
+    observation_requests, total_count = await service.get_many(
+        data=data, auth_user=auth_user
+    )
 
-    total_number = observation_request_tuples[0][1] if observation_request_tuples else 0
-
-    observation_requests = [t[0] for t in observation_request_tuples]
     return Page[schemas.ObservationRequest].model_validate(
         {
-            "total_number": total_number,
+            "total_number": total_count,
             "page": data.page,
             "page_limit": data.page_limit,
             "items": [

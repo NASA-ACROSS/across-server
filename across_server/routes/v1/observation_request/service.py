@@ -42,8 +42,8 @@ def _is_admin(
         or any(
             scope in getattr(group, "scopes", [])
             for scope in [
-                "group:observation_request:write",
-                "group:observation_request:read",
+                "group:observation-request:write",
+                "group:observation-request:read",
             ]
         )
     ]
@@ -125,7 +125,7 @@ class ObservationRequestService:
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
-        related_request_query = (
+        versions_query = (
             select(
                 models.ObservationRequest,
                 or_(is_creator, is_admin).label("is_admin_or_creator"),
@@ -134,19 +134,20 @@ class ObservationRequestService:
             .order_by(models.ObservationRequest.created_on.desc())
         )
 
-        related_request_result = await self.db.execute(related_request_query)
+        versions_result = await self.db.execute(versions_query)
 
-        related_requests = related_request_result.tuples().all()
+        versions = versions_result.tuples().all()
 
         observation_request = schemas.ObservationRequest.from_orm(
             self._redact(observation_request, is_admin_or_creator)
         )
 
-        observation_request.related_requests = [
+        observation_request.versions = [
             schemas.ObservationRequest.from_orm(
-                self._redact(related_request, is_admin_or_creator)
+                self._redact(version, is_admin_or_creator)
             )
-            for related_request, is_admin_or_creator in related_requests
+            for version, is_admin_or_creator in versions
+            if version.id != observation_request.id
         ]
 
         return observation_request
@@ -155,7 +156,7 @@ class ObservationRequestService:
         self,
         data: schemas.ObservationRequestReadParams,
         auth_user: AuthUser | None,
-    ) -> list[Tuple[schemas.ObservationRequest, int]]:
+    ) -> Tuple[list[schemas.ObservationRequest], int]:
         """
         Retrieve a list of ObservationRequest records
         based on the query parameters.
@@ -178,13 +179,14 @@ class ObservationRequestService:
         is_admin_or_creator_query = or_(is_creator, is_admin)
 
         if data.proposal_code or data.proposal_name or data.proposal_ids:
-            observation_request_filter.append(is_admin_or_creator_query)
+            observation_request_filter.append(
+                or_(is_admin_or_creator_query, ~models.ObservationRequest.anonymize)
+            )
 
         observation_request_query = (
             select(
                 models.ObservationRequest,
                 is_admin_or_creator_query.label("is_admin_or_creator"),
-                func.count().over().label("count"),
             )
             .filter(*observation_request_filter)
             .distinct(
@@ -201,17 +203,32 @@ class ObservationRequestService:
         )
 
         result = await self.db.execute(observation_request_query)
-
         observation_requests = result.tuples().all()
+
+        # total_count query for pagination total result set info given filters
+        count_query = (
+            select(func.count())
+            .select_from(models.ObservationRequest)
+            .where(*observation_request_filter)
+        )
+        total_count = (await self.db.execute(count_query)).scalar_one()
 
         related_request_dictionary: dict[UUID, list[schemas.ObservationRequest]] = {}
 
-        if data.include_history:
+        if data.include_versions:
             parent_ids = list(
                 set(
                     [
                         observation_request.parent_id
-                        for observation_request, _, _ in observation_requests
+                        for observation_request, _ in observation_requests
+                    ]
+                )
+            )
+            observation_ids = list(
+                set(
+                    [
+                        observation_request.id
+                        for observation_request, _ in observation_requests
                     ]
                 )
             )
@@ -220,7 +237,10 @@ class ObservationRequestService:
                 select(
                     models.ObservationRequest,
                     is_admin_or_creator_query.label("is_admin_or_creator"),
-                ).where(models.ObservationRequest.parent_id.in_(parent_ids))
+                ).where(
+                    models.ObservationRequest.parent_id.in_(parent_ids),
+                    ~models.ObservationRequest.id.in_(observation_ids),
+                )
             ).order_by(models.ObservationRequest.created_on.desc())
 
             related_request_result = await self.db.execute(related_request_query)
@@ -236,19 +256,19 @@ class ObservationRequestService:
                     if related_request.parent_id == parent_id
                 ]
 
-        redacted_observation_requests: list[tuple[schemas.ObservationRequest, int]] = []
-        for observation_request, is_admin_or_creator, count in observation_requests:
+        redacted_observation_requests: list[schemas.ObservationRequest] = []
+        for observation_request, is_admin_or_creator in observation_requests:
             redacted_observation_request = schemas.ObservationRequest.from_orm(
                 self._redact(observation_request, is_admin_or_creator)
             )
-            redacted_observation_request.related_requests = (
+            redacted_observation_request.versions = (
                 related_request_dictionary.get(observation_request.parent_id, [])
                 if observation_request.parent_id in related_request_dictionary.keys()
                 else []
             )
-            redacted_observation_requests.append((redacted_observation_request, count))
+            redacted_observation_requests.append((redacted_observation_request))
 
-        return redacted_observation_requests
+        return redacted_observation_requests, total_count
 
     async def create(
         self, data: schemas.ObservationRequestCreate, created_by_id: UUID
@@ -278,6 +298,7 @@ class ObservationRequestService:
                 message="The instrument does not allow observation requests."
             )
 
+        # pull into a private method
         query = select(models.ObservingProposal).where(
             models.ObservingProposal.name == data.proposal_name,
             models.ObservingProposal.code == data.proposal_code,
@@ -415,6 +436,17 @@ class ObservationRequestService:
             The ObservationRequest with the modifications
         """
 
+        instrument_query = select(models.Instrument).where(
+            models.Instrument.id == data.instrument_id
+        )
+        result = await self.db.execute(instrument_query)
+        instrument = result.scalar_one_or_none()
+
+        if instrument is None or not instrument.is_observation_request_enabled:
+            raise InvalidObservationRequestCreateParametersException(
+                message="The instrument does not allow observation requests."
+            )
+
         query = select(models.ObservingProposal).where(
             models.ObservingProposal.name == data.proposal_name,
             models.ObservingProposal.code == data.proposal_code,
@@ -440,6 +472,15 @@ class ObservationRequestService:
 
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
+
+        if data.anonymize != observation_request.anonymize:
+            versions_query = select(models.ObservationRequest).where(
+                models.ObservationRequest.parent_id == observation_request.parent_id
+            )
+            result = await self.db.execute(versions_query)
+            versions = result.scalars().all()
+            for version in versions:
+                version.anonymize = data.anonymize
 
         data.parent_id = observation_request.parent_id or observation_request.id
 
@@ -511,6 +552,10 @@ class ObservationRequestService:
             list of ObservationRequest filter booleans
         """
         data_filter = []
+        data_filter = []
+
+        if data.ids and len(data.ids):
+            data_filter.append(models.ObservationRequest.id.in_(data.ids))
 
         if data.observatory_ids and len(data.observatory_ids):
             data_filter.append(

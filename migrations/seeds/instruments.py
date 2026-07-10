@@ -58,6 +58,7 @@ sandy_instrument_calorimeter = Instrument(
         earth10constraint,
     ],
     observation_strategy=observation_strategy.ObservationStrategy.POINTED,
+    is_observation_request_enabled=True,
 )
 
 sandy_all_sky_instrument = Instrument(
@@ -71,6 +72,7 @@ sandy_all_sky_instrument = Instrument(
     visibility_type=visibility_type.VisibilityType.EPHEMERIS,
     constraints=[earth0constraint],
     observation_strategy=observation_strategy.ObservationStrategy.SURVEY,
+    is_observation_request_enabled=True,
 )
 
 sandy_optical_instrument = Instrument(
@@ -84,6 +86,7 @@ sandy_optical_instrument = Instrument(
     visibility_type=visibility_type.VisibilityType.EPHEMERIS,
     constraints=[sun45constraint, moon20constraint, earth20constraint],
     observation_strategy=observation_strategy.ObservationStrategy.POINTED,
+    is_observation_request_enabled=True,
 )
 
 instruments = [
