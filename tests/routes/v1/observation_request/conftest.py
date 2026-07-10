@@ -34,6 +34,7 @@ from across_server.routes.v1.observation_request.service import (
 
 
 class FakeObservationRequestReadParams(PaginationParams):
+    ids: list[UUID] | None = None
     observatory_names: list[str] | None = None
     observatory_ids: list[UUID] | None = None
     telescope_names: list[str] | None = None
@@ -50,9 +51,9 @@ class FakeObservationRequestReadParams(PaginationParams):
     proposal_name: str | None = None
     proposal_code: str | None = None
     proposal_ids: list[str] | None = None
-    is_too: bool | None = None
+    is_too: bool = True
     parent_id: UUID | None = None
-    include_history: bool = False
+    include_versions: bool = False
 
 
 class FakeObservationHistoryParams(PaginationParams):
@@ -65,6 +66,7 @@ class FakeObservationRequestCreate(BaseModel):
     parent_id: UUID | None = None
     proposal_name: str | None = None
     proposal_code: str | None = None
+    anonymize: bool = False
 
     def to_orm(self) -> MagicMock:
         return MagicMock()
@@ -168,7 +170,7 @@ def mock_observation_request_service(
     mock = AsyncMock(ObservationRequestService)
     _id = uuid4()
     mock.get = AsyncMock(return_value=fake_observation_request_schema)
-    mock.get_many = AsyncMock(return_value=[(fake_observation_request_schema, 1)])
+    mock.get_many = AsyncMock(return_value=([fake_observation_request_schema], 1))
     mock.create = AsyncMock(return_value=_id)
     mock.create_many = AsyncMock(return_value=[_id])
     mock.modify = AsyncMock(return_value=_id)

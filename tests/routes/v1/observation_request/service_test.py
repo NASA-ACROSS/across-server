@@ -57,9 +57,10 @@ class TestObservationRequestService:
         ) -> None:
             """Should return empty list when nothing matches params"""
             mock_result.tuples.return_value.all.return_value = []
+            mock_result.scalar_one.return_value = 0
 
             service = ObservationRequestService(mock_db)
-            values = await service.get_many(
+            values, total_count = await service.get_many(
                 mock_observation_request_read_params, auth_user=None
             )
             assert len(values) == 0
@@ -141,9 +142,15 @@ class TestObservationRequestService:
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             mock_observation_request_create: Any,
+            mock_instrument_data: models.Instrument,
         ) -> None:
             """Should raise ObservationRequestNotFoundException when the ObservationRequest does not exist"""
-            mock_result.scalar_one_or_none.return_value = None
+            mock_instrument_data.is_observation_request_enabled = True
+            mock_result.scalar_one_or_none.side_effect = [
+                mock_instrument_data,
+                None,
+                None,
+            ]
 
             service = ObservationRequestService(mock_db)
             with pytest.raises(ObservationRequestNotFoundException):
@@ -159,9 +166,15 @@ class TestObservationRequestService:
             fake_auth_user: AuthUser,
             mock_observation_request_create: Any,
             fake_observation_request: models.ObservationRequest,
+            mock_instrument_data: models.Instrument,
         ) -> None:
             """Should commit modifications of ObservationRequest to database"""
-            mock_result.scalar_one_or_none.return_value = fake_observation_request
+            mock_instrument_data.is_observation_request_enabled = True
+            mock_result.scalar_one_or_none.side_effect = [
+                mock_instrument_data,
+                None,
+                fake_observation_request,
+            ]
 
             service = ObservationRequestService(mock_db)
 
