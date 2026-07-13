@@ -16,6 +16,7 @@ from sqlalchemy import (
     String,
     Table,
     UniqueConstraint,
+    desc,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -638,6 +639,76 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         back_populates="observation", lazy="noload", cascade="all,delete"
     )
 
+    __table_args__ = (
+        # Covering index: instrument_id is a broad filter.
+        # Include: status and type on index leaves to accelerate common compound filters
+        Index(
+            "ix_across_observation_instrument_created_id",
+            "instrument_id",
+            desc("created_on"),
+            desc("id"),
+            postgresql_include=["status", "type"],
+        ),
+        # Covering index: status is a broad filter.
+        # Include: type and instrument_id on index leaves to accelerate common compound filters
+        Index(
+            "ix_across_observation_status_created_id",
+            "status",
+            desc("created_on"),
+            desc("id"),
+            postgresql_include=["instrument_id", "type"],
+        ),
+        # Plain composite indexes for remaining filter columns.
+        Index(
+            "ix_across_observation_type_created_id",
+            "type",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_date_range_end_created_id",
+            "date_range_end",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_date_range_begin_created_id",
+            "date_range_begin",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_min_wavelength_created_id",
+            "min_wavelength",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_max_wavelength_created_id",
+            "max_wavelength",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_depth_value_created_id",
+            "depth_value",
+            desc("created_on"),
+            desc("id"),
+        ),
+        Index(
+            "ix_across_observation_depth_unit_created_id",
+            "depth_unit",
+            desc("created_on"),
+            desc("id"),
+        ),
+        # Default sort composite — created_on + id for no-filter pagination
+        Index(
+            "ix_across_observation_created_on_id",
+            desc("created_on"),
+            desc("id"),
+        ),
+    )
+
 
 class ObservationFootprint(Base):
     __tablename__ = "observation_footprint"
@@ -837,11 +908,13 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
 
     __table_args__ = (
         Index(
-            "ix_observation_request_object_position",
+            "ix_across_observation_request_object_position",
             "object_position",
             postgresql_using="gist",
         ),
         Index(
-            "ix_observation_request_date_range", "date_range_begin", "date_range_end"
+            "ix_across_observation_request_date_range",
+            "date_range_begin",
+            "date_range_end",
         ),
     )
