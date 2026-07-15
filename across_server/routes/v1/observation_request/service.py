@@ -299,22 +299,25 @@ class ObservationRequestService:
             )
 
         # pull into a private method
-        query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name == data.proposal_name,
-            models.ObservingProposal.code == data.proposal_code,
-        )
-        result = await self.db.execute(query)
-        observing_proposal = result.scalar_one_or_none()
-
-        if observing_proposal is None:
-            new_observing_proposal = models.ObservingProposal(
-                name=data.proposal_name, code=data.proposal_code
+        if data.proposal_name and data.proposal_code:
+            query = select(models.ObservingProposal).where(
+                models.ObservingProposal.name == data.proposal_name,
+                models.ObservingProposal.code == data.proposal_code,
             )
-            self.db.add(new_observing_proposal)
-            await self.db.flush()
-            proposal_id = new_observing_proposal.id
+            result = await self.db.execute(query)
+            observing_proposal = result.scalar_one_or_none()
+
+            if observing_proposal is None:
+                new_observing_proposal = models.ObservingProposal(
+                    name=data.proposal_name, code=data.proposal_code
+                )
+                self.db.add(new_observing_proposal)
+                await self.db.flush()
+                proposal_id = new_observing_proposal.id
+            else:
+                proposal_id = observing_proposal.id
         else:
-            proposal_id = observing_proposal.id
+            proposal_id = None
 
         observation_request = data.to_orm()
         observation_request.proposal_id = proposal_id
@@ -346,6 +349,7 @@ class ObservationRequestService:
         proposal_names = [
             observation_request.proposal_name
             for observation_request in data.observation_requests
+            if observation_request.proposal_name is not None
         ]
 
         observing_proposal_query = select(models.ObservingProposal).where(
@@ -365,7 +369,11 @@ class ObservationRequestService:
                 None,
             )
             observation_request_model = observation_request_create.to_orm()
-            if observing_proposal is None:
+            if (
+                observing_proposal is None
+                and observation_request_create.proposal_name
+                and observation_request_create.proposal_code
+            ):
                 new_observing_proposal = models.ObservingProposal(
                     name=observation_request_create.proposal_name,
                     code=observation_request_create.proposal_code,
@@ -374,7 +382,9 @@ class ObservationRequestService:
                 await self.db.flush()
                 observation_request_model.proposal_id = new_observing_proposal.id
             else:
-                observation_request_model.proposal_id = observing_proposal.id
+                observation_request_model.proposal_id = (
+                    observing_proposal.id if observing_proposal else None
+                )
             observation_requests.append(observation_request_model)
 
         # Get list of instrument IDs from the requests to check if the submitter
