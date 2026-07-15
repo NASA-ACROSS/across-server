@@ -1,4 +1,4 @@
 # Lint dependencies
 
 pre-commit
-ruff >=0.15.20
+ruff >=0.15.21
