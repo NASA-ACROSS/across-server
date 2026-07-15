@@ -1,6 +1,6 @@
 # type dependencies
 
-mypy >=2.1.0
+mypy >=2.3.0
 types-boto3[rds,ssm,sts]
 types-python-jose >=3.4.0
 types-requests >=2.33.0.20260518
