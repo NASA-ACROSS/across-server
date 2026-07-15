@@ -16,6 +16,7 @@ class ObservationRequestBase(BaseSchema):
     science_justification: str
     object_name: str
     object_coordinates: Coordinate
+    object_position_error: float | None = None
     object_brightness: UnitValue
     observation_window: NullableEndDateRange
     exposure_time: float
