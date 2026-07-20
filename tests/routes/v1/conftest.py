@@ -1,8 +1,15 @@
 import datetime
+from collections.abc import Sequence
+from typing import Tuple
 from uuid import uuid4
 
 import pytest
 
+from across_server.core.enums import (
+    BrokerAlertDataSource,
+    BrokerAlertStatus,
+    BrokerEventType,
+)
 from across_server.core.schemas.coordinate import Coordinate
 from across_server.db import models
 
@@ -84,12 +91,26 @@ def fake_user(
 
 
 @pytest.fixture
-def fake_group_role(fake_permissions: list[models.Permission]) -> models.GroupRole:
+def fake_group_role_base() -> models.Group:
+    return models.Group(
+        **{
+            "id": "12aa89d2-1b77-4a34-9504-063236b58782",
+            "name": "test group",
+            "short_name": "test",
+        }
+    )
+
+
+@pytest.fixture
+def fake_group_role(
+    fake_permissions: list[models.Permission], fake_group_role_base: models.Group
+) -> models.GroupRole:
     return models.GroupRole(
         **{
             "id": "12aa89d2-1b77-4a34-9504-063236b58782",
             "name": "Schedule Operations",
             "permissions": fake_permissions,
+            "group": fake_group_role_base,
         }
     )
 
@@ -134,4 +155,74 @@ def fake_observation_data() -> models.Observation:
         type="imaging",
         status="planned",
         created_on=datetime.datetime.now(),
+    )
+
+
+@pytest.fixture()
+def fake_broker_event_data() -> models.BrokerEvent:
+    return models.BrokerEvent(
+        id=uuid4(),
+        event_datetime=datetime.datetime.now(),
+        type=BrokerEventType.TRANSIENT.value,
+        name="SN2026test",
+        broker_alerts=[
+            models.BrokerAlert(
+                id=uuid4(),
+                payload={},
+                checksum="",
+                status=BrokerAlertStatus.INITIAL.value,
+                broker_name="TNS",
+                data_source=BrokerAlertDataSource.TNS.value,
+                external_event_id="SN2026test",
+                broker_event_id=uuid4(),
+                broker_received_on=datetime.datetime.now(),
+            )
+        ],
+        localizations=[
+            models.Localization(
+                id=uuid4(),
+                broker_alert_id=uuid4(),
+                broker_event_id=uuid4(),
+                ra=123.45,
+                dec=-43.21,
+            )
+        ],
+    )
+
+
+@pytest.fixture()
+def fake_broker_event_many(
+    fake_broker_event_data: models.BrokerEvent,
+) -> Sequence[Tuple[models.BrokerEvent, int]]:
+    return [
+        (
+            fake_broker_event_data,
+            1,
+        )
+    ]
+
+
+@pytest.fixture()
+def fake_broker_alert_data() -> models.BrokerAlert:
+    return models.BrokerAlert(
+        id=uuid4(),
+        payload={},
+        checksum="",
+        status=BrokerAlertStatus.INITIAL.value,
+        broker_name="TNS",
+        data_source=BrokerAlertDataSource.TNS.value,
+        external_event_id="SN2026test",
+        broker_event_id=uuid4(),
+        broker_received_on=datetime.datetime.now(),
+    )
+
+
+@pytest.fixture()
+def fake_point_source_localization() -> models.Localization:
+    return models.Localization(
+        id=uuid4(),
+        broker_alert_id=uuid4(),
+        broker_event_id=uuid4(),
+        ra=123.45,
+        dec=-43.21,
     )

@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ....db import models
 from ....db.database import get_session
@@ -32,13 +33,22 @@ class TelescopeService:
     ) -> None:
         self.db = db
 
-    async def get(self, telescope_id: UUID) -> models.Telescope:
+    async def get(
+        self,
+        telescope_id: UUID,
+        include_footprints: bool = True,
+        include_filters: bool = True,
+    ) -> models.Telescope:
         """
         Retrieve the Telescope record with the given id.
         Parameters
         ----------
         telescope_id : UUID
             the Telescope id
+        include_footprints : bool
+            Whether to load instrument footprints
+        include_filters : bool
+            Whether to load instrument filters
         Returns
         -------
         models.Telescope
@@ -47,7 +57,16 @@ class TelescopeService:
         ------
         TelescopeNotFoundException
         """
-        query = select(models.Telescope).where(models.Telescope.id == telescope_id)
+        query_options = self._get_telescope_query_options(
+            include_footprints=include_footprints,
+            include_filters=include_filters,
+        )
+
+        query = (
+            select(models.Telescope)
+            .where(models.Telescope.id == telescope_id)
+            .options(*query_options)
+        )
 
         result = await self.db.execute(query)
         telescope = result.scalar_one_or_none()
@@ -65,7 +84,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
         Returns
         -------
         list[sqlalchemy.filters]
@@ -82,6 +101,21 @@ class TelescopeService:
             data_filter.append(
                 func.lower(models.Telescope.name).contains(str.lower(data.name))
                 | func.lower(models.Telescope.short_name).contains(str.lower(data.name))
+            )
+
+        if data.observatory_id:
+            data_filter.append(models.Telescope.observatory_id == data.observatory_id)
+
+        if data.observatory_name:
+            data_filter.append(
+                models.Telescope.observatory.has(
+                    func.lower(models.Observatory.name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                    | func.lower(models.Observatory.short_name).contains(
+                        str.lower(data.observatory_name)
+                    )
+                )
             )
 
         if data.instrument_id:
@@ -107,6 +141,26 @@ class TelescopeService:
 
         return data_filter
 
+    def _get_telescope_query_options(
+        self,
+        include_footprints: bool = False,
+        include_filters: bool = False,
+    ) -> list:
+        options = []
+        if include_footprints:
+            options.append(
+                selectinload(models.Telescope.instruments).selectinload(
+                    models.Instrument.footprints
+                )
+            )
+        if include_filters:
+            options.append(
+                selectinload(models.Telescope.instruments).selectinload(
+                    models.Instrument.filters
+                )
+            )
+        return options
+
     async def get_many(self, data: schemas.TelescopeRead) -> Sequence[models.Telescope]:
         """
         Retrieve a list of Telescope records
@@ -115,7 +169,7 @@ class TelescopeService:
         Parameters
         ----------
         data : schemas.TelescopeRead
-             class representing Telescope filter parameters
+            class representing Telescope filter parameters
 
         Returns
         -------
@@ -124,7 +178,14 @@ class TelescopeService:
         """
         telescope_filter = self._get_filter(data=data)
 
-        telescope_query = select(models.Telescope).filter(*telescope_filter)
+        query_options = self._get_telescope_query_options(
+            include_footprints=data.include_footprints,
+            include_filters=data.include_filters,
+        )
+
+        telescope_query = (
+            select(models.Telescope).filter(*telescope_filter).options(*query_options)
+        )
 
         result = await self.db.execute(telescope_query)
 

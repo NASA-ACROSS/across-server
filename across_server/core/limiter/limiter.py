@@ -18,12 +18,15 @@ jwt_auth = create_jwt_auth(
 
 
 async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
-    ip: str
+    ip = "unknown"
 
     try:
         ip, _ = await client_ip(scope)
     except EmptyInformation:
-        ip = "unknown"
+        client = scope.get("client")
+
+        if client:
+            ip, _ = tuple(client)
 
     user_id: str  # uuid
     limit_group: str  # "user" or "service_account" if jwt, else "default"
@@ -39,6 +42,7 @@ async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
     ):
         user_id = "anonymous"
         limit_group = "default"
+        # can add a debug log to see what it is otherwise the log will be called every time a normal GET request is called that doesn't have authentication information
 
     user_limit_key = f"{ip} {user_id}"
 

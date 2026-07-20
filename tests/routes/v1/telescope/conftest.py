@@ -1,9 +1,12 @@
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock
+from uuid import UUID
 
 import pytest
 from fastapi import FastAPI
 
+from across_server.auth.enums import PrincipalType
+from across_server.auth.schemas import AuthUser
 from across_server.routes.v1.telescope.service import TelescopeService
 
 
@@ -29,3 +32,13 @@ def dep_override(
         }
     ):
         yield overrider
+
+
+@pytest.fixture()
+def fake_auth_user() -> AuthUser:
+    return AuthUser(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        scopes=[],
+        groups=[],
+        type=PrincipalType.USER,
+    )

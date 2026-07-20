@@ -13,7 +13,7 @@ class Setup:
     async def setup(self, async_client: AsyncClient) -> None:
         user_id = uuid.uuid4()
         self.client = async_client
-        self.endpoint = f"/user/{user_id}/service_account/"
+        self.endpoint = f"/user/{user_id}/service-account/"
         self.post_data = {
             "name": "service account name",
             "description": "test service account description",

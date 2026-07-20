@@ -200,7 +200,18 @@ class ObservationCreate(ObservationBase):
         return self.orm_model(**data)
 
 
-class ObservationRead(PaginationParams):
+class ConeSearchParams(BaseSchema):
+    cone_search_ra: float | None = Field(default=None, ge=0.0, lt=360.0)
+    cone_search_dec: float | None = Field(default=None, ge=-90.0, le=90.0)
+    cone_search_radius: float | None = Field(default=None, gt=0.0)
+
+
+class ContainsPointParams(BaseSchema):
+    ra: float = Field(ge=0.0, lt=360.0)
+    dec: float = Field(ge=-90.0, le=90.0)
+
+
+class ObservationReadBase(PaginationParams):
     external_id: str | None = None
     schedule_ids: list[uuid.UUID] | None = None
     observatory_ids: list[uuid.UUID] | None = None
@@ -219,10 +230,15 @@ class ObservationRead(PaginationParams):
         | tools_enums.FrequencyUnit
         | None
     ) = None
-    cone_search_ra: float | None = Field(default=None, ge=0.0, lt=360.0)
-    cone_search_dec: float | None = Field(default=None, ge=-90.0, le=90.0)
-    cone_search_radius: float | None = Field(default=None, gt=0.0)
     type: ObservationType | None = None
     depth_value: float | None = None
     depth_unit: DepthUnit | None = None
     include_footprints: bool = False
+
+
+class ObservationRead(ConeSearchParams, ObservationReadBase):
+    pass
+
+
+class ContainsPointReadParams(ContainsPointParams, ObservationReadBase):
+    pass

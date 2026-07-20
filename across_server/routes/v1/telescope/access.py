@@ -4,10 +4,14 @@ from uuid import UUID
 from fastapi import Body, Depends
 from fastapi.security import SecurityScopes
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....auth.schemas import AuthUser
 from ....auth.strategies import authenticate_jwt, group_access
-from .service import TelescopeService
+from ....db import models
+from ....db.database import get_session
+from .exceptions import TelescopeNotFoundException
 
 
 class TelescopeAccess(BaseModel):
@@ -27,7 +31,7 @@ class TelescopeAccess(BaseModel):
 async def telescope_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],
-    service: Annotated[TelescopeService, Depends(TelescopeService)],
+    db: Annotated[AsyncSession, Depends(get_session)],
     data: Annotated[TelescopeAccess, Body(title="UUID of the telescope")],
 ) -> AuthUser:
     """
@@ -39,19 +43,28 @@ async def telescope_access(
         list of strings scopes
     auth_user: auth.AuthUser
         an authenticated user retrieved from bearer token
-    service: ScheduleService
-        pydantic schedule service class, allowing db access
+    db: sqlalchemy.ext.asyncio.AsyncSession
+        database session
     data: access_schema
-        pydantic class that grabs the schedule_id from the request body
+        pydantic class that grabs the telescope_id from the request body
 
     Returns
     -------
     auth_user: auth.AuthUser
         an authenticated user retrieved from bearer token
     """
-    telescope = await service.get(telescope_id=data.telescope_id)
+    query = (
+        select(models.Group.id)
+        .select_from(models.Telescope)
+        .join(models.Telescope.observatory)
+        .join(models.Observatory.group)
+        .where(models.Telescope.id == data.telescope_id)
+    )
+    result = await db.execute(query)
+    group_id = result.scalar_one_or_none()
 
-    group_id = telescope.observatory.group.id
+    if group_id is None:
+        raise TelescopeNotFoundException(data.telescope_id)
 
     auth_user = await group_access(
         security_scopes=security_scopes, group_id=group_id, auth_user=auth_user

@@ -42,11 +42,12 @@ class Base(AsyncAttrs, DeclarativeBase):
 ## Mixins ##
 class CreatableMixin:
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), nullable=True
+        PG_UUID(as_uuid=True), nullable=True, index=True
     )
     created_on: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
+        index=True,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -58,6 +59,7 @@ class ModifiableMixin:
     modified_on: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
+        index=True,
         onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
@@ -134,6 +136,17 @@ instrument_constraint = Table(
     Base.metadata,
     Column("instrument_id", ForeignKey("instrument.id"), primary_key=True),
     Column("constraint_id", ForeignKey("constraint.id"), primary_key=True),
+)
+
+localization_localization_contour = Table(
+    "localization_localization_contour",
+    Base.metadata,
+    Column("localization_id", ForeignKey("localization.id"), primary_key=True),
+    Column(
+        "localization_contour_id",
+        ForeignKey("localization_contour.id"),
+        primary_key=True,
+    ),
 )
 
 
@@ -408,7 +421,7 @@ class Observatory(Base, CreatableMixin, ModifiableMixin):
     group: Mapped["Group"] = relationship(
         secondary=group_observatory,
         back_populates="observatories",
-        lazy="selectin",
+        lazy="noload",
     )
     ephemeris_types: Mapped[list["ObservatoryEphemerisType"]] = relationship(
         "ObservatoryEphemerisType", back_populates="observatory", cascade="all,delete"
@@ -431,6 +444,7 @@ class Telescope(Base, CreatableMixin, ModifiableMixin):
     )
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_observation_request_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
 
     observatory: Mapped["Observatory"] = relationship(
         back_populates="telescopes", lazy="selectin"
@@ -458,22 +472,26 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     field_of_view: Mapped[str] = mapped_column(String(50))
     reference_url: Mapped[str] = mapped_column(String, nullable=True)
     is_operational: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_observation_request_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     observation_strategy: Mapped[str] = mapped_column(String(50))
 
     telescope: Mapped["Telescope"] = relationship(
         back_populates="instruments", lazy="selectin"
     )
     footprints: Mapped[list["Footprint"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
 
     observations: Mapped[list["Observation"]] = relationship(
         back_populates="instrument", lazy="noload"
     )
     filters: Mapped[list["Filter"]] = relationship(
-        back_populates="instrument", lazy="selectin", cascade="all,delete"
+        back_populates="instrument", lazy="noload", cascade="all,delete"
     )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
+    observation_requests: Mapped[list["ObservationRequest"]] = relationship(
+        back_populates="instrument", lazy="noload", cascade="all,delete"
+    )
     constraints: Mapped[list["Constraint"]] = relationship(
         secondary=instrument_constraint,
         back_populates="instruments",
@@ -568,7 +586,9 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         PG_UUID(as_uuid=True), ForeignKey(Instrument.id)
     )
     schedule_id: Mapped[uuid.UUID] = mapped_column(
-        PG_UUID(as_uuid=True), ForeignKey(Schedule.id)
+        PG_UUID(as_uuid=True),
+        ForeignKey(Schedule.id),
+        index=True,
     )
     object_name: Mapped[str] = mapped_column(String(100))
     pointing_ra: Mapped[float | None] = mapped_column(REAL())
@@ -612,10 +632,10 @@ class Observation(Base, CreatableMixin, ModifiableMixin):
         back_populates="observations", lazy="noload"
     )
     schedule: Mapped["Schedule"] = relationship(
-        back_populates="observations", lazy="selectin"
+        back_populates="observations", lazy="noload"
     )
     footprints: Mapped[list["ObservationFootprint"]] = relationship(
-        back_populates="observation", lazy="selectin", cascade="all,delete"
+        back_populates="observation", lazy="noload", cascade="all,delete"
     )
 
 
@@ -664,4 +684,164 @@ class Constraint(Base, CreatableMixin, ModifiableMixin):
         secondary=instrument_constraint,
         back_populates="constraints",
         lazy="selectin",
+    )
+
+
+class BrokerEvent(Base, CreatableMixin):
+    __tablename__ = "broker_event"
+
+    event_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    broker_alerts: Mapped[list["BrokerAlert"]] = relationship(
+        back_populates="broker_event", lazy="selectin", cascade="all,delete"
+    )
+    localizations: Mapped[list["Localization"]] = relationship(
+        back_populates="broker_event", lazy="selectin", cascade="all,delete"
+    )
+
+
+class BrokerAlert(Base, CreatableMixin):
+    __tablename__ = "broker_alert"
+
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    checksum: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False)
+    broker_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    data_source: Mapped[str] = mapped_column(String(100), nullable=False)
+    external_event_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    broker_received_on: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    broker_event_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerEvent.id)
+    )
+    broker_event: Mapped["BrokerEvent"] = relationship(
+        back_populates="broker_alerts", lazy="selectin", cascade="all,delete"
+    )
+    localizations: Mapped[list["Localization"]] = relationship(
+        back_populates="broker_alert", lazy="selectin", cascade="all,delete"
+    )
+
+
+class Localization(Base, CreatableMixin):
+    __tablename__ = "localization"
+
+    ra: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    dec: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    probability_enclosed: Mapped[float | None] = mapped_column(REAL(), nullable=True)
+    contours: Mapped[list["LocalizationContour"] | None] = relationship(
+        secondary=localization_localization_contour,
+        back_populates="localization",
+        lazy="selectin",
+        cascade="all,delete",
+    )
+    broker_alert_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerAlert.id)
+    )
+    broker_event_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey(BrokerEvent.id)
+    )
+    broker_event: Mapped["BrokerEvent"] = relationship(
+        back_populates="localizations", lazy="selectin", cascade="all,delete"
+    )
+    broker_alert: Mapped["BrokerAlert"] = relationship(
+        back_populates="localizations", lazy="selectin", cascade="all,delete"
+    )
+
+
+class LocalizationContour(Base):
+    __tablename__ = "localization_contour"
+
+    contour: Mapped[WKBElement] = mapped_column(
+        Geography("POLYGON", srid=4326, spatial_index=True), nullable=False
+    )
+    localization: Mapped["Localization"] = relationship(
+        secondary=localization_localization_contour,
+        back_populates="contours",
+        lazy="selectin",
+    )
+
+    __table_args__ = (
+        Index("idx_localization_contour_contour", "contour", postgresql_using="gist"),
+    )
+
+
+class ObservingProposal(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "observing_proposal"
+
+    name: Mapped[str] = mapped_column(String(), nullable=False)
+    code: Mapped[str] = mapped_column(String(128), nullable=False)
+
+    observation_requests: Mapped[list["ObservationRequest"]] = relationship(
+        back_populates="observing_proposal", lazy="selectin"
+    )
+
+
+class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "observation_request"
+
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True)  # Enum
+    status_reason: Mapped[str | None] = mapped_column(String(), nullable=True)
+    science_justification: Mapped[str] = mapped_column(String(), nullable=False)
+    object_ra: Mapped[float] = mapped_column(Float, nullable=False)
+    object_dec: Mapped[float] = mapped_column(Float, nullable=False)
+    object_position_error: Mapped[float | None] = mapped_column(Float, nullable=True)
+    object_position: Mapped[WKBElement] = mapped_column(
+        Geography("POINT", srid=4326), nullable=False
+    )
+    object_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    object_brightness: Mapped[float] = mapped_column(Float, nullable=False)
+    object_brightness_unit: Mapped[str] = mapped_column(
+        String(25), nullable=False
+    )  # Depth Unit Enum
+    date_range_begin: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, index=True
+    )
+    date_range_end: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, index=True
+    )
+    exposure_time: Mapped[float] = mapped_column(Float, nullable=False)
+    proposal_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey(ObservingProposal.id),
+        nullable=True,
+        index=True,
+    )
+    parent_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("observation_request.id"),
+        nullable=False,
+        index=True,
+    )
+    anonymize: Mapped[bool] = mapped_column(Boolean, default=True)
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), nullable=False, index=True
+    )
+    instrument_configuration: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    is_too: Mapped[bool] = mapped_column(Boolean, default=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=True)
+
+    observing_proposal: Mapped["ObservingProposal"] = relationship(
+        back_populates="observation_requests", lazy="selectin"
+    )
+    instrument: Mapped["Instrument"] = relationship(
+        back_populates="observation_requests", lazy="selectin"
+    )
+    original_request: Mapped["ObservationRequest"] = relationship(
+        back_populates="related_requests",
+        lazy="selectin",
+        remote_side="ObservationRequest.id",
+    )
+    related_requests: Mapped[list["ObservationRequest"]] = relationship(
+        back_populates="original_request", lazy="selectin"
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_observation_request_object_position",
+            "object_position",
+            postgresql_using="gist",
+        ),
+        Index(
+            "ix_observation_request_date_range", "date_range_begin", "date_range_end"
+        ),
     )
