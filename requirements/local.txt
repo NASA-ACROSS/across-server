@@ -333,7 +333,7 @@ typer==0.20.0
     #   fastapi-cloud-cli
 types-awscrt==0.30.0
     # via botocore-stubs
-types-boto3[rds,ssm,sts]==1.43.46
+types-boto3[rds,ssm,sts]==1.43.51
     # via -r requirements/types.in
 types-boto3-rds==1.43.30
     # via types-boto3
