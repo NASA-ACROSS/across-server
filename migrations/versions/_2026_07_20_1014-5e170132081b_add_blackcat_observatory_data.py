@@ -21,7 +21,7 @@ from across.tools.visibility.constraints import (
 from alembic import op
 from sqlalchemy import orm
 
-import migrations.versions.model_snapshots.models_2026_04_21 as snapshot_models
+import migrations.versions.model_snapshots.models_2026_05_26 as snapshot_models
 from across_server.core.enums.ephemeris_type import EphemerisType
 from across_server.core.enums.instrument_fov import InstrumentFOV
 from across_server.core.enums.instrument_type import InstrumentType
@@ -77,6 +77,7 @@ OBSERVATORY: dict = {
             "short_name": "BlackCAT",
             "reference_url": "https://heasarc.gsfc.nasa.gov/docs/blackcat/",
             "is_operational": True,
+            "is_observation_request_enabled": False,
             "instruments": [
                 {
                     "id": uuid.UUID("14b5acc2-02ab-4499-b8d3-0b3b5aca1553"),
