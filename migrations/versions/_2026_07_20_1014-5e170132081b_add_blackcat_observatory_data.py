@@ -1,8 +1,8 @@
 """add blackcat observatory data
 
 Revision ID: 5e170132081b
-Revises: d7412770b0be
-Create Date: 2026-05-14 10:14:26.556763
+Revises: 56f11c079a8b
+Create Date: 2026-07-20 10:14:26.556763
 
 """
 
@@ -13,6 +13,11 @@ from typing import Sequence, Union
 from across.tools import EnergyBandpass, convert_to_wave
 from across.tools import enums as tools_enums
 from across.tools.core.enums import ConstraintType
+from across.tools.visibility.constraints import (
+    EarthLimbConstraint,
+    MoonAngleConstraint,
+    SunAngleConstraint,
+)
 from alembic import op
 from sqlalchemy import orm
 
@@ -28,7 +33,7 @@ from migrations.util.footprint_util import rectangle_footprint
 
 # revision identifiers, used by Alembic.
 revision: str = "5e170132081b"
-down_revision: Union[str, None] = "d7412770b0be"
+down_revision: Union[str, None] = "56f11c079a8b"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -91,17 +96,23 @@ OBSERVATORY: dict = {
                 {
                     "id": uuid.UUID("56969f38-5bec-4cf9-bea4-26e76b1fd6d5"),
                     "constraint_type": ConstraintType.SUN,
-                    "constraint_parameters": {"min_angle": 0},
+                    "constraint_parameters": SunAngleConstraint(
+                        min_angle=120
+                    ).model_dump(),  # Sun illumination constraint
                 },
                 {
                     "id": uuid.UUID("50072037-ae61-491d-9915-30127783f8b4"),
                     "constraint_type": ConstraintType.EARTH,
-                    "constraint_parameters": {"min_angle": 0},
+                    "constraint_parameters": EarthLimbConstraint(
+                        min_angle=20
+                    ).model_dump(),  # Earth limb constraint
                 },
                 {
                     "id": uuid.UUID("0621d393-7db8-45c8-b3f5-d21628e517b2"),
                     "constraint_type": ConstraintType.MOON,
-                    "constraint_parameters": {"min_angle": 0},
+                    "constraint_parameters": MoonAngleConstraint(
+                        min_angle=20
+                    ).model_dump(),  # Moon angle constraint
                 },
             ],
         }
