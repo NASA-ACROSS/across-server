@@ -84,7 +84,7 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi[standard]==0.139.0
+fastapi[standard]==0.139.2
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
