@@ -22,7 +22,7 @@ asgi-correlation-id==5.0.1
     # via -r requirements/base.in
 asgi-ratelimit==0.10.0
     # via -r requirements/base.in
-ast-serialize==0.5.0
+ast-serialize==0.6.0
     # via mypy
 astropy==7.2.0
     # via
@@ -128,7 +128,7 @@ jmespath==1.0.1
     #   botocore
 keyring==25.7.0
     # via astroquery
-librt==0.11.0
+librt==0.13.0
     # via mypy
 logbook==1.9.2
     # via spacetrack
@@ -142,7 +142,7 @@ more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==2.1.0
+mypy==2.3.0
     # via -r requirements/types.in
 mypy-extensions==1.1.0
     # via mypy
