@@ -28,11 +28,11 @@ class Config(BaseConfig):
                 f"{path}/ses-configuration-set"
             )
             self.ACROSS_EMAIL = SSM.get_parameter(f"{path}/across-email")
-            self.RESTRICTED_TO_EMAIL_LIST = (
-                split_list(SSM.get_parameter(f"{path}/restricted-to-email-list"))
+            self.RESTRICTED_TO_EMAIL_LIST = split_list(
+                SSM.get_parameter(f"{path}/restricted-to-email-list")
             )
-            self.ALLOWED_TOP_LEVEL_DOMAINS = (
-                split_list(SSM.get_parameter(f"{path}/allowed-top-level-domains"))
+            self.ALLOWED_TOP_LEVEL_DOMAINS = split_list(
+                SSM.get_parameter(f"{path}/allowed-top-level-domains")
             )
 
 

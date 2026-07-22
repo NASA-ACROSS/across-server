@@ -104,7 +104,9 @@ class EmailService:
             return recipients
 
         allowed_set = {addr.lower() for addr in allowed}
-        return [recipient for recipient in recipients if recipient.lower() in allowed_set]
+        return [
+            recipient for recipient in recipients if recipient.lower() in allowed_set
+        ]
 
     async def send(
         self,

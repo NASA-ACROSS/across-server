@@ -81,7 +81,9 @@ class TestUserPostRoute:
         self, monkeypatch: Any
     ) -> None:
         """Should reject registration when the email TLD is not allowed"""
-        monkeypatch.setattr(email_config, "ALLOWED_TOP_LEVEL_DOMAINS", ["gov", "com", ".rocks"])
+        monkeypatch.setattr(
+            email_config, "ALLOWED_TOP_LEVEL_DOMAINS", ["gov", "com", ".rocks"]
+        )
         # mock_user_json uses an ".space" address, which is not permitted
         res = await self.client.post(self.endpoint, json=self.data)
         assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
