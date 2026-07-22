@@ -9,6 +9,9 @@ class Config(BaseConfig):
     # limit /token route
     LIMIT_TOKEN_REQUESTS_PER_MINUTE: int = 20
 
+    # tighter limit for user sign-up
+    LIMIT_SIGNUP_REQUESTS_PER_MINUTE: int = 2
+
     # limit everything else by access type
     LIMIT_DEFAULT_REQUESTS_PER_MINUTE: int = 30
     LIMIT_USER_REQUESTS_PER_SECOND: int = 3
@@ -28,6 +31,17 @@ rules: dict[str, Sequence[Rule]] = {
         Rule(minute=limiter_config.LIMIT_TOKEN_REQUESTS_PER_MINUTE, group="user"),
         Rule(
             minute=limiter_config.LIMIT_TOKEN_REQUESTS_PER_MINUTE,
+            group="service_account",
+        ),
+    ],
+    # Sign-up (registration) is `POST /v1/user/`; the frontend service account
+    # issues the call, so limit every group. Matches only the `/user` root, not
+    # `/user/{id}` sub-routes. Must precede the `.*` catch-all (first match wins).
+    r".*/user/?$": [
+        Rule(minute=limiter_config.LIMIT_SIGNUP_REQUESTS_PER_MINUTE, group="default"),
+        Rule(minute=limiter_config.LIMIT_SIGNUP_REQUESTS_PER_MINUTE, group="user"),
+        Rule(
+            minute=limiter_config.LIMIT_SIGNUP_REQUESTS_PER_MINUTE,
             group="service_account",
         ),
     ],

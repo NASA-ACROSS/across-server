@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel, BeforeValidator, EmailStr
+from pydantic import BaseModel, BeforeValidator, EmailStr, field_validator
 
 from ....core.schemas import Permission
 from ....core.schemas.base import BaseSchema
@@ -78,7 +78,24 @@ class User(UserBase):
 
 
 class UserCreate(UserBase):
-    pass
+    @field_validator("email")
+    @classmethod
+    def validate_allowed_tld(cls, value: EmailStr) -> EmailStr:
+        # Imported lazily to avoid an import cycle at module load
+        # (util.email <-> auth), and because the check only runs at request time.
+        from ....util.email.config import email_config
+
+        allowed = [
+            tld.lower().lstrip(".") for tld in email_config.ALLOWED_TOP_LEVEL_DOMAINS
+        ]
+        if allowed:
+            top_level_domain = value.rsplit("@", 1)[-1].rsplit(".", 1)[-1].lower()
+            if top_level_domain not in allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="Email domain is not permitted.",
+                )
+        return value
 
 
 class UserUpdate(BaseModel):

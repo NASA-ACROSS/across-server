@@ -1,10 +1,10 @@
 # Core dependencies
 
-aiosmtplib >=5.1.2
+aioboto3 >=15.5.0
 alembic >=1.18.5
 asgi-correlation-id >=5.0.1
 alembic >=1.18.4
-boto3 >=1.43.45
+boto3 >=1.40.46
 fastapi >=0.139.0
 httpx >=0.28.1
 asyncpg >=0.30.0
