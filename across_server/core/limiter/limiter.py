@@ -23,25 +23,12 @@ async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
     try:
         ip, _ = await client_ip(scope)
     except EmptyInformation:
-        logger.debug(
-            "Request Headers",
-            headers=[
-                (name.decode("utf8"), value.decode("utf8"))
-                for name, value in scope.get("headers", [])
-            ],
-        )
-
+        # pull the ip from the x-forwarded-for header if it exists, otherwise it will be unknown
         for name, value in scope.get("headers", []):  # type: bytes, bytes
-            if name == b"X-Forwarded-For":
-                logger.debug(
-                    "X-Forwarded-For header found, using it as client IP",
-                    x_forwarded_for=value.decode("utf8"),
-                )
-
-        client = scope.get("client")
-
-        if client:
-            ip, _ = tuple(client)
+            if name == b"x-forwarded-for":
+                # just in case there is a list of ips, and one is spoofed, we need to take the last one.
+                # this assumes that we only have the ALB forwarding requests and no additional proxies. (cloudflare, etc)
+                ip = value.decode("utf-8").split(",")[-1].strip()
 
     user_id: str  # uuid
     limit_group: str  # "user" or "service_account" if jwt, else "default"
