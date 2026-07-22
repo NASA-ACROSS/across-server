@@ -17,10 +17,7 @@ def create_env_file() -> None:
         "ACROSS_DB_ROLE": "aws-developer-role",
         "ACROSS_DB_DEBUG": False,
         "ACROSS_ADMIN_TOKEN": "admin-token-local",
-        "ACROSS_EMAIL": "nasa.across.dev@gmail.com",
-        "ACROSS_EMAIL_PASSWORD": "acrossemailpassword",
-        "ACROSS_EMAIL_HOST": "smtp.gmail.com",
-        "ACROSS_EMAIL_PORT": 465,
+        "ACROSS_EMAIL": "gsfc-across-no-reply@mail.nasa.gov",
         "ACROSS_DEBUG": True,
         "HIDE_LOCAL_ROUTE": False,
     }

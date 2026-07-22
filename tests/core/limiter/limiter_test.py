@@ -107,6 +107,22 @@ class TestLimiter:
             for rule in rules[route]:
                 assert isinstance(rule, Rule)
 
+        def test_rules_should_have_signup_route(self) -> None:
+            routes = [*rules]
+            route = r".*/user/?$"
+
+            assert route in routes
+            assert rules[route].__len__ != 0
+            for rule in rules[route]:
+                assert isinstance(rule, Rule)
+                assert rule.minute == 2
+
+        def test_signup_route_precedes_catchall(self) -> None:
+            """First-match wins, so the sign-up rule must come before `.*`"""
+            routes = [*rules]
+
+            assert routes.index(r".*/user/?$") < routes.index(r".*")
+
         def test_rules_should_have_catchall_route(self) -> None:
             routes = [*rules]
             route = r".*"

@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -5,6 +6,8 @@ import fastapi
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+
+from across_server.util.email.config import email_config
 
 
 class TestUserPatchRoute:
@@ -72,6 +75,16 @@ class TestUserPostRoute:
         """Should return a 201 when a new user is successfully created"""
         res = await self.client.post(self.endpoint, json=self.data)
         assert res.status_code == fastapi.status.HTTP_201_CREATED
+
+    @pytest.mark.asyncio
+    async def test_should_reject_registration_with_unpermitted_tld(
+        self, monkeypatch: Any
+    ) -> None:
+        """Should reject registration when the email TLD is not allowed"""
+        monkeypatch.setattr(email_config, "ALLOWED_TOP_LEVEL_DOMAINS", ["gov", "com", ".rocks"])
+        # mock_user_json uses an ".space" address, which is not permitted
+        res = await self.client.post(self.endpoint, json=self.data)
+        assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
     @pytest.mark.asyncio
     async def test_should_catch_error_when_email_service_throws_exception(

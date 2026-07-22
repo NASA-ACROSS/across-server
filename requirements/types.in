@@ -1,6 +1,7 @@
 # type dependencies
 
 mypy >=2.1.0
+types-aioboto3[ses]
 types-boto3[rds,ssm,sts]
 types-python-jose >=3.4.0
 types-requests >=2.33.0.20260518
