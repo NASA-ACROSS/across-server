@@ -23,6 +23,14 @@ async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
     try:
         ip, _ = await client_ip(scope)
     except EmptyInformation:
+        logger.debug(
+            "Request Headers",
+            headers=[
+                (name.decode("utf8"), value.decode("utf8"))
+                for name, value in scope.get("headers", [])
+            ],
+        )
+
         for name, value in scope.get("headers", []):  # type: bytes, bytes
             if name == b"X-Forwarded-For":
                 logger.debug(
