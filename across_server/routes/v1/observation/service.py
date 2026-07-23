@@ -383,6 +383,15 @@ class ObservationService:
         )
         total_count = (await self.db.execute(count_query)).scalar_one()
 
+        # Raise when page requests out of bounds of requested data length
+        if data.page and data.page_limit:
+            request_total_data_start = data.page * data.page_limit
+
+            if total_count < request_total_data_start:
+                raise InvalidObservationReadParametersException(
+                    "Page and limit selections out of range"
+                )
+
         # query to find the ids quickly with indexes and leaf info
         nested_id_subq = (
             select(models.Observation.id)
