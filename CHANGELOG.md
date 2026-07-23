@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1](https://github.com/NASA-ACROSS/across-server/compare/v1.8.0...v1.8.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **db:** add/rename missing indexes in models.py ([#675](https://github.com/NASA-ACROSS/across-server/issues/675)) ([4d4cdcb](https://github.com/NASA-ACROSS/across-server/commit/4d4cdcb5ccd3e56d0c88636114fbf1f0b10eb6b9))
+* **rate-limit:** use x-forwarded-for for non-frontend requests ([#688](https://github.com/NASA-ACROSS/across-server/issues/688)) ([dd60150](https://github.com/NASA-ACROSS/across-server/commit/dd6015078693dbce3f493cad954ba7406bdd36b0))
+
 ## [1.8.0](https://github.com/NASA-ACROSS/across-server/compare/v1.7.2...v1.8.0) (2026-07-09)
 
 
