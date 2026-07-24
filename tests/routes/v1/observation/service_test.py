@@ -45,6 +45,20 @@ class TestObservationService:
 
     class TestGetMany:
         @pytest.mark.asyncio
+        async def test_should_return_empty_list_when_page_and_page_limit_greater_than_total(
+            self, mock_db: AsyncMock, mock_result: AsyncMock
+        ) -> None:
+            """Should return empty list when pagination parameters are out of range > total"""
+            mock_result.scalar_one.return_value = 1
+
+            service = ObservationService(mock_db)
+            params = ObservationRead()
+            params.page = 10
+            params.page_limit = 100
+            observations, total_count = await service.get_many(params)
+            assert len(observations) == 0
+
+        @pytest.mark.asyncio
         async def test_should_return_empty_list_when_nothing_matches_params(
             self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:

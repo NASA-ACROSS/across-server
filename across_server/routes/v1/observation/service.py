@@ -383,7 +383,7 @@ class ObservationService:
         )
         total_count = (await self.db.execute(count_query)).scalar_one()
 
-        # Raise when page requests out of bounds of requested data length
+        # early return no data when page requests out of bounds of requested data length
         if data.page and data.page_limit:
             request_total_data_start = (data.page - 1) * data.page_limit
 
