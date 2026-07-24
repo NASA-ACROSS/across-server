@@ -1,9 +1,10 @@
 import structlog
 from fastapi import status
 from jwt import DecodeError, ExpiredSignatureError, InvalidSignatureError
-from ratelimit.auths.ip import client_ip
 from ratelimit.auths.jwt import EmptyInformation, create_jwt_auth
 from ratelimit.types import ASGIApp, Receive, Scope, Send
+
+from across_server.core.middleware.parse_client_ip import parse_client_ip
 
 from ...auth.config import auth_config
 
@@ -18,17 +19,7 @@ jwt_auth = create_jwt_auth(
 
 
 async def authenticate_limit(scope: Scope) -> tuple[LimitKey, LimitGroup]:
-    ip = "unknown"
-
-    try:
-        ip, _ = await client_ip(scope)
-    except EmptyInformation:
-        # pull the ip from the x-forwarded-for header if it exists, otherwise it will be unknown
-        for name, value in scope.get("headers", []):  # type: bytes, bytes
-            if name == b"x-forwarded-for":
-                # just in case there is a list of ips, and one is spoofed, we need to take the last one.
-                # this assumes that we only have the ALB forwarding requests and no additional proxies. (cloudflare, etc)
-                ip = value.decode("utf-8").split(",")[-1].strip()
+    ip = await parse_client_ip(scope=scope)
 
     user_id: str  # uuid
     limit_group: str  # "user" or "service_account" if jwt, else "default"
