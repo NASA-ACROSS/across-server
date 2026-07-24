@@ -385,7 +385,7 @@ class ObservationService:
 
         # Raise when page requests out of bounds of requested data length
         if data.page and data.page_limit:
-            request_total_data_start = data.page * data.page_limit
+            request_total_data_start = (data.page - 1) * data.page_limit
 
             if total_count < request_total_data_start:
                 return [], total_count

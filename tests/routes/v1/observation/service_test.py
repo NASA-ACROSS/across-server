@@ -49,7 +49,7 @@ class TestObservationService:
             self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
             """Should return empty list when nothing matches params"""
-            mock_result.scalars.return_value.all.return_value = []
+            mock_result.scalar_one.return_value = 0
 
             service = ObservationService(mock_db)
             params = ObservationRead()
