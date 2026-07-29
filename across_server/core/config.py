@@ -45,7 +45,16 @@ class Config(BaseConfig):
     APP_SUMMARY: str = "Astrophysics Cross-Observatory Science Support (ACROSS)"
     APP_DESCRIPTION: str = "Server providing tools and utilities for various NASA missions to aid in coordination of large observation efforts."
 
+    # Pagination parameters
+    # As of writing, we have ~1.1 million rows in observations table
+    # Currently as set allows retrieval up to 2 million results (DEFAULT_PAGE_MAX * DEFAULT_PAGE_LIMIT_MAX)
+    DEFAULT_PAGE: int = 1
+    DEFAULT_PAGE_MIN: int = 1
+    DEFAULT_PAGE_MAX: int = 2000
+
     DEFAULT_PAGE_LIMIT: int = 100
+    DEFAULT_PAGE_LIMIT_MIN: int = 100
+    DEFAULT_PAGE_LIMIT_MAX: int = 1000
 
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
