@@ -70,9 +70,6 @@ class ObservationRequestCreate(ObservationRequestBase):
         data["object_brightness"] = depth_data["object_brightness_value"]
         data["object_brightness_unit"] = depth_data["object_brightness_unit"]
 
-        data["status"] = ObservationRequestStatus.PENDING.value
-        data["status_reason"] = "Awaiting review"
-
         return ObservationRequestModel(**data)
 
 

@@ -9,6 +9,8 @@ from shapely.geometry import Point
 from sqlalchemy import ColumnElement, False_, false, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from across_server.core.enums.observation_request_status import ObservationRequestStatus
+
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from ....db import models
@@ -320,6 +322,8 @@ class ObservationRequestService:
             proposal_id = None
 
         observation_request = data.to_orm()
+        observation_request.status = ObservationRequestStatus.PENDING.value
+        observation_request.status_reason = "Awaiting review"
         observation_request.proposal_id = proposal_id
         observation_request.created_by_id = created_by_id
 
@@ -415,6 +419,8 @@ class ObservationRequestService:
         observation_request_records = []
         for observation_request in observation_requests:
             observation_request.created_by_id = created_by_id
+            observation_request.status = ObservationRequestStatus.PENDING.value
+            observation_request.status_reason = "Awaiting review"
             observation_request_records.append(observation_request)
 
         self.db.add_all(observation_request_records)
@@ -495,6 +501,8 @@ class ObservationRequestService:
         data.parent_id = observation_request.parent_id or observation_request.id
 
         new_observation_request = data.to_orm()
+        new_observation_request.status = ObservationRequestStatus.PENDING.value
+        new_observation_request.status_reason = "Awaiting review"
         new_observation_request.created_by_id = observation_request.created_by_id
         new_observation_request.modified_by_id = modified_by_id
         new_observation_request.proposal_id = proposal_id
