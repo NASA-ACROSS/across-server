@@ -62,7 +62,6 @@ class ObservationRequestCreate(ObservationRequestBase):
         del data["observation_window"]
         data.update(date_range_data)
 
-        # object brightness TODO: change `object_brightness` to `object_brightness_value`
         depth_data = self.object_brightness.model_dump_with_prefix(
             prefix="object_brightness", data=self.object_brightness.model_dump()
         )
