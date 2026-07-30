@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Path, status
-from sqlalchemy import or_, select
+from sqlalchemy import ColumnElement, False_, false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....auth.schemas import AuthUser
@@ -10,7 +10,43 @@ from ....auth.strategies import authenticate_jwt
 from ....db import models
 from ....db.database import get_session
 from .exceptions import ObservationRequestNotFoundException
-from .service import _is_admin, _is_creator
+
+
+def is_creator_clause(
+    auth_user: AuthUser | None,
+) -> ColumnElement[bool] | False_:
+    if auth_user is None:
+        return false()
+
+    return models.ObservationRequest.created_by_id == auth_user.id
+
+
+def is_admin_clause(
+    auth_user: AuthUser | None,
+) -> ColumnElement[bool] | False_:
+    if auth_user is None:
+        return false()
+
+    admin_group_ids = [
+        group.id
+        for group in auth_user.groups
+        if getattr(group, "is_admin", False)
+        or any(
+            scope in getattr(group, "scopes", [])
+            for scope in [
+                "group:observation-request:write",
+                "group:observation-request:read",
+            ]
+        )
+    ]
+
+    return models.ObservationRequest.instrument.has(
+        models.Instrument.telescope.has(
+            models.Telescope.observatory.has(
+                models.Observatory.group.has(models.Group.id.in_(admin_group_ids))
+            )
+        )
+    )
 
 
 async def observation_request_access(
@@ -25,27 +61,29 @@ async def observation_request_access(
     2. the user is a group admin for the instrument's observatory group
     """
 
-    is_creator_query = _is_creator(auth_user)
-    is_admin_query = _is_admin(auth_user)
+    is_viewer = ~(is_admin_clause(auth_user) | is_creator_clause(auth_user))
 
     observation_request_exists_query = select(
         models.ObservationRequest,
-        or_(is_creator_query, is_admin_query).label("is_creator_or_admin"),
+        is_viewer.label("is_viewer"),
     ).where(models.ObservationRequest.id == observation_request_id)
+
     result = await db.execute(observation_request_exists_query)
-    observation_request_exists, is_creator_or_admin = result.one_or_none() or (
+
+    observation_request_exists, is_viewer = result.one_or_none() or (
         None,
-        False,
+        True,
     )
+
     if observation_request_exists is None:
         raise ObservationRequestNotFoundException(
             observation_request_id=observation_request_id
         )
 
-    if is_creator_or_admin:
-        return auth_user
+    if is_viewer:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    return auth_user
 
 
 async def observation_request_status_access(
@@ -58,18 +96,20 @@ async def observation_request_status_access(
     Will utilize the service layer to query for the observation request and verify if:
     1. the user is a group admin for the instrument's observatory group
     """
-    is_admin_query = _is_admin(auth_user)
 
-    observation_request_exists_query = select(
+    observation_request_query = select(
         models.ObservationRequest,
-        is_admin_query.label("is_admin"),
+        is_admin_clause(auth_user).label("is_admin"),
     ).where(models.ObservationRequest.id == observation_request_id)
-    result = await db.execute(observation_request_exists_query)
-    observation_request_exists, is_admin = result.one_or_none() or (
+
+    result = await db.execute(observation_request_query)
+
+    observation_request, is_admin = result.one_or_none() or (
         None,
         False,
     )
-    if observation_request_exists is None:
+
+    if observation_request is None:
         raise ObservationRequestNotFoundException(
             observation_request_id=observation_request_id
         )

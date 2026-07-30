@@ -1,3 +1,5 @@
+import uuid
+from collections import defaultdict
 from datetime import datetime
 from typing import Annotated, Tuple
 from uuid import UUID
@@ -6,8 +8,14 @@ from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import ColumnElement, False_, false, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from across_server.core.schemas.pagination import PaginationParams
+from across_server.routes.v1.observation_request.access import (
+    is_admin_clause,
+    is_creator_clause,
+)
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -19,42 +27,6 @@ from .exceptions import (
     InvalidObservationRequestReadParametersException,
     ObservationRequestNotFoundException,
 )
-
-
-def _is_creator(
-    auth_user: AuthUser | None,
-) -> ColumnElement[bool] | False_:
-    if auth_user is None:
-        return false()
-    return models.ObservationRequest.created_by_id == auth_user.id
-
-
-def _is_admin(
-    auth_user: AuthUser | None,
-) -> ColumnElement[bool] | False_:
-    if auth_user is None:
-        return false()
-
-    admin_group_ids = [
-        group.id
-        for group in auth_user.groups
-        if getattr(group, "is_admin", False)
-        or any(
-            scope in getattr(group, "scopes", [])
-            for scope in [
-                "group:observation-request:write",
-                "group:observation-request:read",
-            ]
-        )
-    ]
-
-    return models.ObservationRequest.instrument.has(
-        models.Instrument.telescope.has(
-            models.Telescope.observatory.has(
-                models.Observatory.group.has(models.Group.id.in_(admin_group_ids))
-            )
-        )
-    )
 
 
 class ObservationRequestService:
@@ -108,53 +80,45 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
-        is_creator = _is_creator(auth_user)
-        is_admin = _is_admin(auth_user)
-
-        query = select(
+        is_viewer = ~(is_creator_clause(auth_user) | is_admin_clause(auth_user))
+        obs_req_select = select(
             models.ObservationRequest,
-            or_(is_creator, is_admin).label("is_admin_or_creator"),
-        ).where(models.ObservationRequest.id == observation_request_id)
+            is_viewer.label("is_viewer"),
+        )
+
+        query = obs_req_select.where(
+            models.ObservationRequest.id == observation_request_id
+        )
 
         result = await self.db.execute(query)
-        (observation_request, is_admin_or_creator) = result.one_or_none() or (
+        observation_request, is_viewer = result.one_or_none() or (
             None,
-            False,
+            True,
         )
 
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
-        versions_query = (
-            select(
-                models.ObservationRequest,
-                or_(is_creator, is_admin).label("is_admin_or_creator"),
-            )
-            .where(models.ObservationRequest.parent_id == observation_request.parent_id)
-            .order_by(models.ObservationRequest.created_on.desc())
-        )
+        versions_query = obs_req_select.where(
+            models.ObservationRequest.parent_id == observation_request.parent_id
+        ).order_by(models.ObservationRequest.created_on.desc())
 
         versions_result = await self.db.execute(versions_query)
 
         versions = versions_result.tuples().all()
 
-        observation_request = schemas.ObservationRequest.from_orm(
-            self._redact(observation_request, is_admin_or_creator)
-        )
+        observation_request = self._redact_to_schema(observation_request, is_viewer)
 
         observation_request.versions = [
-            schemas.ObservationRequest.from_orm(
-                self._redact(version, is_admin_or_creator)
-            )
-            for version, is_admin_or_creator in versions
-            if version.id != observation_request.id
+            self._redact_to_schema(version, is_viewer)
+            for version, is_viewer in versions
         ]
 
         return observation_request
 
     async def get_many(
         self,
-        data: schemas.ObservationRequestReadParams,
+        params: schemas.ObservationRequestReadParams,
         auth_user: AuthUser | None,
     ) -> Tuple[list[schemas.ObservationRequest], int]:
         """
@@ -173,37 +137,64 @@ class ObservationRequestService:
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
-        observation_request_filter = self._get_filter(data=data)
-        is_creator = _is_creator(auth_user)
-        is_admin = _is_admin(auth_user)
-        is_admin_or_creator_query = or_(is_creator, is_admin)
+        is_admin = is_admin_clause(auth_user)
+        is_creator = is_creator_clause(auth_user)
+        is_viewer = ~(is_admin | is_creator)
 
-        if data.proposal_code or data.proposal_name or data.proposal_ids:
+        pagination_fields = set(PaginationParams.model_fields) | set(
+            PaginationParams.model_computed_fields
+        )
+        req_params = list(
+            params.model_dump(exclude_none=True, exclude=pagination_fields).keys()
+        )
+        only_proposal_fields = set(req_params).issubset(
+            {"proposal_name", "proposal_code", "proposal_ids"}
+        )
+
+        observation_request_filter = self._get_filter(data=params)
+
+        # if the user is a viewer and they only provide proposal information,
+        # they should only see non-anonymized observation requests.
+        # otherwise with other params, the observation requests will be anonymized
+        if only_proposal_fields:
             observation_request_filter.append(
-                or_(is_admin_or_creator_query, ~models.ObservationRequest.anonymize)
+                or_(is_viewer, ~models.ObservationRequest.anonymize)
             )
 
+        # get the top level observation requests (parent_id is None) based on the filters
         observation_request_query = (
             select(
                 models.ObservationRequest,
-                is_admin_or_creator_query.label("is_admin_or_creator"),
+                is_viewer.label("is_viewer"),
             )
-            .filter(*observation_request_filter)
-            .distinct(
-                models.ObservationRequest.parent_id,
-                models.ObservationRequest.created_on,
+            .filter(
+                *observation_request_filter,
+                models.ObservationRequest.parent_id.is_(None),
             )
             .order_by(
                 models.ObservationRequest.created_on.desc(),
-                models.ObservationRequest.parent_id,
             )
             .group_by(models.ObservationRequest.id)
-            .limit(data.page_limit)
-            .offset(data.offset)
+            .limit(params.page_limit)
+            .offset(params.offset)
         )
 
         result = await self.db.execute(observation_request_query)
-        observation_requests = result.tuples().all()
+        observation_requests = list(result.tuples().all())
+
+        # get the proposals for all requests
+        proposal_query = select(models.ObservingProposal).where(
+            models.ObservingProposal.id.in_(
+                [
+                    observation_request.proposal_id
+                    for observation_request, _ in observation_requests
+                    if observation_request.proposal_id is not None
+                ]
+            )
+        )
+        proposal_result = await self.db.execute(proposal_query)
+        proposals = list(proposal_result.scalars().all())
+        proposal_dict = {proposal.id: proposal for proposal in proposals}
 
         # total_count query for pagination total result set info given filters
         count_query = (
@@ -213,60 +204,27 @@ class ObservationRequestService:
         )
         total_count = (await self.db.execute(count_query)).scalar_one()
 
-        related_request_dictionary: dict[UUID, list[schemas.ObservationRequest]] = {}
-
-        if data.include_versions:
-            parent_ids = list(
-                set(
-                    [
-                        observation_request.parent_id
-                        for observation_request, _ in observation_requests
-                    ]
-                )
-            )
-            observation_ids = list(
-                set(
-                    [
-                        observation_request.id
-                        for observation_request, _ in observation_requests
-                    ]
-                )
-            )
-
-            related_request_query = (
-                select(
-                    models.ObservationRequest,
-                    is_admin_or_creator_query.label("is_admin_or_creator"),
-                ).where(
-                    models.ObservationRequest.parent_id.in_(parent_ids),
-                    ~models.ObservationRequest.id.in_(observation_ids),
-                )
-            ).order_by(models.ObservationRequest.created_on.desc())
-
-            related_request_result = await self.db.execute(related_request_query)
-
-            related_requests = related_request_result.tuples().all()
-
-            for parent_id in parent_ids:
-                related_request_dictionary[parent_id] = [
-                    schemas.ObservationRequest.from_orm(
-                        self._redact(related_request, is_admin_or_creator)
-                    )
-                    for related_request, is_admin_or_creator in related_requests
-                    if related_request.parent_id == parent_id
-                ]
-
         redacted_observation_requests: list[schemas.ObservationRequest] = []
-        for observation_request, is_admin_or_creator in observation_requests:
-            redacted_observation_request = schemas.ObservationRequest.from_orm(
-                self._redact(observation_request, is_admin_or_creator)
+
+        for observation_request, is_viewer in observation_requests:
+            if observation_request.proposal_id is not None:
+                proposal = proposal_dict.get(observation_request.proposal_id)
+
+            redacted_observation_request = self._redact_to_schema(
+                observation_request, is_viewer, proposal
             )
-            redacted_observation_request.versions = (
-                related_request_dictionary.get(observation_request.parent_id, [])
-                if observation_request.parent_id in related_request_dictionary.keys()
-                else []
-            )
-            redacted_observation_requests.append((redacted_observation_request))
+            redacted_observation_requests.append(redacted_observation_request)
+
+        if params.include_versions:
+            versions = await self._get_versions(observation_requests, proposal_dict)
+
+            # build lookup of grouped versions (already sorted in descending order by created_on)
+            grouped_versions = defaultdict(list)
+            for version in versions:
+                grouped_versions[version.parent_id].append(version)
+
+            for req in redacted_observation_requests:
+                req.versions = grouped_versions.get(req.id, [])
 
         return redacted_observation_requests, total_count
 
@@ -287,44 +245,12 @@ class ObservationRequestService:
         UUID:
             The id of the newly created ObservationRequest
         """
-        instrument_query = select(models.Instrument).where(
-            models.Instrument.id == data.instrument_id
-        )
-        result = await self.db.execute(instrument_query)
-        instrument = result.scalar_one_or_none()
+        await self._can_submit([data.instrument_id])
+        await self._assign_proposal_ids([data])
 
-        if instrument is None or not instrument.is_observation_request_enabled:
-            raise InvalidObservationRequestCreateParametersException(
-                message="The instrument does not allow observation requests."
-            )
-
-        # pull into a private method
-        if data.proposal_name and data.proposal_code:
-            query = select(models.ObservingProposal).where(
-                models.ObservingProposal.name == data.proposal_name,
-                models.ObservingProposal.code == data.proposal_code,
-            )
-            result = await self.db.execute(query)
-            observing_proposal = result.scalar_one_or_none()
-
-            if observing_proposal is None:
-                new_observing_proposal = models.ObservingProposal(
-                    name=data.proposal_name, code=data.proposal_code
-                )
-                self.db.add(new_observing_proposal)
-                await self.db.flush()
-                proposal_id = new_observing_proposal.id
-            else:
-                proposal_id = observing_proposal.id
-        else:
-            proposal_id = None
-
-        observation_request = data.to_orm()
-        observation_request.proposal_id = proposal_id
-        observation_request.created_by_id = created_by_id
+        observation_request = data.to_orm(created_by_id)
 
         self.db.add(observation_request)
-        await self.db.commit()
 
         return observation_request.id
 
@@ -345,85 +271,33 @@ class ObservationRequestService:
         list[UUID]:
             The ids of the newly created ObservationRequests
         """
+        # Error if an instrument does not allow observation requests
+        instrument_ids = [req.instrument_id for req in data.observation_requests]
+        await self._can_submit(instrument_ids)
 
-        proposal_names = [
-            observation_request.proposal_name
-            for observation_request in data.observation_requests
-            if observation_request.proposal_name is not None
-        ]
-
-        observing_proposal_query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name.in_(proposal_names)
-        )
-        observing_proposal_result = await self.db.execute(observing_proposal_query)
-        observing_proposals = observing_proposal_result.scalars().all()
-
-        observation_requests: list[models.ObservationRequest] = []
-        for observation_request_create in data.observation_requests:
-            observing_proposal = next(
-                (
-                    proposal
-                    for proposal in observing_proposals
-                    if proposal.name == observation_request_create.proposal_name
-                ),
-                None,
+        creates_with_proposals = list(
+            filter(
+                lambda observation_request: observation_request.proposal is not None,
+                data.observation_requests,
             )
-            observation_request_model = observation_request_create.to_orm()
-            if (
-                observing_proposal is None
-                and observation_request_create.proposal_name
-                and observation_request_create.proposal_code
-            ):
-                new_observing_proposal = models.ObservingProposal(
-                    name=observation_request_create.proposal_name,
-                    code=observation_request_create.proposal_code,
-                )
-                self.db.add(new_observing_proposal)
-                await self.db.flush()
-                observation_request_model.proposal_id = new_observing_proposal.id
-            else:
-                observation_request_model.proposal_id = (
-                    observing_proposal.id if observing_proposal else None
-                )
-            observation_requests.append(observation_request_model)
-
-        # Get list of instrument IDs from the requests to check if the submitter
-        # can submit ToOs to all of them
-        instrument_ids = [
-            observation_request.instrument_id
-            for observation_request in observation_requests
-        ]
-
-        # Get the instruments from the database
-        instrument_query = select(models.Instrument).where(
-            models.Instrument.id.in_(instrument_ids)
         )
-        result = await self.db.execute(instrument_query)
-        instruments = result.scalars().all()
 
-        # if one instrument does not have observation requests enabled but the others do,
-        # we deny all create requests in the call
-        can_submit_to_instruments = all(
-            instrument.is_observation_request_enabled for instrument in instruments
-        )
-        if not can_submit_to_instruments:
-            raise InvalidObservationRequestCreateParametersException(
-                message="One or more instruments do not allow observation requests."
-            )
+        await self._assign_proposal_ids(creates_with_proposals)
 
         # Bulk add the ObservationRequest records to the database
-        observation_request_records = []
-        for observation_request in observation_requests:
-            observation_request.created_by_id = created_by_id
-            observation_request_records.append(observation_request)
+        observation_request_records: list[models.ObservationRequest] = []
+        for observation_request_create in data.observation_requests:
+            record = observation_request_create.to_orm(created_by_id)
+            observation_request_records.append(record)
 
         self.db.add_all(observation_request_records)
         await self.db.commit()
-        return [observation_request.id for observation_request in observation_requests]
+
+        return [req.id for req in observation_request_records]
 
     async def modify(
         self,
-        observation_request_id: UUID,
+        parent_id: UUID,
         data: schemas.ObservationRequestUpdate,
         modified_by_id: UUID,
     ) -> UUID:
@@ -434,8 +308,8 @@ class ObservationRequestService:
 
         Parameters
         ----------
-        observation_request_id: UUID
-            the ID of the ObservationRequest to modify
+        parent_id: UUID
+            the ID of the parent ObservationRequest to modify
         data : schemas.ObservationRequestUpdate
             the changes to the ObservationRequest
         modified_by_id: UUID
@@ -446,64 +320,31 @@ class ObservationRequestService:
             The ObservationRequest with the modifications
         """
 
-        instrument_query = select(models.Instrument).where(
-            models.Instrument.id == data.instrument_id
+        parent_query = select(models.ObservationRequest).where(
+            models.ObservationRequest.id == parent_id
         )
-        instrument_result = await self.db.execute(instrument_query)
-        instrument = instrument_result.scalar_one_or_none()
+        parent_result = await self.db.execute(parent_query)
+        parent_observation_request = parent_result.scalar_one_or_none()
 
-        if instrument is None or not instrument.is_observation_request_enabled:
-            raise InvalidObservationRequestCreateParametersException(
-                message="The instrument does not allow observation requests."
-            )
+        if parent_observation_request is None:
+            raise ObservationRequestNotFoundException(parent_id)
 
-        proposal_query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name == data.proposal_name,
-            models.ObservingProposal.code == data.proposal_code,
-        )
-        proposal_result = await self.db.execute(proposal_query)
-        observing_proposal = proposal_result.scalar_one_or_none()
+        # set the parent_id of the new ObservationRequest to the parent ObservationRequest's id
+        data.parent_id = parent_observation_request.id
 
-        if observing_proposal is None:
-            new_observing_proposal = models.ObservingProposal(
-                name=data.proposal_name, code=data.proposal_code
-            )
-            self.db.add(new_observing_proposal)
-            await self.db.flush()
-            proposal_id = new_observing_proposal.id
-        else:
-            proposal_id = observing_proposal.id
+        update_id = await self.create(data, created_by_id=modified_by_id)
 
-        observation_request_query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == observation_request_id
-        )
-        observation_request_result = await self.db.execute(observation_request_query)
-        observation_request = observation_request_result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
-
-        if data.anonymize != observation_request.anonymize:
+        # Anonymize all existing versions if the newest version is changing anonymization
+        if data.anonymize != parent_observation_request.anonymize:
             versions_query = select(models.ObservationRequest).where(
-                models.ObservationRequest.parent_id == observation_request.parent_id
+                models.ObservationRequest.parent_id == parent_id
             )
             result = await self.db.execute(versions_query)
             versions = result.scalars().all()
             for version in versions:
                 version.anonymize = data.anonymize
 
-        data.parent_id = observation_request.parent_id or observation_request.id
-
-        new_observation_request = data.to_orm()
-        new_observation_request.created_by_id = observation_request.created_by_id
-        new_observation_request.modified_by_id = modified_by_id
-        new_observation_request.proposal_id = proposal_id
-        new_observation_request.modified_on = datetime.now()
-        new_observation_request.created_on = datetime.now()
-
-        self.db.add(new_observation_request)
-        await self.db.commit()
-        return new_observation_request.id
+        return update_id
 
     async def update_status(
         self,
@@ -746,28 +587,190 @@ class ObservationRequestService:
 
         return data_filter
 
-    def _redact(
-        self, observation_request: models.ObservationRequest, is_admin_or_creator: bool
-    ) -> models.ObservationRequest:
+    def _redact_to_schema(
+        self,
+        observation_request: models.ObservationRequest,
+        is_viewer: bool,
+        proposal: models.ObservingProposal | None = None,
+    ) -> schemas.ObservationRequest:
         """
-        Redact the ObservationRequest if the auth user is not the submitter or an admin.
+        Redact the ObservationRequest if the auth user is a viewer.
 
         Parameters
         ----------
         observation_request : models.ObservationRequest
             the ObservationRequest to redact
-        auth_user: AuthUser
-            the user making the request
+        is_viewer: bool
+            whether the user making the request is a viewer
         Returns
         -------
-        models.ObservationRequest
+        schemas.ObservationRequest
             The redacted ObservationRequest
         """
 
-        if observation_request.anonymize and not is_admin_or_creator:
-            # Redact the fields that should not be visible to non-admins and non-submitters
-            observation_request.created_by_id = None  # type: ignore
-            observation_request.proposal_id = None  # type: ignore
-            observation_request.observing_proposal = None  # type: ignore
+        schema = schemas.ObservationRequest.from_orm(observation_request)
 
-        return observation_request
+        if schema.anonymize and is_viewer:
+            # Redact the fields that should not be visible to viewers when anonymized
+            schema.created_by_id = None
+        elif proposal is not None:
+            # add the proposal to the schema if it exists and the user is not a viewer
+            schema.proposal = schemas.ObservingProposal.model_validate(proposal)
+
+        return schema
+
+    async def _get_versions(
+        self,
+        observation_requests: list[tuple[models.ObservationRequest, bool]],
+        proposal_dict: dict[UUID, models.ObservingProposal],
+    ) -> list[schemas.ObservationRequest]:
+        """
+        Get the versions of the ObservationRequests.
+
+        Parameters
+        ----------
+        observation_requests : list[tuple[models.ObservationRequest, bool]]
+            The ObservationRequests to get the versions for, along with a boolean indicating if the user is a viewer.
+
+        Returns
+        -------
+        list[schemas.ObservationRequest]
+            The versions of the ObservationRequests.
+        """
+
+        parent_ids = list(
+            set(
+                [
+                    (observation_request.id, is_viewer)
+                    for observation_request, is_viewer in observation_requests
+                ]
+            )
+        )
+
+        related_request_query = (
+            select(models.ObservationRequest).where(
+                models.ObservationRequest.parent_id.in_(parent_ids),
+            )
+        ).order_by(
+            models.ObservationRequest.created_on.desc(),
+        )
+
+        versions_result = await self.db.execute(related_request_query)
+        versions = versions_result.scalars().all()
+
+        # match the is_viewer value for each version based on the parent_id of the version
+        is_viewer_dict = {parent_id: is_viewer for parent_id, is_viewer in parent_ids}
+
+        redacted_versions: list[schemas.ObservationRequest] = []
+
+        for version in versions:
+            if version.proposal_id is not None:
+                proposal = proposal_dict.get(version.proposal_id)
+
+            redacted_version = self._redact_to_schema(
+                version, is_viewer_dict[version.parent_id], proposal
+            )
+            redacted_versions.append(redacted_version)
+
+        return redacted_versions
+
+    async def _can_submit(self, instrument_ids) -> None:
+        """
+        Check against instruments to ensure that they all have observation requests enabled.
+
+        Parameters
+        ----------
+        instrument_ids : list[int]
+            The IDs of the instruments to check
+
+        Raises
+        ------
+        InvalidObservationRequestCreateParametersException
+            If any instrument does not have observation requests enabled.
+        """
+        instrument_query = select(models.Instrument).where(
+            models.Instrument.id.in_(instrument_ids)
+        )
+        result = await self.db.execute(instrument_query)
+        instruments = result.scalars().all()
+
+        # if one instrument does not have observation requests enabled but the others do,
+        # we deny all create requests in the call
+        can_submit_to_instruments = all(
+            instrument.is_observation_request_enabled for instrument in instruments
+        )
+
+        if not can_submit_to_instruments:
+            raise InvalidObservationRequestCreateParametersException(
+                message="One or more instruments do not allow observation requests."
+            )
+
+    async def _assign_proposal_ids(
+        self, requests: list[schemas.ObservationRequestCreate]
+    ) -> None:
+        """
+        Handle the proposals for the observation requests.
+        Finds any existing proposals or creates new proposals
+        and associates them with the observation requests.
+
+        This method modifies the observation requests in place, assigning the appropriate proposal IDs.
+
+        Parameters
+        ----------
+        requests : list[schemas.ObservationRequestCreate]
+            The observation requests to handle proposals for.
+        Returns
+        -------
+        None
+        """
+        proposals = [
+            observation_request.proposal
+            for observation_request in requests  # type: ignore (we've already filtered)
+        ]
+        existing_proposal_records = await self._get_proposals(proposals)  # type: ignore (we've already filtered)
+        existing_proposals_dict = {
+            proposal.name: proposal for proposal in existing_proposal_records
+        }
+
+        new_proposals: list[schemas.ObservingProposalCreate] = []
+
+        for request_create in requests:
+            # will fail if proposal is None, but we already filtered for that above
+            assert request_create.proposal is not None
+
+            proposal_name = request_create.proposal.name
+            existing_proposal = existing_proposals_dict.get(proposal_name)
+
+            # set existing proposal to new obs_req, or create a new proposal
+            if existing_proposal:
+                request_create.proposal.id = existing_proposal.id
+            else:
+                new_proposal = schemas.ObservingProposalCreate(
+                    **request_create.proposal.model_dump(),
+                    id=uuid.uuid4(),
+                )
+                new_proposals.append(new_proposal)
+                request_create.proposal.id = new_proposal.id
+
+        await self._create_proposals(new_proposals)
+
+    async def _get_proposals(self, proposals: list[schemas.ObservingProposal]):
+        query = select(models.ObservingProposal).where(
+            models.ObservingProposal.name.in_([proposal.name for proposal in proposals])
+        )
+        result = await self.db.execute(query)
+        proposal_records = result.scalars().all()
+
+        return list(proposal_records)
+
+    async def _create_proposals(
+        self, proposals: list[schemas.ObservingProposalCreate]
+    ) -> list[models.ObservingProposal]:
+        proposal_records = [
+            models.ObservingProposal(**proposal.model_dump(exclude_unset=True))
+            for proposal in proposals
+        ]
+
+        self.db.add_all(proposal_records)
+        await self.db.flush()
+        return proposal_records

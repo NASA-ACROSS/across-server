@@ -12,6 +12,19 @@ from ....core.schemas import Coordinate, NullableEndDateRange, UnitValue
 from ....db.models import ObservationRequest as ObservationRequestModel
 
 
+class ObservingProposalBase(BaseSchema):
+    name: str
+    code: str
+
+
+class ObservingProposalCreate(ObservingProposalBase):
+    id: uuid.UUID | None = None
+
+
+class ObservingProposal(ObservingProposalBase):
+    id: uuid.UUID
+
+
 class ObservationRequestBase(BaseSchema):
     science_justification: str
     object_name: str
@@ -25,27 +38,18 @@ class ObservationRequestBase(BaseSchema):
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
     parent_id: uuid.UUID | None = None
+    proposal: ObservingProposal | None = None
 
 
 class ObservationRequestCreate(ObservationRequestBase):
-    proposal_name: str | None = None
-    proposal_code: str | None = None
+    proposal: ObservingProposalCreate | None = None
 
-    def to_orm(self) -> ObservationRequestModel:
+    def to_orm(self, created_by_id: uuid.UUID) -> ObservationRequestModel:
         """
         Converts Pydantic schema to ORM representation
         Translates field names and flattens nested Pydantic schemas
         """
         data = self.model_dump(exclude_unset=True)
-
-        del data["proposal_name"]
-        del data["proposal_code"]
-
-        data["id"] = uuid.uuid4()
-
-        # default parent_id to id
-        if "parent_id" not in data.keys() or data["parent_id"] is None:
-            data["parent_id"] = data["id"]
 
         # coordinates
         object_coords = self.object_coordinates.model_dump_with_prefix(
@@ -71,8 +75,11 @@ class ObservationRequestCreate(ObservationRequestBase):
         data["object_brightness"] = depth_data["object_brightness_value"]
         data["object_brightness_unit"] = depth_data["object_brightness_unit"]
 
+        # set default values for status, status_reason
         data["status"] = ObservationRequestStatus.PENDING.value
         data["status_reason"] = "Awaiting review"
+
+        data["created_by_id"] = created_by_id
 
         return ObservationRequestModel(**data)
 
@@ -90,8 +97,7 @@ class ObservationRequest(ObservationRequestBase):
     id: uuid.UUID
     status: ObservationRequestStatus
     status_reason: str | None
-    proposal_name: str | None = None
-    proposal_code: str | None = None
+    proposal: ObservingProposal | None = None
     versions: list[ObservationRequest] | None = None
     created_on: datetime.datetime
     created_by_id: uuid.UUID | None
@@ -100,7 +106,8 @@ class ObservationRequest(ObservationRequestBase):
 
     @classmethod
     def from_orm(
-        cls, observation_request: ObservationRequestModel
+        cls,
+        observation_request: ObservationRequestModel,
     ) -> ObservationRequest:
         return ObservationRequest(
             id=observation_request.id,
@@ -125,12 +132,7 @@ class ObservationRequest(ObservationRequestBase):
             instrument_configuration=observation_request.instrument_configuration,
             status=ObservationRequestStatus(observation_request.status),
             status_reason=observation_request.status_reason,
-            proposal_name=observation_request.observing_proposal.name
-            if observation_request.observing_proposal
-            else None,
-            proposal_code=observation_request.observing_proposal.code
-            if observation_request.observing_proposal
-            else None,
+            proposal=None,
             created_on=observation_request.created_on,
             created_by_id=observation_request.created_by_id,
             modified_on=observation_request.modified_on,

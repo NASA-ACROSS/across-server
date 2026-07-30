@@ -2,9 +2,11 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Security, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server.core.enums.observation_request_status import ObservationRequestStatus
 from across_server.core.schemas.list_response import ListResponse
+from across_server.db.database import get_session
 
 from ....auth.schemas import AuthUser
 from ....auth.strategies import auth_user_or_none, authenticate_jwt
@@ -65,17 +67,17 @@ async def get(
 async def get_many(
     auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
-    data: Annotated[schemas.ObservationRequestReadParams, Query()],
+    params: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
     observation_requests, total_count = await service.get_many(
-        data=data, auth_user=auth_user
+        params=params, auth_user=auth_user
     )
 
     return Page[schemas.ObservationRequest].model_validate(
         {
             "total_number": total_count,
-            "page": data.page,
-            "page_limit": data.page_limit,
+            "page": params.page,
+            "page_limit": params.page_limit,
             "items": [
                 observation_request for observation_request in observation_requests
             ],
@@ -124,9 +126,12 @@ async def create_many(
 async def create(
     auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
+    db: Annotated[AsyncSession, Depends(get_session)],
     data: schemas.ObservationRequestCreate,
 ) -> uuid.UUID:
-    return await service.create(data=data, created_by_id=auth_user.id)
+    id = await service.create(data=data, created_by_id=auth_user.id)
+    await db.commit()
+    return id
 
 
 @router.put(
@@ -151,13 +156,17 @@ async def update(
     ],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_session)],
     data: schemas.ObservationRequestUpdate,
 ) -> uuid.UUID:
-    return await service.modify(
-        observation_request_id=observation_request_id,
+    id = await service.modify(
+        parent_id=observation_request_id,
         data=data,
         modified_by_id=auth_user.id,
     )
+    await db.commit()
+
+    return id
 
 
 @router.put(
