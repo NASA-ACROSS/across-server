@@ -28,7 +28,7 @@ class TestEmailService:
         self.recipient = "mockemail@example.com"
         self.subject = "Mock"
 
-        self.ses_client = AsyncMock()
+        self.mock_ses_client = AsyncMock()
         self.ses_client.send_raw_email = AsyncMock()
 
         def fake_session(*args: Any, **kwargs: Any) -> Any:
