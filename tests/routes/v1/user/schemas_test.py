@@ -56,7 +56,7 @@ class TestUserBaseSchema:
 class TestUserCreateSchema:
     """Test suite for the UserCreate top-level-domain gate"""
 
-    def test_allows_any_tld_when_list_empty(
+    def test_should_allow_any_tld_when_list_empty(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """An empty ALLOWED_TOP_LEVEL_DOMAINS means no restriction"""
