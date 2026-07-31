@@ -90,12 +90,13 @@ class UserCreate(UserBase):
         ]
         if allowed:
             top_level_domain = value.rsplit("@", 1)[-1].rsplit(".", 1)[-1].lower()
-            if top_level_domain not in allowed:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                    detail="Email domain is not permitted.",
-                )
-        return value
+            if top_level_domain in allowed:
+                return value
+           
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        detail="Email domain is not permitted.",
+    )
 
 
 class UserUpdate(BaseModel):
