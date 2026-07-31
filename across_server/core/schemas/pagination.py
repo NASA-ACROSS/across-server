@@ -7,11 +7,16 @@ from ...core.schemas.base import BaseSchema
 
 
 class PaginationParams(BaseSchema):
-    page: int | None = Field(default=1, ge=1, description="Page number")
+    page: int | None = Field(
+        default=config.DEFAULT_PAGE,
+        ge=config.DEFAULT_PAGE_MIN,
+        le=config.DEFAULT_PAGE_MAX,
+        description="Page number",
+    )
     page_limit: int | None = Field(
         default=config.DEFAULT_PAGE_LIMIT,
-        ge=1,
-        le=10000,
+        ge=config.DEFAULT_PAGE_LIMIT_MIN,
+        le=config.DEFAULT_PAGE_LIMIT_MAX,
         description="Records per page",
     )
 

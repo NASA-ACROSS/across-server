@@ -35,7 +35,7 @@ asgi-correlation-id==5.0.1
     # via -r requirements/base.in
 asgi-ratelimit==0.10.0
     # via -r requirements/base.in
-ast-serialize==0.5.0
+ast-serialize==0.6.0
     # via mypy
 astropy==7.2.0
     # via
@@ -175,7 +175,7 @@ jmespath==1.0.1
     #   botocore
 keyring==25.7.0
     # via astroquery
-librt==0.11.0
+librt==0.13.0
     # via mypy
 logbook==1.9.2
     # via spacetrack
@@ -387,7 +387,7 @@ types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20260408
     # via -r requirements/types.in
-types-requests==2.33.0.20260518
+types-requests==2.33.0.20260712
     # via -r requirements/types.in
 types-s3transfer==0.16.0
     # via
