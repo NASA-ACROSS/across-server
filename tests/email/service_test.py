@@ -7,6 +7,7 @@ import pytest_asyncio
 import structlog
 
 from across_server.util.email import config as email_config_module
+import across_server.util.email.service as email_service_module
 from across_server.util.email.service import EmailService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
@@ -43,7 +44,7 @@ class TestEmailService:
             return session
 
         monkeypatch.setattr(aioboto3, "Session", fake_session)
-        monkeypatch.setattr(email_config_module, "logger", self.mock_logger)
+        monkeypatch.setattr(email_service_module, "logger", self.mock_logger)
 
     @pytest.mark.asyncio
     async def test_should_not_send_email_when_local(
