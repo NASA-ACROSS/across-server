@@ -1,6 +1,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
+from fastapi import HTTPException, status
 
 import aioboto3
 import structlog
@@ -120,6 +121,13 @@ class EmailService:
                 subject=subject,
             )
             return
+
+        if not subject:
+            logger.error(
+                "No subject provided; cannot send email",
+                recipients=recipients,
+            )
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
         em = MIMEMultipart("alternative")
         em["From"] = self.sender_email_addr
