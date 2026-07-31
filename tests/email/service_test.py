@@ -75,7 +75,22 @@ class TestEmailService:
         """Should throw an error when sending an email without subject"""
         service = EmailService()
         with pytest.raises(Exception):
-            await service.send(recipients=[self.recipient])  # type: ignore
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("recipients", [[], None])
+    async def test_should_throw_error_when_missing_recipients(self, recipients) -> None:
+        """Should log a warning when sending an email without recipients"""
+        service = EmailService()
+        await service.send(recipients=recipients, subject=self.subject)
+        self.mock_logger.warning.assert_called_once()
+        
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("subject", ["", None])
+    async def test_should_throw_error_when_missing_subject(self, subject) -> None:
+        """Should throw an error when sending an email without subject"""
+        service = EmailService()
+        with pytest.raises(Exception):
+            await service.send(recipients=[self.recipient], subject=subject)
 
     @pytest.mark.asyncio
     async def test_should_skip_send_when_recipient_not_in_restricted_list(
