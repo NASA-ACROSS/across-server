@@ -9,7 +9,7 @@ from across_server.util.email import config as email_config_module
 from across_server.util.email.service import EmailService
 
 
-class _FakeClientContext:
+class MockClientContext:
     """Mimics the async context manager returned by aioboto3 `session.client(...)`."""
 
     def __init__(self, client: AsyncMock) -> None:
