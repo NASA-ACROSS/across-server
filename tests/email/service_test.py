@@ -9,7 +9,7 @@ from across_server.util.email import config as email_config_module
 from across_server.util.email.service import EmailService
 
 
-class _FakeClientContext:
+class MockClientContext:
     """Mimics the async context manager returned by aioboto3 `session.client(...)`."""
 
     def __init__(self, client: AsyncMock) -> None:
@@ -28,7 +28,7 @@ class TestEmailService:
         self.recipient = "mockemail@example.com"
         self.subject = "Mock"
 
-        self.ses_client = AsyncMock()
+        self.mock_ses_client = AsyncMock()
         self.ses_client.send_raw_email = AsyncMock()
 
         def fake_session(*args: Any, **kwargs: Any) -> Any:
@@ -75,7 +75,22 @@ class TestEmailService:
         """Should throw an error when sending an email without subject"""
         service = EmailService()
         with pytest.raises(Exception):
-            await service.send(recipients=[self.recipient])  # type: ignore
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("recipients", [[], None])
+    async def test_should_throw_error_when_missing_recipients(self, recipients) -> None:
+        """Should log a warning when sending an email without recipients"""
+        service = EmailService()
+        await service.send(recipients=recipients, subject=self.subject)
+        self.mock_logger.warning.assert_called_once()
+        
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("subject", ["", None])
+    async def test_should_throw_error_when_missing_subject(self, subject) -> None:
+        """Should throw an error when sending an email without subject"""
+        service = EmailService()
+        with pytest.raises(Exception):
+            await service.send(recipients=[self.recipient], subject=subject)
 
     @pytest.mark.asyncio
     async def test_should_skip_send_when_recipient_not_in_restricted_list(

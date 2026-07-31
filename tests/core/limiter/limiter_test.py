@@ -107,7 +107,7 @@ class TestLimiter:
             for rule in rules[route]:
                 assert isinstance(rule, Rule)
 
-        def test_rules_should_have_signup_route(self) -> None:
+        def test_should_limit_register_route(self) -> None:
             routes = [*rules]
             route = r"^v\d+\/user\/?$"
 

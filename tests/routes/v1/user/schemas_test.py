@@ -56,7 +56,7 @@ class TestUserBaseSchema:
 class TestUserCreateSchema:
     """Test suite for the UserCreate top-level-domain gate"""
 
-    def test_allows_any_tld_when_list_empty(
+    def test_should_allow_any_tld_when_list_empty(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """An empty ALLOWED_TOP_LEVEL_DOMAINS means no restriction"""
@@ -64,7 +64,7 @@ class TestUserCreateSchema:
         user = UserCreate(**mock_user_json)
         assert user.email == mock_user_json["email"]
 
-    def test_allows_email_with_permitted_tld(
+    def test_should_allow_email_with_permitted_tld(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """Should validate when the email's TLD is on the allow-list"""
@@ -73,7 +73,7 @@ class TestUserCreateSchema:
         user = UserCreate(**mock_user_json)
         assert user.email == "sandy@bikinibottom.gov"
 
-    def test_rejects_email_with_unpermitted_tld(
+    def test_should_reject_email_with_unpermitted_tld(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """Should raise a 422 when the email's TLD is not on the allow-list"""
