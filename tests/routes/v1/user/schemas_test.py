@@ -64,7 +64,7 @@ class TestUserCreateSchema:
         user = UserCreate(**mock_user_json)
         assert user.email == mock_user_json["email"]
 
-    def test_allows_email_with_permitted_tld(
+    def test_should_allow_email_with_permitted_tld(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """Should validate when the email's TLD is on the allow-list"""
