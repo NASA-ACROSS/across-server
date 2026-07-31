@@ -80,7 +80,7 @@ class User(UserBase):
 class UserCreate(UserBase):
     @field_validator("email")
     @classmethod
-    def validate_allowed_tld(cls, value: EmailStr) -> EmailStr:
+    def validate_tld(cls, value: EmailStr) -> EmailStr:
         # Imported lazily to avoid an import cycle at module load
         # (util.email <-> auth), and because the check only runs at request time.
         from ....util.email.config import email_config
