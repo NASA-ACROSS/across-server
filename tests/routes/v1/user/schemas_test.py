@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from across_server.routes.v1.user.schemas import UserBase, UserCreate
 from across_server.util.email.config import email_config
@@ -79,8 +79,9 @@ class TestUserCreateSchema:
         """Should raise a 422 when the email's TLD is not on the allow-list"""
         monkeypatch.setattr(email_config, "ALLOWED_TOP_LEVEL_DOMAINS", ["gov"])
         mock_user_json["email"] = "sandy@treedome.space"
-        with pytest.raises(HTTPException):
+        with pytest.raises(HTTPException) as exception:
             UserCreate(**mock_user_json)
+            assert exception.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_tld_check_is_case_insensitive(
         self, mock_user_json: dict[str, Any], monkeypatch: Any

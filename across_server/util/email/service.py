@@ -4,7 +4,6 @@ from email.utils import make_msgid
 
 import aioboto3
 import structlog
-from aiobotocore.config import AioConfig
 
 from across_server.auth import schemas
 from across_server.db import models
@@ -14,15 +13,13 @@ from .config import email_config
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
-_SES_RETRY_CONFIG = AioConfig(retries={"max_attempts": 4, "mode": "adaptive"})
-
 
 class EmailService:
     def __init__(self) -> None:
         self.sender_email_addr = email_config.ACROSS_EMAIL
         self.region = email_config.AWS_SES_REGION
-        self.source_arn = email_config.SES_SOURCE_ARN
-        self.configuration_set = email_config.SES_CONFIGURATION_SET
+        self.source_arn = email_config.AWS_SES_SOURCE_ARN
+        self.configuration_set = email_config.AWS_SES_CONFIGURATION_SET
 
     def construct_login_email(self, user: schemas.AuthUser, login_link: str) -> str:
         return f"""\
@@ -146,7 +143,7 @@ class EmailService:
             async with session.client(
                 "ses",
                 region_name=self.region,
-                config=_SES_RETRY_CONFIG,
+                config=email_config._SES_RETRY_CONFIG,
             ) as ses:
                 await ses.send_raw_email(
                     Source=self.sender_email_addr,

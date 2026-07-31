@@ -37,7 +37,7 @@ rules: dict[str, Sequence[Rule]] = {
     # Sign-up (registration) is `POST /v1/user/`; the frontend service account
     # issues the call, so limit every group. Matches only the `/user` root, not
     # `/user/{id}` sub-routes. Must precede the `.*` catch-all (first match wins).
-    r".*/user/?$": [
+    r"^v\d+\/user\/?$": [
         Rule(minute=limiter_config.LIMIT_SIGNUP_REQUESTS_PER_MINUTE, group="default"),
         Rule(minute=limiter_config.LIMIT_SIGNUP_REQUESTS_PER_MINUTE, group="user"),
         Rule(

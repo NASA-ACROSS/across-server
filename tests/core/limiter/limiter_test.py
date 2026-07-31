@@ -103,16 +103,16 @@ class TestLimiter:
             route = r".*/token"
 
             assert route in routes
-            assert rules[route].__len__ != 0
+            assert rules[route].__len__() != 0
             for rule in rules[route]:
                 assert isinstance(rule, Rule)
 
         def test_rules_should_have_signup_route(self) -> None:
             routes = [*rules]
-            route = r".*/user/?$"
+            route = r"^v\d+\/user\/?$"
 
             assert route in routes
-            assert rules[route].__len__ != 0
+            assert rules[route].__len__() != 0
             for rule in rules[route]:
                 assert isinstance(rule, Rule)
                 assert rule.minute == 2
@@ -121,13 +121,13 @@ class TestLimiter:
             """First-match wins, so the sign-up rule must come before `.*`"""
             routes = [*rules]
 
-            assert routes.index(r".*/user/?$") < routes.index(r".*")
+            assert routes.index(r"^v\d+\/user\/?$") < routes.index(r".*")
 
         def test_rules_should_have_catchall_route(self) -> None:
             routes = [*rules]
             route = r".*"
 
             assert route in routes
-            assert rules[route].__len__ != 0
+            assert rules[route].__len__() != 0
             for rule in rules[r".*"]:
                 assert isinstance(rule, Rule)
