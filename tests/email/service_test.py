@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aioboto3
 import pytest
@@ -29,14 +29,19 @@ class TestEmailService:
         self.subject = "Mock"
 
         self.mock_ses_client = AsyncMock()
-        self.ses_client.send_raw_email = AsyncMock()
+        self.mock_ses_client.send_raw_email = AsyncMock()
+
+        self.mock_logger = AsyncMock()
+        self.mock_logger.warning = MagicMock()
+        self.mock_logger.error = MagicMock()
 
         def fake_session(*args: Any, **kwargs: Any) -> Any:
             session = AsyncMock()
-            session.client = lambda *a, **k: _FakeClientContext(self.ses_client)
+            session.client = lambda *a, **k: MockClientContext(self.mock_ses_client)
             return session
 
         monkeypatch.setattr(aioboto3, "Session", fake_session)
+        monkeypatch.setattr(email_config_module, "logger", self.mock_logger)
 
     @pytest.mark.asyncio
     async def test_should_not_send_email_when_local(
@@ -46,35 +51,23 @@ class TestEmailService:
         mock_config_runtime_env_is_local.return_value = True
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
-        self.ses_client.send_raw_email.assert_not_called()
+        self.mock_ses_client.send_raw_email.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_should_send_email_when_required_data_is_provided(self) -> None:
         """Should send via SES when the required data is provided"""
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
-        self.ses_client.send_raw_email.assert_called_once()
+        self.mock_ses_client.send_raw_email.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_should_throw_error_when_email_fails(self) -> None:
         """Should propagate an error when the SES send fails"""
-        self.ses_client.send_raw_email.side_effect = Exception("Mock Exception")
+        self.mock_ses_client.send_raw_email.side_effect = Exception("Mock Exception")
         service = EmailService()
         with pytest.raises(Exception):
             await service.send(recipients=[self.recipient], subject=self.subject)
 
-    @pytest.mark.asyncio
-    async def test_should_throw_error_when_missing_recipients(self) -> None:
-        """Should throw an error when sending an email without recipients"""
-        service = EmailService()
-        with pytest.raises(Exception):
-            await service.send(subject=self.subject)  # type: ignore
-
-    @pytest.mark.asyncio
-    async def test_should_throw_error_when_missing_subject(self) -> None:
-        """Should throw an error when sending an email without subject"""
-        service = EmailService()
-        with pytest.raises(Exception):
     @pytest.mark.asyncio
     @pytest.mark.parametrize("recipients", [[], None])
     async def test_should_throw_error_when_missing_recipients(self, recipients) -> None:
@@ -83,7 +76,6 @@ class TestEmailService:
         await service.send(recipients=recipients, subject=self.subject)
         self.mock_logger.warning.assert_called_once()
         
-
     @pytest.mark.asyncio
     @pytest.mark.parametrize("subject", ["", None])
     async def test_should_throw_error_when_missing_subject(self, subject) -> None:
@@ -104,7 +96,7 @@ class TestEmailService:
         )
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
-        self.ses_client.send_raw_email.assert_not_called()
+        self.mock_ses_client.send_raw_email.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_should_send_when_recipient_in_restricted_list(
@@ -118,4 +110,4 @@ class TestEmailService:
         )
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
-        self.ses_client.send_raw_email.assert_called_once()
+        self.mock_ses_client.send_raw_email.assert_called_once()
