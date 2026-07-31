@@ -224,6 +224,9 @@ migrate: ## Run the migrations for the database
 		echo "Migrations are only allowed in runtime ENVs: local, dev."; \
 	fi
 
+db_check:
+	@$(VENV_BIN) alembic check
+
 # Group: Running
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30

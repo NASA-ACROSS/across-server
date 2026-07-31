@@ -4,6 +4,8 @@ import structlog
 from fastapi import Request, Response, status
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from across_server.core.middleware.parse_client_ip import parse_client_ip
+
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
@@ -36,7 +38,7 @@ class LoggingMiddleware:
             process_time = time.perf_counter_ns() - start_time
             status_code = response.status_code
             route = request.url.path
-            client_host = request.client.host if request.client else ""
+            client_host = await parse_client_ip(scope=scope)
             client_port = request.client.port if request.client else ""
             http_method = request.method
             http_version = scope.get("http_version", "")

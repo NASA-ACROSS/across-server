@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.9.0](https://github.com/NASA-ACROSS/across-server/compare/v1.8.1...v1.9.0) (2026-07-24)
+
+
+### Features
+
+* limit pagination params and return empty array when out of bounds ([#690](https://github.com/NASA-ACROSS/across-server/issues/690)) ([d2922bb](https://github.com/NASA-ACROSS/across-server/commit/d2922bb14551ee05095b58871c0f46ffb11566ab))
+
+
+### Bug Fixes
+
+* log correct ip ([#693](https://github.com/NASA-ACROSS/across-server/issues/693)) ([412c57d](https://github.com/NASA-ACROSS/across-server/commit/412c57d82ec380a3295a4db84c7608841a541028))
+
+## [1.8.1](https://github.com/NASA-ACROSS/across-server/compare/v1.8.0...v1.8.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **db:** add/rename missing indexes in models.py ([#675](https://github.com/NASA-ACROSS/across-server/issues/675)) ([4d4cdcb](https://github.com/NASA-ACROSS/across-server/commit/4d4cdcb5ccd3e56d0c88636114fbf1f0b10eb6b9))
+* **rate-limit:** use x-forwarded-for for non-frontend requests ([#688](https://github.com/NASA-ACROSS/across-server/issues/688)) ([dd60150](https://github.com/NASA-ACROSS/across-server/commit/dd6015078693dbce3f493cad954ba7406bdd36b0))
+
 ## [1.8.0](https://github.com/NASA-ACROSS/across-server/compare/v1.7.2...v1.8.0) (2026-07-09)
 
 
