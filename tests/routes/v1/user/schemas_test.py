@@ -73,7 +73,7 @@ class TestUserCreateSchema:
         user = UserCreate(**mock_user_json)
         assert user.email == "sandy@bikinibottom.gov"
 
-    def test_rejects_email_with_unpermitted_tld(
+    def test_should_reject_email_with_unpermitted_tld(
         self, mock_user_json: dict[str, Any], monkeypatch: Any
     ) -> None:
         """Should raise a 422 when the email's TLD is not on the allow-list"""
