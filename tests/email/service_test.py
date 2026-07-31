@@ -4,10 +4,12 @@ from unittest.mock import AsyncMock, MagicMock
 import aioboto3
 import pytest
 import pytest_asyncio
+import structlog
 
 from across_server.util.email import config as email_config_module
 from across_server.util.email.service import EmailService
 
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 class MockClientContext:
     """Mimics the async context manager returned by aioboto3 `session.client(...)`."""
