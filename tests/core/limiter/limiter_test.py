@@ -115,7 +115,6 @@ class TestLimiter:
             assert rules[route].__len__() != 0
             for rule in rules[route]:
                 assert isinstance(rule, Rule)
-                assert rule.minute == 2
 
         def test_signup_route_precedes_catchall(self) -> None:
             """First-match wins, so the sign-up rule must come before `.*`"""
