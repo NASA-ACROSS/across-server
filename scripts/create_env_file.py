@@ -25,7 +25,7 @@ def create_env_file() -> None:
         "SES_CONFIGURATION_SET": "across-no-reply-config-set",
         "ACROSS_EMAIL": "gsfc-across-no-reply@mail.nasa.gov",
         "RESTRICTED_TO_EMAIL_LIST": "",
-        "ALLOWED_TOP_LEVEL_DOMAINS": ""
+        "ALLOWED_TOP_LEVEL_DOMAINS": "",
     }
 
     if not os.path.exists(env_file_path):

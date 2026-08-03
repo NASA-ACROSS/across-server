@@ -12,6 +12,7 @@ from across_server.util.email.service import EmailService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
+
 class MockClientContext:
     """Mimics the async context manager returned by aioboto3 `session.client(...)`."""
 
@@ -78,7 +79,7 @@ class TestEmailService:
         service = EmailService()
         await service.send(recipients=recipients, subject=self.subject)
         self.mock_logger.warning.assert_called_once()
-        
+
     @pytest.mark.asyncio
     @pytest.mark.parametrize("subject", ["", None])
     async def test_should_throw_error_when_missing_subject(self, subject) -> None:
