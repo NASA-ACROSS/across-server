@@ -81,7 +81,8 @@ class UserCreate(UserBase):
     @field_validator("email")
     @classmethod
     def validate_tld(cls, value: EmailStr) -> EmailStr:
-        # check only runs at request time.
+        # check only runs at request time. can always move this
+        # to top level if we see performance issues
         from ....util.email.config import email_config
 
         allowed_tlds = [
