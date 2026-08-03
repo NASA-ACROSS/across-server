@@ -74,7 +74,9 @@ class TestEmailService:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("recipients", [[], None])
-    async def test_should_throw_error_when_missing_recipients(self, recipients: list[str] | None) -> None:
+    async def test_should_throw_error_when_missing_recipients(
+        self, recipients: list[str] | None
+    ) -> None:
         """Should log a warning when sending an email without recipients"""
         service = EmailService()
         await service.send(recipients=recipients or [], subject=self.subject)
@@ -82,7 +84,9 @@ class TestEmailService:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("subject", ["", None])
-    async def test_should_throw_error_when_missing_subject(self, subject: str | None) -> None:
+    async def test_should_throw_error_when_missing_subject(
+        self, subject: str | None
+    ) -> None:
         """Should throw an error when sending an email without subject"""
         service = EmailService()
         with pytest.raises(Exception):
