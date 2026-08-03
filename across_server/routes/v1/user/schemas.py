@@ -84,12 +84,12 @@ class UserCreate(UserBase):
         # check only runs at request time.
         from ....util.email.config import email_config
 
-        allowed = [
+        allowed_tlds = [
             tld.lower().lstrip(".") for tld in email_config.ALLOWED_TOP_LEVEL_DOMAINS
         ]
-        if allowed:
+        if allowed_tlds:
             top_level_domain = value.rsplit("@", 1)[-1].rsplit(".", 1)[-1].lower()
-            if top_level_domain not in allowed:
+            if top_level_domain not in allowed_tlds:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                     detail="Email domain is not permitted.",
