@@ -96,7 +96,7 @@ dnspython==2.8.0
     # via email-validator
 email-validator==2.3.0
     # via pydantic
-fastapi==0.139.0
+fastapi==0.141.1
     # via
     #   -r requirements/base.in
     #   pytest-fastapi-deps
@@ -211,7 +211,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.6.0
+pre-commit==4.6.1
     # via -r requirements/lint.in
 propcache==0.5.2
     # via
@@ -270,7 +270,7 @@ requests==2.33.0
     # via
     #   astroquery
     #   pyvo
-ruff==0.15.20
+ruff==0.16.1
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
@@ -363,7 +363,7 @@ urllib3==2.7.0
     #   botocore
     #   requests
     #   types-requests
-uvicorn==0.51.0
+uvicorn==0.52.0
     # via -r requirements/base.in
 virtualenv==20.36.1
     # via pre-commit

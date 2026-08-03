@@ -239,7 +239,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.6.0
+pre-commit==4.6.1
     # via -r requirements/lint.in
 propcache==0.5.2
     # via
@@ -320,7 +320,7 @@ rich-toolkit==0.17.1
     #   fastapi-cloud-cli
 rignore==0.7.6
     # via fastapi-cloud-cli
-ruff==0.15.20
+ruff==0.16.1
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
