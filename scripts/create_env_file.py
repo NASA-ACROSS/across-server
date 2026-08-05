@@ -23,7 +23,6 @@ def create_env_file() -> None:
         "AWS_SES_REGION": "us-east-1",
         "AWS_SES_SOURCE_ARN": "arn:aws:ses:us-east-1:866324986652:identity/nasa.gov",
         "AWS_SES_CONFIGURATION_SET": "across-no-reply-config-set",
-        "ACROSS_EMAIL": "gsfc-across-no-reply@mail.nasa.gov",
         "RESTRICTED_TO_EMAIL_LIST": "",
         "ALLOWED_TOP_LEVEL_DOMAINS": "",
     }
