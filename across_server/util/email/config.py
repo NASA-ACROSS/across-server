@@ -17,10 +17,17 @@ class Config(BaseConfig):
     RESTRICTED_TO_EMAIL_LIST: list[str] = []
     ALLOWED_TOP_LEVEL_DOMAINS: list[str] = []
 
+    RESTRICTED_TO_EMAIL_LIST_CSV: str = ''
+    ALLOWED_TOP_LEVEL_DOMAINS_CSV: str = ''
+
     _SES_RETRY_CONFIG = AioConfig(retries={"max_attempts": 4, "mode": "adaptive"})
 
     def __init__(self) -> None:
         super().__init__()
+
+        self.RESTRICTED_TO_EMAIL_LIST = split_list(self.RESTRICTED_TO_EMAIL_LIST_CSV)
+
+        self.ALLOWED_TOP_LEVEL_DOMAINS = split_list(self.ALLOWED_TOP_LEVEL_DOMAINS_CSV)
 
         if not core_config.is_local():
             path = f"{core_config.APP_ENV}/core-server"
