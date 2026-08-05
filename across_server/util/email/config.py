@@ -17,8 +17,8 @@ class Config(BaseConfig):
     RESTRICTED_TO_EMAIL_LIST: list[str] = []
     ALLOWED_TOP_LEVEL_DOMAINS: list[str] = []
 
-    RESTRICTED_TO_EMAIL_LIST_CSV: str = ''
-    ALLOWED_TOP_LEVEL_DOMAINS_CSV: str = ''
+    RESTRICTED_TO_EMAIL_LIST_CSV: str = ""
+    ALLOWED_TOP_LEVEL_DOMAINS_CSV: str = ""
 
     _SES_RETRY_CONFIG = AioConfig(retries={"max_attempts": 4, "mode": "adaptive"})
 
