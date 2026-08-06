@@ -4,7 +4,6 @@ from across_server.util.email.config import Config
 from unittest.mock import MagicMock
 
 
-
 class TestEmailConfig:
     COMMON_CSV_TEST_CASES = [
         ("", []),
