@@ -1,6 +1,8 @@
 import os
 import pytest
 from across_server.util.email.config import Config
+from unittest.mock import MagicMock
+
 
 
 class TestEmailConfig:
@@ -54,7 +56,7 @@ class TestEmailConfig:
         expected: list[str],
         env_var: str,
         config_attr: str,
-        mock_config_runtime_env_is_local,
+        mock_config_runtime_env_is_local: MagicMock,
     ) -> None:
         """Should parse CSV config correctly"""
         mock_config_runtime_env_is_local.return_value = True
