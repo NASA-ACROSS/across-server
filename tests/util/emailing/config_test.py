@@ -15,7 +15,6 @@ class TestEmailConfig:
         (",None", ["None"]),
     ]
 
-    @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "csv, expected, env_var, config_attr",
         [
@@ -49,7 +48,7 @@ class TestEmailConfig:
             ],
         ],
     )
-    async def test_should_handle_parsing_csv_config(
+    def test_should_handle_parsing_csv_config(
         self,
         csv: str | None,
         expected: list[str],
