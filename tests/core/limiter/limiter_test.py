@@ -109,7 +109,7 @@ class TestLimiter:
 
         def test_should_limit_register_route(self) -> None:
             routes = [*rules]
-            route = r"^v\d+\/user\/?$"
+            route = r"\/v\d+\/user\/?$"
 
             assert route in routes
             assert rules[route].__len__() != 0
@@ -120,7 +120,7 @@ class TestLimiter:
             """First-match wins, so the sign-up rule must come before `.*`"""
             routes = [*rules]
 
-            assert routes.index(r"^v\d+\/user\/?$") < routes.index(r".*")
+            assert routes.index(r"\/v\d+\/user\/?$") < routes.index(r".*")
 
         def test_rules_should_have_catchall_route(self) -> None:
             routes = [*rules]
