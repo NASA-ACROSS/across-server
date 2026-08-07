@@ -31,6 +31,7 @@ from across_server.routes.v1.observation_request.access import (
 from across_server.routes.v1.observation_request.service import (
     ObservationRequestService,
 )
+from across_server.routes.v1.observing_proposal.schemas import ObservingProposalCreate
 
 
 class FakeObservationRequestReadParams(PaginationParams):
@@ -64,8 +65,7 @@ class FakeObservationRequestCreate(BaseModel):
     id: str = "fake-obs-request-id"
     instrument_id: str = "fake-obs-request-instrument-id"
     parent_id: UUID | None = None
-    proposal_name: str | None = None
-    proposal_code: str | None = None
+    proposal: ObservingProposalCreate | None = None
     anonymize: bool = False
 
     def to_orm(self) -> MagicMock:

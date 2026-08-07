@@ -147,8 +147,6 @@ class TestObservationRequestService:
             """Should raise ObservationRequestNotFoundException when the ObservationRequest does not exist"""
             mock_instrument_data.is_observation_request_enabled = True
             mock_result.scalar_one_or_none.side_effect = [
-                mock_instrument_data,
-                None,
                 None,
             ]
 
@@ -171,10 +169,9 @@ class TestObservationRequestService:
             """Should commit modifications of ObservationRequest to database"""
             mock_instrument_data.is_observation_request_enabled = True
             mock_result.scalar_one_or_none.side_effect = [
-                mock_instrument_data,
-                None,
                 fake_observation_request,
             ]
+            mock_result.scalars.return_value.all.return_value = [mock_instrument_data]
 
             service = ObservationRequestService(mock_db)
 
