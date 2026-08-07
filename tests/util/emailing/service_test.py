@@ -79,21 +79,22 @@ class TestEmailService:
     ) -> None:
         """Should log a warning when sending an email without recipients"""
         service = EmailService()
-        await service.send(recipients=recipients or [], subject=self.subject)
-        self.mock_logger.warning.assert_called_once()
+        with pytest.raises(Exception):
+            await service.send(recipients=recipients or [], subject=self.subject)
+        self.mock_logger.error.assert_called_once()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("subject", ["", None])
-    async def test_should_throw_error_when_missing_subject(
+    async def test_should_send_email_on_empty_subject(
         self, subject: str | None
     ) -> None:
-        """Should throw an error when sending an email without subject"""
+        """Should send an email even when the subject is empty"""
         service = EmailService()
-        with pytest.raises(Exception):
-            await service.send(recipients=[self.recipient], subject=subject or "")
+        await service.send(recipients=[self.recipient], subject=subject or "")
+        self.mock_ses_client.send_raw_email.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_skip_send_when_recipient_not_in_restricted_list(
+    async def test_should_skip_throw_error_and_exception_when_recipient_not_in_restricted_list(
         self, monkeypatch: Any
     ) -> None:
         """Should skip the send when no recipient passes RESTRICTED_TO_EMAIL_LIST"""
@@ -103,8 +104,9 @@ class TestEmailService:
             ["allowed@example.com"],
         )
         service = EmailService()
-        await service.send(recipients=[self.recipient], subject=self.subject)
-        self.mock_ses_client.send_raw_email.assert_not_called()
+        with pytest.raises(Exception):
+            await service.send(recipients=[self.recipient] or [], subject=self.subject)
+        self.mock_logger.error.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_should_send_when_recipient_in_restricted_list(
