@@ -23,7 +23,7 @@ asgi-correlation-id==5.0.1
     # via -r requirements/base.in
 asgi-ratelimit==0.10.0
     # via -r requirements/base.in
-ast-serialize==0.5.0
+ast-serialize==0.6.0
     # via mypy
 astropy==7.2.0
     # via
@@ -84,12 +84,12 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi[standard]==0.139.0
+fastapi[standard]==0.141.1
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
     #   pytest-fastapi-deps
-fastapi-cli[standard]==0.0.16
+fastapi-cli[standard]==0.0.32
     # via fastapi
 fastapi-cloud-cli==0.7.0
     # via fastapi-cli
@@ -150,7 +150,7 @@ jmespath==1.0.1
     #   botocore
 keyring==25.7.0
     # via astroquery
-librt==0.11.0
+librt==0.13.0
     # via mypy
 logbook==1.9.2
     # via spacetrack
@@ -170,7 +170,7 @@ more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==2.1.0
+mypy==2.3.0
     # via -r requirements/types.in
 mypy-extensions==1.1.0
     # via mypy
@@ -209,7 +209,7 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.6.0
+pre-commit==4.6.1
     # via -r requirements/lint.in
 pycparser==2.23
     # via cffi
@@ -284,7 +284,7 @@ rich-toolkit==0.17.1
     #   fastapi-cloud-cli
 rignore==0.7.6
     # via fastapi-cloud-cli
-ruff==0.15.20
+ruff==0.16.1
     # via -r requirements/lint.in
 rush==2021.4.0
     # via spacetrack
@@ -345,11 +345,11 @@ types-pyasn1==0.6.0.20250914
     # via types-python-jose
 types-python-jose==3.5.0.20260408
     # via -r requirements/types.in
-types-requests==2.33.0.20260518
+types-requests==2.33.0.20260712
     # via -r requirements/types.in
 types-s3transfer==0.16.0
     # via types-boto3
-types-shapely==2.1.0.20260630
+types-shapely==2.1.0.20260728
     # via -r requirements/types.in
 typing-extensions==4.15.0
     # via
@@ -379,7 +379,7 @@ urllib3==2.7.0
     #   requests
     #   sentry-sdk
     #   types-requests
-uvicorn[standard]==0.51.0
+uvicorn[standard]==0.52.0
     # via
     #   -r requirements/base.in
     #   fastapi

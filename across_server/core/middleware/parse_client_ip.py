@@ -10,7 +10,8 @@ async def parse_client_ip(scope: Scope) -> str:
         ip, _ = await client_ip(scope)
     except EmptyInformation:
         # pull the ip from the x-forwarded-for header if it exists, otherwise it will be unknown
-        for name, value in scope.get("headers", []):  # type: bytes, bytes
+        headers: list[tuple[bytes, bytes]] = scope.get("headers", [])
+        for name, value in headers:
             if name == b"x-forwarded-for":
                 # just in case there is a list of ips, and one is spoofed, we need to take the last one.
                 # this assumes that we only have the ALB forwarding requests and no additional proxies. (cloudflare, etc)
