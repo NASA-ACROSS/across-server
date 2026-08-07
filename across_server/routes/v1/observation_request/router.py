@@ -65,17 +65,17 @@ async def get(
 async def get_many(
     auth_user: Annotated[AuthUser | None, Depends(auth_user_or_none)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
-    data: Annotated[schemas.ObservationRequestReadParams, Query()],
+    params: Annotated[schemas.ObservationRequestReadParams, Query()],
 ) -> Page[schemas.ObservationRequest]:
     observation_requests, total_count = await service.get_many(
-        data=data, auth_user=auth_user
+        params=params, auth_user=auth_user
     )
 
     return Page[schemas.ObservationRequest].model_validate(
         {
             "total_number": total_count,
-            "page": data.page,
-            "page_limit": data.page_limit,
+            "page": params.page,
+            "page_limit": params.page_limit,
             "items": [
                 observation_request for observation_request in observation_requests
             ],

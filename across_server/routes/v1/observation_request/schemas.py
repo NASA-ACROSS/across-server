@@ -6,6 +6,10 @@ import uuid
 from across_server.core.date_utils import UTCDatetime
 from across_server.core.schemas.base import BaseSchema
 from across_server.core.schemas.pagination import PaginationParams
+from across_server.routes.v1.observing_proposal.schemas import (
+    ObservingProposal,
+    ObservingProposalCreate,
+)
 
 from ....core.enums import ObservationRequestStatus
 from ....core.schemas import Coordinate, NullableEndDateRange, UnitValue
@@ -24,12 +28,12 @@ class ObservationRequestBase(BaseSchema):
     is_too: bool
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
-    parent_id: uuid.UUID | None = None
+    proposal: ObservingProposal | None = None
 
 
 class ObservationRequestCreate(ObservationRequestBase):
-    proposal_name: str | None = None
-    proposal_code: str | None = None
+    parent_id: uuid.UUID | None = None
+    proposal: ObservingProposalCreate | None = None
 
     def to_orm(self) -> ObservationRequestModel:
         """
@@ -37,9 +41,6 @@ class ObservationRequestCreate(ObservationRequestBase):
         Translates field names and flattens nested Pydantic schemas
         """
         data = self.model_dump(exclude_unset=True)
-
-        del data["proposal_name"]
-        del data["proposal_code"]
 
         data["id"] = uuid.uuid4()
 
@@ -70,6 +71,9 @@ class ObservationRequestCreate(ObservationRequestBase):
         data["object_brightness"] = depth_data["object_brightness_value"]
         data["object_brightness_unit"] = depth_data["object_brightness_unit"]
 
+        if "proposal" in data:
+            data.pop("proposal")
+
         return ObservationRequestModel(**data)
 
 
@@ -84,10 +88,10 @@ class ObservationRequestStatusUpdate(BaseSchema):
 
 class ObservationRequest(ObservationRequestBase):
     id: uuid.UUID
+    parent_id: uuid.UUID
     status: ObservationRequestStatus
     status_reason: str | None
-    proposal_name: str | None = None
-    proposal_code: str | None = None
+    proposal: ObservingProposal | None = None
     versions: list[ObservationRequest] | None = None
     created_on: datetime.datetime
     created_by_id: uuid.UUID | None
@@ -121,10 +125,11 @@ class ObservationRequest(ObservationRequestBase):
             instrument_configuration=observation_request.instrument_configuration,
             status=ObservationRequestStatus(observation_request.status),
             status_reason=observation_request.status_reason,
-            proposal_name=observation_request.observing_proposal.name
-            if observation_request.observing_proposal
-            else None,
-            proposal_code=observation_request.observing_proposal.code
+            proposal=ObservingProposal(
+                name=observation_request.observing_proposal.name,
+                code=observation_request.observing_proposal.code,
+                id=observation_request.observing_proposal.id,
+            )
             if observation_request.observing_proposal
             else None,
             created_on=observation_request.created_on,
