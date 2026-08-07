@@ -116,18 +116,14 @@ class EmailService:
     ) -> None:
         recipients = self.filter_recipients(recipients)
         if not recipients:
-            logger.warning(
+            logger.error(
                 "No permitted recipients after applying RESTRICTED_TO_EMAIL_LIST; skipping send",
                 subject=subject,
-            )
-            return
-
-        if not subject:
-            logger.error(
-                "No subject provided; cannot send email",
                 recipients=recipients,
             )
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
 
         em = MIMEMultipart("alternative")
         em["From"] = self.sender_email_addr
