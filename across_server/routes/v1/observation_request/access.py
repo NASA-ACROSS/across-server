@@ -61,11 +61,11 @@ async def observation_request_access(
     2. the user is a group admin for the instrument's observatory group
     """
 
-    is_viewer = ~(is_admin_clause(auth_user) | is_creator_clause(auth_user))
+    is_viewer_clause = ~(is_admin_clause(auth_user) | is_creator_clause(auth_user))
 
     observation_request_exists_query = select(
         models.ObservationRequest,
-        is_viewer.label("is_viewer"),
+        is_viewer_clause.label("is_viewer"),
     ).where(models.ObservationRequest.id == observation_request_id)
 
     result = await db.execute(observation_request_exists_query)

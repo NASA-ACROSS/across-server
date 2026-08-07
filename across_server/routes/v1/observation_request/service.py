@@ -756,11 +756,9 @@ class ObservationRequestService:
             A dictionary mapping proposal names to their IDs
         """
 
-        lower_case_proposal_names = [name.lower() for name in proposal_names]
-
         proposal_dictionary: dict[str, UUID] = {}
         observing_proposal_query = select(models.ObservingProposal).where(
-            func.lower(models.ObservingProposal.name).in_(lower_case_proposal_names)
+            models.ObservingProposal.name.in_(proposal_names)
         )
         observing_proposal_result = await self.db.execute(observing_proposal_query)
         observing_proposals = observing_proposal_result.scalars().all()
@@ -768,11 +766,12 @@ class ObservationRequestService:
         for observing_proposal_name, observing_proposal_code in zip(
             proposal_names, proposal_codes
         ):
+            print(observing_proposal_name, observing_proposal_code)
             observing_proposal = next(
                 (
                     proposal
                     for proposal in observing_proposals
-                    if proposal.name.lower() == observing_proposal_name.lower()
+                    if proposal.name == observing_proposal_name
                 ),
                 None,
             )
@@ -787,5 +786,7 @@ class ObservationRequestService:
                     observing_proposal_name + observing_proposal_code
                 ] = new_observing_proposal.id
             else:
-                proposal_dictionary[observing_proposal_name] = observing_proposal.id
+                proposal_dictionary[
+                    observing_proposal_name + observing_proposal_code
+                ] = observing_proposal.id
         return proposal_dictionary

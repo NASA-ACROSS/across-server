@@ -28,7 +28,6 @@ class ObservationRequestBase(BaseSchema):
     is_too: bool
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
-    proposal: ObservingProposal | None = None
 
 
 class ObservationRequestCreate(ObservationRequestBase):
