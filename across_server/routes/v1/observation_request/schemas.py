@@ -3,17 +3,20 @@ from __future__ import annotations
 import datetime
 import uuid
 
-from across_server.core.date_utils import UTCDatetime
-from across_server.core.schemas.base import BaseSchema
-from across_server.core.schemas.pagination import PaginationParams
-from across_server.routes.v1.observing_proposal.schemas import (
+from ....core.date_utils import UTCDatetime
+from ....core.enums import ObservationRequestStatus
+from ....core.schemas import (
+    Coordinate,
+    NullableEndDateRange,
+    PaginationParams,
+    UnitValue,
+)
+from ....core.schemas.base import BaseSchema
+from ....db.models import ObservationRequest as ObservationRequestModel
+from ..observing_proposal.schemas import (
     ObservingProposal,
     ObservingProposalCreate,
 )
-
-from ....core.enums import ObservationRequestStatus
-from ....core.schemas import Coordinate, NullableEndDateRange, UnitValue
-from ....db.models import ObservationRequest as ObservationRequestModel
 
 
 class ObservationRequestBase(BaseSchema):

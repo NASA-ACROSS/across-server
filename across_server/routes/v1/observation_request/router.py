@@ -3,12 +3,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Security, status
 
-from across_server.core.enums.observation_request_status import ObservationRequestStatus
-from across_server.core.schemas.list_response import ListResponse
-
 from ....auth.schemas import AuthUser
 from ....auth.strategies import auth_user_or_none, authenticate_jwt
-from ....core.schemas import Page  # ListResponse
+from ....core.enums.observation_request_status import ObservationRequestStatus
+from ....core.schemas import ListResponse, Page
 from . import schemas
 from .access import observation_request_access, observation_request_status_access
 from .service import ObservationRequestService

@@ -19,7 +19,6 @@ from across_server.core.enums import ObservationRequestStatus
 from across_server.core.schemas import (
     Coordinate,
     NullableEndDateRange,
-    PaginationParams,
     UnitValue,
 )
 from across_server.db import models
@@ -32,33 +31,6 @@ from across_server.routes.v1.observation_request.service import (
     ObservationRequestService,
 )
 from across_server.routes.v1.observing_proposal.schemas import ObservingProposalCreate
-
-
-class FakeObservationRequestReadParams(PaginationParams):
-    ids: list[UUID] | None = None
-    observatory_names: list[str] | None = None
-    observatory_ids: list[UUID] | None = None
-    telescope_names: list[str] | None = None
-    telescope_ids: list[str] | None = None
-    instrument_names: list[str] | None = None
-    instrument_ids: list[str] | None = None
-    object_name: str | None = None
-    object_cone_search_ra: float | None = None
-    object_cone_search_dec: float | None = None
-    object_cone_search_radius: float | None = None
-    begin_date: datetime | None = None
-    end_date: datetime | None = None
-    status: Any | None = None
-    proposal_name: str | None = None
-    proposal_code: str | None = None
-    proposal_ids: list[str] | None = None
-    is_too: bool = True
-    parent_id: UUID | None = None
-    include_versions: bool = False
-
-
-class FakeObservationHistoryParams(PaginationParams):
-    observation_request_id: UUID
 
 
 class FakeObservationRequestCreate(BaseModel):
@@ -116,18 +88,13 @@ def fake_observation_request(
 
 
 @pytest.fixture(autouse=True)
-def mock_observation_request_read_params() -> FakeObservationRequestReadParams:
-    return FakeObservationRequestReadParams()
+def mock_observation_request_read_params() -> obs_schemas.ObservationRequestReadParams:
+    return obs_schemas.ObservationRequestReadParams()
 
 
 @pytest.fixture(autouse=True)
 def mock_observation_request_create() -> FakeObservationRequestCreate:
     return FakeObservationRequestCreate()
-
-
-@pytest.fixture(autouse=True)
-def mock_observation_history_params() -> FakeObservationHistoryParams:
-    return FakeObservationHistoryParams(observation_request_id=uuid4())
 
 
 @pytest.fixture

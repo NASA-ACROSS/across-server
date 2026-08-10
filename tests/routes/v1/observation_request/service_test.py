@@ -6,10 +6,12 @@ import pytest
 from fastapi import HTTPException
 
 from across_server.auth.schemas import AuthUser
+from across_server.core.enums.observation_request_status import ObservationRequestStatus
 from across_server.db import models
 from across_server.routes.v1.observation_request import schemas
 from across_server.routes.v1.observation_request.exceptions import (
     InvalidObservationRequestReadParametersException,
+    ObservationRequestConflictException,
     ObservationRequestNotFoundException,
 )
 from across_server.routes.v1.observation_request.service import (
@@ -135,6 +137,28 @@ class TestObservationRequestService:
                 )
 
     class TestModify:
+        @pytest.mark.asyncio
+        async def test_should_raise_conflict_exception_when_archived_or_rejected(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            fake_auth_user: AuthUser,
+            mock_observation_request_create: Any,
+        ) -> None:
+            """Should raise ObservationRequestConflictException when modifying archived/rejected requests"""
+            fake_observation_request = MagicMock(
+                status=ObservationRequestStatus.ARCHIVED.value
+            )
+            mock_result.scalar_one_or_none.side_effect = [
+                fake_observation_request,
+            ]
+
+            service = ObservationRequestService(mock_db)
+            with pytest.raises(ObservationRequestConflictException):
+                await service.modify(
+                    uuid4(), mock_observation_request_create, fake_auth_user.id
+                )
+
         @pytest.mark.asyncio
         async def test_should_raise_not_found_exception_when_does_not_exist(
             self,

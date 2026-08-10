@@ -19,6 +19,7 @@ from .access import is_admin_clause, is_creator_clause
 from .exceptions import (
     InvalidObservationRequestCreateParametersException,
     InvalidObservationRequestReadParametersException,
+    ObservationRequestConflictException,
     ObservationRequestNotFoundException,
 )
 
@@ -33,20 +34,18 @@ class ObservationRequestService:
 
     Methods
     -------
-    get(observation_request_id: UUID, auth_user: AuthUser) -> models.ObservationRequest
+    get(observation_request_id: UUID, auth_user: AuthUser | None) -> schemas.ObservationRequest
         Retrieve the ObservationRequest by id.
-    get_many(params: schemas.ObservationRequestReadParams, auth_user: AuthUser) -> Sequence[models.ObservationRequest]
+    get_many(params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None) -> Tuple[list[schemas.ObservationRequest], int]
         Retrieves many ObservationRequests based on filter params.
-    create(data: schemas.ObservationRequestCreate, auth_user: AuthUser) -> UUID
+    create(data: schemas.ObservationRequestCreate, created_by_id: UUID) -> UUID
         Create a new ObservationRequest record
-    create_many(data: schemas.ObservationRequestCreateMany, auth_user: AuthUser) -> list[UUID]
+    create_many(data: schemas.ObservationRequestCreateMany, created_by_id: UUID) -> list[UUID]
         Create many new ObservationRequest records
-    modify(data: schemas.ObservationRequestPut, auth_user: AuthUser) -> models.ObservationRequest
+    modify(observation_request_id: UUID, data: schemas.ObservationRequestUpdate, modified_by_id: UUID) -> UUID
         Modify an ObservationRequest record
-    delete(observation_request_id: UUID, auth_user: AuthUser) -> UUID
-        Delete an ObservationRequest record (sets status to "archived")
-    get_observation_request_history(observation_request_id: UUID, auth_user: AuthUser) -> Sequence[models.ObservationRequest]
-        Get the history of an ObservationRequest record by id.
+    update_status(observation_request_id: UUID, data: schemas.ObservationRequestStatusUpdate, modified_by_id: UUID) -> UUID
+        Update the status of an ObservationRequest record.
     """
 
     def __init__(self, db: Annotated[AsyncSession, Depends(get_session)]) -> None:
@@ -340,6 +339,14 @@ class ObservationRequestService:
 
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
+
+        if observation_request.status in [
+            ObservationRequestStatus.ARCHIVED.value,
+            ObservationRequestStatus.REJECTED.value,
+        ]:
+            raise ObservationRequestConflictException(
+                message="Cannot modify an ObservationRequest that has been archived or rejected."
+            )
 
         await self._can_submit(
             [data.instrument_id]
@@ -675,6 +682,7 @@ class ObservationRequestService:
             # Redact the fields that should not be visible to viewers when anonymized
             schema.created_by_id = None
             schema.proposal = None
+            schema.science_justification = ""
 
         return schema
 
@@ -766,7 +774,6 @@ class ObservationRequestService:
         for observing_proposal_name, observing_proposal_code in zip(
             proposal_names, proposal_codes
         ):
-            print(observing_proposal_name, observing_proposal_code)
             observing_proposal = next(
                 (
                     proposal

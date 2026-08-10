@@ -1,6 +1,10 @@
 import uuid
 
-from ....core.exceptions import InvalidEntityException, NotFoundException
+from ....core.exceptions import (
+    AcrossHTTPException,
+    InvalidEntityException,
+    NotFoundException,
+)
 
 
 class ObservationRequestNotFoundException(NotFoundException):
@@ -18,3 +22,14 @@ class InvalidObservationRequestReadParametersException(InvalidEntityException):
 class InvalidObservationRequestCreateParametersException(InvalidEntityException):
     def __init__(self, message: str):
         super().__init__(entity_name="ObservationRequestCreate", message=message)
+
+
+class ObservationRequestConflictException(AcrossHTTPException):
+    def __init__(self, message: str):
+        super().__init__(
+            status_code=409,
+            message=f"ObservationRequest conflict: {message}",
+            log_data={
+                "message": message,
+            },
+        )
