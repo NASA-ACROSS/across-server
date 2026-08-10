@@ -9,6 +9,7 @@ Create Date: 2026-08-10 18:15:14.809021
 import uuid
 from typing import Sequence, Union
 
+from across.tools.core.enums import ConstraintType
 from across.tools.visibility.constraints import SunAngleConstraint
 from alembic import op
 from sqlalchemy import orm
@@ -32,7 +33,7 @@ def upgrade() -> None:
 
     hst_sun_angle_constraint = models.Constraint(
         id=uuid.UUID("ee3758c5-2a58-4c90-bf1d-1dac33daff63"),
-        constraint_type="Sun Angle",
+        constraint_type=ConstraintType.SUN,
         constraint_parameters=SunAngleConstraint(
             min_angle=HST_SINGLE_GYRO_MODE_MIN_SUN_ANGLE,
         ).model_dump(),
@@ -48,7 +49,7 @@ def upgrade() -> None:
 
     for instrument in hst_telescope.instruments:
         for constraint in instrument.constraints:
-            if constraint.constraint_type == "Sun Angle":
+            if constraint.constraint_type == ConstraintType.SUN.value:
                 instrument.constraints.remove(constraint)
 
         instrument.constraints.append(hst_sun_angle_constraint)
