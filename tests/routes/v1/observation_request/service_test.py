@@ -144,11 +144,10 @@ class TestObservationRequestService:
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             mock_observation_request_create: Any,
+            fake_observation_request: models.ObservationRequest,
         ) -> None:
             """Should raise ObservationRequestConflictException when modifying archived/rejected requests"""
-            fake_observation_request = MagicMock(
-                status=ObservationRequestStatus.ARCHIVED.value
-            )
+            fake_observation_request.status = ObservationRequestStatus.ARCHIVED.value
             mock_result.scalar_one_or_none.side_effect = [
                 fake_observation_request,
             ]

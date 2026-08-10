@@ -43,6 +43,9 @@ class FakeObservationRequestCreate(BaseModel):
     def to_orm(self) -> MagicMock:
         return MagicMock()
 
+    def checksum(self) -> str:
+        return "fake-checksum"
+
 
 class FakeObservationRequestCreateMany:
     def __init__(self, observation_requests: list) -> None:
