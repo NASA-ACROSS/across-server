@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import uuid
 
 from ....core.date_utils import UTCDatetime
@@ -31,6 +32,34 @@ class ObservationRequestBase(BaseSchema):
     is_too: bool
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
+
+    def _checksum(
+        self, proposal: ObservingProposal | ObservingProposalCreate | None = None
+    ) -> str:
+        """
+        Calculate a SHA-512 checksum for the observation request data.
+        """
+        # Serialize the relevant fields to a string representation
+        instrument_config_string = (
+            "".join(f"{k}{v}" for k, v in sorted(self.instrument_configuration.items()))
+            if self.instrument_configuration
+            else ""
+        )
+
+        proposal_string = f"{proposal.name}{proposal.code}" if proposal else ""
+
+        data_string = (
+            f"{self.science_justification}"
+            f"{self.object_name}{self.object_coordinates.ra}"
+            f"{self.object_coordinates.dec}{self.object_brightness.value}"
+            f"{self.object_brightness.unit}{self.observation_window.begin}"
+            f"{self.observation_window.end}{self.exposure_time}"
+            f"{self.anonymize}{self.is_too}{self.instrument_id}"
+            f"{instrument_config_string}"
+            f"{proposal_string}"
+        )
+
+        return hashlib.sha512(data_string.encode()).hexdigest()
 
 
 class ObservationRequestCreate(ObservationRequestBase):
@@ -77,6 +106,10 @@ class ObservationRequestCreate(ObservationRequestBase):
             data.pop("proposal")
 
         return ObservationRequestModel(**data)
+
+    @property
+    def checksum(self) -> str:
+        return self._checksum(proposal=self.proposal)
 
 
 class ObservationRequestUpdate(ObservationRequestCreate):
@@ -139,6 +172,10 @@ class ObservationRequest(ObservationRequestBase):
             modified_on=observation_request.modified_on,
             modified_by_id=observation_request.modified_by_id,
         )
+
+    @property
+    def checksum(self) -> str:
+        return self._checksum(proposal=self.proposal)
 
 
 class ObservationRequestReadParams(PaginationParams):

@@ -340,6 +340,12 @@ class ObservationRequestService:
         if observation_request is None:
             raise ObservationRequestNotFoundException(observation_request_id)
 
+        observation_request_schema = schemas.ObservationRequest.from_orm(
+            observation_request
+        )
+        if data.checksum == observation_request_schema.checksum:
+            raise ObservationRequestConflictException(message="No changes detected.")
+
         if observation_request.status in [
             ObservationRequestStatus.ARCHIVED.value,
             ObservationRequestStatus.REJECTED.value,
