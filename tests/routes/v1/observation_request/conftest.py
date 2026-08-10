@@ -1,5 +1,5 @@
 from collections.abc import Generator
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
@@ -18,7 +18,7 @@ from across_server.auth.strategies import (
 from across_server.core.enums import ObservationRequestStatus
 from across_server.core.schemas import (
     Coordinate,
-    NullableEndDateRange,
+    NullableEndFutureDateRange,
     UnitValue,
 )
 from across_server.db import models
@@ -75,7 +75,7 @@ def fake_observation_request(
         object_name="Test Object",
         object_brightness=12.34,
         object_brightness_unit="AB_mag",
-        date_range_begin=datetime(2026, 6, 25),
+        date_range_begin=datetime.now(timezone.utc) + timedelta(days=1),
         exposure_time=3600.0,
         parent_id=uuid4(),
         instrument=mock_instrument_data,
@@ -107,7 +107,9 @@ def fake_observation_request_schema() -> obs_schemas.ObservationRequest:
         object_name="Test Object",
         object_coordinates=Coordinate(ra=123.45, dec=-76.54),
         object_brightness=UnitValue(value=12.34, unit="AB_mag"),
-        observation_window=NullableEndDateRange(begin=datetime(2026, 6, 25), end=None),
+        observation_window=NullableEndFutureDateRange(
+            begin=datetime.now(timezone.utc) + timedelta(days=1), end=None
+        ),
         exposure_time=3600.0,
         anonymize=False,
         is_too=False,

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -14,14 +15,15 @@ class Setup:
     async def setup(self, async_client: AsyncClient) -> None:
         self.client = async_client
         self.endpoint = "/observation-request/"
+        _now = datetime.now(timezone.utc)
         self.post_data = {
             "science_justification": "A clear science case",
             "object_name": "SN2026abc",
             "object_coordinates": {"ra": 123.456, "dec": -45.678},
             "object_brightness": {"value": 20.5, "unit": "mag"},
             "observation_window": {
-                "begin": "2026-01-01T00:00:00Z",
-                "end": "2026-01-02T00:00:00Z",
+                "begin": (_now + timedelta(days=1)).isoformat(),
+                "end": (_now + timedelta(days=2)).isoformat(),
             },
             "exposure_time": 1200.0,
             "anonymize": False,
@@ -47,8 +49,8 @@ class Setup:
             "object_coordinates": {"ra": 123.456, "dec": -45.678},
             "object_brightness": {"value": 19.0, "unit": "mag"},
             "observation_window": {
-                "begin": "2026-01-01T00:00:00Z",
-                "end": "2026-01-02T00:00:00Z",
+                "begin": (_now + timedelta(days=1)).isoformat(),
+                "end": (_now + timedelta(days=2)).isoformat(),
             },
             "exposure_time": 1800.0,
             "anonymize": False,

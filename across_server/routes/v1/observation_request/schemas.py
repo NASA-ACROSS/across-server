@@ -7,7 +7,7 @@ from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
 from ....core.schemas import (
     Coordinate,
-    NullableEndDateRange,
+    NullableEndFutureDateRange,
     PaginationParams,
     UnitValue,
 )
@@ -25,7 +25,7 @@ class ObservationRequestBase(BaseSchema):
     object_coordinates: Coordinate
     object_position_error: float | None = None
     object_brightness: UnitValue
-    observation_window: NullableEndDateRange
+    observation_window: NullableEndFutureDateRange
     exposure_time: float
     anonymize: bool
     is_too: bool
@@ -116,7 +116,7 @@ class ObservationRequest(ObservationRequestBase):
                 value=observation_request.object_brightness,
                 unit=observation_request.object_brightness_unit,
             ),
-            observation_window=NullableEndDateRange(
+            observation_window=NullableEndFutureDateRange(
                 begin=observation_request.date_range_begin,
                 end=observation_request.date_range_end,
             ),
