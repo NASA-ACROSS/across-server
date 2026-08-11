@@ -10,9 +10,8 @@ def split_list(list_str: str) -> list[str]:
 
 class Config(BaseConfig):
     AWS_SES_REGION: str = "us-east-1"
-    AWS_SES_SOURCE_ARN: str = "arn:aws:ses:us-east-1:866324986652:identity/nasa.gov"
     AWS_SES_CONFIGURATION_SET: str = "across-no-reply-config-set"
-    ACROSS_EMAIL: str = "gsfc-across-no-reply@mail.nasa.gov"
+    ACROSS_EMAIL: str = "no-reply@across.sciencecloud.nasa.gov"
 
     RESTRICTED_TO_EMAIL_LIST: list[str] = []
     ALLOWED_TOP_LEVEL_DOMAINS: list[str] = []
@@ -33,7 +32,6 @@ class Config(BaseConfig):
             path = f"{core_config.APP_ENV}/core-server"
 
             self.AWS_SES_REGION = SSM.get_parameter(f"{path}/aws-ses-region")
-            self.AWS_SES_SOURCE_ARN = SSM.get_parameter(f"{path}/ses-source-arn")
             self.AWS_SES_CONFIGURATION_SET = SSM.get_parameter(
                 f"{path}/ses-configuration-set"
             )

@@ -19,7 +19,6 @@ class EmailService:
     def __init__(self) -> None:
         self.sender_email_addr = email_config.ACROSS_EMAIL
         self.region = email_config.AWS_SES_REGION
-        self.source_arn = email_config.AWS_SES_SOURCE_ARN
         self.configuration_set = email_config.AWS_SES_CONFIGURATION_SET
 
     def construct_login_email(self, user: schemas.AuthUser, login_link: str) -> str:
@@ -153,6 +152,5 @@ class EmailService:
                     Source=self.sender_email_addr,
                     Destinations=recipients,
                     RawMessage={"Data": em.as_string()},
-                    SourceArn=self.source_arn,
                     ConfigurationSetName=self.configuration_set,
                 )
