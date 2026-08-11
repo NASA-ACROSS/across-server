@@ -66,7 +66,7 @@ class ObservationRequestBase(BaseSchema):
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
-    observation_window: NullableEndFutureDateRange
+    observation_window: NullableEndFutureDateRange  # type: ignore - mypy types work around
 
     def to_orm(self) -> ObservationRequestModel:
         """
