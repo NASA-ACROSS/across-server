@@ -1,8 +1,8 @@
 """adding observation request group permissions
 
 Revision ID: 5a093993a1a3
-Revises: cb5340af20da
-Create Date: 2026-08-06 15:12:32.356187
+Revises: 5e170132081b
+Create Date: 2026-08-011 15:12:32.356187
 
 """
 
@@ -16,7 +16,7 @@ from migrations.versions.model_snapshots import models_2026_05_26 as snapshot_mo
 
 # revision identifiers, used by Alembic.
 revision: str = "5a093993a1a3"
-down_revision: Union[str, None] = "cb5340af20da"
+down_revision: Union[str, None] = "5e170132081b"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
