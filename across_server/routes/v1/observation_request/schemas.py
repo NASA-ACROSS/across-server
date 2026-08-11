@@ -8,6 +8,7 @@ from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
 from ....core.schemas import (
     Coordinate,
+    NullableEndDateRange,
     NullableEndFutureDateRange,
     PaginationParams,
     UnitValue,
@@ -26,7 +27,7 @@ class ObservationRequestBase(BaseSchema):
     object_coordinates: Coordinate
     object_position_error: float | None = None
     object_brightness: UnitValue
-    observation_window: NullableEndFutureDateRange
+    observation_window: NullableEndDateRange
     exposure_time: float
     anonymize: bool
     is_too: bool
@@ -65,6 +66,7 @@ class ObservationRequestBase(BaseSchema):
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
+    observation_window: NullableEndFutureDateRange
 
     def to_orm(self) -> ObservationRequestModel:
         """
@@ -103,7 +105,10 @@ class ObservationRequestCreate(ObservationRequestBase):
         data["object_brightness_unit"] = depth_data["object_brightness_unit"]
 
         if "proposal" in data:
-            data.pop("proposal")
+            proposal = data.pop("proposal")
+            data["proposal_id"] = proposal["id"]
+        else:
+            data["proposal_id"] = None
 
         return ObservationRequestModel(**data)
 
@@ -149,7 +154,7 @@ class ObservationRequest(ObservationRequestBase):
                 value=observation_request.object_brightness,
                 unit=observation_request.object_brightness_unit,
             ),
-            observation_window=NullableEndFutureDateRange(
+            observation_window=NullableEndDateRange(
                 begin=observation_request.date_range_begin,
                 end=observation_request.date_range_end,
             ),

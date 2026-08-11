@@ -1,6 +1,5 @@
-from datetime import datetime
-from typing import Annotated, Tuple
-from uuid import UUID
+from typing import Annotated
+from uuid import UUID, uuid4
 
 from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
@@ -36,7 +35,7 @@ class ObservationRequestService:
     -------
     get(observation_request_id: UUID, auth_user: AuthUser | None) -> schemas.ObservationRequest
         Retrieve the ObservationRequest by id.
-    get_many(params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None) -> Tuple[list[schemas.ObservationRequest], int]
+    get_many(params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None) -> tuple[list[schemas.ObservationRequest], int]
         Retrieves many ObservationRequests based on filter params.
     create(data: schemas.ObservationRequestCreate, created_by_id: UUID) -> UUID
         Create a new ObservationRequest record
@@ -111,7 +110,7 @@ class ObservationRequestService:
         self,
         params: schemas.ObservationRequestReadParams,
         auth_user: AuthUser | None,
-    ) -> Tuple[list[schemas.ObservationRequest], int]:
+    ) -> tuple[list[schemas.ObservationRequest], int]:
         """
         Retrieve a list of ObservationRequest records
         based on the query parameters.
@@ -124,7 +123,7 @@ class ObservationRequestService:
             the user making the request
         Returns
         -------
-        list[Tuple[models.ObservationRequest, int]]
+        list[tuple[models.ObservationRequest, int]]
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
@@ -220,19 +219,10 @@ class ObservationRequestService:
             [data.instrument_id]
         )  # Check if the instrument allows observation requests
 
-        proposal_id = None
-        if data.proposal:
-            proposal_ids = await self._get_proposals_ids(
-                [data.proposal.name], [data.proposal.code]
-            )  # Check if the proposal exists, create if not
-            proposal_id = proposal_ids.get(
-                data.proposal.name + data.proposal.code, None
-            )
-
+        await self._assign_proposal_ids([data])
         observation_request = data.to_orm()
         observation_request.status = ObservationRequestStatus.PENDING.value
         observation_request.status_reason = "Awaiting review"
-        observation_request.proposal_id = proposal_id
         observation_request.created_by_id = created_by_id
 
         self.db.add(observation_request)
@@ -267,20 +257,7 @@ class ObservationRequestService:
             instrument_ids
         )  # Check if the instruments allow observation requests
 
-        proposal_names = [
-            observation_request_create.proposal.name
-            for observation_request_create in data.observation_requests
-            if observation_request_create.proposal is not None
-        ]
-        proposal_codes = [
-            observation_request_create.proposal.code
-            for observation_request_create in data.observation_requests
-            if observation_request_create.proposal is not None
-        ]
-
-        proposal_dictionary = await self._get_proposals_ids(
-            proposal_names, proposal_codes
-        )  # Check if the proposals exist, create if not
+        await self._assign_proposal_ids(data.observation_requests)
 
         # Bulk add the ObservationRequest records to the database
         observation_request_records = []
@@ -289,18 +266,12 @@ class ObservationRequestService:
             observation_request.created_by_id = created_by_id
             observation_request.status = ObservationRequestStatus.PENDING.value
             observation_request.status_reason = "Awaiting review"
-            if observation_request_create.proposal is not None:
-                observation_request.proposal_id = proposal_dictionary.get(
-                    observation_request_create.proposal.name
-                    + observation_request_create.proposal.code,
-                    None,
-                )
-            else:
-                observation_request.proposal_id = None
+
             observation_request_records.append(observation_request)
 
         self.db.add_all(observation_request_records)
         await self.db.commit()
+
         return [
             observation_request.id
             for observation_request in observation_request_records
@@ -330,42 +301,13 @@ class ObservationRequestService:
         models.ObservationRequest
             The ObservationRequest with the modifications
         """
-
-        observation_request_query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == observation_request_id
-        )
-        observation_request_result = await self.db.execute(observation_request_query)
-        observation_request = observation_request_result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
-
-        observation_request_schema = schemas.ObservationRequest.from_orm(
-            observation_request
-        )
-        if data.checksum == observation_request_schema.checksum:
-            raise ObservationRequestConflictException(message="No changes detected.")
-
-        if observation_request.status in [
-            ObservationRequestStatus.ARCHIVED.value,
-            ObservationRequestStatus.REJECTED.value,
-        ]:
-            raise ObservationRequestConflictException(
-                message="Cannot modify an ObservationRequest that has been archived or rejected."
-            )
+        observation_request = await self._is_modifiable(observation_request_id, data)
 
         await self._can_submit(
             [data.instrument_id]
         )  # Check if the instruments allow observation requests
 
-        proposal_id = None
-        if data.proposal is not None:
-            proposal_dictionary = await self._get_proposals_ids(
-                [data.proposal.name], [data.proposal.code]
-            )  # Check if the proposal exists, create if not
-            proposal_id = proposal_dictionary.get(
-                data.proposal.name + data.proposal.code, None
-            )
+        await self._assign_proposal_ids([data])
 
         # if changing to anonymize, update all versions to anonymize as well
         if data.anonymize != observation_request.anonymize:
@@ -384,9 +326,6 @@ class ObservationRequestService:
         new_observation_request.status_reason = "Awaiting review"
         new_observation_request.created_by_id = observation_request.created_by_id
         new_observation_request.modified_by_id = modified_by_id
-        new_observation_request.proposal_id = proposal_id
-        new_observation_request.modified_on = datetime.now()
-        new_observation_request.created_on = datetime.now()
 
         self.db.add(new_observation_request)
         await self.db.commit()
@@ -414,19 +353,11 @@ class ObservationRequestService:
         UUID
             The ID of the updated ObservationRequest
         """
-        query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == observation_request_id
-        )
-        result = await self.db.execute(query)
-        observation_request = result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
+        observation_request = await self._exists(observation_request_id)
 
         observation_request.status = data.status
         observation_request.status_reason = data.status_reason
         observation_request.modified_by_id = modified_by_id
-        observation_request.modified_on = datetime.now()
 
         await self.db.commit()
 
@@ -701,7 +632,7 @@ class ObservationRequestService:
 
         Parameters
         ----------
-        observation_requests : list[Tuple[models.ObservationRequest, bool]]
+        observation_requests : list[tuple[models.ObservationRequest, bool]]
             The ObservationRequests to get the versions for
         is_viewer_clause: ColumnElement[bool] | False_
             The clause to determine if the user is a viewer
@@ -751,55 +682,139 @@ class ObservationRequestService:
 
         return related_request_dictionary
 
-    async def _get_proposals_ids(
-        self, proposal_names: list[str], proposal_codes: list[str]
-    ) -> dict[str, UUID]:
+    async def _assign_proposal_ids(
+        self, requests: list[schemas.ObservationRequestCreate]
+    ) -> None:
         """
-        Get the ObservingProposals for the given names and codes.
+        Handle the proposals for the observation requests.
+        Finds any existing proposals or creates new proposals
+        and associates them with the observation requests.
+
+        This method modifies the observation requests in place, assigning the appropriate proposal IDs.
 
         Parameters
         ----------
-        proposal_names : list[str]
-            The names of the proposals to get
-        proposal_codes : list[str]
-            The codes of the proposals to get
+        requests : list[schemas.ObservationRequestCreate]
+            The observation requests to handle proposals for.
+        Returns
+        -------
+        None
+        """
+        proposals = [
+            observation_request.proposal
+            for observation_request in requests
+            if observation_request.proposal is not None
+        ]
+        existing_proposal_records = await self._get_proposals(proposals)
+        existing_proposals_dict = {
+            proposal.name + proposal.code: proposal
+            for proposal in existing_proposal_records
+        }
+
+        new_proposals: list[schemas.ObservingProposalCreate] = []
+
+        for request_create in requests:
+            if request_create.proposal is not None:
+                proposal_name = request_create.proposal.name
+                existing_proposal = existing_proposals_dict.get(
+                    proposal_name + request_create.proposal.code, None
+                )
+
+                # set existing proposal to new obs_req, or create a new proposal
+                if existing_proposal:
+                    request_create.proposal.id = existing_proposal.id
+                else:
+                    new_proposal = schemas.ObservingProposalCreate(
+                        **request_create.proposal.model_dump(),
+                    )
+                    new_proposal.id = uuid4()
+                    new_proposals.append(new_proposal)
+                    request_create.proposal.id = new_proposal.id
+
+        await self._create_proposals(new_proposals)
+
+    async def _get_proposals(
+        self, proposals: list[schemas.ObservingProposalCreate]
+    ) -> list[models.ObservingProposal]:
+        query = select(models.ObservingProposal).where(
+            models.ObservingProposal.name.in_([proposal.name for proposal in proposals])
+        )
+        result = await self.db.execute(query)
+        proposal_records = result.scalars().all()
+
+        return list(proposal_records)
+
+    async def _create_proposals(
+        self, proposals: list[schemas.ObservingProposalCreate]
+    ) -> list[models.ObservingProposal]:
+        proposal_records = [
+            models.ObservingProposal(**proposal.model_dump(exclude_unset=True))
+            for proposal in proposals
+        ]
+
+        self.db.add_all(proposal_records)
+        await self.db.flush()
+        return proposal_records
+
+    async def _exists(self, observation_request_id: UUID) -> models.ObservationRequest:
+        """
+        Check if an ObservationRequest exists in the database.
+
+        Parameters
+        ----------
+        observation_request_id : UUID
+            The ID of the ObservationRequest to check
 
         Returns
         -------
-        dict[str, UUID]
-            A dictionary mapping proposal names to their IDs
+        models.ObservationRequest
+            The ObservationRequest instance if it exists, otherwise an exception is raised
         """
-
-        proposal_dictionary: dict[str, UUID] = {}
-        observing_proposal_query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name.in_(proposal_names)
+        observation_request_query = select(models.ObservationRequest).where(
+            models.ObservationRequest.id == observation_request_id
         )
-        observing_proposal_result = await self.db.execute(observing_proposal_query)
-        observing_proposals = observing_proposal_result.scalars().all()
 
-        for observing_proposal_name, observing_proposal_code in zip(
-            proposal_names, proposal_codes
-        ):
-            observing_proposal = next(
-                (
-                    proposal
-                    for proposal in observing_proposals
-                    if proposal.name == observing_proposal_name
-                ),
-                None,
+        result = await self.db.execute(observation_request_query)
+        observation_request = result.scalar_one_or_none()
+
+        if observation_request is None:
+            raise ObservationRequestNotFoundException(observation_request_id)
+
+        return observation_request
+
+    async def _is_modifiable(
+        self, observation_request_id: UUID, data: schemas.ObservationRequestUpdate
+    ) -> models.ObservationRequest:
+        """
+        Check if an ObservationRequest is modifiable based on its status.
+
+        Parameters
+        ----------
+        observation_request_id : UUID
+            The ID of the ObservationRequest to check
+        data : schemas.ObservationRequestUpdate
+            The data to be updated in the ObservationRequest
+
+        Returns
+        -------
+        models.ObservationRequest
+            The ObservationRequest instance if it is modifiable, otherwise an exception is raised
+        """
+        observation_request = await self._exists(observation_request_id)
+
+        observation_request_schema = schemas.ObservationRequest.from_orm(
+            observation_request
+        )
+        if data.checksum == observation_request_schema.checksum:
+            raise ObservationRequestConflictException(message="No changes detected.")
+
+        if observation_request.status in [
+            ObservationRequestStatus.ARCHIVED.value,
+            ObservationRequestStatus.REJECTED.value,
+            ObservationRequestStatus.ACCEPTED.value,
+        ]:
+            raise ObservationRequestConflictException(
+                message="Cannot modify an ObservationRequest that has been archived, rejected, or accepted."
             )
-            if observing_proposal is None:
-                new_observing_proposal = models.ObservingProposal(
-                    name=observing_proposal_name,
-                    code=observing_proposal_code,
-                )
-                self.db.add(new_observing_proposal)
-                await self.db.flush()
-                proposal_dictionary[
-                    observing_proposal_name + observing_proposal_code
-                ] = new_observing_proposal.id
-            else:
-                proposal_dictionary[
-                    observing_proposal_name + observing_proposal_code
-                ] = observing_proposal.id
-        return proposal_dictionary
+
+        return observation_request

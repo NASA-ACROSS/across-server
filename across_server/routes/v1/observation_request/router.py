@@ -158,7 +158,7 @@ async def update(
     )
 
 
-@router.put(
+@router.patch(
     "/{observation_request_id}/status",
     summary="Update the status of an observation request",
     description="Update the status of an existing observation request for ACROSS.",

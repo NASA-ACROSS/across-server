@@ -194,7 +194,10 @@ class TestObservationRequestService:
             mock_result.scalar_one_or_none.side_effect = [
                 fake_observation_request,
             ]
-            mock_result.scalars.return_value.all.return_value = [mock_instrument_data]
+            mock_result.scalars.return_value.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                [],  # _get_proposals: no existing proposals
+            ]
 
             service = ObservationRequestService(mock_db)
 

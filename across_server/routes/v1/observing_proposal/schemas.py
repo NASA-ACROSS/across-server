@@ -9,7 +9,7 @@ class ObservingProposalBase(BaseSchema):
 
 
 class ObservingProposalCreate(ObservingProposalBase):
-    pass
+    id: uuid.UUID | None = None
 
 
 class ObservingProposal(ObservingProposalBase):

@@ -185,28 +185,28 @@ class TestObservationRequestRouter:
             res = await self.client.delete(endpoint)
             assert res.status_code == fastapi.status.HTTP_204_NO_CONTENT
 
-    class TestPutStatus(Setup):
+    class TestPatchStatus(Setup):
         @pytest.mark.asyncio
         async def test_should_return_updated_observation_request_id(self) -> None:
-            """PUT status should return updated observation request id when successful"""
+            """PATCH status should return updated observation request id when successful"""
             endpoint = self.endpoint + f"{uuid4()}/status"
-            res = await self.client.put(endpoint, json=self.put_status_data)
+            res = await self.client.patch(endpoint, json=self.put_status_data)
             assert UUID(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
-            """PUT status should return 200 when successful"""
+            """PATCH status should return 200 when successful"""
             endpoint = self.endpoint + f"{uuid4()}/status"
-            res = await self.client.put(endpoint, json=self.put_status_data)
+            res = await self.client.patch(endpoint, json=self.put_status_data)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
         @pytest.mark.asyncio
         async def test_should_return_422_when_missing_required_fields(
             self, required_status_update_field: str
         ) -> None:
-            """PUT status should return 422 when required fields are missing"""
+            """PATCH status should return 422 when required fields are missing"""
             endpoint = self.endpoint + f"{uuid4()}/status"
             data = self.put_status_data.copy()
             data.pop(required_status_update_field)
-            res = await self.client.put(endpoint, json=data)
+            res = await self.client.patch(endpoint, json=data)
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
