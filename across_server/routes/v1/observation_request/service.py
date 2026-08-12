@@ -802,11 +802,11 @@ class ObservationRequestService:
         """
         observation_request = await self._exists(observation_request_id)
 
-        observation_request_schema = schemas.ObservationRequest.from_orm(
-            observation_request
-        )
-        if data.checksum == observation_request_schema.checksum:
-            raise ObservationRequestConflictException(message="No changes detected.")
+        # observation_request_schema = schemas.ObservationRequest.from_orm(
+        #     observation_request
+        # )
+        # if data.checksum == observation_request_schema.checksum:
+        #     raise ObservationRequestConflictException(message="No changes detected.")
 
         if observation_request.status in [
             ObservationRequestStatus.ARCHIVED.value,

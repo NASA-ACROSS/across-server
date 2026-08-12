@@ -27,7 +27,7 @@ class ObservationRequestBase(BaseSchema):
     object_coordinates: Coordinate
     object_position_error: float | None = None
     object_brightness: UnitValue
-    observation_window: NullableEndDateRange
+    observation_window: NullableEndDateRange | NullableEndFutureDateRange
     exposure_time: float
     anonymize: bool
     is_too: bool
@@ -66,7 +66,7 @@ class ObservationRequestBase(BaseSchema):
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
-    observation_window: NullableEndFutureDateRange  # type: ignore
+    observation_window: NullableEndFutureDateRange
 
     def to_orm(self) -> ObservationRequestModel:
         """
@@ -78,7 +78,7 @@ class ObservationRequestCreate(ObservationRequestBase):
         data["id"] = uuid.uuid4()
 
         # default parent_id to id
-        if "parent_id" not in data.keys() or data["parent_id"] is None:
+        if "parent_id" not in data or data["parent_id"] is None:
             data["parent_id"] = data["id"]
 
         # coordinates
