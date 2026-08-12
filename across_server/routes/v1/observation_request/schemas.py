@@ -30,7 +30,7 @@ class ObservationRequestBase(BaseSchema):
     observation_window: NullableEndDateRange | NullableEndFutureDateRange
     exposure_time: float
     anonymize: bool
-    is_too: bool
+    is_too: bool  # placeholder field for the potential of general ToO request. Defaults to True right now
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
 
