@@ -25,6 +25,16 @@ async def authenticate_jwt(
     return await service.authenticate_jwt(token)
 
 
+async def auth_user_or_none(
+    service: Annotated[AuthService, Depends(AuthService)],
+    token: Annotated[str, Depends(get_bearer_credentials)],
+) -> AuthUser | None:
+    try:
+        return await service.authenticate_jwt(token)
+    except HTTPException:
+        return None
+
+
 async def global_access(
     security_scopes: SecurityScopes,
     auth_user: Annotated[AuthUser, Depends(authenticate_jwt)],

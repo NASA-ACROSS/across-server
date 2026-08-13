@@ -6,6 +6,7 @@ from across_server.db.models import ObservationRequest
 
 from .instruments import sandy_instrument_calorimeter
 from .observing_proposal import sandy_proposal
+from .users import sandy
 
 krusty_too = ObservationRequest(
     id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
@@ -23,9 +24,10 @@ krusty_too = ObservationRequest(
     status_reason="Awaiting review",
     observing_proposal=sandy_proposal,
     parent_id=uuid.UUID("6450ad6e-e185-4313-83b2-d6ed15bc11ca"),
-    anonymize=False,
+    anonymize=True,
     is_too=True,
     exposure_time=3600.0,
+    created_by_id=sandy.id,
 )
 
 observation_requests = [krusty_too]
