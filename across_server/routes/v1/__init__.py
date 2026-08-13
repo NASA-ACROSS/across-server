@@ -9,6 +9,7 @@ from . import (
     group,
     instrument,
     observation,
+    observation_request,
     observatory,
     permission,
     role,
@@ -45,5 +46,6 @@ api.include_router(observation.router)
 api.include_router(filter.router)
 api.include_router(system_service_account.router)
 api.include_router(tools.router)
+api.include_router(observation_request.router)
 api.include_router(broker_event.router)
 api.include_router(broker_alert.router)

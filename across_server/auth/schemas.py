@@ -9,6 +9,7 @@ from .enums import PrincipalType
 class Group(BaseModel):
     id: UUID
     scopes: list[str]
+    is_admin: bool = False
 
     @model_serializer
     def serialize(self) -> dict:
