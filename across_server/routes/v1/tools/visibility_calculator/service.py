@@ -16,6 +16,7 @@ from across.tools.visibility import (
     compute_joint_visibility,
 )
 from across.tools.visibility.constraints import Constraint, PointingConstraint
+from astropy.coordinates import SkyCoord  # type: ignore[import-untyped]
 from astropy.time import Time  # type: ignore[import-untyped]
 from fastapi import Depends
 from geoalchemy2.functions import ST_DWithin
@@ -105,8 +106,7 @@ class VisibilityCalculatorService:
             end=Time(date_range_end),
             ephemeris=ephemeris,
             constraints=constraints,
-            ra=ra,
-            dec=dec,
+            coordinate=SkyCoord(ra=ra * u.deg, dec=dec * u.deg),  # type: ignore
             step_size=step_size * u.s,  # type: ignore
             observatory_id=observatory_id,
             min_vis=min_visibility_duration,
