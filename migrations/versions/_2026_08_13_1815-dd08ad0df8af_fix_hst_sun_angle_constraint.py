@@ -1,7 +1,7 @@
 """fix HST sun angle constraint
 
 Revision ID: dd08ad0df8af
-Revises: 5e170132081b
+Revises: 5a093993a1a3
 Create Date: 2026-08-10 18:15:14.809021
 
 """
@@ -18,7 +18,7 @@ import migrations.versions.model_snapshots.models_2026_05_26 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "dd08ad0df8af"
-down_revision: Union[str, None] = "5e170132081b"
+down_revision: Union[str, None] = "5a093993a1a3"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
