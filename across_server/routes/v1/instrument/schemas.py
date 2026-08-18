@@ -56,6 +56,7 @@ class InstrumentBase(BaseSchema):
     constraints: list[dict[str, Any]] | None = None
     visibility_type: VisibilityType | None = None
     observation_strategy: ObservationStrategy | None = None
+    is_observation_request_enabled: bool
 
 
 class Instrument(InstrumentBase):
@@ -104,6 +105,7 @@ class Instrument(InstrumentBase):
             ),
             visibility_type=obj.visibility_type,
             observation_strategy=obj.observation_strategy,
+            is_observation_request_enabled=obj.is_observation_request_enabled,
         )
 
 
