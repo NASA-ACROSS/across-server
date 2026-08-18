@@ -1,8 +1,10 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
+from fastapi import HTTPException, status
 
-import aiosmtplib
+import aioboto3
+import structlog
 
 from across_server.auth import schemas
 from across_server.db import models
@@ -10,14 +12,14 @@ from across_server.db import models
 from ...core.config import config as core_config
 from .config import email_config
 
+logger: structlog.stdlib.BoundLogger = structlog.get_logger()
+
 
 class EmailService:
     def __init__(self) -> None:
         self.sender_email_addr = email_config.ACROSS_EMAIL
-        self.login_email_user = email_config.ACROSS_EMAIL_USER
-        self.login_email_password = email_config.ACROSS_EMAIL_PASSWORD
-        self.smtp_host = email_config.ACROSS_EMAIL_HOST
-        self.smtp_port = int(email_config.ACROSS_EMAIL_PORT)
+        self.region = email_config.AWS_SES_REGION
+        self.configuration_set = email_config.AWS_SES_CONFIGURATION_SET
 
     def construct_login_email(self, user: schemas.AuthUser, login_link: str) -> str:
         return f"""\
@@ -93,6 +95,16 @@ class EmailService:
             </html>
         """
 
+    def filter_recipients(self, recipients: list[str]) -> list[str]:
+        allowed = email_config.RESTRICTED_TO_EMAIL_LIST
+        if not allowed:
+            return recipients
+
+        allowed_set = {addr.lower() for addr in allowed}
+        return [
+            recipient for recipient in recipients if recipient.lower() in allowed_set
+        ]
+
     async def send(
         self,
         recipients: list[str],
@@ -101,6 +113,17 @@ class EmailService:
         content_html: str | None = None,
         attachments: list = [],
     ) -> None:
+        recipients = self.filter_recipients(recipients)
+        if not recipients:
+            logger.error(
+                "No permitted recipients after applying RESTRICTED_TO_EMAIL_LIST; skipping send",
+                subject=subject,
+                recipients=recipients,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
         em = MIMEMultipart("alternative")
         em["From"] = self.sender_email_addr
         em["To"] = ",".join(recipients)
@@ -119,8 +142,15 @@ class EmailService:
 
         # only send emails in non-local envs
         if not core_config.is_local():
-            async with aiosmtplib.SMTP(
-                hostname=self.smtp_host, port=self.smtp_port, use_tls=True
-            ) as smtp:
-                await smtp.login(self.login_email_user, self.login_email_password)
-                await smtp.sendmail(self.sender_email_addr, recipients, em.as_string())
+            session = aioboto3.Session()
+            async with session.client(
+                "ses",
+                region_name=self.region,
+                config=email_config._SES_RETRY_CONFIG,
+            ) as ses:
+                await ses.send_raw_email(
+                    Source=self.sender_email_addr,
+                    Destinations=recipients,
+                    RawMessage={"Data": em.as_string()},
+                    ConfigurationSetName=self.configuration_set,
+                )
