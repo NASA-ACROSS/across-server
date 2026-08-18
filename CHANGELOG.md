@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.10.0](https://github.com/NASA-ACROSS/across-server/compare/v1.9.0...v1.10.0) (2026-08-13)
+
+
+### Features
+
+* add observation request router, schemas, service, and access ([#658](https://github.com/NASA-ACROSS/across-server/issues/658)) ([65c590c](https://github.com/NASA-ACROSS/across-server/commit/65c590c2a5ae658833f29b56391af3f8e54172c8))
+* **migration:** add blackcat observatory migration ([#682](https://github.com/NASA-ACROSS/across-server/issues/682)) ([6c75c01](https://github.com/NASA-ACROSS/across-server/commit/6c75c013332352dadfbc6f2ab59135f24ad6f222))
+
+
+### Bug Fixes
+
+* correct jwst visibility constraints ([cb4a0d3](https://github.com/NASA-ACROSS/across-server/commit/cb4a0d369aedfffabd1408ef7d54b102c790bc23))
+* correct JWST visibility constraints ([#715](https://github.com/NASA-ACROSS/across-server/issues/715)) ([cb4a0d3](https://github.com/NASA-ACROSS/across-server/commit/cb4a0d369aedfffabd1408ef7d54b102c790bc23))
+* **tests:** add parse ip tests ([eeefbe9](https://github.com/NASA-ACROSS/across-server/commit/eeefbe9f357300dfaa6b9f1a523265caf9d23257))
+* visibility calculator service fix for 0.0 dec ([#702](https://github.com/NASA-ACROSS/across-server/issues/702)) ([b817de1](https://github.com/NASA-ACROSS/across-server/commit/b817de17e02746fc5261f28132fecd6542fdd230))
+* **visibility:** update HST constraints for reduced gyro mode ([#723](https://github.com/NASA-ACROSS/across-server/issues/723)) ([83501fd](https://github.com/NASA-ACROSS/across-server/commit/83501fd8c7035d6a470a7813c23ef942ed10cb39))
+
 ## [1.9.0](https://github.com/NASA-ACROSS/across-server/compare/v1.8.1...v1.9.0) (2026-07-24)
 
 
