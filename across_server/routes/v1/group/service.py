@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from ....db import get_session, models
 from .exceptions import GroupNotFoundException
@@ -26,16 +27,18 @@ class GroupService:
         return result.all()
 
     async def get(self, id: UUID) -> models.Group:
-        group = await self.db.get(models.Group, id)
+        query = (
+            select(models.Group)
+            .where(models.Group.id == id)
+            .options(joinedload(models.Group.roles))
+            .options(joinedload(models.Group.users))
+        )
+
+        result = await self.db.execute(query)
+        group = result.unique().scalar_one_or_none()
 
         if group is None:
             raise GroupNotFoundException(id)
-
-        await group.awaitable_attrs.users
-        await group.awaitable_attrs.roles
-
-        for group_role in group.roles:
-            await group_role.awaitable_attrs.users
 
         return group
 
