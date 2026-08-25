@@ -53,6 +53,26 @@ class FakeObservationRequestCreateMany:
 
 
 @pytest.fixture(autouse=True)
+def fake_observation_request_json() -> dict:
+    return {
+        "science_justification": "test science justification",
+        "object_name": "test object",
+        "object_coordinates": {"ra": 123.1, "dec": 42.1},
+        "object_position_error": 13.3,
+        "object_brightness": {"value": 321.3, "unit": "ab_mag"},
+        "observation_window": {
+            "begin": datetime.now() + timedelta(days=3),
+            "end": datetime.now() + timedelta(days=7),
+        },
+        "exposure_time": 3000,
+        "anonymize": False,
+        "is_too": True,
+        "instrument_id": "5865b62e-179f-4e5b-9cd0-692d1ed84d4a",
+        "instrument_configuration": None,
+    }
+
+
+@pytest.fixture(autouse=True)
 def fake_auth_user(fake_group: models.Group) -> AuthUser:
     return AuthUser(
         id=uuid4(),
