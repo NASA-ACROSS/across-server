@@ -9,7 +9,7 @@ from ....core.enums import ObservationRequestStatus
 from ....core.schemas import (
     Coordinate,
     NullableEndDateRange,
-    NullableEndFutureDateRange,
+    NullableEndFutureDateRangeCreate,
     PaginationParams,
     UnitValue,
 )
@@ -27,7 +27,7 @@ class ObservationRequestBase(BaseSchema):
     object_coordinates: Coordinate
     object_position_error: float | None = None
     object_brightness: UnitValue
-    observation_window: NullableEndDateRange | NullableEndFutureDateRange
+    observation_window: NullableEndDateRange | NullableEndFutureDateRangeCreate
     exposure_time: float
     anonymize: bool
     is_too: bool  # placeholder field for the potential of general ToO request. Defaults to True right now
@@ -66,7 +66,7 @@ class ObservationRequestBase(BaseSchema):
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
-    observation_window: NullableEndFutureDateRange
+    observation_window: NullableEndFutureDateRangeCreate
 
     def to_orm(self) -> ObservationRequestModel:
         """

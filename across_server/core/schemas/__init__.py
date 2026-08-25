@@ -3,7 +3,7 @@ from .date_range import (
     DateRange,
     NullableDateRange,
     NullableEndDateRange,
-    NullableEndFutureDateRange,
+    NullableEndFutureDateRangeCreate,
 )
 from .list_response import ListResponse
 from .pagination import Page, PaginationParams
@@ -16,7 +16,7 @@ __all__ = [
     "DateRange",
     "NullableDateRange",
     "NullableEndDateRange",
-    "NullableEndFutureDateRange",
+    "NullableEndFutureDateRangeCreate",
     "Page",
     "PaginationParams",
     "Permission",

@@ -11,13 +11,6 @@ class DateRangeMixin(BaseModel, PrefixMixin):
     begin: UTCDatetime | None
     end: UTCDatetime | None
 
-    @model_validator(mode="after")
-    def validate_date_range(self) -> Self:
-        if self.begin is not None and self.end is not None and self.end <= self.begin:
-            raise ValueError("End date must be after begin date")
-
-        return self
-
 
 class DateRange(DateRangeMixin):
     begin: UTCDatetime
@@ -34,7 +27,7 @@ class NullableEndDateRange(DateRangeMixin):
     end: UTCDatetime | None
 
 
-class NullableEndFutureDateRange(DateRangeMixin):
+class NullableEndFutureDateRangeCreate(DateRangeMixin):
     begin: UTCDatetime
     end: UTCDatetime | None
 
@@ -42,5 +35,12 @@ class NullableEndFutureDateRange(DateRangeMixin):
     def validate_future_date_range(self) -> Self:
         if self.begin <= datetime.now(timezone.utc).replace(tzinfo=None):
             raise ValueError("Begin date must be in the future")
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        if self.begin is not None and self.end is not None and self.end <= self.begin:
+            raise ValueError("End date must be after begin date")
 
         return self
