@@ -17,12 +17,13 @@ def create_env_file() -> None:
         "ACROSS_DB_ROLE": "aws-developer-role",
         "ACROSS_DB_DEBUG": False,
         "ACROSS_ADMIN_TOKEN": "admin-token-local",
-        "ACROSS_EMAIL": "nasa.across.dev@gmail.com",
-        "ACROSS_EMAIL_PASSWORD": "acrossemailpassword",
-        "ACROSS_EMAIL_HOST": "smtp.gmail.com",
-        "ACROSS_EMAIL_PORT": 465,
+        "ACROSS_EMAIL": "no-reply@across.sciencecloud.nasa.gov",
         "ACROSS_DEBUG": True,
         "HIDE_LOCAL_ROUTE": False,
+        "AWS_SES_REGION": "us-east-1",
+        "AWS_SES_CONFIGURATION_SET": "across-no-reply-config-set",
+        "RESTRICTED_TO_EMAIL_LIST": "",
+        "ALLOWED_TOP_LEVEL_DOMAINS": "",
     }
 
     if not os.path.exists(env_file_path):
