@@ -11,7 +11,7 @@ class Config(BaseConfig):
 
     # tighter limit for user sign-up and login
     LIMIT_SIGNUP_REQUESTS_PER_MINUTE: int = 2
-    LIMIT_LOGIN_REQUESTS_PER_MINUTE: int = 5
+    LIMIT_LOGIN_REQUESTS_PER_MINUTE: int = 2
 
     # limit everything else by access type
     LIMIT_DEFAULT_REQUESTS_PER_MINUTE: int = 30
