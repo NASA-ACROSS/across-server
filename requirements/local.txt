@@ -4,7 +4,7 @@ across-tools==1.6.1
     # via -r requirements/base.in
 aioboto3==15.5.0
     # via -r requirements/base.in
-aiobotocore==2.25.1
+aiobotocore[boto3]==2.25.1
     # via aioboto3
 aiofiles==25.1.0
     # via aioboto3
@@ -89,7 +89,7 @@ click==8.3.1
     #   rich-toolkit
     #   typer
     #   uvicorn
-coverage==7.13.0
+coverage[toml]==7.13.0
     # via pytest-cov
 cryptography==48.0.1
     # via secretstorage
@@ -103,12 +103,12 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.139.0
+fastapi[standard]==0.141.1
     # via
     #   -r requirements/base.in
     #   -r requirements/local.in
     #   pytest-fastapi-deps
-fastapi-cli==0.0.16
+fastapi-cli[standard]==0.0.32
     # via fastapi
 fastapi-cloud-cli==0.7.0
     # via fastapi-cli
@@ -247,7 +247,7 @@ propcache==0.5.2
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.13.4
+pydantic[email]==2.13.4
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -352,7 +352,7 @@ spacetrack==1.4.0
     # via across-tools
 spiceypy==8.0.0
     # via across-tools
-sqlalchemy==2.0.51
+sqlalchemy[asyncio]==2.0.51
     # via
     #   -r requirements/base.in
     #   alembic
@@ -367,7 +367,7 @@ typer==0.20.0
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-types-aioboto3==15.5.0
+types-aioboto3[ses]==15.5.0
     # via -r requirements/types.in
 types-aiobotocore==3.8.0
     # via types-aioboto3
@@ -375,7 +375,7 @@ types-aiobotocore-ses==2.25.2
     # via types-aioboto3
 types-awscrt==0.30.0
     # via botocore-stubs
-types-boto3==1.43.46
+types-boto3[rds,ssm,sts]==1.43.78
     # via -r requirements/types.in
 types-boto3-rds==1.43.30
     # via types-boto3
@@ -425,7 +425,7 @@ urllib3==2.7.0
     #   requests
     #   sentry-sdk
     #   types-requests
-uvicorn==0.51.0
+uvicorn[standard]==0.52.4
     # via
     #   -r requirements/base.in
     #   fastapi
