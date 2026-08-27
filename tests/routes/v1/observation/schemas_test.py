@@ -21,7 +21,7 @@ class TestObservationSchemas:
     async def test_from_orm_should_return_observation_when_date_range_begin_equals_date_range_end(
         self, fake_observation_data_with_footprint: ObservationModel
     ) -> None:
-        """Should return the observation schema without validating when date_range_begin = date_range_end"""
+        """Should return the observation schema when date_range_begin = date_range_end"""
         fake_observation_data_with_footprint.date_range_end = (
             fake_observation_data_with_footprint.date_range_begin
         )
