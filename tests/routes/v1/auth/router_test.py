@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock
 
 import fastapi
 import pytest
@@ -64,11 +64,49 @@ class TestLoginRoute:
         mock_auth_service.get_authenticated_user.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_send_email_to_user(
+    async def test_should_send_login_email_to_user_when_user_is_found(
         self,
         mock_email_service: AsyncMock,
     ) -> None:
         """Should send an email to the user when logging in"""
         await self.client.post(self.endpoint)
 
-        mock_email_service.send.assert_called_once()
+        mock_email_service.send.assert_called_once_with(
+            recipients=[ANY],
+            subject="NASA ACROSS Account Login",
+            content_html=ANY,
+        )
+
+    @pytest.mark.asyncio
+    async def test_should_send_login_with_new_account_email_when_user_is_not_found(
+        self,
+        mock_email_service: AsyncMock,
+        mock_auth_service: AsyncMock,
+    ) -> None:
+        """Should send a 'login with new account' email to the user when not found"""
+        mock_auth_service.get_authenticated_user.side_effect = fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+        await self.client.post(self.endpoint)
+
+        mock_email_service.send.assert_called_once_with(
+            recipients=[ANY],
+            subject="NASA ACROSS Account Login Attempt",
+            content_html=ANY,
+        )
+
+    @pytest.mark.asyncio
+    async def test_should_return_error_when_get_authenticated_user_fails(
+        self,
+        mock_auth_service: AsyncMock,
+    ) -> None:
+        """Should raise a 401 error when the user is not found"""
+        mock_auth_service.get_authenticated_user.side_effect = fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_401_UNAUTHORIZED,
+        )
+
+        res = await self.client.post(self.endpoint)
+
+        assert res.status_code == fastapi.status.HTTP_401_UNAUTHORIZED
