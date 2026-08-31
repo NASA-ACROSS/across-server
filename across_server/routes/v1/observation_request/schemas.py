@@ -11,7 +11,7 @@ from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
 from ....core.schemas import (
     Coordinate,
-    DateRange,
+    NullableDateRange,
     PaginationParams,
     UnitValue,
 )
@@ -221,7 +221,7 @@ class ObservationRequestCreateMany(BaseSchema):
     observation_requests: list[ObservationRequestCreate]
 
 
-class NullableEndDateRange(DateRange):
+class NullableEndDateRange(NullableDateRange):
     begin: UTCDatetime
     end: UTCDatetime | None
 
