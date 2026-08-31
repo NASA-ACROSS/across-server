@@ -18,7 +18,6 @@ from across_server.auth.strategies import (
 from across_server.core.enums import ObservationRequestStatus
 from across_server.core.schemas import (
     Coordinate,
-    NullableEndDateRange,
     UnitValue,
 )
 from across_server.db import models
@@ -130,7 +129,7 @@ def fake_observation_request_schema() -> obs_schemas.ObservationRequest:
         object_name="Test Object",
         object_coordinates=Coordinate(ra=123.45, dec=-76.54),
         object_brightness=UnitValue(value=12.34, unit="AB_mag"),
-        observation_window=NullableEndDateRange(
+        observation_window=obs_schemas.NullableEndDateRange(
             begin=datetime.now(timezone.utc) + timedelta(days=1), end=None
         ),
         exposure_time=3600.0,
