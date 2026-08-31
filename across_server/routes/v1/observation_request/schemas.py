@@ -152,6 +152,7 @@ class ObservationRequest(ObservationRequestBase):
             object_coordinates=Coordinate(
                 ra=observation_request.object_ra, dec=observation_request.object_dec
             ),
+            object_position_error=observation_request.object_position_error,
             object_brightness=UnitValue(
                 value=observation_request.object_brightness,
                 unit=observation_request.object_brightness_unit,

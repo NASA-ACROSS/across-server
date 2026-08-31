@@ -78,6 +78,7 @@ def fake_instrument_with_constraints(
         constraints=[fake_sun_constraint.model_dump()],
         short_name="test",
         created_on=datetime.now(),
+        is_observation_request_enabled=False,
     )
 
 
@@ -91,6 +92,7 @@ def fake_instrument_without_constraints() -> InstrumentSchema:
         constraints=[],
         short_name="test",
         created_on=datetime.now(),
+        is_observation_request_enabled=False,
     )
 
 
@@ -122,6 +124,7 @@ def fake_survey_instrument(
         created_on=datetime.now(),
         observation_strategy=ObservationStrategy.SURVEY,
         footprints=fake_footprint,
+        is_observation_request_enabled=False,
     )
 
 
@@ -191,6 +194,7 @@ def fake_instrument_schema_from_orm(
     mock_instrument_schema.telescope = MagicMock()
     mock_instrument_schema.telescope.id = fake_telescope_id
     mock_instrument_schema.visibility_type = "ephemeris"
+    mock_instrument_schema.is_observation_request_enabled = False
 
     monkeypatch.setattr(
         InstrumentSchema, "from_orm", MagicMock(return_value=mock_instrument_schema)
