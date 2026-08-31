@@ -18,6 +18,17 @@ class TestObservationSchemas:
         assert isinstance(observation, Observation)
 
     @pytest.mark.asyncio
+    async def test_from_orm_should_return_observation_when_date_range_begin_equals_date_range_end(
+        self, fake_observation_data_with_footprint: ObservationModel
+    ) -> None:
+        """Should return the observation schema when date_range_begin = date_range_end"""
+        fake_observation_data_with_footprint.date_range_end = (
+            fake_observation_data_with_footprint.date_range_begin
+        )
+        observation = Observation.from_orm(fake_observation_data_with_footprint)
+        assert isinstance(observation, Observation)
+
+    @pytest.mark.asyncio
     async def test_to_orm_should_return_observation_model(
         self, mock_observation_create: ObservationCreate
     ) -> None:

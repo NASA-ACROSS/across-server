@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-import datetime
 import hashlib
 import uuid
+from datetime import datetime, timezone
+from typing import Self
+
+from pydantic import model_validator
 
 from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
 from ....core.schemas import (
     Coordinate,
-    NullableEndDateRange,
-    NullableEndFutureDateRange,
+    NullableDateRange,
     PaginationParams,
     UnitValue,
 )
@@ -27,7 +29,7 @@ class ObservationRequestBase(BaseSchema):
     object_coordinates: Coordinate
     object_position_error: float | None = None
     object_brightness: UnitValue
-    observation_window: NullableEndDateRange | NullableEndFutureDateRange
+    observation_window: NullableEndDateRange | DateRangeCreate
     exposure_time: float
     anonymize: bool
     is_too: bool  # placeholder field for the potential of general ToO request. Defaults to True right now
@@ -66,7 +68,7 @@ class ObservationRequestBase(BaseSchema):
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
-    observation_window: NullableEndFutureDateRange
+    observation_window: DateRangeCreate
 
     def to_orm(self) -> ObservationRequestModel:
         """
@@ -133,9 +135,9 @@ class ObservationRequest(ObservationRequestBase):
     status_reason: str | None
     proposal: ObservingProposal | None = None
     versions: list[ObservationRequest] | None = None
-    created_on: datetime.datetime
+    created_on: datetime
     created_by_id: uuid.UUID | None
-    modified_on: datetime.datetime | None
+    modified_on: datetime | None
     modified_by_id: uuid.UUID | None
 
     @classmethod
@@ -217,3 +219,27 @@ class ObservationRequestCreateMany(BaseSchema):
     """
 
     observation_requests: list[ObservationRequestCreate]
+
+
+class NullableEndDateRange(NullableDateRange):
+    begin: UTCDatetime
+    end: UTCDatetime | None
+
+
+class DateRangeCreate(NullableEndDateRange):
+    begin: UTCDatetime
+    end: UTCDatetime | None
+
+    @model_validator(mode="after")
+    def validate_future_date_range(self) -> Self:
+        if self.begin <= datetime.now(timezone.utc).replace(tzinfo=None):
+            raise ValueError("Begin date must be in the future")
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> Self:
+        if self.begin is not None and self.end is not None and self.end <= self.begin:
+            raise ValueError("End date must be after begin date")
+
+        return self
