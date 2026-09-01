@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.11.0](https://github.com/NASA-ACROSS/across-server/compare/v1.10.0...v1.11.0) (2026-08-31)
+
+
+### Features
+
+* add is_observation_request_enabled to Instrument and TelescopeInstrument schemas ([#737](https://github.com/NASA-ACROSS/across-server/issues/737)) ([2bee3a3](https://github.com/NASA-ACROSS/across-server/commit/2bee3a3f300a7ee426f0fab439f507cb1f983677))
+* prepare core-server to support SES email sending ([#685](https://github.com/NASA-ACROSS/across-server/issues/685)) ([f5b4c62](https://github.com/NASA-ACROSS/across-server/commit/f5b4c62f4b3d498186621c44bdbe405ecf5e1349))
+
+
+### Bug Fixes
+
+* add login route rate limit ([#757](https://github.com/NASA-ACROSS/across-server/issues/757)) ([7047b84](https://github.com/NASA-ACROSS/across-server/commit/7047b84eac38400346e1e90586a4700daaece48a))
+* get group throws 500 when a group has an invited user ([#738](https://github.com/NASA-ACROSS/across-server/issues/738)) ([efafb95](https://github.com/NASA-ACROSS/across-server/commit/efafb9595b13c29cdf2bb830be5df59a7f5769ea))
+* observation request create date range validator coupled to observation response serializer ([#753](https://github.com/NASA-ACROSS/across-server/issues/753)) ([8cba08a](https://github.com/NASA-ACROSS/across-server/commit/8cba08a152ee0df5f7d9ef2fbf7c34e000054154))
+
 ## [1.10.0](https://github.com/NASA-ACROSS/across-server/compare/v1.9.0...v1.10.0) (2026-08-13)
 
 
