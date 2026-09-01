@@ -12,6 +12,7 @@ from ..group.invite.service import GroupInviteService
 from ..group.service import GroupService
 from ..user.invite.service import UserInviteService
 from . import schemas
+from .exceptions import DuplicateUserException
 from .service import UserService
 from .service_account.service import ServiceAccountService
 
@@ -87,7 +88,29 @@ async def create(
     email_service: Annotated[EmailService, Depends(EmailService)],
     data: schemas.UserCreate,
 ) -> dict | None:
-    user = await user_service.create(data)
+    user: db.models.User
+
+    try:
+        user = await user_service.create(data)
+    except DuplicateUserException:
+        # If the user already exists, we want to send a verification link but let them know that a new registration was attempted.
+        user = await user_service.get_by_email(data.email)
+        magic_link = auth_service.generate_magic_link(user.email)
+        dupe_account_login_body = email_service.construct_dupe_account_login_email(
+            user, magic_link
+        )
+
+        try:
+            await email_service.send(
+                recipients=[user.email],
+                subject="NASA ACROSS Login Link",
+                content_html=dupe_account_login_body,
+            )
+        except Exception as e:
+            logger.error("Email service failed to send user registration email", e=e)
+
+        return {"magic_link": magic_link} if config.is_local() else None
+
     magic_link = auth_service.generate_magic_link(user.email)
     verification_email_body = email_service.construct_verification_email(
         user, magic_link

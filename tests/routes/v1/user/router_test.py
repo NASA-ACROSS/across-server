@@ -7,6 +7,7 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
+from across_server.routes.v1.user.exceptions import DuplicateUserException
 from across_server.util.email.config import email_config
 
 
@@ -61,6 +62,25 @@ class TestUserPostRoute:
         """Should send an email when a new user is successfully created"""
         await self.client.post(self.endpoint, json=self.data)
         mock_email_service.send.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_use_verification_email_template_when_user_is_created(
+        self, mock_email_service: MagicMock
+    ) -> None:
+        """Should send an email when a new user is successfully created"""
+        await self.client.post(self.endpoint, json=self.data)
+        mock_email_service.construct_verification_email.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_should_use_dupe_account_login_email_template_when_email_already_exists(
+        self, mock_email_service: MagicMock, mock_user_service: MagicMock
+    ) -> None:
+        """Should send an email when a new user is successfully created"""
+        mock_user_service.create.side_effect = DuplicateUserException(
+            "email", "test@example.com"
+        )
+        await self.client.post(self.endpoint, json=self.data)
+        mock_email_service.construct_dupe_account_login_email.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_should_send_email_with_magic_link(
