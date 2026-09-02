@@ -172,7 +172,7 @@ multidict==6.7.1
     #   aiobotocore
     #   aiohttp
     #   yarl
-mypy==2.1.0
+mypy==2.3.1
     # via -r requirements/types.in
 mypy-extensions==1.1.0
     # via mypy
