@@ -228,7 +228,7 @@ pydantic[email]==2.13.4
     #   rust-ephem
 pydantic-core==2.46.4
     # via pydantic
-pydantic-settings==2.14.2
+pydantic-settings==2.15.0
     # via
     #   -r requirements/base.in
     #   across-tools
