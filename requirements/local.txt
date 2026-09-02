@@ -16,7 +16,7 @@ aioitertools==0.13.0
     # via aiobotocore
 aiosignal==1.4.0
     # via aiohttp
-alembic==1.18.5
+alembic==1.19.1
     # via -r requirements/base.in
 annotated-doc==0.0.4
     # via fastapi
