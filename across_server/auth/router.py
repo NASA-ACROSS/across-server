@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Form, Response, Security, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Response, Security, status
 from pydantic import EmailStr
 
 from ..core import config
@@ -70,7 +70,24 @@ async def login(
     email_service: Annotated[EmailService, Depends(EmailService)],
     auth_service: Annotated[AuthService, Depends(AuthService)],
 ) -> dict | None:
-    user = await auth_service.get_authenticated_user(email=email)
+    user: schemas.AuthUser
+
+    try:
+        user = await auth_service.get_authenticated_user(email=email)
+    except HTTPException as exc:
+        # If the email is not found, send an email indicating that they need to register
+        if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            login_email_body = email_service.construct_login_with_new_account_email(
+                email
+            )
+
+            await email_service.send(
+                recipients=[email],
+                subject="NASA ACROSS Account Login Attempt",
+                content_html=login_email_body,
+            )
+
+        raise
 
     link = magic_link.generate(email)
 
