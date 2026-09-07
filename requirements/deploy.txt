@@ -170,14 +170,14 @@ propcache==0.5.2
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.13.4
+pydantic==2.13.5
     # via
     #   -r requirements/base.in
     #   across-tools
     #   fastapi
     #   pydantic-settings
     #   rust-ephem
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via pydantic
 pydantic-settings==2.15.0
     # via
