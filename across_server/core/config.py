@@ -1,3 +1,4 @@
+from pydantic import EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .enums import Environments
@@ -16,6 +17,7 @@ class Config(BaseConfig):
     FRONTEND_HOST: str = "http://localhost:5173"
     PORT: int = 8000
     ROOT_PATH: str = ""
+    ACROSS_SUPPORT_EMAIL: EmailStr = "gsfc-across-support@mail.nasa.gov"
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 

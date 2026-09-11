@@ -1,10 +1,10 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import make_msgid
-from fastapi import HTTPException, status
 
 import aioboto3
 import structlog
+from fastapi import HTTPException, status
 
 from across_server.auth import schemas
 from across_server.db import models
@@ -33,6 +33,27 @@ class EmailService:
             <p>
                 If you think that this has been done in error, please contact an ACROSS administrator:
             <p>
+            <p>
+                Best,
+            </p>
+            <p>
+                NASA-ACROSS
+            </p>
+            </html>
+        """
+
+    def construct_login_with_new_account_email(self, email: str) -> str:
+        return f"""\
+            <html>
+            <p>To Whom It May Concern,</p>
+            <p>
+                It looks like someone tried to log into the ACROSS system using this email address ({email}), but
+                we do not have an account in our system for this address. If you would like to register for
+                the ACROSS system please visit our <a href="https://app.across.sciencecloud.nasa.gov/user/register">registration page</a>.
+            </p>
+            <p>
+                If you did not request this registration, please contact <a href="mailto:{core_config.ACROSS_SUPPORT_EMAIL}">ACROSS support</a>.
+            </p>
             <p>
                 Best,
             </p>
@@ -154,3 +175,9 @@ class EmailService:
                     RawMessage={"Data": em.as_string()},
                     ConfigurationSetName=self.configuration_set,
                 )
+        else:
+            logger.info(
+                "Skipping email send in local environment",
+                subject=subject,
+                recipients=recipients,
+            )
