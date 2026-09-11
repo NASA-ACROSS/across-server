@@ -92,21 +92,41 @@ class EmailService:
             </html>
         """
 
+    def construct_dupe_account_login_email(
+        self, user: models.User, magic_link: str
+    ) -> str:
+        return f"""\
+            <html>
+            <p>Dear {user.first_name} {user.last_name},</p>
+            <p>
+                An account with this email ({user.email}) has been previously registered.
+                Please use the following link to login and verify your account. This link will expire in 15 minutes.
+            </p>
+            <a href="{magic_link}">Verify your account</a>
+            <p>
+                Otherwise, if this was not you, please ignore this email or contact <a href="mailto:{core_config.ACROSS_SUPPORT_EMAIL}">ACROSS Support</a>.
+            </p>
+            <p>
+                Best,
+            </p>
+            <p>
+                NASA-ACROSS
+            </p>
+            </html>
+        """
+
     def construct_verification_email(self, user: models.User, magic_link: str) -> str:
         return f"""\
             <html>
             <p>Dear {user.first_name} {user.last_name},</p>
             <p>
-                An account with the username: {user.username} has been created with this email.
-                Please use the following link to login and verify your account.
-                After doing so, you will have access to your NASA ACROSS API <ttt>api_token</ttt>
-                which can be used to access the API endpoints within the NASA-ACROSS framework.
-                This link will expire in 15 minutes.
+                An account with this email ({user.email}) has been created.
+                Please use the following link to login and verify your account. This link will expire in 15 minutes.
             </p>
             <a href="{magic_link}">Verify your account</a>
             <p>
-                If you think that this has been done in error, please contact an ACROSS administrator:
-            <p>
+                Otherwise, if this was not you, please ignore this email or contact <a href="mailto:{core_config.ACROSS_SUPPORT_EMAIL}">ACROSS Support</a>.
+            </p>
             <p>
                 Best,
             </p>
