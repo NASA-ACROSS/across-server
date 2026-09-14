@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.11.1](https://github.com/NASA-ACROSS/across-server/compare/v1.11.0...v1.11.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* send an email to register when logging in with unknown email ([#767](https://github.com/NASA-ACROSS/across-server/issues/767)) ([bb6134a](https://github.com/NASA-ACROSS/across-server/commit/bb6134a16cc0a961c565e38976f526f5d42bd699))
+* send dupe register email and rm ref to API key ([fe431ed](https://github.com/NASA-ACROSS/across-server/commit/fe431eda946e279ddfc93e2a9b13a5d98f6af697))
+* send email when dupe email used to register and rm ref to API key ([#768](https://github.com/NASA-ACROSS/across-server/issues/768)) ([fe431ed](https://github.com/NASA-ACROSS/across-server/commit/fe431eda946e279ddfc93e2a9b13a5d98f6af697))
+
 ## [1.11.0](https://github.com/NASA-ACROSS/across-server/compare/v1.10.0...v1.11.0) (2026-08-31)
 
 
