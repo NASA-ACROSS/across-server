@@ -186,6 +186,7 @@ class TelescopeInstrument(InstrumentBase):
             ),
             visibility_type=obj.visibility_type,
             observation_strategy=ObservationStrategy(obj.observation_strategy),
+            is_observation_request_enabled=obj.is_observation_request_enabled,
         )
 
 

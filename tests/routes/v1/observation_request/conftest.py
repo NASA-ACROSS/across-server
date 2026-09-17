@@ -18,7 +18,6 @@ from across_server.auth.strategies import (
 from across_server.core.enums import ObservationRequestStatus
 from across_server.core.schemas import (
     Coordinate,
-    NullableEndDateRange,
     UnitValue,
 )
 from across_server.db import models
@@ -50,6 +49,26 @@ class FakeObservationRequestCreate(BaseModel):
 class FakeObservationRequestCreateMany:
     def __init__(self, observation_requests: list) -> None:
         self.observation_requests = observation_requests
+
+
+@pytest.fixture(autouse=True)
+def fake_observation_request_json() -> dict:
+    return {
+        "science_justification": "test science justification",
+        "object_name": "test object",
+        "object_coordinates": {"ra": 123.1, "dec": 42.1},
+        "object_position_error": 13.3,
+        "object_brightness": {"value": 321.3, "unit": "ab_mag"},
+        "observation_window": {
+            "begin": datetime.now() + timedelta(days=3),
+            "end": datetime.now() + timedelta(days=7),
+        },
+        "exposure_time": 3000,
+        "anonymize": False,
+        "is_too": True,
+        "instrument_id": "5865b62e-179f-4e5b-9cd0-692d1ed84d4a",
+        "instrument_configuration": None,
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -110,7 +129,7 @@ def fake_observation_request_schema() -> obs_schemas.ObservationRequest:
         object_name="Test Object",
         object_coordinates=Coordinate(ra=123.45, dec=-76.54),
         object_brightness=UnitValue(value=12.34, unit="AB_mag"),
-        observation_window=NullableEndDateRange(
+        observation_window=obs_schemas.NullableEndDateRange(
             begin=datetime.now(timezone.utc) + timedelta(days=1), end=None
         ),
         exposure_time=3600.0,

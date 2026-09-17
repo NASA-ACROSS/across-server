@@ -13,9 +13,10 @@ class TestGroupService:
     class TestGet:
         @pytest.mark.asyncio
         async def test_should_raise_group_not_found_when_group_is_none(
-            self, mock_db: AsyncMock
+            self, mock_db: AsyncMock, mock_result: AsyncMock
         ) -> None:
-            mock_db.get.return_value = None
+            mock_result.unique.return_value.scalar_one_or_none.return_value = None
+            mock_db.execute.return_value = mock_result
             group_role_service = GroupRoleService(mock_db)
             group_service = GroupService(mock_db, group_role_service)
             with pytest.raises(GroupNotFoundException):
@@ -23,9 +24,10 @@ class TestGroupService:
 
         @pytest.mark.asyncio
         async def test_should_return_instance_of_group(
-            self, mock_db: AsyncMock, fake_group: models.Group
+            self, mock_db: AsyncMock, mock_result: AsyncMock, fake_group: models.Group
         ) -> None:
-            mock_db.get.return_value = fake_group
+            mock_result.unique.return_value.scalar_one_or_none.return_value = fake_group
+            mock_db.execute.return_value = mock_result
             group_role_service = GroupRoleService(mock_db)
             group_service = GroupService(mock_db, group_role_service)
 

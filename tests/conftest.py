@@ -191,6 +191,7 @@ def mock_instrument_data(mock_telescope_data: Telescope) -> Instrument:
         short_name="TI",
         created_on=datetime.now(),
         telescope=mock_telescope_data,
+        is_observation_request_enabled=False,
     )
 
 
