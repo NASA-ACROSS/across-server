@@ -28,6 +28,8 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind, expire_on_commit=False)
 
+    # If Daytime=True, use EarthLimb value 1 (45 degrees) for EarthLimb constraint evaluation.
+    # If Daytime=False, use value 2 (9 degrees)
     compound_constraint = (EarthLimbConstraint(min_angle=45) & DaytimeConstraint()) | (
         EarthLimbConstraint(min_angle=9)
     )
