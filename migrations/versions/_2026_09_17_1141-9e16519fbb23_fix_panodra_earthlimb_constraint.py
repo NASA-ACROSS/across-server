@@ -1,8 +1,8 @@
 """fix pandora earthlimb constraint
 
 Revision ID: 9e16519fbb23
-Revises: dd08ad0df8af
-Create Date: 2026-08-21 11:41:18.498052
+Revises: e56408928037
+Create Date: 2026-09-17 11:41:18.498052
 
 """
 
@@ -16,7 +16,7 @@ import migrations.versions.model_snapshots.models_2026_05_26 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "9e16519fbb23"
-down_revision: Union[str, None] = "dd08ad0df8af"
+down_revision: Union[str, None] = "e56408928037"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
