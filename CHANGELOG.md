@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/NASA-ACROSS/across-server/compare/v1.11.1...v1.11.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* add back daytime constraint for ground-based observatories ([#780](https://github.com/NASA-ACROSS/across-server/issues/780)) ([c1e3af1](https://github.com/NASA-ACROSS/across-server/commit/c1e3af181c17ea4e1c9812b18affe224a751466c))
+
 ## [1.11.1](https://github.com/NASA-ACROSS/across-server/compare/v1.11.0...v1.11.1) (2026-09-11)
 
 
