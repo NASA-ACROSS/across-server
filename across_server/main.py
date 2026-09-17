@@ -57,6 +57,7 @@ app = FastAPI(
     summary=config.APP_SUMMARY,
     description=config.APP_DESCRIPTION,
     root_path=config.ROOT_PATH,
+    docs_url="/docs" if config.is_local() else None,
     lifespan=lifespan,
     openapi_tags=tags_metadata,
     version=__version__,
