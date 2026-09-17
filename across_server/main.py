@@ -8,7 +8,7 @@ from typing import AsyncGenerator
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from astropy.utils import iers  # type: ignore
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.responses import FileResponse, RedirectResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
@@ -50,6 +50,8 @@ tags_metadata = [
     },
 ]
 
+logger.debug("ROOT_PATH", root_path=config.ROOT_PATH)
+
 app = FastAPI(
     title=config.APP_TITLE,
     summary=config.APP_SUMMARY,
@@ -86,8 +88,8 @@ app.add_middleware(
     description="Health Check Route",
     status_code=status.HTTP_200_OK,
 )
-async def get() -> str:
-    logger.debug("health check!")
+async def get(request: Request) -> str:
+    logger.debug("health check!", root_path=request.scope.get("root_path"))
     return "ok"
 
 
