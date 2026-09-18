@@ -1,15 +1,15 @@
 import os
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from astropy.utils import iers  # type: ignore
-from fastapi import FastAPI, status
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi import FastAPI, Request, status
+from fastapi.responses import FileResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
 
@@ -45,16 +45,19 @@ tags_metadata = [
         "description": "API version 1, click link on the right",
         "externalDocs": {
             "description": "V1 docs",
-            "url": f"{config.base_url()}/v1/docs",
+            "url": f"{config.docs_base_url()}/v1/docs",
         },
     },
 ]
+
+logger.debug("ROOT_PATH", root_path=config.ROOT_PATH)
 
 app = FastAPI(
     title=config.APP_TITLE,
     summary=config.APP_SUMMARY,
     description=config.APP_DESCRIPTION,
     root_path=config.ROOT_PATH,
+    docs_url="/docs" if config.is_local() else None,
     lifespan=lifespan,
     openapi_tags=tags_metadata,
     version=__version__,
@@ -86,19 +89,14 @@ app.add_middleware(
     description="Health Check Route",
     status_code=status.HTTP_200_OK,
 )
-async def get() -> str:
-    logger.debug("health check!")
+async def get(request: Request) -> str:
+    logger.debug("health check!", root_path=request.scope.get("root_path"))
     return "ok"
 
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon() -> FileResponse:
     return FileResponse(Path("static/favicon.ico"))
-
-
-@app.get("/", include_in_schema=False)
-async def redirect() -> RedirectResponse:
-    return RedirectResponse(url="/docs")
 
 
 app.mount("/v1", v1.api)
