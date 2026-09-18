@@ -1,15 +1,15 @@
 import os
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from astropy.utils import iers  # type: ignore
 from fastapi import FastAPI, Request, status
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
 
@@ -45,7 +45,7 @@ tags_metadata = [
         "description": "API version 1, click link on the right",
         "externalDocs": {
             "description": "V1 docs",
-            "url": f"{config.base_url()}/v1/docs",
+            "url": f"{config.docs_base_url()}/v1/docs",
         },
     },
 ]
@@ -97,11 +97,6 @@ async def get(request: Request) -> str:
 @app.get("/favicon.ico", include_in_schema=False)
 async def get_favicon() -> FileResponse:
     return FileResponse(Path("static/favicon.ico"))
-
-
-@app.get("/", include_in_schema=False)
-async def redirect() -> RedirectResponse:
-    return RedirectResponse(url="/docs")
 
 
 app.mount("/v1", v1.api)

@@ -61,7 +61,8 @@ class Config(BaseConfig):
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
-    def base_url(self) -> str:
+    def docs_base_url(self) -> str:
+        """Should only be used to construct the base URL for the swagger docs"""
         return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
 
 
