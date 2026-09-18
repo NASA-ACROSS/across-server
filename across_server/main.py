@@ -1,9 +1,9 @@
 import os
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -14,6 +14,7 @@ from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
 
 from across_server import db
+from across_server.util.decorators import local_only_route
 
 from . import __version__
 from .core import config, limiter, logging
@@ -45,7 +46,7 @@ tags_metadata = [
         "description": "API version 1, click link on the right",
         "externalDocs": {
             "description": "V1 docs",
-            "url": f"{config.base_url()}/v1/docs",
+            "url": f"{config.docs_base_url()}/v1/docs",
         },
     },
 ]
@@ -99,7 +100,7 @@ async def get_favicon() -> FileResponse:
     return FileResponse(Path("static/favicon.ico"))
 
 
-@app.get("/", include_in_schema=False)
+@local_only_route(app, path="/", include_in_schema=False)
 async def redirect() -> RedirectResponse:
     return RedirectResponse(url="/docs")
 
