@@ -908,7 +908,7 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
         lazy="selectin",
     )
     submitted_by: AssociationProxy[str] = association_proxy(
-        "submitted_by_user", "full_name"
+        target_collection="submitted_by_user", attr="full_name"
     )
 
     __table_args__ = (
