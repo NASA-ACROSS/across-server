@@ -85,8 +85,13 @@ def fake_auth_user(fake_group: models.Group) -> AuthUser:
 
 
 @pytest.fixture(autouse=True)
+def fake_submitted_by_user() -> models.User:
+    return models.User(first_name="Mock", last_name="User")
+
+
+@pytest.fixture(autouse=True)
 def fake_observation_request(
-    mock_instrument_data: models.Instrument,
+    mock_instrument_data: models.Instrument, fake_submitted_by_user: models.User
 ) -> models.ObservationRequest:
     return models.ObservationRequest(
         id=uuid4(),
@@ -106,6 +111,7 @@ def fake_observation_request(
         created_on=datetime(2026, 6, 25),
         anonymize=False,
         is_too=False,
+        submitted_by_user=fake_submitted_by_user,
     )
 
 
@@ -142,6 +148,7 @@ def fake_observation_request_schema() -> obs_schemas.ObservationRequest:
         created_by_id=_id,
         modified_on=None,
         modified_by_id=None,
+        submitted_by="Mock User",
     )
 
 
