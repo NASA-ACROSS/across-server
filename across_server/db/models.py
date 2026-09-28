@@ -19,6 +19,7 @@ from sqlalchemy import (
     desc,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -358,6 +359,10 @@ class User(Base, CreatableMixin, ModifiableMixin):
     last_name: Mapped[str] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+
+    @property
+    def full_name(self) -> str:
+        return self.first_name + " " + self.last_name
 
     groups: Mapped[list["Group"]] = relationship(
         secondary=user_group, back_populates="users", lazy="selectin"
@@ -896,6 +901,14 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     )
     instrument: Mapped["Instrument"] = relationship(
         back_populates="observation_requests", lazy="selectin"
+    )
+    submitted_by_user: Mapped["User"] = relationship(
+        primaryjoin="ObservationRequest.created_by_id == User.id",
+        foreign_keys="User.id",
+        lazy="selectin",
+    )
+    submitted_by: AssociationProxy[str] = association_proxy(
+        "submitted_by_user", "full_name"
     )
 
     __table_args__ = (
