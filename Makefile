@@ -232,7 +232,7 @@ run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 
 # Group: Deployment
-push: ## Build, tag, and push an image to ECR
+push: ## Manually build, tag, and push an image to ECR
 	@aws ecr get-login-password \
     	--region us-east-2 | \
     	docker login \
