@@ -2,12 +2,14 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, FastAPI
 
 from ...core.config import config
 
 
-def local_only_route(router: APIRouter, path: str, **route_kwargs: Any) -> Callable:
+def local_only_route(
+    router: APIRouter | FastAPI, path: str, **route_kwargs: Any
+) -> Callable:
     """
     Decorator that adds a route to the router only for local environments.
     - Excludes the route from OpenAPI schema in non-local environments.

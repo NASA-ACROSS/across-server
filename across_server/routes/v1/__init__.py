@@ -26,6 +26,7 @@ api = FastAPI(
     summary=config.APP_SUMMARY,
     description=config.APP_DESCRIPTION,
     version=__version__,
+    docs_url="/docs" if config.is_local() else None,
 )
 
 api.include_router(auth.router)
