@@ -128,13 +128,19 @@ class ObservationRequestStatusUpdate(BaseSchema):
     status_reason: str | None = None
 
 
+class ObservationRequestVersion(BaseSchema):
+    id: uuid.UUID
+    created_on: datetime
+    modified_on: datetime | None
+
+
 class ObservationRequest(ObservationRequestBase):
     id: uuid.UUID
     parent_id: uuid.UUID
     status: ObservationRequestStatus
     status_reason: str | None
     proposal: ObservingProposal | None = None
-    versions: list[ObservationRequest] | None = None
+    versions: list[ObservationRequestVersion] | None = None
     created_on: datetime
     created_by_id: uuid.UUID | None
     modified_on: datetime | None
