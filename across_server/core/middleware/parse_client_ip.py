@@ -16,8 +16,8 @@ async def parse_client_ip(scope: Scope) -> str:
                 # just in case there is a list of ips, and one is spoofed, we need to take the last one.
                 # this assumes that we only have the ALB forwarding requests and no additional proxies. (cloudflare, etc)
                 # Example:
-                #   Normal (no spoofing): x-forwarded-for: "10.1.13.128"
-                #   Spoofed: x-forwarded-for: "1.1.1.1, 2.2.2.2, 10.1.13.128"
-                ip = value.decode("utf-8").split(",")[-1].strip()
+                #   Direct calls from proxy: x-forwarded-for: "10.1.13.128 (user), 16.16.16.16 (proxy), 7.7.7.7 (alb)"
+                #   Spoofed: x-forwarded-for: "2.2.2.2 (spoof), 10.1.13.128 (user), 16.16.16.16 (proxy), 7.7.7.7 (alb)"
+                ip = value.decode("utf-8").split(",")[-2].strip()
 
     return ip
