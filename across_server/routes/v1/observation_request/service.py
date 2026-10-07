@@ -617,6 +617,7 @@ class ObservationRequestService:
         if schema.anonymize and is_viewer:
             # Redact the fields that should not be visible to viewers when anonymized
             schema.created_by_id = None
+            schema.submitted_by = None
             schema.proposal = None
             schema.science_justification = ""
 

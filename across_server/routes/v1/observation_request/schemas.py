@@ -145,6 +145,7 @@ class ObservationRequest(ObservationRequestBase):
     created_by_id: uuid.UUID | None
     modified_on: datetime | None
     modified_by_id: uuid.UUID | None
+    submitted_by: str | None
 
     @classmethod
     def from_orm(
@@ -185,6 +186,7 @@ class ObservationRequest(ObservationRequestBase):
             created_by_id=observation_request.created_by_id,
             modified_on=observation_request.modified_on,
             modified_by_id=observation_request.modified_by_id,
+            submitted_by=observation_request.submitted_by,
         )
 
     @property
