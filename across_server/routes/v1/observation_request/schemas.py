@@ -3,12 +3,13 @@ from __future__ import annotations
 import hashlib
 import uuid
 from datetime import datetime, timezone
-from typing import Self
+from typing import Any, Self
 
 from pydantic import model_validator
 
 from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
+from ....core.exceptions import InvalidEntityException
 from ....core.schemas import (
     Coordinate,
     NullableDateRange,
@@ -66,9 +67,17 @@ class ObservationRequestBase(BaseSchema):
 
 
 class ObservationRequestCreate(ObservationRequestBase):
-    parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
     observation_window: DateRangeCreate
+
+    @model_validator(mode="before")
+    def reject_parent_id(self: Any) -> Any:
+        if "parent_id" in self:
+            raise InvalidEntityException(
+                entity_name="parent_id",
+                message="parent_id is not expected in POST. if this is an update, use PATCH",
+            )
+        return self
 
     def to_orm(self) -> ObservationRequestModel:
         """
@@ -79,9 +88,8 @@ class ObservationRequestCreate(ObservationRequestBase):
 
         data["id"] = uuid.uuid4()
 
-        # default parent_id to id
-        if "parent_id" not in data or data["parent_id"] is None:
-            data["parent_id"] = data["id"]
+        # default parent_id to id on create
+        data["parent_id"] = data["id"]
 
         # coordinates
         object_coords = self.object_coordinates.model_dump_with_prefix(
@@ -120,7 +128,7 @@ class ObservationRequestCreate(ObservationRequestBase):
 
 
 class ObservationRequestUpdate(ObservationRequestCreate):
-    pass
+    parent_id: uuid.UUID | None = None
 
 
 class ObservationRequestStatusUpdate(BaseSchema):
