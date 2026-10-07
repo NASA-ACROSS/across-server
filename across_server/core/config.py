@@ -32,6 +32,9 @@ class Config(BaseConfig):
 
     # Request Headers
     REQUEST_ID_HEADER: str = "X-Request-ID"
+    # forwarding depth for X-Forwarded-For header. Default is for local as 1 to
+    # assume that local can set a x-forwarded-for, infra deployments will set it higher as needed.
+    XFF_DEPTH: int = 1
 
     # Always hide local only routes -- mainly used for client generation locally.
     HIDE_LOCAL_ROUTE: bool = True
