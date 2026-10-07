@@ -7,6 +7,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -98,7 +99,7 @@ class ObservationRequestService:
         )
 
         observation_request_schema.versions = [
-            self._redact_to_schema(version, is_viewer)
+            version
             for version in versions_dictionary.get(
                 observation_request_schema.parent_id, []
             )
@@ -174,12 +175,10 @@ class ObservationRequestService:
         ).where(*observation_request_filter)
         total_count = (await self.db.execute(count_query)).scalar_one()
 
-        observation_request_versions_dictionary: dict[
-            UUID, list[models.ObservationRequest]
-        ] = {}
+        versions_dictionary: dict[UUID, list[schemas.ObservationRequestVersion]] = {}
 
         if params.include_versions:
-            observation_request_versions_dictionary = await self._get_versions(
+            versions_dictionary = await self._get_versions(
                 [request for request, _ in observation_requests]
             )
 
@@ -189,8 +188,8 @@ class ObservationRequestService:
                 observation_request, is_viewer
             )
             redacted_observation_request.versions = [
-                self._redact_to_schema(v, is_viewer)
-                for v in observation_request_versions_dictionary.get(
+                version
+                for version in versions_dictionary.get(
                     observation_request.parent_id, []
                 )
             ]
@@ -626,7 +625,7 @@ class ObservationRequestService:
     async def _get_versions(
         self,
         observation_requests: list[models.ObservationRequest],
-    ) -> dict[UUID, list[models.ObservationRequest]]:
+    ) -> dict[UUID, list[schemas.ObservationRequestVersion]]:
         """
         Get the versions of the ObservationRequests.
 
@@ -639,33 +638,31 @@ class ObservationRequestService:
 
         Returns
         -------
-        dict[UUID, list[schemas.ObservationRequest]]
-            A dictionary of parent_id to list of ObservationRequest versions
+        dict[UUID, list[schemas.ObservationRequestVersion]]
+            A dictionary of parent_id to list of ObservationRequestVersion versions
         """
-        related_request_dictionary: dict[UUID, list[models.ObservationRequest]] = {}
+        related_request_dictionary: dict[
+            UUID, list[schemas.ObservationRequestVersion]
+        ] = {}
 
         if len(observation_requests) > 0:
             parent_ids = list(
-                set(
-                    [
-                        observation_request.parent_id
-                        for observation_request in observation_requests
-                    ]
-                )
-            )
-            observation_ids = list(
-                set(
-                    [
-                        observation_request.id
-                        for observation_request in observation_requests
-                    ]
-                )
+                {
+                    observation_request.parent_id
+                    for observation_request in observation_requests
+                }
             )
 
             related_request_query = (
-                select(models.ObservationRequest).where(
-                    models.ObservationRequest.parent_id.in_(parent_ids),
-                    ~models.ObservationRequest.id.in_(observation_ids),
+                select(models.ObservationRequest)
+                .where(models.ObservationRequest.parent_id.in_(parent_ids))
+                .options(
+                    load_only(
+                        models.ObservationRequest.id,
+                        models.ObservationRequest.created_on,
+                        models.ObservationRequest.modified_on,
+                        models.ObservationRequest.parent_id,
+                    )
                 )
             ).order_by(models.ObservationRequest.created_on.desc())
 
@@ -675,7 +672,7 @@ class ObservationRequestService:
 
             for parent_id in parent_ids:
                 related_request_dictionary[parent_id] = [
-                    related_request
+                    schemas.ObservationRequestVersion.from_orm(related_request)
                     for related_request in related_requests
                     if related_request.parent_id == parent_id
                 ]
