@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.12.0](https://github.com/NASA-ACROSS/across-server/compare/v1.11.1...v1.12.0) (2026-10-07)
+
+
+### Features
+
+* add submitted_by to obs req model and schema ([#795](https://github.com/NASA-ACROSS/across-server/issues/795)) ([f1df31f](https://github.com/NASA-ACROSS/across-server/commit/f1df31f69f3c8cb67ae52d442fca5c91af3007cc))
+* simplify observation request versions interface, return current version in versions list ([#809](https://github.com/NASA-ACROSS/across-server/issues/809)) ([6cf2c16](https://github.com/NASA-ACROSS/across-server/commit/6cf2c1694259cb1a130c67b7df411a66cb70d27d))
+* update migration for updating pandora complex constraint ([#740](https://github.com/NASA-ACROSS/across-server/issues/740)) ([5332139](https://github.com/NASA-ACROSS/across-server/commit/5332139d5e3cf4aab551093d022a6732425a4d91))
+
+
+### Bug Fixes
+
+* add back daytime constraint for ground-based observatories ([#780](https://github.com/NASA-ACROSS/across-server/issues/780)) ([c1e3af1](https://github.com/NASA-ACROSS/across-server/commit/c1e3af181c17ea4e1c9812b18affe224a751466c))
+* add feat2 and qa env to enum list ([#801](https://github.com/NASA-ACROSS/across-server/issues/801)) ([e40c5e0](https://github.com/NASA-ACROSS/across-server/commit/e40c5e003f6d81f9e93e304aa1888bce3b50f995))
+
 ## [1.11.1](https://github.com/NASA-ACROSS/across-server/compare/v1.11.0...v1.11.1) (2026-09-11)
 
 
