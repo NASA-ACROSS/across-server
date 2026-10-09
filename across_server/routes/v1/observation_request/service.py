@@ -1,3 +1,4 @@
+import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -8,6 +9,8 @@ from shapely.geometry import Point
 from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only
+
+from tests.util.helpers import get_nested_data, has_nested_key
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -300,31 +303,64 @@ class ObservationRequestService:
         models.ObservationRequest
             The ObservationRequest with the modifications
         """
-        observation_request = await self._is_modifiable(observation_request_id, data)
+        # pull existing version
+        (observation_request, _) = await self._get_model(observation_request_id)
 
-        await self._can_submit(
-            [data.instrument_id]
-        )  # Check if the instruments allow observation requests
+        await self._can_modify(observation_request)
+
+        # attempt to use the incoming instrument_id first with the assumption that instrument_id can be changed.
+        instrument_id = data.instrument_id or observation_request.instrument_id
+        await self._can_submit([instrument_id])
 
         await self._assign_proposal_ids([data])
 
         # if changing to anonymize, update all versions to anonymize as well
-        if data.anonymize != observation_request.anonymize:
+        if (
+            data.anonymize is not None
+            and data.anonymize != observation_request.anonymize
+        ):
             versions_query = select(models.ObservationRequest).where(
                 models.ObservationRequest.parent_id == observation_request.parent_id
             )
             result = await self.db.execute(versions_query)
             versions = result.scalars().all()
+
             for version in versions:
                 version.anonymize = data.anonymize
 
-        data.parent_id = observation_request.parent_id or observation_request.id
+        # Keys that do not need to be copied over to the new version
+        exclude_keys = [
+            "id",
+            "modified_by_id",
+            "modified_on",
+        ]
 
-        new_observation_request = data.to_orm()
-        new_observation_request.status = ObservationRequestStatus.PENDING.value
-        new_observation_request.status_reason = "Awaiting review"
-        new_observation_request.created_by_id = observation_request.created_by_id
+        # prepare data_to_modify dictionary with existing obsreq values
+        db_keys = [
+            column.name
+            for column in observation_request.__table__.columns
+            if column.name not in exclude_keys
+        ]
+        data_to_modify = {key: getattr(observation_request, key) for key in db_keys}
+
+        # Include keys that are explicitly set by the user so explicit "None"s are preserved.
+        # Override with None for keys explicitly set to None by the user.
+        data_dict = data.model_dump(exclude_unset=True)
+
+        # check what db keys are on the incoming data so the data to modify can be modified accordingly
+        for db_key in db_keys:
+            schema_key = data.get_schema_key(db_key)
+
+            # Ensure the key exists before trying to copy it. This implies that the field
+            # was explicitly set and if the value is None it is
+            incoming_has_key = has_nested_key(data_dict, schema_key)
+
+            if incoming_has_key:
+                data_to_modify[db_key] = get_nested_data(data, schema_key)
+
+        new_observation_request = models.ObservationRequest(**data_to_modify)
         new_observation_request.modified_by_id = modified_by_id
+        new_observation_request.modified_on = datetime.datetime.now()
 
         self.db.add(new_observation_request)
         await self.db.commit()
@@ -352,7 +388,7 @@ class ObservationRequestService:
         UUID
             The ID of the updated ObservationRequest
         """
-        observation_request = await self._exists(observation_request_id)
+        (observation_request, _) = await self._get_model(observation_request_id)
 
         observation_request.status = data.status
         observation_request.status_reason = data.status_reason
@@ -361,6 +397,37 @@ class ObservationRequestService:
         await self.db.commit()
 
         return observation_request.id
+
+    async def _get_model(
+        self, observation_request_id: UUID, auth_user: AuthUser | None = None
+    ) -> tuple[models.ObservationRequest, bool]:
+        # observation_request_query = select(models.ObservationRequest).where(
+        #     models.ObservationRequest.id == observation_request_id
+        # )
+        # result = await self.db.execute(observation_request_query)
+        # observation_request = result.scalar_one_or_none()
+
+        # if observation_request is None:
+        #     raise ObservationRequestNotFoundException(observation_request_id)
+
+        is_viewer_clause = ~(is_creator_clause(auth_user) | is_admin_clause(auth_user))
+
+        observation_request_query = select(
+            models.ObservationRequest,
+            is_viewer_clause.label("is_viewer"),
+        ).where(models.ObservationRequest.id == observation_request_id)
+
+        result = await self.db.execute(observation_request_query)
+
+        observation_request, is_viewer = result.one_or_none() or (
+            None,
+            True,
+        )
+
+        if observation_request is None:
+            raise ObservationRequestNotFoundException(observation_request_id)
+
+        return (observation_request, bool(is_viewer))
 
     def _get_filter(self, data: schemas.ObservationRequestReadParams) -> list:
         """
@@ -734,8 +801,10 @@ class ObservationRequestService:
     async def _get_proposals(
         self, proposals: list[schemas.ObservingProposalCreate]
     ) -> list[models.ObservingProposal]:
+        names = [proposal.name for proposal in proposals]
+
         query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name.in_([proposal.name for proposal in proposals])
+            models.ObservingProposal.name.in_(names)
         )
         result = await self.db.execute(query)
         proposal_records = result.scalars().all()
@@ -754,57 +823,20 @@ class ObservationRequestService:
         await self.db.flush()
         return proposal_records
 
-    async def _exists(self, observation_request_id: UUID) -> models.ObservationRequest:
-        """
-        Check if an ObservationRequest exists in the database.
-
-        Parameters
-        ----------
-        observation_request_id : UUID
-            The ID of the ObservationRequest to check
-
-        Returns
-        -------
-        models.ObservationRequest
-            The ObservationRequest instance if it exists, otherwise an exception is raised
-        """
-        observation_request_query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == observation_request_id
-        )
-
-        result = await self.db.execute(observation_request_query)
-        observation_request = result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
-
-        return observation_request
-
-    async def _is_modifiable(
-        self, observation_request_id: UUID, data: schemas.ObservationRequestUpdate
-    ) -> models.ObservationRequest:
+    async def _can_modify(self, observation_request: models.ObservationRequest) -> None:
         """
         Check if an ObservationRequest is modifiable based on its status.
 
         Parameters
         ----------
-        observation_request_id : UUID
-            The ID of the ObservationRequest to check
-        data : schemas.ObservationRequestUpdate
-            The data to be updated in the ObservationRequest
+        observation_request : models.ObservationRequest
+            The ObservationRequest instance to check
 
         Returns
         -------
-        models.ObservationRequest
-            The ObservationRequest instance if it is modifiable, otherwise an exception is raised
+        None
+            None if the ObservationRequest is modifiable, otherwise an exception is raised
         """
-        observation_request = await self._exists(observation_request_id)
-
-        # observation_request_schema = schemas.ObservationRequest.from_orm(
-        #     observation_request
-        # )
-        # if data.checksum == observation_request_schema.checksum:
-        #     raise ObservationRequestConflictException(message="No changes detected.")
 
         if observation_request.status in [
             ObservationRequestStatus.ARCHIVED.value,
@@ -814,5 +846,3 @@ class ObservationRequestService:
             raise ObservationRequestConflictException(
                 message="Cannot modify an ObservationRequest that has been archived, rejected, or accepted."
             )
-
-        return observation_request

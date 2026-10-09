@@ -127,10 +127,10 @@ async def create(
     return await service.create(data=data, created_by_id=auth_user.id)
 
 
-@router.put(
+@router.patch(
     "/{observation_request_id}",
     summary="Update an observation request",
-    description="Update an existing observation request for ACROSS.",
+    description="Update an existing observation request for ACROSS. Partial updates are acceptable.",
     operation_id="update_observation_request",
     status_code=status.HTTP_200_OK,
     response_model=uuid.UUID,
@@ -218,4 +218,3 @@ async def delete(
         ),
         modified_by_id=auth_user.id,
     )
-    return None

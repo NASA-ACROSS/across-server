@@ -11,6 +11,7 @@ services:
     volumes:
       - ../across_server/main.py:/app/across_server/main.py
       - ../across_server:/app/across_server
+      - ../.env:/app/.env
     environment:
       BUILD_ENV: local
       ACROSS_DB_HOST: db
