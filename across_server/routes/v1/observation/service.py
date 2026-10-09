@@ -11,11 +11,11 @@ from across.tools import (
 )
 from across.tools import enums as tools_enums
 from fastapi import Depends
-from geoalchemy2 import Geometry
+from geoalchemy2 import Geography, Geometry
 from geoalchemy2.functions import ST_Contains, ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import cast, func, or_, select
+from sqlalchemy import and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, selectinload
 
@@ -306,15 +306,22 @@ class ObservationService:
         return data_filter
 
     async def _get_resolved_instrument_ids(
-        self, data: ObservationRead
+        self,
+        observatory_ids: list[UUID] | None = None,
+        telescope_ids: list[UUID] | None = None,
+        instrument_ids: list[UUID] | None = None,
     ) -> set[UUID] | None:
         """
         Resolve data.observatory_ids and data.telescope_ids into a list of instrument_ids
 
         Parameters
         ----------
-        data : schemas.ObservationRead
-            the ObservationRead data
+        observatory_ids : list[UUID] | None
+            The optional list of observatory ids to resolve
+        telescope_ids : list[UUID] | None
+            The optional list of telescope ids to resolve
+        instrument_ids : list[UUID] | None
+            The list of already-resolved instrument ids
 
         Returns
         -------
@@ -323,14 +330,12 @@ class ObservationService:
         """
         resolved_instrument_ids: set[UUID] | None = None
 
-        if data.observatory_ids or data.telescope_ids:
+        if observatory_ids or telescope_ids:
             conditions = []
-            if data.observatory_ids:
-                conditions.append(
-                    models.Telescope.observatory_id.in_(data.observatory_ids)
-                )
-            if data.telescope_ids:
-                conditions.append(models.Telescope.id.in_(data.telescope_ids))
+            if observatory_ids:
+                conditions.append(models.Telescope.observatory_id.in_(observatory_ids))
+            if telescope_ids:
+                conditions.append(models.Telescope.id.in_(telescope_ids))
             result = await self.db.execute(
                 select(models.Instrument.id)
                 .join(
@@ -341,11 +346,11 @@ class ObservationService:
             )
             resolved_instrument_ids = set(result.scalars().all())
 
-        if data.instrument_ids:
+        if instrument_ids:
             if resolved_instrument_ids is not None:
-                resolved_instrument_ids |= set(data.instrument_ids)
+                resolved_instrument_ids |= set(instrument_ids)
             else:
-                resolved_instrument_ids = set(data.instrument_ids)
+                resolved_instrument_ids = set(instrument_ids)
 
         return resolved_instrument_ids
 
@@ -371,7 +376,9 @@ class ObservationService:
         )
 
         # pre-resolve observatory_id and telescope_id into a list of instrument_ids
-        resolved_instrument_ids = await self._get_resolved_instrument_ids(data)
+        resolved_instrument_ids = await self._get_resolved_instrument_ids(
+            data.observatory_ids, data.telescope_ids, data.instrument_ids
+        )
 
         query_filter = self._get_observation_base_filter(
             data, resolved_instrument_ids=resolved_instrument_ids
@@ -430,8 +437,8 @@ class ObservationService:
 
         Parameters
         ----------
-        data : schemas.PointOverlapRead
-            the PointOverlapRead data
+        data : schemas.ContainsPointReadParams
+            the ContainsPointReadParams data
 
         Returns
         -------
@@ -443,25 +450,70 @@ class ObservationService:
             include_footprints=data.include_footprints
         )
 
-        query_filter = self._get_observation_base_filter(
-            data
-        ) + self._get_observation_contains_point_filter(data)
-
-        count_query = (
-            select(func.count()).select_from(models.Observation).where(*query_filter)
+        # pre-resolve observatory_id and telescope_id into a list of instrument_ids
+        resolved_instrument_ids = await self._get_resolved_instrument_ids(
+            data.observatory_ids, data.telescope_ids, data.instrument_ids
         )
-        total_count = (await self.db.execute(count_query)).scalar_one()
 
-        data_query = (
-            select(models.Observation)
-            .where(*query_filter)
-            .order_by(models.Observation.created_on.desc())
+        base_query_filter = self._get_observation_base_filter(
+            data, resolved_instrument_ids=resolved_instrument_ids
+        )
+
+        # Force the planner to ignore the bbox operator by using _ST_COVERS
+        # This is because the planner is grossly misjudging the number of rows to scan
+        # This speeds up queries by a factor of ~4
+        stmt = (
+            select(models.Observation.id, models.Observation.created_on)
+            .join(
+                models.ObservationFootprint,
+                models.ObservationFootprint.observation_id == models.Observation.id,
+            )
+            .where(
+                and_(
+                    *base_query_filter,
+                    func._ST_COVERS(
+                        models.ObservationFootprint.polygon,
+                        cast(
+                            from_shape(
+                                Point(data.ra, data.dec),  # type: ignore
+                                srid=4326,
+                            ),
+                            Geography(geometry_type="POINT", srid=4326),
+                        ),
+                    ),
+                )
+            )
+        )
+
+        # Subquery for counting after applying filters
+        count_subquery = stmt.subquery()
+
+        # Subquery for paginated results after applying filters
+        contains_point_subquery = (
+            stmt.order_by(
+                models.Observation.created_on.desc(),
+                models.Observation.id.desc(),
+            )
             .limit(data.page_limit)
             .offset(data.offset)
+            .subquery()
+        )
+
+        # Hydrate rows for current page
+        hydrate_query = (
+            select(models.Observation)
+            .join(
+                contains_point_subquery,
+                models.Observation.id == contains_point_subquery.c.id,
+            )
             .options(query_options)  # type: ignore
         )
 
-        result = await self.db.execute(data_query)
-        observations = result.scalars().all()
+        count_query = select(func.count()).select_from(count_subquery)
+
+        result = await self.db.execute(hydrate_query)
+        observations = typing.cast(Sequence[models.Observation], result.scalars().all())
+
+        total_count = (await self.db.execute(count_query)).scalar_one()
 
         return observations, total_count
