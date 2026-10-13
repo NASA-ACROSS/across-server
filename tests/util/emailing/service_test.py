@@ -5,8 +5,8 @@ import aioboto3
 import pytest
 import pytest_asyncio
 import structlog
+from fastapi import HTTPException
 
-from across_server.util.email import config as email_config_module
 import across_server.util.email.service as email_service_module
 from across_server.util.email.service import EmailService
 
@@ -28,9 +28,12 @@ class MockClientContext:
 
 class TestEmailService:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, monkeypatch: Any) -> None:
+    async def setup(self, monkeypatch: Any, mock_email_config: MagicMock) -> None:
         self.recipient = "mockemail@example.com"
         self.subject = "Mock"
+
+        # force the restricted list to include the mock recipient
+        mock_email_config.RESTRICTED_TO_EMAIL_LIST = ["mockemail@example.com"]
 
         self.mock_ses_client = AsyncMock()
         self.mock_ses_client.send_raw_email = AsyncMock()
@@ -69,7 +72,7 @@ class TestEmailService:
         """Should propagate an error when the SES send fails"""
         self.mock_ses_client.send_raw_email.side_effect = Exception("Mock Exception")
         service = EmailService()
-        with pytest.raises(Exception):
+        with pytest.raises(Exception) as _:
             await service.send(recipients=[self.recipient], subject=self.subject)
 
     @pytest.mark.asyncio
@@ -79,7 +82,7 @@ class TestEmailService:
     ) -> None:
         """Should log a warning when sending an email without recipients"""
         service = EmailService()
-        with pytest.raises(Exception):
+        with pytest.raises(Exception) as _:
             await service.send(recipients=recipients or [], subject=self.subject)
         self.mock_logger.error.assert_called_once()
 
@@ -94,30 +97,30 @@ class TestEmailService:
         self.mock_ses_client.send_raw_email.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_skip_throw_error_and_exception_when_recipient_not_in_restricted_list(
-        self, monkeypatch: Any
+    async def test_should_raise_403_exception_when_recipient_not_in_restricted_to_list(
+        self, mock_email_config: MagicMock
     ) -> None:
-        """Should skip the send when no recipient passes RESTRICTED_TO_EMAIL_LIST"""
-        monkeypatch.setattr(
-            email_config_module.email_config,
-            "RESTRICTED_TO_EMAIL_LIST",
-            ["allowed@example.com"],
-        )
+        """Should raise exception when attempting to send when no recipient passes RESTRICTED_TO_EMAIL_LIST"""
+        mock_email_config.RESTRICTED_TO_EMAIL_LIST = ["allowed@example.com"]
         service = EmailService()
-        with pytest.raises(Exception):
-            await service.send(recipients=[self.recipient] or [], subject=self.subject)
+        with pytest.raises(HTTPException) as exc_info:
+            await service.send(recipients=[self.recipient], subject=self.subject)
+        assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_should_log_error_when_recipient_not_in_restricted_to_list(
+        self, mock_email_config: MagicMock
+    ) -> None:
+        """Should log an error when attempting to send when no recipient passes RESTRICTED_TO_EMAIL_LIST"""
+        mock_email_config.RESTRICTED_TO_EMAIL_LIST = ["allowed@example.com"]
+        service = EmailService()
+        with pytest.raises(Exception) as _:
+            await service.send(recipients=[self.recipient], subject=self.subject)
         self.mock_logger.error.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_should_send_when_recipient_in_restricted_list(
-        self, monkeypatch: Any
-    ) -> None:
+    async def test_should_send_when_recipient_in_restricted_list(self) -> None:
         """Should send when the recipient is on RESTRICTED_TO_EMAIL_LIST"""
-        monkeypatch.setattr(
-            email_config_module.email_config,
-            "RESTRICTED_TO_EMAIL_LIST",
-            [self.recipient],
-        )
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
         self.mock_ses_client.send_raw_email.assert_called_once()

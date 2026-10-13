@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from across_server import main
 from across_server.auth import strategies
 from across_server.db.models import Filter, Group, Instrument, Observatory, Telescope
+from across_server.util.email.config import email_config
 from across_server.util.email.service import EmailService
 
 
@@ -130,6 +131,27 @@ def mock_db(
     yield mock
 
 
+@pytest.fixture(autouse=True)
+def mock_email_config(monkeypatch: pytest.MonkeyPatch) -> Generator[MagicMock]:
+    """Prevent email_config's SSM-backed properties from making real AWS calls in tests."""
+    mock = MagicMock()
+    mock.ALLOWED_TOP_LEVEL_DOMAINS = ["gov", "edu", "space"]
+    mock.RESTRICTED_TO_EMAIL_LIST = ["sandy@treedome.space"]
+
+    monkeypatch.setattr(
+        type(email_config),
+        "ALLOWED_TOP_LEVEL_DOMAINS",
+        property(lambda _: mock.ALLOWED_TOP_LEVEL_DOMAINS),
+    )
+    monkeypatch.setattr(
+        type(email_config),
+        "RESTRICTED_TO_EMAIL_LIST",
+        property(lambda _: mock.RESTRICTED_TO_EMAIL_LIST),
+    )
+
+    yield mock
+
+
 @pytest.fixture
 def mock_email_service() -> Generator[AsyncMock]:
     mock = AsyncMock(EmailService)
@@ -161,7 +183,7 @@ def mock_self_access() -> Generator[MagicMock]:
 
 
 @pytest.fixture()
-def mock_observatory_data(fake_group: Group) -> Observatory:
+def fake_observatory_data(fake_group: Group) -> Observatory:
     return Observatory(
         id=uuid4(),
         name="Test Observatory",
@@ -173,37 +195,37 @@ def mock_observatory_data(fake_group: Group) -> Observatory:
 
 
 @pytest.fixture()
-def mock_telescope_data(mock_observatory_data: Observatory) -> Telescope:
+def fake_telescope_data(fake_observatory_data: Observatory) -> Telescope:
     return Telescope(
         id=uuid4(),
         name="Test Telescope",
         short_name="TT",
         created_on=datetime.now(),
-        observatory=mock_observatory_data,
+        observatory=fake_observatory_data,
     )
 
 
 @pytest.fixture()
-def mock_instrument_data(mock_telescope_data: Telescope) -> Instrument:
+def fake_instrument_data(fake_telescope_data: Telescope) -> Instrument:
     return Instrument(
         id=uuid4(),
         name="Test Instrument",
         short_name="TI",
         created_on=datetime.now(),
-        telescope=mock_telescope_data,
+        telescope=fake_telescope_data,
         is_observation_request_enabled=False,
     )
 
 
 @pytest.fixture()
-def mock_filter_data(mock_instrument_data: Instrument) -> Filter:
+def fake_filter_data(fake_instrument_data: Instrument) -> Filter:
     return Filter(
         id=uuid4(),
         name="Test Filter",
         created_on=datetime.now(),
         min_wavelength=5000,
         max_wavelength=6000,
-        instrument_id=mock_instrument_data.id,
+        instrument_id=fake_instrument_data.id,
         is_operational=True,
     )
 

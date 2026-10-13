@@ -12,11 +12,11 @@ from across_server.routes.v1.instrument.schemas import Instrument
 class Setup:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(
-        self, async_client: AsyncClient, mock_instrument_data: AsyncMock
+        self, async_client: AsyncClient, fake_instrument_data: AsyncMock
     ) -> None:
         self.client = async_client
         self.endpoint = "/instrument/"
-        self.get_data = mock_instrument_data
+        self.get_data = fake_instrument_data
 
 
 class TestInstrumentRouter:

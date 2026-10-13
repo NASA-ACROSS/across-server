@@ -1,20 +1,28 @@
 import os
-import pytest
-from across_server.util.email.config import Config
 from unittest.mock import MagicMock
+
+import pytest
+
+from across_server.util.email.config import Config
+
+COMMON_CSV_TEST_CASES = [
+    ("", []),
+    (None, []),
+    (",", []),
+    (" , ", []),
+    ("None", ["None"]),
+    ("None,", ["None"]),
+    (",None", ["None"]),
+]
+
+
+@pytest.fixture(autouse=True)
+def mock_email_config() -> None:
+    """These tests exercise email_config's real property/CSV-parsing logic; skip the global SSM mock."""
+    return
 
 
 class TestEmailConfig:
-    COMMON_CSV_TEST_CASES = [
-        ("", []),
-        (None, []),
-        (",", []),
-        (" , ", []),
-        ("None", ["None"]),
-        ("None,", ["None"]),
-        (",None", ["None"]),
-    ]
-
     @pytest.mark.parametrize(
         "csv, expected, env_var, config_attr",
         [

@@ -136,25 +136,15 @@ class EmailService:
             </html>
         """
 
-    def filter_recipients(self, recipients: list[str]) -> list[str]:
-        allowed = email_config.RESTRICTED_TO_EMAIL_LIST
-        if not allowed:
-            return recipients
-
-        allowed_set = {addr.lower() for addr in allowed}
-        return [
-            recipient for recipient in recipients if recipient.lower() in allowed_set
-        ]
-
     async def send(
         self,
         recipients: list[str],
         subject: str,
         content_body: str | None = None,
         content_html: str | None = None,
-        attachments: list = [],
+        attachments: list | None = None,
     ) -> None:
-        recipients = self.filter_recipients(recipients)
+        recipients = self._filter_recipients(recipients)
         if not recipients:
             logger.error(
                 "No permitted recipients after applying RESTRICTED_TO_EMAIL_LIST; skipping send",
@@ -182,22 +172,33 @@ class EmailService:
             pass
 
         # only send emails in non-local envs
-        if not core_config.is_local():
-            session = aioboto3.Session()
-            async with session.client(
-                "ses",
-                region_name=self.region,
-                config=email_config._SES_RETRY_CONFIG,
-            ) as ses:
-                await ses.send_raw_email(
-                    Source=self.sender_email_addr,
-                    Destinations=recipients,
-                    RawMessage={"Data": em.as_string()},
-                    ConfigurationSetName=self.configuration_set,
-                )
-        else:
-            logger.info(
+        if core_config.is_local():
+            logger.warning(
                 "Skipping email send in local environment",
                 subject=subject,
                 recipients=recipients,
             )
+            return
+
+        session = aioboto3.Session()
+        async with session.client(
+            "ses",
+            region_name=self.region,
+            config=email_config._SES_RETRY_CONFIG,
+        ) as ses:
+            await ses.send_raw_email(
+                Source=self.sender_email_addr,
+                Destinations=recipients,
+                RawMessage={"Data": em.as_string()},
+                ConfigurationSetName=self.configuration_set,
+            )
+
+    def _filter_recipients(self, recipients: list[str]) -> list[str]:
+        allowed = email_config.RESTRICTED_TO_EMAIL_LIST
+        if not allowed:
+            return recipients
+
+        allowed_set = {addr.lower() for addr in allowed}
+        return [
+            recipient for recipient in recipients if recipient.lower() in allowed_set
+        ]
