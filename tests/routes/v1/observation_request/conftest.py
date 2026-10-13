@@ -22,7 +22,7 @@ from across_server.routes.v1.observation_request.service import (
 
 
 @pytest.fixture(autouse=True)
-def fake_observation_request_data(mock_instrument_data: models.Instrument) -> dict:
+def fake_observation_request_data(fake_instrument_model: models.Instrument) -> dict:
     return {
         "id": uuid.uuid4(),
         "science_justification": "test science justification",
@@ -37,7 +37,7 @@ def fake_observation_request_data(mock_instrument_data: models.Instrument) -> di
         "exposure_time": 3000,
         "anonymize": False,
         "is_too": True,
-        "instrument_id": mock_instrument_data.id,
+        "instrument_id": fake_instrument_model.id,
         "instrument_configuration": None,
         "proposal": {
             "name": "Test Proposal",
@@ -144,7 +144,6 @@ def fake_observation_request_model_factory(
             created_by_id=fake_user.id,
             modified_by_id=fake_user.id,
             submitted_by_user=fake_user,
-            # submitted_by=f"{fake_user.first_name} {fake_user.last_name}",
             created_on=datetime.now(),
             modified_on=datetime.now(),
         )

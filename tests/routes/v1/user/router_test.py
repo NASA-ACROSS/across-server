@@ -8,7 +8,6 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from across_server.routes.v1.user.exceptions import DuplicateUserException
-from across_server.util.email.config import email_config
 
 
 class TestUserPatchRoute:
@@ -50,10 +49,10 @@ class TestUserPatchRoute:
 
 class TestUserPostRoute:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, async_client: AsyncClient, mock_user_json: dict) -> None:
+    async def setup(self, async_client: AsyncClient, fake_user_json: dict) -> None:
         self.client = async_client
         self.endpoint = "/user/"
-        self.data = mock_user_json
+        self.data = fake_user_json
 
     @pytest.mark.asyncio
     async def test_should_send_email_when_user_is_created(
@@ -98,12 +97,11 @@ class TestUserPostRoute:
 
     @pytest.mark.asyncio
     async def test_should_reject_registration_with_unpermitted_tld(
-        self, monkeypatch: Any
+        self, mock_email_config: Any
     ) -> None:
         """Should reject registration when the email TLD is not allowed"""
-        monkeypatch.setattr(
-            email_config, "ALLOWED_TOP_LEVEL_DOMAINS", ["gov", "com", ".rocks"]
-        )
+        mock_email_config.ALLOWED_TOP_LEVEL_DOMAINS = ["gov", "com", ".rocks"]
+
         # mock_user_json uses an ".space" address, which is not permitted
         res = await self.client.post(self.endpoint, json=self.data)
         assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT

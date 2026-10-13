@@ -12,11 +12,11 @@ from across_server.routes.v1.filter.schemas import Filter
 class Setup:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(
-        self, async_client: AsyncClient, mock_filter_data: AsyncMock
+        self, async_client: AsyncClient, fake_filter_data: AsyncMock
     ) -> None:
         self.client = async_client
         self.endpoint = "/filter/"
-        self.get_data = mock_filter_data
+        self.get_data = fake_filter_data
 
 
 class TestFilterRouter:
