@@ -9,11 +9,11 @@ from across_server.routes.v1.instrument.service import InstrumentService
 
 
 @pytest.fixture(scope="function")
-def mock_instrument_service(mock_instrument_data: Instrument) -> Generator[AsyncMock]:
+def mock_instrument_service(fake_instrument_data: Instrument) -> Generator[AsyncMock]:
     mock = AsyncMock(InstrumentService)
 
-    mock.get = AsyncMock(return_value=mock_instrument_data)
-    mock.get_many = AsyncMock(return_value=[mock_instrument_data])
+    mock.get = AsyncMock(return_value=fake_instrument_data)
+    mock.get_many = AsyncMock(return_value=[fake_instrument_data])
 
     yield mock
 

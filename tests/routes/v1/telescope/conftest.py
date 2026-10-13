@@ -11,11 +11,11 @@ from across_server.routes.v1.telescope.service import TelescopeService
 
 
 @pytest.fixture(scope="function")
-def mock_telescope_service(mock_telescope_data: None) -> Generator[AsyncMock]:
+def mock_telescope_service(fake_telescope_data: None) -> Generator[AsyncMock]:
     mock = AsyncMock(TelescopeService)
 
-    mock.get = AsyncMock(return_value=mock_telescope_data)
-    mock.get_many = AsyncMock(return_value=[mock_telescope_data])
+    mock.get = AsyncMock(return_value=fake_telescope_data)
+    mock.get_many = AsyncMock(return_value=[fake_telescope_data])
 
     yield mock
 

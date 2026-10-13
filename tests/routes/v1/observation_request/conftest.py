@@ -91,7 +91,7 @@ def fake_submitted_by_user() -> models.User:
 
 @pytest.fixture(autouse=True)
 def fake_observation_request(
-    mock_instrument_data: models.Instrument, fake_submitted_by_user: models.User
+    fake_instrument_data: models.Instrument, fake_submitted_by_user: models.User
 ) -> models.ObservationRequest:
     return models.ObservationRequest(
         id=uuid4(),
@@ -105,8 +105,8 @@ def fake_observation_request(
         date_range_begin=datetime.now(timezone.utc) + timedelta(days=1),
         exposure_time=3600.0,
         parent_id=uuid4(),
-        instrument=mock_instrument_data,
-        instrument_id=mock_instrument_data.id,
+        instrument=fake_instrument_data,
+        instrument_id=fake_instrument_data.id,
         created_by_id=uuid4(),
         created_on=datetime(2026, 6, 25),
         anonymize=False,

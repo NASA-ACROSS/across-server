@@ -45,7 +45,7 @@ class AuthService:
         self, credentials: HTTPBasicCredentials
     ) -> schemas.AuthUser:
         query = select(models.ServiceAccount).where(
-            (models.ServiceAccount.id == credentials.username)
+            models.ServiceAccount.id == credentials.username
         )
 
         result = await self.db.execute(query)
@@ -168,7 +168,7 @@ class AuthService:
                         for perm in role.permissions
                     }
                 )
-                is_admin = True if "group:all:write" in unique_group_perms else False
+                is_admin = "group:all:write" in unique_group_perms
 
                 auth_user.groups.append(
                     schemas.Group(

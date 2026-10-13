@@ -9,11 +9,11 @@ from across_server.routes.v1.filter.service import FilterService
 
 
 @pytest.fixture(scope="function")
-def mock_filter_service(mock_filter_data: Filter) -> Generator[AsyncMock]:
+def mock_filter_service(fake_filter_data: Filter) -> Generator[AsyncMock]:
     mock = AsyncMock(FilterService)
 
-    mock.get = AsyncMock(return_value=mock_filter_data)
-    mock.get_many = AsyncMock(return_value=[mock_filter_data])
+    mock.get = AsyncMock(return_value=fake_filter_data)
+    mock.get_many = AsyncMock(return_value=[fake_filter_data])
 
     yield mock
 

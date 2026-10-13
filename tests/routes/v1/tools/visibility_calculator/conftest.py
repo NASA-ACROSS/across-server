@@ -156,19 +156,19 @@ def mock_ephemeris_service() -> Generator[AsyncMock]:
 
 @pytest.fixture(scope="function")
 def mock_instrument_service(
-    mock_instrument_data: Instrument,
+    fake_instrument_data: Instrument,
 ) -> Generator[AsyncMock]:
     mock = AsyncMock(InstrumentService)
 
-    mock.get = AsyncMock(return_value=mock_instrument_data)
+    mock.get = AsyncMock(return_value=fake_instrument_data)
     yield mock
 
 
 @pytest.fixture(scope="function")
-def mock_telescope_service(mock_telescope_data: Telescope) -> Generator[AsyncMock]:
+def mock_telescope_service(fake_telescope_data: Telescope) -> Generator[AsyncMock]:
     mock = AsyncMock(TelescopeService)
 
-    mock.get = AsyncMock(return_value=mock_telescope_data)
+    mock.get = AsyncMock(return_value=fake_telescope_data)
     yield mock
 
 

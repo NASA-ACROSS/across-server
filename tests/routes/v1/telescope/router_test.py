@@ -10,10 +10,10 @@ from across_server.routes.v1.telescope.schemas import Telescope
 
 class Setup:
     @pytest_asyncio.fixture(autouse=True)
-    async def setup(self, async_client: AsyncClient, mock_telescope_data: None) -> None:
+    async def setup(self, async_client: AsyncClient, fake_telescope_data: None) -> None:
         self.client = async_client
         self.endpoint = "/telescope/"
-        self.get_data = mock_telescope_data
+        self.get_data = fake_telescope_data
 
 
 class TestTelescopeRouter:

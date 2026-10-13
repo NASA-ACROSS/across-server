@@ -124,12 +124,12 @@ class TestObservationRequestService:
             mock_db: AsyncMock,
             mock_result: MagicMock,
             mock_observation_request_create_many: Any,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_data: models.Instrument,
             fake_auth_user: AuthUser,
         ) -> None:
             """Should raise an error if any instrument in the submitted requests does not have requests enabled"""
-            mock_instrument_data.is_observation_request_enabled = False
-            mock_result.scalars.return_value.all.return_value = [mock_instrument_data]
+            fake_instrument_data.is_observation_request_enabled = False
+            mock_result.scalars.return_value.all.return_value = [fake_instrument_data]
             service = ObservationRequestService(mock_db)
             with pytest.raises(HTTPException):
                 await service.create_many(
@@ -165,10 +165,10 @@ class TestObservationRequestService:
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             mock_observation_request_create: Any,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_data: models.Instrument,
         ) -> None:
             """Should raise ObservationRequestNotFoundException when the ObservationRequest does not exist"""
-            mock_instrument_data.is_observation_request_enabled = True
+            fake_instrument_data.is_observation_request_enabled = True
             mock_result.scalar_one_or_none.side_effect = [
                 None,
             ]
@@ -187,15 +187,15 @@ class TestObservationRequestService:
             fake_auth_user: AuthUser,
             mock_observation_request_create: Any,
             fake_observation_request: models.ObservationRequest,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_data: models.Instrument,
         ) -> None:
             """Should commit modifications of ObservationRequest to database"""
-            mock_instrument_data.is_observation_request_enabled = True
+            fake_instrument_data.is_observation_request_enabled = True
             mock_result.scalar_one_or_none.side_effect = [
                 fake_observation_request,
             ]
             mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
+                [fake_instrument_data],  # _can_submit: instruments query
                 [],  # _get_proposals: no existing proposals
             ]
 
