@@ -731,6 +731,7 @@ class ObservationFootprint(Base):
 
     __table_args__ = (
         Index("idx_observation_footprint_polygon", "polygon", postgresql_using="gist"),
+        Index("ix_observation_footprint_observation_id", "observation_id"),
     )
 
 
