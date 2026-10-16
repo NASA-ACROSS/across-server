@@ -148,6 +148,8 @@ class ObservationRequestUpdate(ObservationRequestCreate):
     is_too: bool | None = None
     instrument_id: uuid.UUID | None = None
     instrument_configuration: dict | None = None
+    status: ObservationRequestStatus | None = None
+    status_reason: str | None = None
 
 
 class ObservationRequestStatusUpdate(BaseSchema):

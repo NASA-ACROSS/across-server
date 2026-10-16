@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 
 
-def has_nested_key(obj: dict, path: str):
+def has_key(obj: dict, path: str):
     keys = path.split(".")
     current = obj
 
@@ -15,16 +15,17 @@ def has_nested_key(obj: dict, path: str):
     return True
 
 
-def get_nested_data(model: BaseModel, path: str) -> Any:
+def get_value(model: BaseModel | dict, path: str) -> Any:
     keys = path.split(".")
     current = model
 
     for key in keys:
-        next = getattr(current, key)
-
-        if isinstance(next, BaseModel):
+        if isinstance(current, BaseModel) and hasattr(current, key):
+            next = getattr(current, key)
             current = next
+        elif isinstance(current, dict) and key in current:
+            current = current[key]
         else:
-            current = next
+            current = None
 
     return current

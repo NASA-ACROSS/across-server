@@ -166,14 +166,12 @@ class AuthService:
                         perm.name
                         for role in (group.roles or [])
                         for perm in role.permissions
+                        if role.id in {r.id for r in (user.group_roles or [])}
                     }
                 )
-                is_admin = True if "group:all:write" in unique_group_perms else False
 
                 auth_user.groups.append(
-                    schemas.Group(
-                        id=group.id, scopes=unique_group_perms, is_admin=is_admin
-                    )
+                    schemas.Group(id=group.id, scopes=unique_group_perms)
                 )
 
         return auth_user

@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Path, status
-from sqlalchemy import ColumnElement, False_, false, select
+from sqlalchemy import ColumnElement, False_, case, false, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....auth.schemas import AuthUser
@@ -21,19 +21,19 @@ def is_creator_clause(
     return models.ObservationRequest.created_by_id == auth_user.id
 
 
-def is_admin_clause(
+def is_writer_clause(
     auth_user: AuthUser | None,
 ) -> ColumnElement[bool] | False_:
     if auth_user is None:
         return false()
 
-    admin_group_ids = [
+    group_ids = [
         group.id
         for group in auth_user.groups
-        if getattr(group, "is_admin", False)
-        or any(
+        if any(
             scope in getattr(group, "scopes", [])
             for scope in [
+                "group:all:write",
                 "group:observation-request:write",
                 "group:observation-request:read",
             ]
@@ -43,7 +43,7 @@ def is_admin_clause(
     return models.ObservationRequest.instrument.has(
         models.Instrument.telescope.has(
             models.Telescope.observatory.has(
-                models.Observatory.group.has(models.Group.id.in_(admin_group_ids))
+                models.Observatory.group.has(models.Group.id.in_(group_ids))
             )
         )
     )
@@ -61,26 +61,32 @@ async def observation_request_access(
     2. the user is a group admin for the instrument's observatory group
     """
 
-    is_viewer_clause = ~(is_admin_clause(auth_user) | is_creator_clause(auth_user))
-
     observation_request_exists_query = select(
         models.ObservationRequest,
-        is_viewer_clause.label("is_viewer"),
+        case(
+            (is_writer_clause(auth_user), "writer"),
+            (is_creator_clause(auth_user), "creator"),
+            else_="viewer",
+        ).label("user_type"),
     ).where(models.ObservationRequest.id == observation_request_id)
 
-    result = await db.execute(observation_request_exists_query)
+    exec = await db.execute(observation_request_exists_query)
 
-    observation_request_exists, is_viewer = result.one_or_none() or (
-        None,
-        True,
-    )
+    res = exec.one_or_none()
+
+    if res is None:
+        raise ObservationRequestNotFoundException(
+            observation_request_id=observation_request_id
+        )
+
+    observation_request_exists, user_type = res
 
     if observation_request_exists is None:
         raise ObservationRequestNotFoundException(
             observation_request_id=observation_request_id
         )
 
-    if is_viewer:
+    if user_type == "viewer":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     return auth_user
@@ -99,12 +105,12 @@ async def observation_request_status_access(
 
     observation_request_exists_query = select(
         models.ObservationRequest,
-        is_admin_clause(auth_user).label("is_admin"),
+        is_writer_clause(auth_user).label("is_writer"),
     ).where(models.ObservationRequest.id == observation_request_id)
 
     result = await db.execute(observation_request_exists_query)
 
-    observation_request, is_admin = result.one_or_none() or (
+    observation_request, is_writer = result.one_or_none() or (
         None,
         False,
     )
@@ -114,7 +120,7 @@ async def observation_request_status_access(
             observation_request_id=observation_request_id
         )
 
-    if is_admin:
+    if is_writer:
         return auth_user
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
