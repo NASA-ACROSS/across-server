@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
@@ -8,7 +9,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import case, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, make_transient
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -385,10 +386,13 @@ class ObservationRequestService:
             or observation_request.status == ObservationRequestStatus.WARNING.value
         )
 
-        if can_creator_archive or user_type == "admin":
+        if can_creator_archive or user_type == "writer":
+            # unlink from current db record state and allow to add as a new entity
+            make_transient(observation_request)
             observation_request.status = ObservationRequestStatus.ARCHIVED.value
             observation_request.modified_by_id = modified_by.id
             observation_request.modified_on = datetime.datetime.now()
+            observation_request.id = uuid.uuid4()
 
             self.db.add(observation_request)
             await self.db.commit()
@@ -724,7 +728,7 @@ class ObservationRequestService:
                         models.ObservationRequest.parent_id,
                     )
                 )
-            ).order_by(models.ObservationRequest.created_on.desc())
+            ).order_by(models.ObservationRequest.modified_on.desc())
 
             related_request_result = await self.db.execute(related_request_query)
 
@@ -848,7 +852,7 @@ class ObservationRequestService:
                 message="Cannot modify an ObservationRequest that has been archived, rejected, or accepted."
             )
 
-        if user_type == "creator" and update_data.status or update_data.status_reason:
+        if user_type == "creator" and (update_data.status or update_data.status_reason):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Cannot modify the status or status reason of an ObservationRequest as a creator.",
