@@ -1,27 +1,32 @@
-from typing import Annotated
+import datetime
+import uuid
+from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import distinct, func, or_, select
+from sqlalchemy import case, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, make_transient
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
 from ....core.enums.observation_request_status import ObservationRequestStatus
 from ....db import models
 from ....db.database import get_session
+from ....util.helpers import nested
 from . import schemas
-from .access import is_admin_clause, is_creator_clause
+from .access import is_creator_clause, is_writer_clause
 from .exceptions import (
     InvalidObservationRequestCreateParametersException,
     InvalidObservationRequestReadParametersException,
     ObservationRequestConflictException,
     ObservationRequestNotFoundException,
 )
+
+type UserType = Literal["viewer", "creator", "writer"]
 
 
 class ObservationRequestService:
@@ -73,7 +78,7 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
-        is_viewer_clause = ~(is_creator_clause(auth_user) | is_admin_clause(auth_user))
+        is_viewer_clause = ~(is_creator_clause(auth_user) | is_writer_clause(auth_user))
 
         observation_request_query = select(
             models.ObservationRequest,
@@ -130,7 +135,7 @@ class ObservationRequestService:
         """
         observation_request_filter = self._get_filter(data=params)
 
-        is_viewer_clause = ~(is_creator_clause(auth_user) | is_admin_clause(auth_user))
+        is_viewer_clause = ~(is_creator_clause(auth_user) | is_writer_clause(auth_user))
 
         if params.proposal_code or params.proposal_name or params.proposal_ids:
             observation_request_filter.append(
@@ -280,7 +285,7 @@ class ObservationRequestService:
         self,
         observation_request_id: UUID,
         data: schemas.ObservationRequestUpdate,
-        modified_by_id: UUID,
+        modified_by: AuthUser,
     ) -> UUID:
         """
         Modify an ObservationRequest given some changes.
@@ -293,74 +298,132 @@ class ObservationRequestService:
             the ID of the ObservationRequest to modify
         data : schemas.ObservationRequestUpdate
             the changes to the ObservationRequest
-        modified_by_id: UUID
-            the ID of the user making the request
+        modified_by: AuthUser
+            the authenticated user making the request
         Returns
         -------
         models.ObservationRequest
             The ObservationRequest with the modifications
         """
-        observation_request = await self._is_modifiable(observation_request_id, data)
+        # pull existing version
+        (observation_request, user_type) = await self._get_model(
+            observation_request_id, modified_by
+        )
 
-        await self._can_submit(
-            [data.instrument_id]
-        )  # Check if the instruments allow observation requests
+        await self._can_modify(observation_request, data, user_type)
+
+        # attempt to use the incoming instrument_id first with the assumption that instrument_id can be changed.
+        instrument_id = data.instrument_id or observation_request.instrument_id
+        await self._can_submit([instrument_id])
 
         await self._assign_proposal_ids([data])
 
         # if changing to anonymize, update all versions to anonymize as well
-        if data.anonymize != observation_request.anonymize:
+        if (
+            data.anonymize is not None
+            and data.anonymize != observation_request.anonymize
+        ):
             versions_query = select(models.ObservationRequest).where(
                 models.ObservationRequest.parent_id == observation_request.parent_id
             )
             result = await self.db.execute(versions_query)
             versions = result.scalars().all()
+
             for version in versions:
                 version.anonymize = data.anonymize
 
-        data.parent_id = observation_request.parent_id or observation_request.id
+        # Keys that do not need to be copied over to the new version
+        exclude_keys = [
+            "id",
+            "modified_by_id",
+            "modified_on",
+        ]
 
-        new_observation_request = data.to_orm()
-        new_observation_request.status = ObservationRequestStatus.PENDING.value
-        new_observation_request.status_reason = "Awaiting review"
-        new_observation_request.created_by_id = observation_request.created_by_id
-        new_observation_request.modified_by_id = modified_by_id
+        # prepare data_to_modify dictionary with existing obsreq values
+        db_keys = [
+            column.name
+            for column in observation_request.__table__.columns
+            if column.name not in exclude_keys
+        ]
+        data_to_modify = {key: getattr(observation_request, key) for key in db_keys}
+
+        # Include keys that are explicitly set by the user so explicit "None"s are preserved.
+        # Override with None for keys explicitly set to None by the user.
+        data_dict = data.model_dump(exclude_unset=True)
+
+        # check what db keys are on the incoming data so the data to modify can be modified accordingly
+        for db_key in db_keys:
+            schema_key = data.get_schema_key(db_key)
+
+            # Ensure the key exists before trying to copy it. This implies that the field
+            # was explicitly set and if the value is None it is
+            incoming_has_key = nested.has_key(data_dict, schema_key)
+
+            if incoming_has_key:
+                data_to_modify[db_key] = nested.get_value(data, schema_key)
+
+        new_observation_request = models.ObservationRequest(**data_to_modify)
+        new_observation_request.modified_by_id = modified_by.id
+        new_observation_request.modified_on = datetime.datetime.now()
 
         self.db.add(new_observation_request)
         await self.db.commit()
         return new_observation_request.id
 
-    async def update_status(
-        self,
-        observation_request_id: UUID,
-        data: schemas.ObservationRequestStatusUpdate,
-        modified_by_id: UUID,
-    ) -> UUID:
-        """
-        Update the status of an ObservationRequest by ID.
+    async def archive(self, observation_request_id: UUID, modified_by: AuthUser):
+        observation_request, user_type = await self._get_model(
+            observation_request_id, auth_user=modified_by
+        )
 
-        Parameters
-        ----------
-        observation_request_id : UUID
-            the ObservationRequest ID
-        data: schemas.ObservationRequestStatusUpdate
-            the new status and reason for the ObservationRequest
-        modified_by_id: UUID
-            the UUID of the user updating the ObservationRequest
-        Returns
-        -------
-        UUID
-            The ID of the updated ObservationRequest
-        """
-        observation_request = await self._exists(observation_request_id)
+        # already archived -> noop
+        if observation_request.status == ObservationRequestStatus.ARCHIVED.value:
+            return
 
-        observation_request.status = data.status
-        observation_request.status_reason = data.status_reason
-        observation_request.modified_by_id = modified_by_id
+        # A creator can archive an obsreq IFF they are the creator and the current status is PENDING or WARNING.
+        # An admin can archive an obsreq regardless of its current status
+        can_creator_archive = user_type == "creator" and (
+            observation_request.status == ObservationRequestStatus.PENDING.value
+            or observation_request.status == ObservationRequestStatus.WARNING.value
+        )
 
-        await self.db.commit()
+        if can_creator_archive or user_type == "writer":
+            # unlink from current db record state and allow to add as a new entity
+            make_transient(observation_request)
+            observation_request.status = ObservationRequestStatus.ARCHIVED.value
+            observation_request.modified_by_id = modified_by.id
+            observation_request.modified_on = datetime.datetime.now()
+            observation_request.id = uuid.uuid4()
 
-        return observation_request.id
+            self.db.add(observation_request)
+            await self.db.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to archive this observation request.",
+            )
+
+    async def _get_model(
+        self, observation_request_id: UUID, auth_user: AuthUser | None = None
+    ) -> tuple[models.ObservationRequest, UserType]:
+        observation_request_exists_query = select(
+            models.ObservationRequest,
+            case(
+                (is_writer_clause(auth_user), "writer"),
+                (is_creator_clause(auth_user), "creator"),
+                else_="viewer",
+            ).label("user_type"),
+        ).where(models.ObservationRequest.id == observation_request_id)
+
+        exec = await self.db.execute(observation_request_exists_query)
+
+        res = exec.one_or_none()
+
+        if res is None:
+            raise ObservationRequestNotFoundException(
+                observation_request_id=observation_request_id
+            )
+
+        return res.tuple()
 
     def _get_filter(self, data: schemas.ObservationRequestReadParams) -> list:
         """
@@ -665,7 +728,7 @@ class ObservationRequestService:
                         models.ObservationRequest.parent_id,
                     )
                 )
-            ).order_by(models.ObservationRequest.created_on.desc())
+            ).order_by(models.ObservationRequest.modified_on.desc())
 
             related_request_result = await self.db.execute(related_request_query)
 
@@ -734,8 +797,10 @@ class ObservationRequestService:
     async def _get_proposals(
         self, proposals: list[schemas.ObservingProposalCreate]
     ) -> list[models.ObservingProposal]:
+        names = [proposal.name for proposal in proposals]
+
         query = select(models.ObservingProposal).where(
-            models.ObservingProposal.name.in_([proposal.name for proposal in proposals])
+            models.ObservingProposal.name.in_(names)
         )
         result = await self.db.execute(query)
         proposal_records = result.scalars().all()
@@ -754,59 +819,31 @@ class ObservationRequestService:
         await self.db.flush()
         return proposal_records
 
-    async def _exists(self, observation_request_id: UUID) -> models.ObservationRequest:
+    async def _can_modify(
+        self,
+        observation_request: models.ObservationRequest,
+        update_data: schemas.ObservationRequestUpdate,
+        user_type: UserType,
+    ) -> None:
         """
-        Check if an ObservationRequest exists in the database.
+        Check if an ObservationRequest is modifiable.
 
         Parameters
         ----------
-        observation_request_id : UUID
-            The ID of the ObservationRequest to check
+        observation_request : models.ObservationRequest
+            The ObservationRequest instance to check
+        user_type : UserType
+            The type of user attempting to modify the ObservationRequest
 
         Returns
         -------
-        models.ObservationRequest
-            The ObservationRequest instance if it exists, otherwise an exception is raised
+        None
+            None if the ObservationRequest is modifiable, otherwise an exception is raised
         """
-        observation_request_query = select(models.ObservationRequest).where(
-            models.ObservationRequest.id == observation_request_id
-        )
+        if user_type == "viewer":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-        result = await self.db.execute(observation_request_query)
-        observation_request = result.scalar_one_or_none()
-
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
-
-        return observation_request
-
-    async def _is_modifiable(
-        self, observation_request_id: UUID, data: schemas.ObservationRequestUpdate
-    ) -> models.ObservationRequest:
-        """
-        Check if an ObservationRequest is modifiable based on its status.
-
-        Parameters
-        ----------
-        observation_request_id : UUID
-            The ID of the ObservationRequest to check
-        data : schemas.ObservationRequestUpdate
-            The data to be updated in the ObservationRequest
-
-        Returns
-        -------
-        models.ObservationRequest
-            The ObservationRequest instance if it is modifiable, otherwise an exception is raised
-        """
-        observation_request = await self._exists(observation_request_id)
-
-        # observation_request_schema = schemas.ObservationRequest.from_orm(
-        #     observation_request
-        # )
-        # if data.checksum == observation_request_schema.checksum:
-        #     raise ObservationRequestConflictException(message="No changes detected.")
-
-        if observation_request.status in [
+        if user_type == "creator" and observation_request.status in [
             ObservationRequestStatus.ARCHIVED.value,
             ObservationRequestStatus.REJECTED.value,
             ObservationRequestStatus.ACCEPTED.value,
@@ -815,4 +852,8 @@ class ObservationRequestService:
                 message="Cannot modify an ObservationRequest that has been archived, rejected, or accepted."
             )
 
-        return observation_request
+        if user_type == "creator" and (update_data.status or update_data.status_reason):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Cannot modify the status or status reason of an ObservationRequest as a creator.",
+            )

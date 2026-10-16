@@ -64,6 +64,19 @@ class ObservationRequestBase(BaseSchema):
 
         return hashlib.sha512(data_string.encode()).hexdigest()
 
+    def get_schema_key(self, db_key: str):
+        map = {
+            "date_range_begin": "observation_window.begin",
+            "date_range_end": "observation_window.end",
+            "object_ra": "object_coordinates.ra",
+            "object_dec": "object_coordinates.dec",
+            "object_brightness": "object_brightness.value",
+            "object_brightness_unit": "object_brightness.unit",
+            "proposal_id": "proposal.id",
+        }
+
+        return map.get(db_key, db_key)
+
 
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
@@ -84,27 +97,30 @@ class ObservationRequestCreate(ObservationRequestBase):
             data["parent_id"] = data["id"]
 
         # coordinates
-        object_coords = self.object_coordinates.model_dump_with_prefix(
-            prefix="object", data=self.object_coordinates.model_dump()
-        )
-        data.update(object_coords)
-        data["object_position"] = self.object_coordinates.create_gis_point()
-        del data["object_coordinates"]
+        if self.object_coordinates is not None:
+            object_coords = self.object_coordinates.model_dump_with_prefix(
+                prefix="object", data=self.object_coordinates.model_dump()
+            )
+            data.update(object_coords)
+            data["object_position"] = self.object_coordinates.create_gis_point()
+            del data["object_coordinates"]
 
         # date range
-        date_range_data = self.observation_window.model_dump_with_prefix(
-            prefix="date_range", data=self.observation_window.model_dump()
-        )
-        del data["observation_window"]
-        data.update(date_range_data)
+        if self.observation_window is not None:
+            date_range_data = self.observation_window.model_dump_with_prefix(
+                prefix="date_range", data=self.observation_window.model_dump()
+            )
+            del data["observation_window"]
+            data.update(date_range_data)
 
-        depth_data = self.object_brightness.model_dump_with_prefix(
-            prefix="object_brightness", data=self.object_brightness.model_dump()
-        )
-        del data["object_brightness"]
+        if self.object_brightness is not None:
+            depth_data = self.object_brightness.model_dump_with_prefix(
+                prefix="object_brightness", data=self.object_brightness.model_dump()
+            )
+            del data["object_brightness"]
 
-        data["object_brightness"] = depth_data["object_brightness_value"]
-        data["object_brightness_unit"] = depth_data["object_brightness_unit"]
+            data["object_brightness"] = depth_data["object_brightness_value"]
+            data["object_brightness_unit"] = depth_data["object_brightness_unit"]
 
         if "proposal" in data:
             proposal = data.pop("proposal")
@@ -120,7 +136,20 @@ class ObservationRequestCreate(ObservationRequestBase):
 
 
 class ObservationRequestUpdate(ObservationRequestCreate):
-    pass
+    science_justification: str | None = None
+    object_name: str | None = None
+    object_coordinates: Coordinate | None = None
+    object_position_error: float | None = None
+    object_brightness: UnitValue | None = None
+    observation_window: NullableEndDateRange | DateRangeCreate | None = None
+    exposure_time: float | None = None
+    anonymize: bool | None = None
+    # placeholder field for the potential of general ToO request. Defaults to True right now
+    is_too: bool | None = None
+    instrument_id: uuid.UUID | None = None
+    instrument_configuration: dict | None = None
+    status: ObservationRequestStatus | None = None
+    status_reason: str | None = None
 
 
 class ObservationRequestStatusUpdate(BaseSchema):
@@ -232,12 +261,12 @@ class ObservationRequestCreateMany(BaseSchema):
 
 class NullableEndDateRange(NullableDateRange):
     begin: UTCDatetime
-    end: UTCDatetime | None
+    end: UTCDatetime | None = None
 
 
 class DateRangeCreate(NullableEndDateRange):
     begin: UTCDatetime
-    end: UTCDatetime | None
+    end: UTCDatetime | None = None
 
     @model_validator(mode="after")
     def validate_future_date_range(self) -> Self:
