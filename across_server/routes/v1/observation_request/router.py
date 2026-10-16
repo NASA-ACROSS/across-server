@@ -5,10 +5,8 @@ from fastapi import APIRouter, Depends, Query, Security, status
 
 from ....auth.schemas import AuthUser
 from ....auth.strategies import auth_user_or_none, authenticate_jwt
-from ....core.enums.observation_request_status import ObservationRequestStatus
 from ....core.schemas import ListResponse, Page
 from . import schemas
-from .access import observation_request_access, observation_request_status_access
 from .service import ObservationRequestService
 
 router = APIRouter(
@@ -127,10 +125,10 @@ async def create(
     return await service.create(data=data, created_by_id=auth_user.id)
 
 
-@router.put(
+@router.patch(
     "/{observation_request_id}",
     summary="Update an observation request",
-    description="Update an existing observation request for ACROSS.",
+    description="Update an existing observation request for ACROSS. Partial updates are acceptable.",
     operation_id="update_observation_request",
     status_code=status.HTTP_200_OK,
     response_model=uuid.UUID,
@@ -143,10 +141,7 @@ async def create(
     },
 )
 async def update(
-    auth_user: Annotated[
-        AuthUser,
-        Security(observation_request_access),
-    ],
+    auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
     data: schemas.ObservationRequestUpdate,
@@ -154,38 +149,7 @@ async def update(
     return await service.modify(
         observation_request_id=observation_request_id,
         data=data,
-        modified_by_id=auth_user.id,
-    )
-
-
-@router.patch(
-    "/{observation_request_id}/status",
-    summary="Update the status of an observation request",
-    description="Update the status of an existing observation request for ACROSS.",
-    operation_id="update_observation_request_status",
-    status_code=status.HTTP_200_OK,
-    response_model=uuid.UUID,
-    responses={
-        status.HTTP_200_OK: {
-            "model": uuid.UUID,
-            "description": "Updated observation request id",
-        },
-        status.HTTP_404_NOT_FOUND: {"description": "Observation request not found"},
-    },
-)
-async def update_status(
-    auth_user: Annotated[
-        AuthUser,
-        Security(observation_request_status_access),
-    ],
-    service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
-    observation_request_id: uuid.UUID,
-    data: schemas.ObservationRequestStatusUpdate,
-) -> uuid.UUID:
-    return await service.update_status(
-        observation_request_id=observation_request_id,
-        data=data,
-        modified_by_id=auth_user.id,
+        modified_by=auth_user,
     )
 
 
@@ -203,19 +167,11 @@ async def update_status(
     },
 )
 async def delete(
-    auth_user: Annotated[
-        AuthUser,
-        Security(observation_request_access),
-    ],
+    auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
 ) -> None:
-    await service.update_status(
+    await service.archive(
         observation_request_id=observation_request_id,
-        data=schemas.ObservationRequestStatusUpdate(
-            status=ObservationRequestStatus.ARCHIVED,
-            status_reason="Deleted by user",
-        ),
-        modified_by_id=auth_user.id,
+        modified_by=auth_user,
     )
-    return None

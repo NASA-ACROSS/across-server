@@ -53,6 +53,12 @@ def mock_scalar_one_or_none() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_one_or_none() -> Generator[MagicMock]:
+    mock = MagicMock()
+    yield mock
+
+
+@pytest.fixture
 def mock_scalar_one() -> Generator[MagicMock]:
     mock = MagicMock()
     yield mock
@@ -80,6 +86,7 @@ def mock_tuples() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_result(
     mock_scalar_one_or_none: MagicMock,
+    mock_one_or_none: MagicMock,
     mock_scalar_one: MagicMock,
     mock_scalars: MagicMock,
     mock_unique: MagicMock,
@@ -89,6 +96,7 @@ def mock_result(
     mock.unique = MagicMock(return_value=mock_unique)
     mock.scalar_one = mock_scalar_one
     mock.scalar_one_or_none = mock_scalar_one_or_none
+    mock.one_or_none = mock_one_or_none
     mock.scalars = mock_scalars
     mock.tuples = mock_tuples
 
