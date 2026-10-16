@@ -348,7 +348,9 @@ class ObservationService:
 
         if instrument_ids:
             if resolved_instrument_ids is not None:
-                resolved_instrument_ids |= set(instrument_ids)
+                resolved_instrument_ids &= set(instrument_ids)
+                if not resolved_instrument_ids:
+                    resolved_instrument_ids = None
             else:
                 resolved_instrument_ids = set(instrument_ids)
 
