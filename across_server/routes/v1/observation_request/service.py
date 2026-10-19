@@ -855,3 +855,17 @@ class ObservationRequestService:
             raise ObservationRequestConflictException(
                 message="The ObservationRequest is locked, the status cannot be modified to same status."
             )
+
+        # prevent overwriting stale versions between multiple users by forcing modify to only allow when newest version
+        versions_dictionary = await self._get_versions(
+            observation_requests=[observation_request],
+        )
+        versions = versions_dictionary[observation_request.parent_id]
+        newest_version: schemas.ObservationRequestVersion = max(
+            versions,
+            key=lambda x: x.modified_on if x.modified_on is not None else x.created_on,
+        )
+        if newest_version.id != observation_request.id:
+            raise ObservationRequestConflictException(
+                message=f"Cannot modify an ObservationRequest that has been modified. This could be because someone modified it as you were making your submission. Please verify existing data and then resubmit modify by specifying the newest version with id {newest_version.id!s}"
+            )
