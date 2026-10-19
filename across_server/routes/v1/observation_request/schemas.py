@@ -109,7 +109,8 @@ class ObservationRequestCreate(ObservationRequestBase):
 
         if "proposal" in data:
             proposal = data.pop("proposal")
-            data["proposal_id"] = proposal["id"]
+            if proposal is not None and proposal["id"] is not None:
+                data["proposal_id"] = proposal["id"]
         else:
             data["proposal_id"] = None
 
