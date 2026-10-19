@@ -15,7 +15,7 @@ from geoalchemy2 import Geography, Geometry
 from geoalchemy2.functions import ST_Contains, ST_DWithin
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
-from sqlalchemy import and_, cast, func, select
+from sqlalchemy import and_, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, selectinload
 
@@ -342,19 +342,17 @@ class ObservationService:
                     models.Telescope,
                     models.Instrument.telescope_id == models.Telescope.id,
                 )
-                .where(and_(*conditions))
+                .where(or_(*conditions))
             )
             resolved_instrument_ids = set(result.scalars().all())
 
         if instrument_ids:
             if resolved_instrument_ids is not None:
-                resolved_instrument_ids &= set(instrument_ids)
-                if not resolved_instrument_ids:
-                    resolved_instrument_ids = None
+                resolved_instrument_ids |= set(instrument_ids)
             else:
                 resolved_instrument_ids = set(instrument_ids)
 
-        return resolved_instrument_ids
+        return resolved_instrument_ids if resolved_instrument_ids else None
 
     async def get_many(
         self, data: ObservationRead
