@@ -315,6 +315,9 @@ class ObservationRequestService:
         instrument_id = data.instrument_id or observation_request.instrument_id
         await self._can_submit([instrument_id])
 
+        # prevent overwriting stale edits
+        await self._can_modify_version(observation_request)
+
         await self._assign_proposal_ids([data])
 
         # if changing to anonymize, update all versions to anonymize as well
@@ -710,6 +713,37 @@ class ObservationRequestService:
 
         return related_request_dictionary
 
+    async def _can_modify_version(
+        self, observation_request: models.ObservationRequest
+    ) -> None:
+        """
+        Prevent overwriting stale edits by ensuring that the observation_request is
+        the newest version from the list of all versions associated by parent_id
+
+        Parameters
+        ----------
+        observation_request : models.ObservationRequest
+            The ObservationRequest instance to check
+
+        Returns
+        -------
+        None
+            None if the ObservationRequest is modifiable, otherwise an exception is raised
+        """
+        versions_dictionary = await self._get_versions(
+            observation_requests=[observation_request],
+        )
+        versions = versions_dictionary[observation_request.parent_id]
+        newest_version: schemas.ObservationRequestVersion = max(
+            versions,
+            key=lambda x: x.modified_on if x.modified_on is not None else x.created_on,
+        )
+        # prevent overwriting stale versions between multiple users by forcing modify to only allow when newest version
+        if newest_version.id != observation_request.id:
+            raise ObservationRequestConflictException(
+                message=f"Cannot modify an ObservationRequest that has been modified. This could be because someone modified it as you were making your submission. Please verify existing data and then resubmit modify by specifying the newest version with id {newest_version.id!s}"
+            )
+
     async def _assign_proposal_ids(
         self,
         requests: list[schemas.ObservationRequestCreate]
@@ -854,18 +888,4 @@ class ObservationRequestService:
         ):
             raise ObservationRequestConflictException(
                 message="The ObservationRequest is locked, the status cannot be modified to same status."
-            )
-
-        # prevent overwriting stale versions between multiple users by forcing modify to only allow when newest version
-        versions_dictionary = await self._get_versions(
-            observation_requests=[observation_request],
-        )
-        versions = versions_dictionary[observation_request.parent_id]
-        newest_version: schemas.ObservationRequestVersion = max(
-            versions,
-            key=lambda x: x.modified_on if x.modified_on is not None else x.created_on,
-        )
-        if newest_version.id != observation_request.id:
-            raise ObservationRequestConflictException(
-                message=f"Cannot modify an ObservationRequest that has been modified. This could be because someone modified it as you were making your submission. Please verify existing data and then resubmit modify by specifying the newest version with id {newest_version.id!s}"
             )
