@@ -16,10 +16,6 @@ from across_server.auth.strategies import (
 )
 from across_server.core.enums.observation_request_status import ObservationRequestStatus
 from across_server.db import models
-from across_server.routes.v1.observation_request.access import (
-    observation_request_access,
-    observation_request_status_access,
-)
 from across_server.routes.v1.observation_request.schemas import (
     ObservationRequest,
     ObservationRequestBase,
@@ -195,30 +191,17 @@ def mock_observation_request_service(
     return mock
 
 
-@pytest.fixture
-def mock_observation_request_access() -> Generator[MagicMock]:
-    mock = MagicMock(observation_request_access)
-    mock.id = 1
-
-    yield mock
-
-
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app: FastAPI,
-    fastapi_dep: MagicMock,
-    mock_observation_request_access: MagicMock,
-    mock_observation_request_service: AsyncMock,
+    app: FastAPI, fastapi_dep: MagicMock, mock_
 ) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
-            auth_user_or_none: lambda: mock_observation_request_access,
-            authenticate_jwt: lambda: mock_observation_request_access,
-            global_access: lambda: mock_observation_request_access,
-            observation_request_access: lambda: mock_observation_request_access,
-            observation_request_status_access: lambda: mock_observation_request_access,
+            auth_user_or_none: AsyncMock(),
+            authenticate_jwt: AsyncMock(),
+            global_access: AsyncMock(),
             ObservationRequestService: lambda: mock_observation_request_service,
         }
     ):
