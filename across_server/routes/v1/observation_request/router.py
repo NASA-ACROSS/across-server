@@ -3,6 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Security, status
 
+from across_server.core.enums.observation_request_status import ObservationRequestStatus
+
 from ....auth.schemas import AuthUser
 from ....auth.strategies import auth_user_or_none, authenticate_jwt
 from ....core.schemas import ListResponse, Page
@@ -155,13 +157,13 @@ async def update(
 
 @router.delete(
     "/{observation_request_id}",
-    summary="Delete an observation request",
-    description="Delete an existing observation request for ACROSS.",
-    operation_id="delete_observation_request",
-    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Archive an observation request",
+    description="Archive an existing observation request for ACROSS.",
+    operation_id="archive_observation_request",
+    status_code=status.HTTP_200_OK,
     responses={
-        status.HTTP_204_NO_CONTENT: {
-            "description": "Observation request deleted successfully"
+        status.HTTP_200_OK: {
+            "description": "Observation request archived successfully"
         },
         status.HTTP_404_NOT_FOUND: {"description": "Observation request not found"},
     },
@@ -170,8 +172,13 @@ async def delete(
     auth_user: Annotated[AuthUser, Security(authenticate_jwt)],
     service: Annotated[ObservationRequestService, Depends(ObservationRequestService)],
     observation_request_id: uuid.UUID,
-) -> None:
-    await service.archive(
+    reason: Annotated[str | None, Query()] = None,
+) -> uuid.UUID:
+    return await service.modify(
         observation_request_id=observation_request_id,
         modified_by=auth_user,
+        data=schemas.ObservationRequestUpdate(
+            status=ObservationRequestStatus.ARCHIVED,
+            status_reason=reason,
+        ),
     )

@@ -1,5 +1,4 @@
 import datetime
-import uuid
 from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
@@ -9,7 +8,7 @@ from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 from sqlalchemy import case, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import load_only, make_transient
+from sqlalchemy.orm import load_only
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -369,38 +368,6 @@ class ObservationRequestService:
         self.db.add(new_observation_request)
         await self.db.commit()
         return new_observation_request.id
-
-    async def archive(self, observation_request_id: UUID, modified_by: AuthUser):
-        observation_request, user_type = await self._get_model(
-            observation_request_id, auth_user=modified_by
-        )
-
-        # already archived -> noop
-        if observation_request.status == ObservationRequestStatus.ARCHIVED.value:
-            return
-
-        # A creator can archive an obsreq IFF they are the creator and the current status is PENDING or WARNING.
-        # An admin can archive an obsreq regardless of its current status
-        can_creator_archive = user_type == "creator" and (
-            observation_request.status == ObservationRequestStatus.PENDING.value
-            or observation_request.status == ObservationRequestStatus.WARNING.value
-        )
-
-        if can_creator_archive or user_type == "writer":
-            # unlink from current db record state and allow to add as a new entity
-            make_transient(observation_request)
-            observation_request.status = ObservationRequestStatus.ARCHIVED.value
-            observation_request.modified_by_id = modified_by.id
-            observation_request.modified_on = datetime.datetime.now()
-            observation_request.id = uuid.uuid4()
-
-            self.db.add(observation_request)
-            await self.db.commit()
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to archive this observation request.",
-            )
 
     async def _get_model(
         self, observation_request_id: UUID, auth_user: AuthUser | None = None
@@ -840,20 +807,49 @@ class ObservationRequestService:
         None
             None if the ObservationRequest is modifiable, otherwise an exception is raised
         """
+        # When there are a finite number of options for business state transitions,
+        # consider using a rules matrix (similar to how the tests are setup) to
+        # simplify these conditional checks.
+
         if user_type == "viewer":
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        elif user_type == "creator":
+            creator_locked_status = [
+                ObservationRequestStatus.ARCHIVED.value,
+                ObservationRequestStatus.REJECTED.value,
+                ObservationRequestStatus.ACCEPTED.value,
+            ]
+            is_updating_locked = observation_request.status in creator_locked_status
 
-        if user_type == "creator" and observation_request.status in [
-            ObservationRequestStatus.ARCHIVED.value,
+            # creator can only update to pending, warning, archived
+            writer_only_status = [
+                ObservationRequestStatus.REJECTED.value,
+                ObservationRequestStatus.ACCEPTED.value,
+            ]
+            is_updating_to_locked = update_data.status in writer_only_status
+
+            if is_updating_locked:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Creator cannot modify an ObservationRequest that has been archived, rejected, or accepted.",
+                )
+
+            if is_updating_to_locked:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cannot modify the status or status reason of an ObservationRequest as a creator.",
+                )
+
+        # prevents duplicate records and prevents updates to records that should not be changed after
+        # they have moved into a locked state without changing the status
+        writer_locked_status = [
             ObservationRequestStatus.REJECTED.value,
-            ObservationRequestStatus.ACCEPTED.value,
-        ]:
+            ObservationRequestStatus.ARCHIVED.value,
+        ]
+        if (
+            observation_request.status == update_data.status
+            and observation_request.status in writer_locked_status
+        ):
             raise ObservationRequestConflictException(
-                message="Cannot modify an ObservationRequest that has been archived, rejected, or accepted."
-            )
-
-        if user_type == "creator" and (update_data.status or update_data.status_reason):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Cannot modify the status or status reason of an ObservationRequest as a creator.",
+                message="The ObservationRequest is locked, the status cannot be modified to same status."
             )

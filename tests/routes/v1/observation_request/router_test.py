@@ -155,8 +155,15 @@ class TestObservationRequestRouter:
 
     class TestDelete(Setup):
         @pytest.mark.asyncio
-        async def test_should_return_204_on_delete(self) -> None:
-            """DELETE should return 204 when successful"""
+        async def test_should_return_200_on_delete(self) -> None:
+            """DELETE should return 200 when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
             res = await self.client.delete(endpoint)
-            assert res.status_code == fastapi.status.HTTP_204_NO_CONTENT
+            assert res.status_code == fastapi.status.HTTP_200_OK
+
+        @pytest.mark.asyncio
+        async def test_should_return_id_on_delete(self) -> None:
+            """DELETE should return the archived observation request id when successful"""
+            endpoint = self.endpoint + f"{uuid4()}"
+            res = await self.client.delete(endpoint)
+            assert UUID(res.json())

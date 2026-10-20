@@ -171,22 +171,29 @@ class TestObservationRequestService:
             ),
             [
                 (ObservationRequestStatus.PENDING.value, "viewer", None, None, 403),
-                (ObservationRequestStatus.ARCHIVED.value, "creator", None, None, 409),
-                (ObservationRequestStatus.REJECTED.value, "creator", None, None, 409),
-                (ObservationRequestStatus.ACCEPTED.value, "creator", None, None, 409),
                 (
-                    ObservationRequestStatus.PENDING.value,
+                    ObservationRequestStatus.REJECTED.value,
                     "creator",
-                    ObservationRequestStatus.ARCHIVED,
+                    ObservationRequestStatus.REJECTED.value,
                     None,
                     403,
                 ),
+                (ObservationRequestStatus.ARCHIVED.value, "creator", None, None, 403),
+                (ObservationRequestStatus.REJECTED.value, "creator", None, None, 403),
+                (ObservationRequestStatus.ACCEPTED.value, "creator", None, None, 403),
                 (
-                    ObservationRequestStatus.WARNING.value,
-                    "creator",
+                    ObservationRequestStatus.REJECTED.value,
+                    "writer",
+                    ObservationRequestStatus.REJECTED.value,
                     None,
-                    "test status reason",
-                    403,
+                    409,
+                ),
+                (
+                    ObservationRequestStatus.ARCHIVED.value,
+                    "writer",
+                    ObservationRequestStatus.ARCHIVED.value,
+                    None,
+                    409,
                 ),
             ],
         )
@@ -252,6 +259,40 @@ class TestObservationRequestService:
                 )
 
         @pytest.mark.asyncio
+        async def test_should_successfully_modify_currently_accepted_when_user_type_is_writer_and_status_is_accepted(
+            self,
+            fake_auth_user: AuthUser,
+            mock_db: AsyncMock,
+            fake_observation_request_model: models.ObservationRequest,
+            fake_observation_request_update: schemas.ObservationRequestUpdate,
+            mock_instrument_data: models.Instrument,
+            mock_result: AsyncMock,
+        ):
+            mock_instrument_data.is_observation_request_enabled = True
+            fake_observation_request_model.status = (
+                ObservationRequestStatus.ACCEPTED.value
+            )
+            fake_observation_request_update.status = ObservationRequestStatus.ACCEPTED
+
+            mock_result.one_or_none.return_value = MagicMock(
+                tuple=MagicMock(
+                    side_effect=lambda: [fake_observation_request_model, "writer"]
+                )
+            )
+            mock_result.scalars.return_value.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                [],  # _get_proposals: no existing proposals
+            ]
+
+            await self.service.modify(
+                uuid4(),
+                fake_observation_request_update,
+                fake_auth_user,
+            )
+
+            mock_db.commit.assert_called_once()
+
+        @pytest.mark.asyncio
         async def test_should_commit_changes_to_db(
             self,
             mock_db: AsyncMock,
@@ -281,95 +322,4 @@ class TestObservationRequestService:
                 fake_observation_request_update,
                 fake_auth_user,
             )
-            mock_db.commit.assert_called_once()
-
-    class TestArchive(Setup):
-        @pytest.mark.asyncio
-        async def test_should_set_status_to_archived(
-            self,
-            mock_db: AsyncMock,
-            mock_result: AsyncMock,
-            fake_auth_user: AuthUser,
-            fake_observation_request_model: models.ObservationRequest,
-        ) -> None:
-            """Should archive an ObservationRequest"""
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
-                )
-            )
-
-            await self.service.archive(
-                uuid4(),
-                fake_auth_user,
-            )
-            args = mock_db.add.call_args
-
-            assert args[0][0].status == "archived"
-
-        @pytest.mark.asyncio
-        async def test_should_not_commit_to_db_when_already_archived(
-            self,
-            mock_db: AsyncMock,
-            mock_result: AsyncMock,
-            fake_auth_user: AuthUser,
-            fake_observation_request_model: models.ObservationRequest,
-        ) -> None:
-            fake_observation_request_model.status = "archived"
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
-                )
-            )
-
-            await self.service.archive(
-                uuid4(),
-                fake_auth_user,
-            )
-            mock_db.commit.assert_not_called()
-
-        @pytest.mark.parametrize("status", ["accepted", "rejected"])
-        @pytest.mark.asyncio
-        async def test_should_raise_403_when_creator_tries_to_archive_when_status_cannot_be_archived(
-            self,
-            mock_result: AsyncMock,
-            fake_auth_user: AuthUser,
-            fake_observation_request_model: models.ObservationRequest,
-            status: str,
-        ) -> None:
-            """Should raise 403 when creator tries to archive when status is not pending"""
-            fake_observation_request_model.status = status
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
-                )
-            )
-            with pytest.raises(HTTPException) as exc_info:
-                await self.service.archive(
-                    uuid4(),
-                    fake_auth_user,
-                )
-
-            assert exc_info.value.status_code == 403
-
-        @pytest.mark.asyncio
-        async def test_should_commit_to_db(
-            self,
-            mock_db: AsyncMock,
-            mock_result: AsyncMock,
-            fake_auth_user: AuthUser,
-            fake_observation_request_model: models.ObservationRequest,
-        ) -> None:
-            """Should archive an ObservationRequest"""
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
-                )
-            )
-
-            await self.service.archive(
-                uuid4(),
-                fake_auth_user,
-            )
-
             mock_db.commit.assert_called_once()

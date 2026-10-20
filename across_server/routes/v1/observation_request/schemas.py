@@ -152,11 +152,6 @@ class ObservationRequestUpdate(ObservationRequestCreate):
     status_reason: str | None = None
 
 
-class ObservationRequestStatusUpdate(BaseSchema):
-    status: ObservationRequestStatus
-    status_reason: str | None = None
-
-
 class ObservationRequestVersion(BaseSchema):
     id: uuid.UUID
     created_on: datetime
@@ -221,6 +216,10 @@ class ObservationRequest(ObservationRequestBase):
     @property
     def checksum(self) -> str:
         return self._checksum(proposal=self.proposal)
+
+
+class ObservationRequestDeleteParams:
+    reason: str | None = None
 
 
 class ObservationRequestReadParams(PaginationParams):
