@@ -332,7 +332,6 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_403_when_creator_tries_to_archive_when_status_cannot_be_archived(
             self,
-            mock_db: AsyncMock,
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             fake_observation_request_model: models.ObservationRequest,
@@ -367,7 +366,6 @@ class TestObservationRequestService:
                     side_effect=lambda: [fake_observation_request_model, "creator"]
                 )
             )
-            mock_result.one_or_none.return_value = fake_observation_request_model
 
             await self.service.archive(
                 uuid4(),
