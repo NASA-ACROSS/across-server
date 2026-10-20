@@ -64,19 +64,6 @@ class ObservationRequestBase(BaseSchema):
 
         return hashlib.sha512(data_string.encode()).hexdigest()
 
-    def get_schema_key(self, db_key: str):
-        map = {
-            "date_range_begin": "observation_window.begin",
-            "date_range_end": "observation_window.end",
-            "object_ra": "object_coordinates.ra",
-            "object_dec": "object_coordinates.dec",
-            "object_brightness": "object_brightness.value",
-            "object_brightness_unit": "object_brightness.unit",
-            "proposal_id": "proposal.id",
-        }
-
-        return map.get(db_key, db_key)
-
 
 class ObservationRequestCreate(ObservationRequestBase):
     parent_id: uuid.UUID | None = None
@@ -135,7 +122,7 @@ class ObservationRequestCreate(ObservationRequestBase):
         return self._checksum(proposal=self.proposal)
 
 
-class ObservationRequestUpdate(ObservationRequestCreate):
+class ObservationRequestUpdate(BaseSchema):
     science_justification: str | None = None
     object_name: str | None = None
     object_coordinates: Coordinate | None = None
@@ -150,6 +137,20 @@ class ObservationRequestUpdate(ObservationRequestCreate):
     instrument_configuration: dict | None = None
     status: ObservationRequestStatus | None = None
     status_reason: str | None = None
+    proposal: ObservingProposalCreate | None = None
+
+    def get_schema_key(self, db_key: str) -> str:
+        map = {
+            "date_range_begin": "observation_window.begin",
+            "date_range_end": "observation_window.end",
+            "object_ra": "object_coordinates.ra",
+            "object_dec": "object_coordinates.dec",
+            "object_brightness": "object_brightness.value",
+            "object_brightness_unit": "object_brightness.unit",
+            "proposal_id": "proposal.id",
+        }
+
+        return map.get(db_key, db_key)
 
 
 class ObservationRequestVersion(BaseSchema):

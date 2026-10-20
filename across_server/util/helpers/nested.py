@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 
 
-def has_key(obj: dict, path: str):
+def has_key(obj: dict, path: str) -> bool:
     keys = path.split(".")
     current = obj
 
@@ -26,6 +26,6 @@ def get_value(model: BaseModel | dict, path: str) -> Any:
         elif isinstance(current, dict) and key in current:
             current = current[key]
         else:
-            current = None
+            return None
 
     return current

@@ -711,7 +711,9 @@ class ObservationRequestService:
         return related_request_dictionary
 
     async def _assign_proposal_ids(
-        self, requests: list[schemas.ObservationRequestCreate]
+        self,
+        requests: list[schemas.ObservationRequestCreate]
+        | list[schemas.ObservationRequestUpdate],
     ) -> None:
         """
         Handle the proposals for the observation requests.

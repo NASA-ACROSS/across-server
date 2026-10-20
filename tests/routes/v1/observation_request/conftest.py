@@ -60,7 +60,7 @@ def fake_observation_request_data(mock_instrument_data: models.Instrument) -> di
 
 @pytest.fixture(autouse=True)
 def fake_observation_request_base(
-    fake_observation_request_data,
+    fake_observation_request_data: dict,
 ) -> ObservationRequestBase:
     return ObservationRequestBase(**fake_observation_request_data)
 

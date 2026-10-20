@@ -21,22 +21,6 @@ class BaseSchema(BaseModel):
         json_data = self.model_dump_json()
         return hashlib.sha512(json_data.encode()).hexdigest()
 
-    @classmethod
-    def get_schema_paths(cls, paths: dict | None = None):
-        fields = cls.model_fields
-
-        if paths is None:
-            paths = {}
-
-        for field in fields:
-            if isinstance(field, BaseSchema):
-                path = field.get_schema_fields()
-                field_paths.extend(path)
-            else:
-                field_paths.append(field)
-
-        return field_paths
-
 
 class IDNameSchema(BaseSchema):
     id: UUID

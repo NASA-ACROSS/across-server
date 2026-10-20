@@ -21,7 +21,7 @@ from across_server.routes.v1.observation_request.service import (
 
 class Setup:
     @pytest.fixture(autouse=True)
-    def setup(self, mock_db):
+    def setup(self, mock_db: AsyncMock) -> None:
         self.service = ObservationRequestService(mock_db)
 
 
@@ -237,7 +237,7 @@ class TestObservationRequestService:
             fake_observation_request_model: models.ObservationRequest,
             mock_instrument_data: models.Instrument,
             mock_result: AsyncMock,
-        ):
+        ) -> None:
             mock_instrument_data.is_observation_request_enabled = False
             mock_result.one_or_none.return_value = MagicMock(
                 tuple=MagicMock(
@@ -267,7 +267,7 @@ class TestObservationRequestService:
             fake_observation_request_update: schemas.ObservationRequestUpdate,
             mock_instrument_data: models.Instrument,
             mock_result: AsyncMock,
-        ):
+        ) -> None:
             mock_instrument_data.is_observation_request_enabled = True
             fake_observation_request_model.status = (
                 ObservationRequestStatus.ACCEPTED.value
