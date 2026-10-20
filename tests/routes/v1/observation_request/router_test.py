@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -15,7 +15,7 @@ class Setup:
     async def setup(self, async_client: AsyncClient) -> None:
         self.client = async_client
         self.endpoint = "/observation-request/"
-        _now = datetime.now(timezone.utc)
+        _now = datetime.now(UTC)
         self.post_data = {
             "science_justification": "A clear science case",
             "object_name": "SN2026abc",
@@ -42,23 +42,10 @@ class Setup:
                 },
             ]
         }
-        self.put_data = {
-            "id": str(uuid4()),
-            "science_justification": "Updated science case",
-            "object_name": "SN2026abc",
+        self.patch_data = {
             "object_coordinates": {"ra": 123.456, "dec": -45.678},
-            "object_brightness": {"value": 19.0, "unit": "mag"},
-            "observation_window": {
-                "begin": (_now + timedelta(days=1)).isoformat(),
-                "end": (_now + timedelta(days=2)).isoformat(),
-            },
-            "exposure_time": 1800.0,
-            "anonymize": False,
-            "is_too": True,
-            "instrument_id": str(uuid4()),
-            "status": "accepted",
-            "status_reason": "Reviewed and approved",
         }
+
         self.put_status_data = {
             "status": "accepted",
             "status_reason": "Reviewed and approved",
@@ -151,62 +138,32 @@ class TestObservationRequestRouter:
             res = await self.client.post(self.endpoint + "bulk", json=data)
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
-    class TestPut(Setup):
+    class TestPatch(Setup):
         @pytest.mark.asyncio
         async def test_should_return_updated_observation_request_id(self) -> None:
-            """PUT should return updated observation request id when successful"""
+            """PATCH should return updated observation request id when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
-            res = await self.client.put(endpoint, json=self.put_data)
+            res = await self.client.patch(endpoint, json=self.patch_data)
             assert UUID(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
-            """PUT should return 200 when successful"""
+            """PATCH should return 200 when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
-            res = await self.client.put(endpoint, json=self.put_data)
+            res = await self.client.patch(endpoint, json=self.patch_data)
             assert res.status_code == fastapi.status.HTTP_200_OK
-
-        @pytest.mark.asyncio
-        async def test_should_return_422_when_missing_required_fields(
-            self, required_update_field: str
-        ) -> None:
-            """PUT should return 422 when required fields are missing"""
-            endpoint = self.endpoint + f"{uuid4()}"
-            data = self.put_data.copy()
-            data.pop(required_update_field)
-            res = await self.client.put(endpoint, json=data)
-            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
     class TestDelete(Setup):
         @pytest.mark.asyncio
-        async def test_should_return_204_on_delete(self) -> None:
-            """DELETE should return 204 when successful"""
+        async def test_should_return_200_on_delete(self) -> None:
+            """DELETE should return 200 when successful"""
             endpoint = self.endpoint + f"{uuid4()}"
             res = await self.client.delete(endpoint)
-            assert res.status_code == fastapi.status.HTTP_204_NO_CONTENT
-
-    class TestPatchStatus(Setup):
-        @pytest.mark.asyncio
-        async def test_should_return_updated_observation_request_id(self) -> None:
-            """PATCH status should return updated observation request id when successful"""
-            endpoint = self.endpoint + f"{uuid4()}/status"
-            res = await self.client.patch(endpoint, json=self.put_status_data)
-            assert UUID(res.json())
-
-        @pytest.mark.asyncio
-        async def test_should_return_200(self) -> None:
-            """PATCH status should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}/status"
-            res = await self.client.patch(endpoint, json=self.put_status_data)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
         @pytest.mark.asyncio
-        async def test_should_return_422_when_missing_required_fields(
-            self, required_status_update_field: str
-        ) -> None:
-            """PATCH status should return 422 when required fields are missing"""
-            endpoint = self.endpoint + f"{uuid4()}/status"
-            data = self.put_status_data.copy()
-            data.pop(required_status_update_field)
-            res = await self.client.patch(endpoint, json=data)
-            assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
+        async def test_should_return_id_on_delete(self) -> None:
+            """DELETE should return the archived observation request id when successful"""
+            endpoint = self.endpoint + f"{uuid4()}"
+            res = await self.client.delete(endpoint)
+            assert UUID(res.json())

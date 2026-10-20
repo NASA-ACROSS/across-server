@@ -161,6 +161,9 @@ dev: local_only ## Start the server in the terminal
 stop: local_only ## Stop the server container
 	@$(DOCKER_COMPOSE) down app
 
+stop_db: local_only ## Stop the db container
+	@$(DOCKER_COMPOSE) down db -v
+
 stop_all: local_only ## Stop all containers
 	@$(DOCKER_COMPOSE) down -v
 
@@ -174,6 +177,13 @@ reset: local_only ## Resets the db containers and volumes
 	@$(call ask,\
 		"Proceeding will reset the db and delete any existing data.", \
 		$(MAKE) stop_all && $(MAKE) start,\
+		"Reset aborted."\
+	);
+
+reset_db: local_only ## Resets the db containers
+	@$(call ask,\
+		"Proceeding will reset the db and delete any existing data.", \
+		$(MAKE) stop_db && $(MAKE) run_db && $(MAKE) migrate && $(MAKE) seed,\
 		"Reset aborted."\
 	);
 
@@ -230,6 +240,8 @@ db_check:
 # Group: Running
 run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
+run_db: ## Run the db
+	@$(DOCKER_COMPOSE) up db -d --wait --wait-timeout 30
 
 # Group: Deployment
 push: ## Manually build, tag, and push an image to ECR

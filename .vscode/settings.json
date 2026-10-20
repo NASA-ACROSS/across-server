@@ -36,6 +36,7 @@
         "joinedload",
         "Morty",
         "mypy",
+        "obsreq",
         "onupdate",
         "overrider",
         "pixi",
