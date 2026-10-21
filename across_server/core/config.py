@@ -61,6 +61,11 @@ class Config(BaseConfig):
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
+    def swagger_docs_path(self) -> str | None:
+        if self.is_local():
+            return "/swagger-docs"
+        return None
+
     def base_url(self) -> str:
         if self.is_local():
             return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
