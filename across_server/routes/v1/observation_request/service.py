@@ -698,7 +698,7 @@ class ObservationRequestService:
                         models.ObservationRequest.parent_id,
                     )
                 )
-            ).order_by(models.ObservationRequest.modified_on.desc())
+            ).order_by(models.ObservationRequest.modified_on.desc().nulls_last())
 
             related_request_result = await self.db.execute(related_request_query)
 
@@ -734,10 +734,7 @@ class ObservationRequestService:
             observation_requests=[observation_request],
         )
         versions = versions_dictionary[observation_request.parent_id]
-        newest_version: schemas.ObservationRequestVersion = max(
-            versions,
-            key=lambda x: x.modified_on if x.modified_on is not None else x.created_on,
-        )
+        newest_version: schemas.ObservationRequestVersion = versions[0]
         # prevent overwriting stale versions between multiple users by forcing modify to only allow when newest version
         if newest_version.id != observation_request.id:
             raise ObservationRequestConflictException(
