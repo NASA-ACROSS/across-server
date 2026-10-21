@@ -66,7 +66,6 @@ class ObservationRequestBase(BaseSchema):
 
 
 class ObservationRequestCreate(ObservationRequestBase):
-    parent_id: uuid.UUID | None = None
     proposal: ObservingProposalCreate | None = None
     observation_window: DateRangeCreate
 
@@ -79,9 +78,8 @@ class ObservationRequestCreate(ObservationRequestBase):
 
         data["id"] = uuid.uuid4()
 
-        # default parent_id to id
-        if "parent_id" not in data or data["parent_id"] is None:
-            data["parent_id"] = data["id"]
+        # default parent_id to id on create
+        data["parent_id"] = data["id"]
 
         # coordinates
         if self.object_coordinates is not None:
@@ -111,7 +109,8 @@ class ObservationRequestCreate(ObservationRequestBase):
 
         if "proposal" in data:
             proposal = data.pop("proposal")
-            data["proposal_id"] = proposal["id"]
+            if proposal is not None and proposal["id"] is not None:
+                data["proposal_id"] = proposal["id"]
         else:
             data["proposal_id"] = None
 
