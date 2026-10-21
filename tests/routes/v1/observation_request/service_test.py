@@ -1,4 +1,6 @@
-from typing import Any
+import datetime
+import uuid
+from typing import Any, Callable
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -12,6 +14,7 @@ from across_server.routes.v1.observation_request import schemas
 from across_server.routes.v1.observation_request.exceptions import (
     InvalidObservationRequestCreateParametersException,
     InvalidObservationRequestReadParametersException,
+    ObservationRequestConflictException,
     ObservationRequestNotFoundException,
 )
 from across_server.routes.v1.observation_request.service import (
@@ -263,24 +266,25 @@ class TestObservationRequestService:
             self,
             fake_auth_user: AuthUser,
             mock_db: AsyncMock,
-            fake_observation_request_model: models.ObservationRequest,
+            fake_observation_request_model_factory: Callable,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
             mock_instrument_data: models.Instrument,
             mock_result: AsyncMock,
         ) -> None:
             mock_instrument_data.is_observation_request_enabled = True
-            fake_observation_request_model.status = (
-                ObservationRequestStatus.ACCEPTED.value
-            )
+            obs_req_model = fake_observation_request_model_factory()
+            obs_req_model.status = ObservationRequestStatus.ACCEPTED.value
             fake_observation_request_update.status = ObservationRequestStatus.ACCEPTED
 
             mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "writer"]
-                )
+                tuple=MagicMock(side_effect=lambda: [obs_req_model, "writer"])
             )
+
+            obs_req_version = fake_observation_request_model_factory()
+
             mock_result.scalars.return_value.all.side_effect = [
                 [mock_instrument_data],  # _can_submit: instruments query
+                [obs_req_version],
                 [],  # _get_proposals: no existing proposals
             ]
 
@@ -299,21 +303,28 @@ class TestObservationRequestService:
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
-            fake_observation_request_model: models.ObservationRequest,
+            fake_observation_request_model_factory: Callable,
             mock_instrument_data: models.Instrument,
         ) -> None:
             """Should commit modifications of ObservationRequest to database"""
             mock_instrument_data.is_observation_request_enabled = True
             mock_result.one_or_none.return_value = MagicMock(
                 tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
+                    side_effect=lambda: [
+                        fake_observation_request_model_factory(),
+                        "creator",
+                    ]
                 )
             )
             mock_result.scalar_one_or_none.side_effect = [
-                fake_observation_request_model,
+                fake_observation_request_model_factory(),
             ]
+
+            obs_req_version = fake_observation_request_model_factory()
+
             mock_result.scalars.return_value.all.side_effect = [
                 [mock_instrument_data],  # _can_submit: instruments query
+                [obs_req_version],
                 [],  # _get_proposals: no existing proposals
             ]
 
@@ -323,3 +334,49 @@ class TestObservationRequestService:
                 fake_auth_user,
             )
             mock_db.commit.assert_called_once()
+
+        @pytest.mark.asyncio
+        async def test_should_raise_409_when_modifying_stale_version(
+            self,
+            mock_db: AsyncMock,
+            mock_result: AsyncMock,
+            fake_auth_user: AuthUser,
+            fake_observation_request_update: schemas.ObservationRequestUpdate,
+            fake_observation_request_model_factory: Callable,
+            mock_instrument_data: models.Instrument,
+        ) -> None:
+            """Should raise 409 when modifying stale version"""
+            mock_instrument_data.is_observation_request_enabled = True
+            mock_result.one_or_none.return_value = MagicMock(
+                tuple=MagicMock(
+                    side_effect=lambda: [
+                        fake_observation_request_model_factory(),
+                        "creator",
+                    ]
+                )
+            )
+            mock_result.scalar_one_or_none.side_effect = [
+                fake_observation_request_model_factory(),
+            ]
+
+            # default fixture fake_observation_request_update.id matches obs_req_version_one.id
+            obs_req_version_one = fake_observation_request_model_factory()
+            obs_req_version_two = fake_observation_request_model_factory()
+
+            # simulate update against obs_req_version_one
+            obs_req_version_two.id = uuid.uuid4()
+            obs_req_version_two.modified_on = (
+                obs_req_version_two.modified_on + datetime.timedelta(hours=10)
+            )
+
+            mock_result.scalars.return_value.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                [obs_req_version_one, obs_req_version_two],
+                [],  # _get_proposals: no existing proposals
+            ]
+            with pytest.raises(ObservationRequestConflictException):
+                await self.service.modify(
+                    uuid4(),
+                    fake_observation_request_update,
+                    fake_auth_user,
+                )

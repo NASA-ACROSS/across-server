@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import Generator
 from datetime import datetime, timedelta
+from typing import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -100,44 +101,62 @@ def fake_submitted_by_user(fake_auth_user: AuthUser) -> models.User:
     )
 
 
-@pytest.fixture(autouse=True)
-def fake_observation_request_model(
+@pytest.fixture()
+def fake_observation_request_model_factory(
     fake_observation_request_data: dict,
     fake_user: models.User,
-) -> models.ObservationRequest:
+) -> Callable:
     id = fake_observation_request_data["id"]
 
-    return models.ObservationRequest(
-        id=id,
-        parent_id=id,
-        status=ObservationRequestStatus.PENDING,
-        status_reason="testing",
-        science_justification=fake_observation_request_data["science_justification"],
-        date_range_begin=fake_observation_request_data["observation_window"]["begin"],
-        date_range_end=fake_observation_request_data["observation_window"]["end"],
-        object_ra=fake_observation_request_data["object_coordinates"]["ra"],
-        object_dec=fake_observation_request_data["object_coordinates"]["dec"],
-        object_position_error=fake_observation_request_data["object_position_error"],
-        object_name=fake_observation_request_data["object_name"],
-        object_brightness=fake_observation_request_data["object_brightness"]["value"],
-        object_brightness_unit=fake_observation_request_data["object_brightness"][
-            "unit"
-        ],
-        instrument_id=fake_observation_request_data["instrument_id"],
-        instrument_configuration=fake_observation_request_data[
-            "instrument_configuration"
-        ],
-        exposure_time=fake_observation_request_data["exposure_time"],
-        anonymize=fake_observation_request_data["anonymize"],
-        is_too=fake_observation_request_data["is_too"],
-        proposal_id=fake_observation_request_data["proposal"]["id"],
-        created_by_id=fake_user.id,
-        modified_by_id=fake_user.id,
-        submitted_by_user=fake_user,
-        # submitted_by=f"{fake_user.first_name} {fake_user.last_name}",
-        created_on=datetime.now(),
-        modified_on=datetime.now(),
-    )
+    def factory() -> models.ObservationRequest:
+        return models.ObservationRequest(
+            id=id,
+            parent_id=id,
+            status=ObservationRequestStatus.PENDING,
+            status_reason="testing",
+            science_justification=fake_observation_request_data[
+                "science_justification"
+            ],
+            date_range_begin=fake_observation_request_data["observation_window"][
+                "begin"
+            ],
+            date_range_end=fake_observation_request_data["observation_window"]["end"],
+            object_ra=fake_observation_request_data["object_coordinates"]["ra"],
+            object_dec=fake_observation_request_data["object_coordinates"]["dec"],
+            object_position_error=fake_observation_request_data[
+                "object_position_error"
+            ],
+            object_name=fake_observation_request_data["object_name"],
+            object_brightness=fake_observation_request_data["object_brightness"][
+                "value"
+            ],
+            object_brightness_unit=fake_observation_request_data["object_brightness"][
+                "unit"
+            ],
+            instrument_id=fake_observation_request_data["instrument_id"],
+            instrument_configuration=fake_observation_request_data[
+                "instrument_configuration"
+            ],
+            exposure_time=fake_observation_request_data["exposure_time"],
+            anonymize=fake_observation_request_data["anonymize"],
+            is_too=fake_observation_request_data["is_too"],
+            proposal_id=fake_observation_request_data["proposal"]["id"],
+            created_by_id=fake_user.id,
+            modified_by_id=fake_user.id,
+            submitted_by_user=fake_user,
+            # submitted_by=f"{fake_user.first_name} {fake_user.last_name}",
+            created_on=datetime.now(),
+            modified_on=datetime.now(),
+        )
+
+    return factory
+
+
+@pytest.fixture(autouse=True)
+def fake_observation_request_model(
+    fake_observation_request_model_factory: Callable,
+) -> models.ObservationRequest:
+    return fake_observation_request_model_factory()
 
 
 @pytest.fixture(autouse=True)
