@@ -1,9 +1,9 @@
 import os
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -57,6 +57,8 @@ app = FastAPI(
     root_path=config.ROOT_PATH,
     lifespan=lifespan,
     openapi_tags=tags_metadata,
+    docs_url=config.swagger_docs_path(),
+    redoc_url="/docs",
     version=__version__,
 )
 
