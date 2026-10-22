@@ -46,11 +46,6 @@ class Setup:
             "object_coordinates": {"ra": 123.456, "dec": -45.678},
         }
 
-        self.put_status_data = {
-            "status": "accepted",
-            "status_reason": "Reviewed and approved",
-        }
-
 
 @pytest.fixture(params=["science_justification", "instrument_id", "observation_window"])
 def required_create_field(request: pytest.FixtureRequest) -> Any:

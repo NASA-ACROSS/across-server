@@ -11,7 +11,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from across_server import main
 from across_server.auth import strategies
-from across_server.db.models import Filter, Group, Instrument, Observatory, Telescope
+from across_server.auth.schemas import AuthUser
+from across_server.db.models import (
+    Filter,
+    Group,
+    Instrument,
+    Observatory,
+    Telescope,
+)
 from across_server.util.email.service import EmailService
 
 
@@ -139,6 +146,11 @@ def mock_db(
 
 
 @pytest.fixture
+def fake_auth_user_or_none(fake_auth_user: AuthUser) -> AuthUser:
+    return fake_auth_user
+
+
+@pytest.fixture
 def mock_email_service() -> Generator[AsyncMock]:
     mock = AsyncMock(EmailService)
     mock.send = AsyncMock(return_value=True)
@@ -199,7 +211,7 @@ def mock_instrument_data(mock_telescope_data: Telescope) -> Instrument:
         short_name="TI",
         created_on=datetime.now(),
         telescope=mock_telescope_data,
-        is_observation_request_enabled=False,
+        is_observation_request_enabled=True,
     )
 
 

@@ -1,7 +1,6 @@
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
-from typing import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -101,7 +100,7 @@ def fake_submitted_by_user(fake_auth_user: AuthUser) -> models.User:
 def fake_observation_request_model_factory(
     fake_observation_request_data: dict,
     fake_user: models.User,
-) -> Callable:
+) -> Callable[[], models.ObservationRequest]:
     id = fake_observation_request_data["id"]
 
     def factory() -> models.ObservationRequest:
@@ -193,15 +192,19 @@ def mock_observation_request_service(
 
 @pytest.fixture(scope="function", autouse=True)
 def dep_override(
-    app: FastAPI, fastapi_dep: MagicMock, mock_
+    app: FastAPI,
+    fastapi_dep: MagicMock,
+    mock_global_access: AsyncMock,
+    fake_auth_user_or_none: AuthUser,
+    mock_observation_request_service: AsyncMock,
 ) -> Generator[None, None, None]:
     overrider = fastapi_dep(app)
 
     with overrider.override(
         {
-            auth_user_or_none: AsyncMock(),
-            authenticate_jwt: AsyncMock(),
-            global_access: AsyncMock(),
+            auth_user_or_none: lambda: fake_auth_user_or_none,
+            authenticate_jwt: lambda: AsyncMock(),
+            global_access: lambda: mock_global_access,
             ObservationRequestService: lambda: mock_observation_request_service,
         }
     ):

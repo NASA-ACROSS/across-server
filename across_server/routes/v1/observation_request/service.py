@@ -19,7 +19,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import load_only, make_transient
+from sqlalchemy.orm import load_only
 
 from across_server.core.schemas.base import BaseSchema
 
@@ -44,7 +44,7 @@ class ManyModels(BaseSchema):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     records: list[tuple[models.ObservationRequest, UserType]]
-    count: int
+    total_count: int
 
 
 class ObservationRequestService:
@@ -135,7 +135,7 @@ class ObservationRequestService:
             the user making the request
         Returns
         -------
-        list[tuple[models.ObservationRequest, int]]
+        tuple[list[schemas.ObservationRequest], int]
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
@@ -163,7 +163,7 @@ class ObservationRequestService:
             ]
             redacted_observation_requests.append(redacted_observation_request)
 
-        return redacted_observation_requests, models.count
+        return redacted_observation_requests, models.total_count
 
     async def create(
         self, data: schemas.ObservationRequestCreate, created_by_id: UUID
@@ -340,7 +340,7 @@ class ObservationRequestService:
             auth_user,
         )
 
-        if models.count == 0:
+        if models.total_count == 0:
             raise ObservationRequestNotFoundException(
                 observation_request_id=observation_request_id
             )
@@ -364,7 +364,7 @@ class ObservationRequestService:
             .filter(*observation_request_filter)
             .order_by(
                 models.ObservationRequest.parent_id,
-                models.ObservationRequest.created_on.desc(),
+                models.ObservationRequest.modified_on.desc().nulls_last(),
             )
             .distinct(models.ObservationRequest.parent_id)
             .subquery()
@@ -381,7 +381,7 @@ class ObservationRequestService:
                 models.ObservationRequest.id == latest_observation_request_ids.c.id,
             )
             .order_by(
-                models.ObservationRequest.created_on.desc(),
+                (models.ObservationRequest.created_on.desc()),
             )
             .limit(params.page_limit)
             .offset(params.offset)
@@ -390,7 +390,7 @@ class ObservationRequestService:
         result = await self.db.execute(observation_request_query)
         records = list(result.tuples().all())
 
-        return ManyModels(records=records, count=total_count)
+        return ManyModels(records=records, total_count=total_count)
 
     def _get_filter(
         self, params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None
@@ -660,7 +660,7 @@ class ObservationRequestService:
 
         return schema
 
-    def _user_type_case(self, auth_user: AuthUser | None):
+    def _user_type_case(self, auth_user: AuthUser | None) -> ColumnElement[str]:
         return case(
             (self._is_writer_clause(auth_user), "writer"),
             (self._is_creator_clause(auth_user), "creator"),
