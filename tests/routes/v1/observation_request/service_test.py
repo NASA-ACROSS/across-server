@@ -1,6 +1,7 @@
-import datetime
 import uuid
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -19,7 +20,30 @@ from across_server.routes.v1.observation_request.exceptions import (
 )
 from across_server.routes.v1.observation_request.service import (
     ObservationRequestService,
+    UserType,
 )
+
+
+@pytest.fixture()
+def fake_user_type() -> UserType:
+    return "viewer"
+
+
+@pytest.fixture()
+def fake_models_result(
+    fake_observation_request_model: models.ObservationRequest,
+    fake_user_type: UserType,
+) -> list[tuple]:
+    return [(fake_observation_request_model, fake_user_type)]
+
+
+@pytest.fixture(autouse=True)
+def mock_get_models_db_result(
+    mock_result: AsyncMock,
+    fake_models_result: list[tuple],
+) -> None:
+    mock_result.scalar_one.side_effect = lambda: len(fake_models_result)
+    mock_result.tuples.return_value.all.side_effect = lambda: fake_models_result
 
 
 class Setup:
@@ -33,46 +57,33 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_return_observation_request_when_found(
             self,
-            mock_result: AsyncMock,
-            fake_observation_request_model: models.ObservationRequest,
         ) -> None:
             """Should return a schemas.ObservationRequest object"""
-            mock_result.one_or_none.return_value = (
-                fake_observation_request_model,
-                True,
-            )
-            mock_result.tuples.return_value.all.return_value = []
-
             observation_request = await self.service.get(uuid4(), auth_user=None)
             assert isinstance(observation_request, schemas.ObservationRequest)
 
         @pytest.mark.asyncio
         async def test_should_raise_not_found_exception_when_does_not_exist(
             self,
-            mock_db: AsyncMock,
-            mock_result: AsyncMock,
+            fake_models_result: list[tuple],
         ) -> None:
             """Should raise ObservationRequestNotFoundException when the ObservationRequest does not exist"""
-            mock_result.one_or_none.return_value = None
+            fake_models_result.clear()
 
-            service = ObservationRequestService(mock_db)
             with pytest.raises(ObservationRequestNotFoundException):
-                await service.get(uuid4(), auth_user=None)
+                await self.service.get(uuid4(), auth_user=None)
 
     class TestGetMany(Setup):
         @pytest.mark.asyncio
-        async def test_should_return_empty_list_when_nothing_matches_params(
+        async def test_should_return_empty_list_when_no_results(
             self,
-            mock_db: AsyncMock,
-            mock_result: AsyncMock,
+            fake_models_result: list[tuple],
             fake_observation_request_read_params: Any,
         ) -> None:
             """Should return empty list when nothing matches params"""
-            mock_result.tuples.return_value.all.return_value = []
-            mock_result.scalar_one.return_value = 0
+            fake_models_result.clear()
 
-            service = ObservationRequestService(mock_db)
-            values, _ = await service.get_many(
+            values, _ = await self.service.get_many(
                 fake_observation_request_read_params, auth_user=None
             )
             assert len(values) == 0
@@ -80,16 +91,13 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_422_with_bad_params(
             self,
-            mock_db: AsyncMock,
-            fake_observation_request_read_params: Any,
+            fake_observation_request_read_params: schemas.ObservationRequestReadParams,
         ) -> None:
             """Should raise InvalidObservationRequestReadParametersException with bad params"""
-
             fake_observation_request_read_params.object_cone_search_ra = 123.45
 
-            service = ObservationRequestService(mock_db)
             with pytest.raises(InvalidObservationRequestReadParametersException):
-                await service.get_many(
+                await self.service.get_many(
                     fake_observation_request_read_params,
                     auth_user=None,
                 )
@@ -130,7 +138,6 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_error_if_instrument_observation_request_not_enabled(
             self,
-            mock_db: AsyncMock,
             mock_result: MagicMock,
             fake_observation_request_create_many: schemas.ObservationRequestCreateMany,
             mock_instrument_data: models.Instrument,
@@ -145,15 +152,54 @@ class TestObservationRequestService:
                 )
 
     class TestModify(Setup):
+        @pytest.fixture(autouse=True)
+        def fake_user_type(self) -> UserType:
+            return "creator"
+
+        @pytest.fixture()
+        def fake_proposal(
+            self, fake_observation_request_data: dict
+        ) -> schemas.ObservingProposal:
+            return schemas.ObservingProposal(
+                id=fake_observation_request_data["proposal"]["id"],
+                code=fake_observation_request_data["proposal"]["code"],
+                name=fake_observation_request_data["proposal"]["name"],
+            )
+
+        @pytest.fixture()
+        def fake_observation_request_versions(
+            self,
+            fake_observation_request_model_factory: Callable[
+                [], models.ObservationRequest
+            ],
+        ) -> list[models.ObservationRequest]:
+            v1 = fake_observation_request_model_factory()
+
+            return [v1]
+
+        @pytest.fixture(autouse=True)
+        def mock_scalars_all(
+            self,
+            mock_result: AsyncMock,
+            mock_instrument_data: models.Instrument,
+            fake_proposal: schemas.ObservingProposal,
+            fake_observation_request_versions: list[models.ObservationRequest],
+        ) -> None:
+            mock_result.scalars.return_value.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                fake_observation_request_versions,  # _get_versions: versions query
+                [fake_proposal],  # _get_proposals: proposals query
+            ]
+
         @pytest.mark.asyncio
         async def test_should_raise_404_not_found_when_observation_request_does_not_exist(
             self,
-            mock_result: AsyncMock,
+            fake_models_result: list[tuple],
             fake_auth_user: AuthUser,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
         ) -> None:
             """Should raise ObservationRequestNotFoundException when the observation request does not exist"""
-            mock_result.one_or_none.return_value = None
+            fake_models_result.clear()
 
             with pytest.raises(ObservationRequestNotFoundException) as exc_info:
                 await self.service.modify(
@@ -203,23 +249,21 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_http_exception_when_checking_can_modify(
             self,
-            mock_result: AsyncMock,
             db_status: str,
-            user_type: str,
+            user_type: UserType,
             modified_status: ObservationRequestStatus,
             modified_status_reason: str,
             fake_auth_user: AuthUser,
             expected_status_code: int,
             fake_observation_request_model: models.ObservationRequest,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
+            fake_models_result: list[tuple],
         ) -> None:
             """Should raise ObservationRequestForbiddenException when a viewer tries modifying the observation request"""
             fake_observation_request_model.status = db_status
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, user_type]
-                )
-            )
+
+            fake_models_result.clear()
+            fake_models_result.append((fake_observation_request_model, user_type))
 
             fake_observation_request_update.status = modified_status
             fake_observation_request_update.status_reason = modified_status_reason
@@ -234,26 +278,13 @@ class TestObservationRequestService:
             assert exc_info.value.status_code == expected_status_code
 
         @pytest.mark.asyncio
-        async def test_should_raise_exception_when_instrument_does_not_have_observation_request_enabled(
+        async def test_should_raise_422_when_instrument_does_not_have_observation_request_enabled(
             self,
             fake_auth_user: AuthUser,
-            fake_observation_request_model: models.ObservationRequest,
             mock_instrument_data: models.Instrument,
-            mock_result: AsyncMock,
         ) -> None:
             mock_instrument_data.is_observation_request_enabled = False
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [fake_observation_request_model, "creator"]
-                )
-            )
-            mock_result.scalar_one_or_none.side_effect = [
-                fake_observation_request_model,
-            ]
-            mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
-                [],  # _get_proposals: no existing proposals
-            ]
+
             with pytest.raises(InvalidObservationRequestCreateParametersException):
                 await self.service.modify(
                     uuid4(),
@@ -262,31 +293,25 @@ class TestObservationRequestService:
                 )
 
         @pytest.mark.asyncio
-        async def test_should_successfully_modify_currently_accepted_when_user_type_is_writer_and_status_is_accepted(
+        async def test_should_successfully_modify_currently_accepted_when_user_type_is_writer(
             self,
             fake_auth_user: AuthUser,
             mock_db: AsyncMock,
             fake_observation_request_model_factory: Callable,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
-            mock_instrument_data: models.Instrument,
-            mock_result: AsyncMock,
+            fake_models_result: list[tuple[models.ObservationRequest, UserType]],
+            fake_observation_request_versions: list[models.ObservationRequest],
         ) -> None:
-            mock_instrument_data.is_observation_request_enabled = True
             obs_req_model = fake_observation_request_model_factory()
             obs_req_model.status = ObservationRequestStatus.ACCEPTED.value
             fake_observation_request_update.status = ObservationRequestStatus.ACCEPTED
 
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(side_effect=lambda: [obs_req_model, "writer"])
-            )
+            fake_models_result.clear()
+            fake_models_result.append((obs_req_model, "writer"))
 
             obs_req_version = fake_observation_request_model_factory()
-
-            mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
-                [obs_req_version],
-                [],  # _get_proposals: no existing proposals
-            ]
+            fake_observation_request_versions.clear()
+            fake_observation_request_versions.append(obs_req_version)
 
             await self.service.modify(
                 uuid4(),
@@ -300,34 +325,10 @@ class TestObservationRequestService:
         async def test_should_commit_changes_to_db(
             self,
             mock_db: AsyncMock,
-            mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
-            fake_observation_request_model_factory: Callable,
-            mock_instrument_data: models.Instrument,
         ) -> None:
             """Should commit modifications of ObservationRequest to database"""
-            mock_instrument_data.is_observation_request_enabled = True
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [
-                        fake_observation_request_model_factory(),
-                        "creator",
-                    ]
-                )
-            )
-            mock_result.scalar_one_or_none.side_effect = [
-                fake_observation_request_model_factory(),
-            ]
-
-            obs_req_version = fake_observation_request_model_factory()
-
-            mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
-                [obs_req_version],
-                [],  # _get_proposals: no existing proposals
-            ]
-
             await self.service.modify(
                 uuid4(),
                 fake_observation_request_update,
@@ -338,26 +339,19 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_409_when_modifying_stale_version(
             self,
-            mock_db: AsyncMock,
             mock_result: AsyncMock,
             fake_auth_user: AuthUser,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
             fake_observation_request_model_factory: Callable,
             mock_instrument_data: models.Instrument,
+            fake_models_result: list[tuple],
         ) -> None:
             """Should raise 409 when modifying stale version"""
-            mock_instrument_data.is_observation_request_enabled = True
-            mock_result.one_or_none.return_value = MagicMock(
-                tuple=MagicMock(
-                    side_effect=lambda: [
-                        fake_observation_request_model_factory(),
-                        "creator",
-                    ]
-                )
+            # fake existing version
+            fake_models_result.clear()
+            fake_models_result.append(
+                (fake_observation_request_model_factory(), "creator")
             )
-            mock_result.scalar_one_or_none.side_effect = [
-                fake_observation_request_model_factory(),
-            ]
 
             # default fixture fake_observation_request_update.id matches obs_req_version_one.id
             obs_req_version_one = fake_observation_request_model_factory()
@@ -366,7 +360,7 @@ class TestObservationRequestService:
             # simulate update against obs_req_version_one
             obs_req_version_two.id = uuid.uuid4()
             obs_req_version_two.modified_on = (
-                obs_req_version_two.modified_on + datetime.timedelta(hours=10)
+                obs_req_version_two.modified_on + timedelta(hours=10)
             )
 
             mock_result.scalars.return_value.all.side_effect = [

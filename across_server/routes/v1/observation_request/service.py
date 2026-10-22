@@ -5,10 +5,23 @@ from uuid import UUID, uuid4
 from fastapi import Depends, HTTPException, status
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
+from pydantic import ConfigDict
 from shapely.geometry import Point
-from sqlalchemy import case, distinct, func, or_, select
+from sqlalchemy import (
+    ColumnElement,
+    ColumnExpressionArgument,
+    False_,
+    case,
+    distinct,
+    false,
+    func,
+    or_,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import load_only
+
+from across_server.core.schemas.base import BaseSchema
 
 from ....auth.schemas import AuthUser
 from ....core.constants import EARTH_CIRCUMFERENCE_METERS_PER_DEGREE
@@ -17,7 +30,6 @@ from ....db import models
 from ....db.database import get_session
 from ....util.helpers import nested
 from . import schemas
-from .access import is_creator_clause, is_writer_clause
 from .exceptions import (
     InvalidObservationRequestCreateParametersException,
     InvalidObservationRequestReadParametersException,
@@ -26,6 +38,13 @@ from .exceptions import (
 )
 
 type UserType = Literal["viewer", "creator", "writer"]
+
+
+class ManyModels(BaseSchema):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    records: list[tuple[models.ObservationRequest, UserType]]
+    total_count: int
 
 
 class ObservationRequestService:
@@ -77,25 +96,13 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
-        is_viewer_clause = ~(is_creator_clause(auth_user) | is_writer_clause(auth_user))
-
-        observation_request_query = select(
-            models.ObservationRequest,
-            is_viewer_clause.label("is_viewer"),
-        ).where(models.ObservationRequest.id == observation_request_id)
-
-        result = await self.db.execute(observation_request_query)
-
-        observation_request, is_viewer = result.one_or_none() or (
-            None,
-            True,
+        (observation_request, user_type) = await self._get_model(
+            observation_request_id=observation_request_id,
+            auth_user=auth_user,
         )
 
-        if observation_request is None:
-            raise ObservationRequestNotFoundException(observation_request_id)
-
         observation_request_schema = self._redact_to_schema(
-            observation_request, is_viewer
+            observation_request, user_type
         )
 
         versions_dictionary = await self._get_versions(
@@ -128,56 +135,13 @@ class ObservationRequestService:
             the user making the request
         Returns
         -------
-        list[tuple[models.ObservationRequest, int]]
+        tuple[list[schemas.ObservationRequest], int]
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
-        observation_request_filter = self._get_filter(data=params)
+        models = await self._get_models(params, auth_user)
 
-        is_viewer_clause = ~(is_creator_clause(auth_user) | is_writer_clause(auth_user))
-
-        if params.proposal_code or params.proposal_name or params.proposal_ids:
-            observation_request_filter.append(
-                or_(~is_viewer_clause, ~models.ObservationRequest.anonymize)
-            )
-
-        # subquery to allow for filtering on latest versions
-        latest_observation_request_ids = (
-            select(models.ObservationRequest.id)
-            .filter(*observation_request_filter)
-            .order_by(
-                models.ObservationRequest.parent_id,
-                models.ObservationRequest.created_on.desc(),
-            )
-            .distinct(models.ObservationRequest.parent_id)
-            .subquery()
-        )
-
-        # query for latest versions and order them by created_on descending
-        observation_request_query = (
-            select(
-                models.ObservationRequest,
-                is_viewer_clause.label("is_viewer"),
-            )
-            .join(
-                latest_observation_request_ids,
-                models.ObservationRequest.id == latest_observation_request_ids.c.id,
-            )
-            .order_by(
-                models.ObservationRequest.created_on.desc(),
-            )
-            .limit(params.page_limit)
-            .offset(params.offset)
-        )
-
-        result = await self.db.execute(observation_request_query)
-        observation_requests = result.tuples().all()
-
-        # total_count query for pagination total result set info given filters
-        count_query = select(
-            func.count(distinct(models.ObservationRequest.parent_id))
-        ).where(*observation_request_filter)
-        total_count = (await self.db.execute(count_query)).scalar_one()
+        observation_requests = models.records
 
         versions_dictionary: dict[UUID, list[schemas.ObservationRequestVersion]] = {}
 
@@ -187,9 +151,9 @@ class ObservationRequestService:
             )
 
         redacted_observation_requests: list[schemas.ObservationRequest] = []
-        for observation_request, is_viewer in observation_requests:
+        for observation_request, user_type in observation_requests:
             redacted_observation_request = self._redact_to_schema(
-                observation_request, is_viewer
+                observation_request, user_type
             )
             redacted_observation_request.versions = [
                 version
@@ -199,7 +163,7 @@ class ObservationRequestService:
             ]
             redacted_observation_requests.append(redacted_observation_request)
 
-        return redacted_observation_requests, total_count
+        return redacted_observation_requests, models.total_count
 
     async def create(
         self, data: schemas.ObservationRequestCreate, created_by_id: UUID
@@ -218,9 +182,7 @@ class ObservationRequestService:
         UUID:
             The id of the newly created ObservationRequest
         """
-        await self._can_submit(
-            [data.instrument_id]
-        )  # Check if the instrument allows observation requests
+        await self._can_submit([data.instrument_id])
 
         await self._assign_proposal_ids([data])
         observation_request = data.to_orm()
@@ -256,9 +218,7 @@ class ObservationRequestService:
             for observation_request in data.observation_requests
         ]
 
-        await self._can_submit(
-            instrument_ids
-        )  # Check if the instruments allow observation requests
+        await self._can_submit(instrument_ids)
 
         await self._assign_proposal_ids(data.observation_requests)
 
@@ -375,27 +335,66 @@ class ObservationRequestService:
     async def _get_model(
         self, observation_request_id: UUID, auth_user: AuthUser | None = None
     ) -> tuple[models.ObservationRequest, UserType]:
-        observation_request_exists_query = select(
-            models.ObservationRequest,
-            case(
-                (is_writer_clause(auth_user), "writer"),
-                (is_creator_clause(auth_user), "creator"),
-                else_="viewer",
-            ).label("user_type"),
-        ).where(models.ObservationRequest.id == observation_request_id)
+        models = await self._get_models(
+            schemas.ObservationRequestReadParams(ids=[observation_request_id]),
+            auth_user,
+        )
 
-        exec = await self.db.execute(observation_request_exists_query)
-
-        res = exec.one_or_none()
-
-        if res is None:
+        if models.total_count == 0:
             raise ObservationRequestNotFoundException(
                 observation_request_id=observation_request_id
             )
 
-        return res.tuple()
+        return models.records[0]
 
-    def _get_filter(self, data: schemas.ObservationRequestReadParams) -> list:
+    async def _get_models(
+        self, params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None
+    ) -> ManyModels:
+        observation_request_filter = self._get_filter(params, auth_user)
+
+        # total_count query for pagination total result set info given filters
+        count_query = select(
+            func.count(distinct(models.ObservationRequest.parent_id))
+        ).where(*observation_request_filter)
+        total_count = (await self.db.execute(count_query)).scalar_one()
+
+        # subquery to allow for filtering on latest versions
+        latest_observation_request_ids = (
+            select(models.ObservationRequest.id)
+            .filter(*observation_request_filter)
+            .order_by(
+                models.ObservationRequest.parent_id,
+                models.ObservationRequest.modified_on.desc().nulls_last(),
+            )
+            .distinct(models.ObservationRequest.parent_id)
+            .subquery()
+        )
+
+        # query for latest versions and order them by created_on descending
+        observation_request_query = (
+            select(
+                models.ObservationRequest,
+                self._user_type_case(auth_user),
+            )
+            .join(
+                latest_observation_request_ids,
+                models.ObservationRequest.id == latest_observation_request_ids.c.id,
+            )
+            .order_by(
+                (models.ObservationRequest.created_on.desc()),
+            )
+            .limit(params.page_limit)
+            .offset(params.offset)
+        )
+
+        result = await self.db.execute(observation_request_query)
+        records = list(result.tuples().all())
+
+        return ManyModels(records=records, total_count=total_count)
+
+    def _get_filter(
+        self, params: schemas.ObservationRequestReadParams, auth_user: AuthUser | None
+    ) -> list[ColumnExpressionArgument]:
         """
         Build the sqlalchemy filter list based on the passed in ObservationRequestReadParams.
         Parses whether or not any of the fields are populated, and constructs a list
@@ -411,24 +410,24 @@ class ObservationRequestService:
         list[sqlalchemy.filters]
             list of ObservationRequest filter booleans
         """
-        data_filter: list = []
+        filters: list[ColumnExpressionArgument] = []
 
-        if data.ids and len(data.ids):
-            data_filter.append(models.ObservationRequest.id.in_(data.ids))
+        if params.ids and len(params.ids):
+            filters.append(models.ObservationRequest.id.in_(params.ids))
 
-        if data.observatory_ids and len(data.observatory_ids):
-            data_filter.append(
+        if params.observatory_ids and len(params.observatory_ids):
+            filters.append(
                 models.ObservationRequest.instrument.has(
                     models.Instrument.telescope.has(
-                        models.Telescope.observatory_id.in_(data.observatory_ids)
+                        models.Telescope.observatory_id.in_(params.observatory_ids)
                     )
                 )
             )
 
-        if data.observatory_names and len(data.observatory_names):
+        if params.observatory_names and len(params.observatory_names):
             observatory_name_or_filter = []
 
-            for observatory_name in data.observatory_names:
+            for observatory_name in params.observatory_names:
                 observatory_name_or_filter.append(
                     models.ObservationRequest.instrument.has(
                         models.Instrument.telescope.has(
@@ -453,19 +452,19 @@ class ObservationRequestService:
                     )
                 )
 
-            data_filter.append(or_(*observatory_name_or_filter))
+            filters.append(or_(*observatory_name_or_filter))
 
-        if data.telescope_ids and len(data.telescope_ids):
-            data_filter.append(
+        if params.telescope_ids and len(params.telescope_ids):
+            filters.append(
                 models.ObservationRequest.instrument.has(
-                    models.Telescope.id.in_(data.telescope_ids)
+                    models.Telescope.id.in_(params.telescope_ids)
                 )
             )
 
-        if data.telescope_names and len(data.telescope_names):
+        if params.telescope_names and len(params.telescope_names):
             telescope_name_or_filter = []
 
-            for telescope_name in data.telescope_names:
+            for telescope_name in params.telescope_names:
                 telescope_name_or_filter.append(
                     models.ObservationRequest.instrument.has(
                         models.Instrument.telescope.has(
@@ -486,17 +485,17 @@ class ObservationRequestService:
                     )
                 )
 
-            data_filter.append(or_(*telescope_name_or_filter))
+            filters.append(or_(*telescope_name_or_filter))
 
-        if data.instrument_ids and len(data.instrument_ids):
-            data_filter.append(
-                models.ObservationRequest.instrument_id.in_(data.instrument_ids)
+        if params.instrument_ids and len(params.instrument_ids):
+            filters.append(
+                models.ObservationRequest.instrument_id.in_(params.instrument_ids)
             )
 
-        if data.instrument_names and len(data.instrument_names):
+        if params.instrument_names and len(params.instrument_names):
             instrument_name_or_filter = []
 
-            for instrument_name in data.instrument_names:
+            for instrument_name in params.instrument_names:
                 instrument_name_or_filter.append(
                     models.ObservationRequest.instrument.has(
                         func.lower(models.Instrument.name).contains(
@@ -513,19 +512,19 @@ class ObservationRequestService:
                     )
                 )
 
-            data_filter.append(or_(*instrument_name_or_filter))
+            filters.append(or_(*instrument_name_or_filter))
 
-        if data.object_name:
-            data_filter.append(
+        if params.object_name:
+            filters.append(
                 func.lower(models.ObservationRequest.object_name).contains(
-                    str.lower(data.object_name)
+                    str.lower(params.object_name)
                 )
             )
 
         cone_search_params = [
-            data.object_cone_search_ra,
-            data.object_cone_search_dec,
-            data.object_cone_search_radius,
+            params.object_cone_search_ra,
+            params.object_cone_search_dec,
+            params.object_cone_search_radius,
         ]
         if any(param is not None for param in cone_search_params) and not all(
             param is not None for param in cone_search_params
@@ -535,16 +534,16 @@ class ObservationRequestService:
             )
         elif all(param is not None for param in cone_search_params):
             cone_search_point = from_shape(
-                Point(data.object_cone_search_ra, data.object_cone_search_dec),  # type: ignore
+                Point(params.object_cone_search_ra, params.object_cone_search_dec),  # type: ignore
                 srid=4326,
             )
 
             # Convert degrees to meters
             cone_search_radius = (
-                data.object_cone_search_radius * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE  # type: ignore
+                params.object_cone_search_radius * EARTH_CIRCUMFERENCE_METERS_PER_DEGREE  # type: ignore
             )
 
-            data_filter.append(
+            filters.append(
                 ST_DWithin(
                     models.ObservationRequest.object_position,
                     cone_search_point,
@@ -552,49 +551,54 @@ class ObservationRequestService:
                 )
             )
 
-        if data.begin_date:
-            data_filter.append(
-                models.ObservationRequest.date_range_end > data.begin_date
-            )
+        if params.begin_date:
+            filters.append(models.ObservationRequest.date_range_end > params.begin_date)
 
-        if data.end_date:
-            data_filter.append(
-                models.ObservationRequest.date_range_begin < data.end_date
-            )
+        if params.end_date:
+            filters.append(models.ObservationRequest.date_range_begin < params.end_date)
 
-        if data.proposal_name:
-            data_filter.append(
+        if params.proposal_name:
+            filters.append(
                 models.ObservationRequest.observing_proposal.has(
                     func.lower(models.ObservingProposal.name).contains(
-                        str.lower(data.proposal_name)
+                        str.lower(params.proposal_name)
                     )
                 )
             )
 
-        if data.proposal_code:
-            data_filter.append(
+        if params.proposal_code:
+            filters.append(
                 models.ObservationRequest.observing_proposal.has(
                     func.lower(models.ObservingProposal.code).contains(
-                        str.lower(data.proposal_code)
+                        str.lower(params.proposal_code)
                     )
                 )
             )
 
-        if data.proposal_ids and len(data.proposal_ids):
-            data_filter.append(
-                models.ObservationRequest.proposal_id.in_(data.proposal_ids)
+        if params.proposal_ids and len(params.proposal_ids):
+            filters.append(
+                models.ObservationRequest.proposal_id.in_(params.proposal_ids)
             )
 
-        if data.is_too is not None:
-            data_filter.append(models.ObservationRequest.is_too == data.is_too)
+        if params.is_too is not None:
+            filters.append(models.ObservationRequest.is_too == params.is_too)
 
-        if data.parent_id is not None:
-            data_filter.append(models.ObservationRequest.parent_id == data.parent_id)
+        if params.parent_id is not None:
+            filters.append(models.ObservationRequest.parent_id == params.parent_id)
 
-        if data.status is not None:
-            data_filter.append(models.ObservationRequest.status == data.status.value)
+        if params.status is not None:
+            filters.append(models.ObservationRequest.status == params.status.value)
 
-        return data_filter
+        # if proposal params exist in the query, filter out if not a viewer or not anonymized
+        if params.proposal_code or params.proposal_name or params.proposal_ids:
+            filters.append(
+                or_(
+                    self._user_type_case(auth_user) != "viewer",
+                    ~models.ObservationRequest.anonymize,
+                )
+            )
+
+        return filters
 
     async def _can_submit(self, instrument_ids: list[UUID]) -> None:
         """
@@ -628,7 +632,7 @@ class ObservationRequestService:
             )
 
     def _redact_to_schema(
-        self, observation_request: models.ObservationRequest, is_viewer: bool
+        self, observation_request: models.ObservationRequest, user_type: UserType
     ) -> schemas.ObservationRequest:
         """
         Redact the ObservationRequest if the auth user is a viewer.
@@ -647,7 +651,7 @@ class ObservationRequestService:
 
         schema = schemas.ObservationRequest.from_orm(observation_request)
 
-        if schema.anonymize and is_viewer:
+        if schema.anonymize and user_type == "viewer":
             # Redact the fields that should not be visible to viewers when anonymized
             schema.created_by_id = None
             schema.submitted_by = None
@@ -655,6 +659,48 @@ class ObservationRequestService:
             schema.science_justification = ""
 
         return schema
+
+    def _user_type_case(self, auth_user: AuthUser | None) -> ColumnElement[str]:
+        return case(
+            (self._is_writer_clause(auth_user), "writer"),
+            (self._is_creator_clause(auth_user), "creator"),
+            else_="viewer",
+        ).label("user_type")
+
+    def _is_writer_clause(
+        self, auth_user: AuthUser | None
+    ) -> ColumnElement[bool] | False_:
+        if auth_user is None:
+            return false()
+
+        group_ids = [
+            group.id
+            for group in auth_user.groups
+            if any(
+                scope in getattr(group, "scopes", [])
+                for scope in [
+                    "group:all:write",
+                    "group:observation-request:write",
+                    "group:observation-request:read",
+                ]
+            )
+        ]
+
+        return models.ObservationRequest.instrument.has(
+            models.Instrument.telescope.has(
+                models.Telescope.observatory.has(
+                    models.Observatory.group.has(models.Group.id.in_(group_ids))
+                )
+            )
+        )
+
+    def _is_creator_clause(
+        self, auth_user: AuthUser | None
+    ) -> ColumnElement[bool] | False_:
+        if auth_user is None:
+            return false()
+
+        return models.ObservationRequest.created_by_id == auth_user.id
 
     async def _get_versions(
         self,
