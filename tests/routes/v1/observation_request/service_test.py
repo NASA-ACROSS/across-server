@@ -371,7 +371,7 @@ class TestObservationRequestService:
 
             mock_result.scalars.return_value.all.side_effect = [
                 [mock_instrument_data],  # _can_submit: instruments query
-                [obs_req_version_one, obs_req_version_two],
+                [obs_req_version_two, obs_req_version_one],
                 [],  # _get_proposals: no existing proposals
             ]
             with pytest.raises(ObservationRequestConflictException):
