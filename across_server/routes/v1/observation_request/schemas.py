@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Self
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from ....core.date_utils import UTCDatetime
 from ....core.enums import ObservationRequestStatus
@@ -164,7 +164,7 @@ class ObservationRequest(ObservationRequestBase):
     status: ObservationRequestStatus
     status_reason: str | None
     proposal: ObservingProposal | None = None
-    versions: list[ObservationRequestVersion] | None = None
+    versions: list[ObservationRequestVersion] = Field(default_factory=list)
     created_on: datetime
     created_by_id: uuid.UUID | None
     modified_on: datetime | None

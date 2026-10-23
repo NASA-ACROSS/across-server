@@ -18,10 +18,8 @@ from across_server.routes.v1.user.service_account.service import ServiceAccountS
 class TestServiceAccountService:
     class TestCreate:
         @pytest.fixture(autouse=True)
-        def find_db_user(
-            self, mock_scalar_result: MagicMock, fake_user: models.User
-        ) -> None:
-            mock_scalar_result.one.return_value(fake_user)
+        def find_db_user(self, mock_scalars: MagicMock, fake_user: models.User) -> None:
+            mock_scalars.one.return_value(fake_user)
 
         @pytest.mark.asyncio
         async def should_generate_secret_key_hex_with_64_bytes(
