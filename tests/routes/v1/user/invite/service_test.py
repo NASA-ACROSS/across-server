@@ -14,11 +14,11 @@ class TestUserInviteService:
         async def test_should_return_group_invite_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_scalar_result: AsyncMock,
+            mock_scalars: AsyncMock,
             mock_group_invite_data: models.GroupInvite,
         ) -> None:
             """Should return a single GroupInvite model when get is successful"""
-            mock_scalar_result.one_or_none.return_value = mock_group_invite_data
+            mock_scalars.one_or_none.return_value = mock_group_invite_data
             service = UserInviteService(mock_db)
 
             user_invite = await service.get(uuid.uuid4(), uuid.uuid4())
@@ -27,10 +27,10 @@ class TestUserInviteService:
 
         @pytest.mark.asyncio
         async def test_should_throw_exception_when_invite_not_found(
-            self, mock_db: AsyncMock, mock_scalar_result: AsyncMock
+            self, mock_db: AsyncMock, mock_scalars: AsyncMock
         ) -> None:
             """Should throw exception when user invite not found"""
-            mock_scalar_result.one_or_none.return_value = None
+            mock_scalars.one_or_none.return_value = None
             service = UserInviteService(mock_db)
 
             with pytest.raises(GroupInviteNotFoundException):
@@ -41,11 +41,11 @@ class TestUserInviteService:
         async def test_should_return_list_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_scalar_result: AsyncMock,
+            mock_scalars: AsyncMock,
             mock_group_invite_data: models.GroupInvite,
         ) -> None:
             """Should return an list of GroupInvite models when get_many is successful"""
-            mock_scalar_result.all.return_value = [
+            mock_scalars.all.return_value = [
                 mock_group_invite_data,
                 mock_group_invite_data,
             ]
@@ -61,11 +61,11 @@ class TestUserInviteService:
         async def test_should_return_list_of_group_invites_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_scalar_result: AsyncMock,
+            mock_scalars: AsyncMock,
             mock_group_invite_data: models.GroupInvite,
         ) -> None:
             """Should return a list of GroupInvite models when get_many is successful"""
-            mock_scalar_result.all.return_value = [
+            mock_scalars.all.return_value = [
                 mock_group_invite_data,
                 mock_group_invite_data,
             ]
@@ -82,10 +82,10 @@ class TestUserInviteService:
         async def test_should_return_empty_list_when_successful(
             self,
             mock_db: AsyncMock,
-            mock_scalar_result: AsyncMock,
+            mock_scalars: AsyncMock,
         ) -> None:
             """Should return an empty list when no invites for user"""
-            mock_scalar_result.all.return_value = []
+            mock_scalars.all.return_value = []
             service = UserInviteService(mock_db)
 
             user_invites = await service.get_many(

@@ -15,14 +15,7 @@ from across_server.auth.strategies import (
 )
 from across_server.core.enums.observation_request_status import ObservationRequestStatus
 from across_server.db import models
-from across_server.routes.v1.observation_request.schemas import (
-    ObservationRequest,
-    ObservationRequestBase,
-    ObservationRequestCreate,
-    ObservationRequestCreateMany,
-    ObservationRequestReadParams,
-    ObservationRequestUpdate,
-)
+from across_server.routes.v1.observation_request import schemas
 from across_server.routes.v1.observation_request.service import (
     ObservationRequestService,
 )
@@ -57,22 +50,26 @@ def fake_observation_request_data(mock_instrument_data: models.Instrument) -> di
 @pytest.fixture(autouse=True)
 def fake_observation_request_base(
     fake_observation_request_data: dict,
-) -> ObservationRequestBase:
-    return ObservationRequestBase(**fake_observation_request_data)
+) -> schemas.ObservationRequestBase:
+    return schemas.ObservationRequestBase(**fake_observation_request_data)
 
 
 @pytest.fixture(autouse=True)
 def fake_observation_request_create(
-    fake_observation_request_base: ObservationRequestBase,
-) -> ObservationRequestCreate:
-    return ObservationRequestCreate(**fake_observation_request_base.model_dump())
+    fake_observation_request_base: schemas.ObservationRequestBase,
+) -> schemas.ObservationRequestCreate:
+    return schemas.ObservationRequestCreate(
+        **fake_observation_request_base.model_dump()
+    )
 
 
 @pytest.fixture(autouse=True)
 def fake_observation_request_update(
-    fake_observation_request_base: ObservationRequestBase,
-) -> ObservationRequestUpdate:
-    return ObservationRequestUpdate(**fake_observation_request_base.model_dump())
+    fake_observation_request_base: schemas.ObservationRequestBase,
+) -> schemas.ObservationRequestUpdate:
+    return schemas.ObservationRequestUpdate(
+        **fake_observation_request_base.model_dump()
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -94,6 +91,11 @@ def fake_submitted_by_user(fake_auth_user: AuthUser) -> models.User:
         first_name=fake_auth_user.first_name,
         last_name=fake_auth_user.last_name,
     )
+
+
+@pytest.fixture()
+def fake_proposal(fake_observation_request_data: dict) -> schemas.ObservingProposal:
+    return schemas.ObservingProposal(**fake_observation_request_data["proposal"])
 
 
 @pytest.fixture()
@@ -136,6 +138,9 @@ def fake_observation_request_model_factory(
             anonymize=fake_observation_request_data["anonymize"],
             is_too=fake_observation_request_data["is_too"],
             proposal_id=fake_observation_request_data["proposal"]["id"],
+            observing_proposal=models.ObservingProposal(
+                **fake_observation_request_data["proposal"]
+            ),
             created_by_id=fake_user.id,
             modified_by_id=fake_user.id,
             submitted_by_user=fake_user,
@@ -155,29 +160,29 @@ def fake_observation_request_model(
 
 
 @pytest.fixture(autouse=True)
-def fake_observation_request_read_params() -> ObservationRequestReadParams:
-    return ObservationRequestReadParams()
+def fake_observation_request_read_params() -> schemas.ObservationRequestReadParams:
+    return schemas.ObservationRequestReadParams()
 
 
 @pytest.fixture
 def fake_observation_request_schema(
     fake_observation_request_model: models.ObservationRequest,
-) -> ObservationRequest:
-    return ObservationRequest.from_orm(fake_observation_request_model)
+) -> schemas.ObservationRequest:
+    return schemas.ObservationRequest.from_orm(fake_observation_request_model)
 
 
 @pytest.fixture
 def fake_observation_request_create_many(
-    fake_observation_request_create: ObservationRequestCreate,
-) -> ObservationRequestCreateMany:
-    return ObservationRequestCreateMany(
+    fake_observation_request_create: schemas.ObservationRequestCreate,
+) -> schemas.ObservationRequestCreateMany:
+    return schemas.ObservationRequestCreateMany(
         observation_requests=[fake_observation_request_create]
     )
 
 
 @pytest.fixture
 def mock_observation_request_service(
-    fake_observation_request_schema: ObservationRequest,
+    fake_observation_request_schema: schemas.ObservationRequest,
 ) -> AsyncMock:
     mock = AsyncMock(ObservationRequestService)
     mock.get = AsyncMock(return_value=fake_observation_request_schema)

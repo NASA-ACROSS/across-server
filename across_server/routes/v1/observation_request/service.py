@@ -39,11 +39,15 @@ from .exceptions import (
 
 type UserType = Literal["viewer", "creator", "writer"]
 
+type RecordType = tuple[
+    models.ObservationRequest, UserType, list[models.ObservationRequest]
+]
+
 
 class ManyModels(BaseSchema):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    records: list[tuple[models.ObservationRequest, UserType]]
+    records: list[RecordType]
     total_count: int
 
 
@@ -77,7 +81,7 @@ class ObservationRequestService:
     async def get(
         self,
         observation_request_id: UUID,
-        auth_user: AuthUser | None,
+        auth_user: AuthUser | None = None,
     ) -> schemas.ObservationRequest:
         """
         Retrieve the ObservationRequest record with the given id.
@@ -96,24 +100,20 @@ class ObservationRequestService:
         ------
         ObservationRequestNotFoundException
         """
-        (observation_request, user_type) = await self._get_model(
+        (observation_request, user_type, versions) = await self._get_model(
             observation_request_id=observation_request_id,
             auth_user=auth_user,
         )
 
-        observation_request_schema = self._redact_to_schema(
-            observation_request, user_type
-        )
+        latest_version = versions[0]
 
-        versions_dictionary = await self._get_versions(
-            observation_requests=[observation_request],
+        observation_request_schema = self._redact_to_schema(
+            observation_request, user_type, latest_version.anonymize
         )
 
         observation_request_schema.versions = [
-            version
-            for version in versions_dictionary.get(
-                observation_request_schema.parent_id, []
-            )
+            schemas.ObservationRequestVersion.model_validate(version)
+            for version in versions
         ]
 
         return observation_request_schema
@@ -139,31 +139,24 @@ class ObservationRequestService:
             The list of ObservationRequest records and the total number of records
             as a tuple
         """
-        models = await self._get_models(params, auth_user)
-
-        observation_requests = models.records
-
-        versions_dictionary: dict[UUID, list[schemas.ObservationRequestVersion]] = {}
-
-        if params.include_versions:
-            versions_dictionary = await self._get_versions(
-                [request for request, _ in observation_requests]
-            )
+        db_models = await self._get_models(params, auth_user)
 
         redacted_observation_requests: list[schemas.ObservationRequest] = []
-        for observation_request, user_type in observation_requests:
+        for observation_request, user_type, versions in db_models.records:
+            latest_version = versions[0]
+
             redacted_observation_request = self._redact_to_schema(
-                observation_request, user_type
+                observation_request, user_type, latest_version.anonymize
             )
+
             redacted_observation_request.versions = [
-                version
-                for version in versions_dictionary.get(
-                    observation_request.parent_id, []
-                )
+                schemas.ObservationRequestVersion.model_validate(version)
+                for version in versions
             ]
+
             redacted_observation_requests.append(redacted_observation_request)
 
-        return redacted_observation_requests, models.total_count
+        return redacted_observation_requests, db_models.total_count
 
     async def create(
         self, data: schemas.ObservationRequestCreate, created_by_id: UUID
@@ -265,7 +258,7 @@ class ObservationRequestService:
             The ObservationRequest with the modifications
         """
         # pull existing version
-        (observation_request, user_type) = await self._get_model(
+        (observation_request, user_type, versions) = await self._get_model(
             observation_request_id, modified_by
         )
 
@@ -276,23 +269,9 @@ class ObservationRequestService:
         await self._can_submit([instrument_id])
 
         # prevent overwriting stale edits
-        await self._can_modify_version(observation_request)
+        await self._can_modify_version(observation_request, versions)
 
         await self._assign_proposal_ids([data])
-
-        # if changing to anonymize, update all versions to anonymize as well
-        if (
-            data.anonymize is not None
-            and data.anonymize != observation_request.anonymize
-        ):
-            versions_query = select(models.ObservationRequest).where(
-                models.ObservationRequest.parent_id == observation_request.parent_id
-            )
-            result = await self.db.execute(versions_query)
-            versions = result.scalars().all()
-
-            for version in versions:
-                version.anonymize = data.anonymize
 
         # Keys that do not need to be copied over to the new version
         exclude_keys = [
@@ -334,7 +313,7 @@ class ObservationRequestService:
 
     async def _get_model(
         self, observation_request_id: UUID, auth_user: AuthUser | None = None
-    ) -> tuple[models.ObservationRequest, UserType]:
+    ) -> RecordType:
         models = await self._get_models(
             schemas.ObservationRequestReadParams(ids=[observation_request_id]),
             auth_user,
@@ -356,10 +335,11 @@ class ObservationRequestService:
         count_query = select(
             func.count(distinct(models.ObservationRequest.parent_id))
         ).where(*observation_request_filter)
-        total_count = (await self.db.execute(count_query)).scalar_one()
+        count_res = await self.db.execute(count_query)
+        total_count = count_res.scalar_one()
 
         # subquery to allow for filtering on latest versions
-        latest_observation_request_ids = (
+        latest_observation_request_ids_query = (
             select(models.ObservationRequest.id)
             .filter(*observation_request_filter)
             .order_by(
@@ -377,8 +357,9 @@ class ObservationRequestService:
                 self._user_type_case(auth_user),
             )
             .join(
-                latest_observation_request_ids,
-                models.ObservationRequest.id == latest_observation_request_ids.c.id,
+                latest_observation_request_ids_query,
+                models.ObservationRequest.id
+                == latest_observation_request_ids_query.c.id,
             )
             .order_by(
                 (models.ObservationRequest.created_on.desc()),
@@ -388,7 +369,17 @@ class ObservationRequestService:
         )
 
         result = await self.db.execute(observation_request_query)
-        records = list(result.tuples().all())
+        db_records = list(result.tuples().all())
+
+        versions_dictionary = await self._get_versions_by_parent_id(
+            observation_requests=[record[0] for record in db_records],
+        )
+
+        records: list[RecordType] = []
+
+        for [obsreq, user_type] in db_records:
+            versions = versions_dictionary.get(obsreq.parent_id, [])
+            records.append((obsreq, user_type, versions))
 
         return ManyModels(records=records, total_count=total_count)
 
@@ -632,7 +623,10 @@ class ObservationRequestService:
             )
 
     def _redact_to_schema(
-        self, observation_request: models.ObservationRequest, user_type: UserType
+        self,
+        observation_request: models.ObservationRequest,
+        user_type: UserType,
+        anonymize: bool,
     ) -> schemas.ObservationRequest:
         """
         Redact the ObservationRequest if the auth user is a viewer.
@@ -641,8 +635,8 @@ class ObservationRequestService:
         ----------
         observation_request : models.ObservationRequest
             the ObservationRequest to redact
-        is_viewer: bool
-            whether the user making the request is a viewer
+        anonymize: bool
+            whether the observation request should be anonymized for the user
         Returns
         -------
         schemas.ObservationRequest
@@ -651,16 +645,17 @@ class ObservationRequestService:
 
         schema = schemas.ObservationRequest.from_orm(observation_request)
 
-        if schema.anonymize and user_type == "viewer":
+        if anonymize and user_type == "viewer":
             # Redact the fields that should not be visible to viewers when anonymized
             schema.created_by_id = None
+            schema.modified_by_id = None
             schema.submitted_by = None
             schema.proposal = None
             schema.science_justification = ""
 
         return schema
 
-    def _user_type_case(self, auth_user: AuthUser | None) -> ColumnElement[str]:
+    def _user_type_case(self, auth_user: AuthUser | None) -> ColumnElement[UserType]:
         return case(
             (self._is_writer_clause(auth_user), "writer"),
             (self._is_creator_clause(auth_user), "creator"),
@@ -702,29 +697,23 @@ class ObservationRequestService:
 
         return models.ObservationRequest.created_by_id == auth_user.id
 
-    async def _get_versions(
+    async def _get_versions_by_parent_id(
         self,
         observation_requests: list[models.ObservationRequest],
-    ) -> dict[UUID, list[schemas.ObservationRequestVersion]]:
+    ) -> dict[UUID, list[models.ObservationRequest]]:
         """
         Get the versions of the ObservationRequests.
 
         Parameters
         ----------
-        observation_requests : list[tuple[models.ObservationRequest, bool]]
+        observation_requests : list[models.ObservationRequest]
             The ObservationRequests to get the versions for
-        is_viewer_clause: ColumnElement[bool] | False_
-            The clause to determine if the user is a viewer
 
         Returns
         -------
-        dict[UUID, list[schemas.ObservationRequestVersion]]
-            A dictionary of parent_id to list of ObservationRequestVersion versions
+        dict[UUID, list[models.ObservationRequest]]
+            A dictionary of parent_id to list of ObservationRequest versions
         """
-        related_request_dictionary: dict[
-            UUID, list[schemas.ObservationRequestVersion]
-        ] = {}
-
         if len(observation_requests) > 0:
             parent_ids = list(
                 {
@@ -733,12 +722,13 @@ class ObservationRequestService:
                 }
             )
 
-            related_request_query = (
+            versions_query = (
                 select(models.ObservationRequest)
                 .where(models.ObservationRequest.parent_id.in_(parent_ids))
                 .options(
                     load_only(
                         models.ObservationRequest.id,
+                        models.ObservationRequest.anonymize,
                         models.ObservationRequest.created_on,
                         models.ObservationRequest.modified_on,
                         models.ObservationRequest.parent_id,
@@ -746,21 +736,24 @@ class ObservationRequestService:
                 )
             ).order_by(models.ObservationRequest.modified_on.desc().nulls_last())
 
-            related_request_result = await self.db.execute(related_request_query)
+            res = await self.db.scalars(versions_query)
 
-            related_requests = related_request_result.scalars().all()
+            versions = res.all()
+
+            versions_dictionary: dict[UUID, list[models.ObservationRequest]] = {}
 
             for parent_id in parent_ids:
-                related_request_dictionary[parent_id] = [
-                    schemas.ObservationRequestVersion.from_orm(related_request)
-                    for related_request in related_requests
-                    if related_request.parent_id == parent_id
+                versions_dictionary[parent_id] = [
+                    version for version in versions if version.parent_id == parent_id
                 ]
 
-        return related_request_dictionary
+            return versions_dictionary
+        return {}
 
     async def _can_modify_version(
-        self, observation_request: models.ObservationRequest
+        self,
+        observation_request: models.ObservationRequest,
+        versions: list[models.ObservationRequest],
     ) -> None:
         """
         Prevent overwriting stale edits by ensuring that the observation_request is
@@ -776,11 +769,8 @@ class ObservationRequestService:
         None
             None if the ObservationRequest is modifiable, otherwise an exception is raised
         """
-        versions_dictionary = await self._get_versions(
-            observation_requests=[observation_request],
-        )
-        versions = versions_dictionary[observation_request.parent_id]
-        newest_version: schemas.ObservationRequestVersion = versions[0]
+        newest_version = versions[0]
+
         # prevent overwriting stale versions between multiple users by forcing modify to only allow when newest version
         if newest_version.id != observation_request.id:
             raise ObservationRequestConflictException(

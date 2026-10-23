@@ -37,13 +37,41 @@ def fake_models_result(
     return [(fake_observation_request_model, fake_user_type)]
 
 
+@pytest.fixture()
+def fake_versions(
+    fake_observation_request_model: models.ObservationRequest,
+) -> list[models.ObservationRequest]:
+    return [fake_observation_request_model]
+
+
 @pytest.fixture(autouse=True)
-def mock_get_models_db_result(
-    mock_result: AsyncMock,
+def mock_observation_requests_total_count_result(
+    mock_scalar_one: AsyncMock,
     fake_models_result: list[tuple],
 ) -> None:
-    mock_result.scalar_one.side_effect = lambda: len(fake_models_result)
-    mock_result.tuples.return_value.all.side_effect = lambda: fake_models_result
+    mock_scalar_one.side_effect = lambda: len(fake_models_result)
+
+
+@pytest.fixture(autouse=True)
+def mock_observation_requests_result(
+    mock_tuples: AsyncMock,
+    fake_models_result: list[tuple],
+) -> None:
+    mock_tuples.return_value.all.side_effect = lambda: fake_models_result
+
+
+@pytest.fixture(autouse=True)
+def mock_get_additional_records(
+    mock_scalars: AsyncMock,
+    mock_instrument_data: models.Instrument,
+    fake_proposal: schemas.ObservingProposal,
+    fake_versions: list[models.ObservationRequest],
+) -> None:
+    mock_scalars.all.side_effect = [
+        fake_versions,  # _get_versions: versions query
+        [mock_instrument_data],  # _can_submit: instruments query
+        [fake_proposal],  # _get_proposals: proposals query
+    ]
 
 
 class Setup:
@@ -55,23 +83,42 @@ class Setup:
 class TestObservationRequestService:
     class TestGet(Setup):
         @pytest.mark.asyncio
-        async def test_should_return_observation_request_when_found(
-            self,
-        ) -> None:
+        async def test_should_return_observation_request_when_found(self) -> None:
             """Should return a schemas.ObservationRequest object"""
             observation_request = await self.service.get(uuid4(), auth_user=None)
             assert isinstance(observation_request, schemas.ObservationRequest)
 
         @pytest.mark.asyncio
         async def test_should_raise_not_found_exception_when_does_not_exist(
-            self,
-            fake_models_result: list[tuple],
+            self, fake_models_result: list[tuple]
         ) -> None:
             """Should raise ObservationRequestNotFoundException when the ObservationRequest does not exist"""
             fake_models_result.clear()
 
             with pytest.raises(ObservationRequestNotFoundException):
                 await self.service.get(uuid4(), auth_user=None)
+
+        @pytest.mark.asyncio
+        async def test_should_redact_observation_request_by_latest_version_anonymize_value(
+            self,
+            fake_observation_request_model_factory: Callable[
+                [], models.ObservationRequest
+            ],
+            fake_versions: list[models.ObservationRequest],
+        ) -> None:
+            # first version should be anonymized
+            fake_versions[0].science_justification = "FIRST VERSION TEST IS ANONYMIZED"
+            fake_versions[0].anonymize = True
+
+            # do not anonymize the latest version
+            latest = fake_observation_request_model_factory()
+            latest.science_justification = "LATEST VERSION TEST IS NOT ANONYMIZED"
+            latest.anonymize = False
+            fake_versions.insert(0, latest)
+
+            obsreq = await self.service.get(fake_versions[0].id)
+
+            assert obsreq.proposal is not None
 
     class TestGetMany(Setup):
         @pytest.mark.asyncio
@@ -103,6 +150,22 @@ class TestObservationRequestService:
                 )
 
     class TestCreate(Setup):
+        @pytest.fixture(autouse=True)
+        def mock_get_additional_records(
+            self,
+            mock_scalars: AsyncMock,
+            mock_instrument_data: models.Instrument,
+            fake_proposal: schemas.ObservingProposal,
+        ) -> None:
+            """
+            Mock the additional records needed for creating an ObservationRequest.
+            Create does not require pulling existing versions.
+            """
+            mock_scalars.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                [fake_proposal],  # _get_proposals: proposals query
+            ]
+
         @pytest.mark.asyncio
         async def test_should_save_observation_request_to_database(
             self,
@@ -119,6 +182,22 @@ class TestObservationRequestService:
             mock_db.commit.assert_called_once()
 
     class TestCreateMany(Setup):
+        @pytest.fixture(autouse=True)
+        def mock_get_additional_records(
+            self,
+            mock_scalars: AsyncMock,
+            mock_instrument_data: models.Instrument,
+            fake_proposal: schemas.ObservingProposal,
+        ) -> None:
+            """
+            Mock the additional records needed for creating an ObservationRequest.
+            Create does not require pulling existing versions.
+            """
+            mock_scalars.all.side_effect = [
+                [mock_instrument_data],  # _can_submit: instruments query
+                [fake_proposal],  # _get_proposals: proposals query
+            ]
+
         @pytest.mark.asyncio
         async def test_should_commit_observation_requests_once(
             self,
@@ -155,41 +234,6 @@ class TestObservationRequestService:
         @pytest.fixture(autouse=True)
         def fake_user_type(self) -> UserType:
             return "creator"
-
-        @pytest.fixture()
-        def fake_proposal(
-            self, fake_observation_request_data: dict
-        ) -> schemas.ObservingProposal:
-            return schemas.ObservingProposal(
-                id=fake_observation_request_data["proposal"]["id"],
-                code=fake_observation_request_data["proposal"]["code"],
-                name=fake_observation_request_data["proposal"]["name"],
-            )
-
-        @pytest.fixture()
-        def fake_observation_request_versions(
-            self,
-            fake_observation_request_model_factory: Callable[
-                [], models.ObservationRequest
-            ],
-        ) -> list[models.ObservationRequest]:
-            v1 = fake_observation_request_model_factory()
-
-            return [v1]
-
-        @pytest.fixture(autouse=True)
-        def mock_scalars_all(
-            self,
-            mock_result: AsyncMock,
-            mock_instrument_data: models.Instrument,
-            fake_proposal: schemas.ObservingProposal,
-            fake_observation_request_versions: list[models.ObservationRequest],
-        ) -> None:
-            mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
-                fake_observation_request_versions,  # _get_versions: versions query
-                [fake_proposal],  # _get_proposals: proposals query
-            ]
 
         @pytest.mark.asyncio
         async def test_should_raise_404_not_found_when_observation_request_does_not_exist(
@@ -300,7 +344,7 @@ class TestObservationRequestService:
             fake_observation_request_model_factory: Callable,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
             fake_models_result: list[tuple[models.ObservationRequest, UserType]],
-            fake_observation_request_versions: list[models.ObservationRequest],
+            fake_versions: list[models.ObservationRequest],
         ) -> None:
             obs_req_model = fake_observation_request_model_factory()
             obs_req_model.status = ObservationRequestStatus.ACCEPTED.value
@@ -310,8 +354,8 @@ class TestObservationRequestService:
             fake_models_result.append((obs_req_model, "writer"))
 
             obs_req_version = fake_observation_request_model_factory()
-            fake_observation_request_versions.clear()
-            fake_observation_request_versions.append(obs_req_version)
+            fake_versions.clear()
+            fake_versions.append(obs_req_version)
 
             await self.service.modify(
                 uuid4(),
@@ -339,11 +383,10 @@ class TestObservationRequestService:
         @pytest.mark.asyncio
         async def test_should_raise_409_when_modifying_stale_version(
             self,
-            mock_result: AsyncMock,
+            fake_versions: list[models.ObservationRequest],
             fake_auth_user: AuthUser,
             fake_observation_request_update: schemas.ObservationRequestUpdate,
             fake_observation_request_model_factory: Callable,
-            mock_instrument_data: models.Instrument,
             fake_models_result: list[tuple],
         ) -> None:
             """Should raise 409 when modifying stale version"""
@@ -354,7 +397,6 @@ class TestObservationRequestService:
             )
 
             # default fixture fake_observation_request_update.id matches obs_req_version_one.id
-            obs_req_version_one = fake_observation_request_model_factory()
             obs_req_version_two = fake_observation_request_model_factory()
 
             # simulate update against obs_req_version_one
@@ -363,11 +405,8 @@ class TestObservationRequestService:
                 obs_req_version_two.modified_on + timedelta(hours=10)
             )
 
-            mock_result.scalars.return_value.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
-                [obs_req_version_two, obs_req_version_one],
-                [],  # _get_proposals: no existing proposals
-            ]
+            fake_versions.insert(0, obs_req_version_two)
+
             with pytest.raises(ObservationRequestConflictException):
                 await self.service.modify(
                     uuid4(),
