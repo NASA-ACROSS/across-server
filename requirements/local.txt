@@ -334,7 +334,7 @@ sentry-sdk==2.48.0
     # via fastapi-cloud-cli
 sgp4==2.25
     # via across-tools
-shapely==2.1.2
+shapely==2.2.0
     # via
     #   -r requirements/base.in
     #   across-tools
