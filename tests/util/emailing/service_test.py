@@ -6,8 +6,8 @@ import pytest
 import pytest_asyncio
 import structlog
 
-from across_server.util.email import config as email_config_module
 import across_server.util.email.service as email_service_module
+from across_server.util.email import config as email_config_module
 from across_server.util.email.service import EmailService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
@@ -22,7 +22,7 @@ class MockClientContext:
     async def __aenter__(self) -> AsyncMock:
         return self._client
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *_: Any) -> None:
         return None
 
 

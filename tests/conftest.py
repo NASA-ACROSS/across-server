@@ -54,40 +54,34 @@ async def async_client(app: FastAPI) -> AsyncGenerator[httpx.AsyncClient]:
 
 
 @pytest.fixture
-def mock_scalar_one_or_none() -> Generator[MagicMock]:
+def mock_scalar_one_or_none() -> MagicMock:
     mock = MagicMock()
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_one_or_none() -> Generator[MagicMock]:
+def mock_one_or_none() -> MagicMock:
     mock = MagicMock()
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_scalar_one() -> Generator[MagicMock]:
+def mock_scalar_one() -> MagicMock:
     mock = MagicMock()
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_scalars() -> Generator[MagicMock]:
-    mock = MagicMock()
-    yield mock
-
-
-@pytest.fixture
-def mock_unique(mock_scalar_one_or_none: MagicMock) -> Generator[MagicMock]:
+def mock_unique(mock_scalar_one_or_none: MagicMock) -> MagicMock:
     mock = MagicMock()
     mock.scalar_one_or_none = mock_scalar_one_or_none
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_tuples() -> Generator[MagicMock]:
+def mock_tuples() -> MagicMock:
     mock = MagicMock()
-    yield mock
+    return mock
 
 
 @pytest.fixture
@@ -98,26 +92,26 @@ def mock_result(
     mock_scalars: MagicMock,
     mock_unique: MagicMock,
     mock_tuples: MagicMock,
-) -> Generator[MagicMock]:
+) -> MagicMock:
     mock = MagicMock()
     mock.unique = MagicMock(return_value=mock_unique)
+    mock.scalars = MagicMock(return_value=mock_scalars)
     mock.scalar_one = mock_scalar_one
     mock.scalar_one_or_none = mock_scalar_one_or_none
     mock.one_or_none = mock_one_or_none
-    mock.scalars = mock_scalars
     mock.tuples = mock_tuples
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_scalar_result() -> Generator[AsyncMock]:
+def mock_scalars() -> AsyncMock:
     mock = AsyncMock()
     mock.all = MagicMock()
     mock.one = MagicMock()
     mock.one_or_none = MagicMock()
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
@@ -129,20 +123,20 @@ def mock_refresh() -> AsyncMock:
 @pytest.fixture
 def mock_db(
     mock_result: AsyncMock,
-    mock_scalar_result: AsyncMock,
+    mock_scalars: AsyncMock,
     mock_refresh: AsyncMock,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     mock = AsyncMock(AsyncSession)
 
     # Mock the Result object that `execute` returns
     mock.execute = AsyncMock(return_value=mock_result)
-    mock.scalars = AsyncMock(return_value=mock_scalar_result)
+    mock.scalars = AsyncMock(return_value=mock_scalars)
     mock.add = Mock()
     mock.commit = AsyncMock()
     mock.refresh = mock_refresh
     mock.delete = AsyncMock()
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
@@ -151,33 +145,33 @@ def fake_auth_user_or_none(fake_auth_user: AuthUser) -> AuthUser:
 
 
 @pytest.fixture
-def mock_email_service() -> Generator[AsyncMock]:
+def mock_email_service() -> AsyncMock:
     mock = AsyncMock(EmailService)
     mock.send = AsyncMock(return_value=True)
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_webserver_access() -> Generator[MagicMock]:
+def mock_webserver_access() -> MagicMock:
     mock = MagicMock(strategies.webserver_access)
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_global_access() -> Generator[MagicMock]:
+def mock_global_access() -> MagicMock:
     mock = MagicMock(strategies.global_access)
 
-    yield mock
+    return mock
 
 
 @pytest.fixture
-def mock_self_access() -> Generator[MagicMock]:
+def mock_self_access() -> MagicMock:
     mock = MagicMock(strategies.self_access)
     mock.id = 1
 
-    yield mock
+    return mock
 
 
 @pytest.fixture()
