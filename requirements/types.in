@@ -1,6 +1,6 @@
 # type dependencies
 
-mypy >=2.3.1
+mypy >=2.4.0
 types-aioboto3[ses]
 types-boto3[rds,ssm,sts]
 types-python-jose >=3.4.0
