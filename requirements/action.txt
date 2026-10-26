@@ -282,7 +282,7 @@ secretstorage==3.5.0
     # via keyring
 sgp4==2.25
     # via across-tools
-shapely==2.1.2
+shapely==2.2.0
     # via
     #   -r requirements/base.in
     #   across-tools
