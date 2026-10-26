@@ -149,16 +149,16 @@ jobs:
     needs: [ preview ]
     steps:
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v2.2.0
-      #   with:
-      #     aws-region: ${{ secrets.ecr-region }}
-      #     role-to-assume: ${{ secrets.ecr-iam-role }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2.2.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
 
-      # - name: Login to Amazon ECR Public
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   with:
-      #     registry-type: public
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
@@ -324,16 +324,16 @@ jobs:
     needs: [ preview ]
     steps:
 
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v2.2.0
-      #   with:
-      #     aws-region: ${{ secrets.ecr-region }}
-      #     role-to-assume: ${{ secrets.ecr-iam-role }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2.2.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
 
-      # - name: Login to Amazon ECR Public
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   with:
-      #     registry-type: public
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
 
       - uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image
