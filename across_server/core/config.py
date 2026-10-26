@@ -15,6 +15,7 @@ class Config(BaseConfig):
     # need http:// prefix to prevent href removal in some email clients
     HOST: str = "http://localhost"
     FRONTEND_HOST: str = "http://localhost:5173"
+    FRONTEND_BASE_PATH: str = ""
     PORT: int = 8000
     ROOT_PATH: str = ""
     ACROSS_SUPPORT_EMAIL: EmailStr = "gsfc-across-support@mail.nasa.gov"
@@ -60,6 +61,10 @@ class Config(BaseConfig):
     DEFAULT_PAGE_LIMIT: int = 100
     DEFAULT_PAGE_LIMIT_MIN: int = 100
     DEFAULT_PAGE_LIMIT_MAX: int = 1000
+
+    @property
+    def FRONTEND_URL(self) -> str:
+        return f"{self.FRONTEND_HOST}{self.FRONTEND_BASE_PATH}"
 
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
