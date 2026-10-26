@@ -273,7 +273,7 @@ urllib3==2.7.0
     # via
     #   botocore
     #   requests
-uvicorn==0.52.4
+uvicorn==0.54.0
     # via -r requirements/base.in
 webencodings==0.5.1
     # via html5lib
