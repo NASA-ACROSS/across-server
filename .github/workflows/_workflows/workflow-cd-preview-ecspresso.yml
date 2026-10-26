@@ -104,12 +104,19 @@ on:
       github-private-actions-pat:
         description: "Github PAT allow to pull private repos"
         required: true
+      ecr-region:
+        description: "ECR AWS region"
+        required: true
+      ecr-iam-role:
+        description: "IAM Role ARN provide ECR write/read access"
+        required: true
 
 permissions:
   pull-requests: write
   deployments: write
   id-token: write
   contents: read
+  secrets: read
 
 jobs:
   preview:
