@@ -75,6 +75,14 @@ jobs:
           operation: 'lowercase'
           input-string: ${{ inputs.repository }}
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2.2.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
+
+      
+
       - name: Encode Image
         uses: cloudposse/github-action-secret-outputs@0.1.1
         id: image

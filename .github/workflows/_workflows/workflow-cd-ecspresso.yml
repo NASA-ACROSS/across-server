@@ -91,7 +91,14 @@ jobs:
       name: ${{ inputs.environment }}
       url: ${{ steps.result.outputs.webapp-url }}
     steps:
-      - uses: cloudposse/github-action-secret-outputs@0.1.1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2.2.0
+        with:
+          aws-region: ${{ secrets.ecr-region }}
+          role-to-assume: ${{ secrets.ecr-iam-role }}
+      
+
+      - uses: NASA-ACROSS/github-action-workflows/.github/actions/secret-outputs@main
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}

@@ -116,7 +116,7 @@ jobs:
           to: ${{ inputs.version }}
           use_metadata: false
 
-      - uses: cloudposse/github-action-secret-outputs@0.1.1
+      - uses: NASA-ACROSS/github-action-workflows/.github/actions/secret-outputs@main
         id: image
         with:
           secret: ${{ secrets.secret-outputs-passphrase }}
