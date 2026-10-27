@@ -23,7 +23,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgis/postgis
+    image: postgis/postgis:16-master
     platform: linux/amd64
     ports:
       - 5432:5432
