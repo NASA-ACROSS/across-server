@@ -78,6 +78,11 @@ jobs:
           aws-region: ${{ secrets.ecr-region }}
           role-to-assume: ${{ secrets.ecr-iam-role }}
 
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
       - name: Sanitize Organization
         id: lowercase
         uses: cloudposse/github-action-string-transformer@main
