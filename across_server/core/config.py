@@ -15,6 +15,7 @@ class Config(BaseConfig):
     # need http:// prefix to prevent href removal in some email clients
     HOST: str = "http://localhost"
     FRONTEND_HOST: str = "http://localhost:5173"
+    FRONTEND_BASE_PATH: str = ""
     PORT: int = 8000
     ROOT_PATH: str = ""
     ACROSS_SUPPORT_EMAIL: EmailStr = "gsfc-across-support@mail.nasa.gov"
@@ -32,6 +33,9 @@ class Config(BaseConfig):
 
     # Request Headers
     REQUEST_ID_HEADER: str = "X-Request-ID"
+    # forwarding depth for X-Forwarded-For header. Default is for local as 1 to
+    # assume that local can set a x-forwarded-for, infra deployments will set it higher as needed.
+    XFF_DEPTH: int = 1
 
     # Always hide local only routes -- mainly used for client generation locally.
     HIDE_LOCAL_ROUTE: bool = True
@@ -57,6 +61,10 @@ class Config(BaseConfig):
     DEFAULT_PAGE_LIMIT: int = 100
     DEFAULT_PAGE_LIMIT_MIN: int = 100
     DEFAULT_PAGE_LIMIT_MAX: int = 1000
+
+    @property
+    def FRONTEND_URL(self) -> str:
+        return f"{self.FRONTEND_HOST}{self.FRONTEND_BASE_PATH}"
 
     def is_local(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
