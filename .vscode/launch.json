@@ -5,26 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "local: Start Server",
+            "name": "Local: Attach to server",
             "type": "debugpy",
-            "request": "launch",
-            "envFile": "${workspaceFolder}/.env",
-            "python": "${workspaceFolder}/.venv/bin/python",
-            "pythonArgs": [
-                "-Xfrozen_modules=off"
+            "request": "attach",
+            "preLaunchTask": "Start full stack for debugging (docker)",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}/across_server",
+                    "remoteRoot": "/app/across_server"
+                }
             ],
-            "module": "uvicorn",
-            "args": [
-                "across_server.main:app",
-                "--reload",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8000",
-                "--proxy-headers"
-            ],
-            "jinja": true,
-            "justMyCode": false
+            "justMyCode": true
         },
         {
             "name": "feat1: Start Server",

@@ -8,7 +8,6 @@ import structlog
 from fastapi import HTTPException
 
 import across_server.util.email.service as email_service_module
-from across_server.util.email import config as email_config_module
 from across_server.util.email.service import EmailService
 
 logger: structlog.stdlib.BoundLogger = structlog.get_logger()
@@ -23,7 +22,7 @@ class MockClientContext:
     async def __aenter__(self) -> AsyncMock:
         return self._client
 
-    async def __aexit__(self, *_: Any) -> None:
+    async def __aexit__(self, *_: object) -> None:
         return None
 
 
@@ -53,10 +52,10 @@ class TestEmailService:
 
     @pytest.mark.asyncio
     async def test_should_not_send_email_when_local(
-        self, mock_config_runtime_env_is_local: AsyncMock
+        self, mock_core_config_is_local: AsyncMock
     ) -> None:
         """Should not call SES when running locally"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
         service = EmailService()
         await service.send(recipients=[self.recipient], subject=self.subject)
         self.mock_ses_client.send_raw_email.assert_not_called()

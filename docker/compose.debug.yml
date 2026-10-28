@@ -1,0 +1,11 @@
+services:
+  app:
+    # Wrap the normal start command with debugpy, listening for a debugger to
+    # attach. `--wait-for-client` pauses startup so breakpoints in startup/
+    # lifespan code aren't missed. debugpy's `subProcess` setting defaults to
+    # true, which patches the OS-level process-creation calls that
+    # `multiprocessing` (used by uvicorn's `--reload` worker) goes through,
+    # so `--reload` is kept and should still be debuggable.
+    command: python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m fastapi dev across_server/main.py --host 0.0.0.0 --port 8000 --root-path /across/api --reload
+    ports:
+      - 5678:5678

@@ -48,7 +48,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read observation request(s)",
     description="Read most recent observation requests based on query params",
@@ -105,7 +105,7 @@ async def create_many(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create an observation request",
     description="Create a new observation request for ACROSS.",
     operation_id="create_observation_request",

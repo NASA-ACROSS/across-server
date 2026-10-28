@@ -42,7 +42,7 @@ def init() -> None:
     engine = create_async_engine(
         url=config.DB_URI,
         pool_pre_ping=True,
-        connect_args={"ssl": "require" if not core_config.is_local() else False},
+        connect_args={"ssl": "require" if not core_config.IS_LOCAL else False},
     )
     logger.debug("Created async db engine")
 
@@ -54,7 +54,7 @@ def init() -> None:
     )
     logger.debug("Created async db session")
 
-    if not core_config.is_local():
+    if not core_config.IS_LOCAL:
         event.listen(engine.sync_engine, "do_connect", refresh_token)
 
 

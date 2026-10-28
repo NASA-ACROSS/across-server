@@ -13,7 +13,7 @@ class TestLoggingMiddleware:
         async_client: AsyncClient,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/"
+        self.endpoint = ""
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

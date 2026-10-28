@@ -12,7 +12,7 @@ class Setup:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, async_client: AsyncClient) -> None:
         self.client = async_client
-        self.endpoint = "/instrument/"
+        self.endpoint = "/instrument"
 
 
 class TestInstrumentRouter:
@@ -20,14 +20,14 @@ class TestInstrumentRouter:
         @pytest.mark.asyncio
         async def test_should_return_instrument(self) -> None:
             """GET Should return created instrument when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert Instrument.model_validate(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -38,7 +38,7 @@ class TestInstrumentRouter:
             assert len(res.json())
 
         @pytest.mark.asyncio
-        async def test_many_should_return_many_telescopes(self) -> None:
+        async def test_many_should_return_many_instruments(self) -> None:
             """GET many should return multiple instruments when successful"""
             res = await self.client.get(self.endpoint)
             assert all(Instrument.model_validate(json) for json in res.json())

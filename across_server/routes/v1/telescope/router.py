@@ -42,7 +42,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read telescopes(s)",
     description="Read most recent telescopes based on query params",

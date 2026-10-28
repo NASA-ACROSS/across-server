@@ -18,7 +18,7 @@ class Setup:
         fake_observation_data_with_footprint: ObservationModel,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/observation/"
+        self.endpoint = "/observation"
         self.get_data = fake_observation_data_with_footprint
 
 
@@ -28,7 +28,7 @@ class SetupMany:
         self, async_client: AsyncClient, fake_observation_many: None
     ) -> None:
         self.client = async_client
-        self.endpoint = "/observation/"
+        self.endpoint = "/observation"
         self.get_data = fake_observation_many
 
 
@@ -38,7 +38,7 @@ class SetupOverlapPoint:
         self, async_client: AsyncClient, fake_observation_contains_point_many: None
     ) -> None:
         self.client = async_client
-        self.endpoint = "/observation/search/contains-point/"
+        self.endpoint = "/observation/search/contains-point"
         self.get_data = fake_observation_contains_point_many
 
 
@@ -47,14 +47,14 @@ class TestObservationRouterGet:
         @pytest.mark.asyncio
         async def test_should_return_observation(self) -> None:
             """GET Should return created observation when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert Observation.model_validate(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -69,7 +69,7 @@ class TestObservationRouterGet:
         async def test_many_should_return_many_observations(self) -> None:
             """GET many should return multiple observations when successful"""
             res = await self.client.get(self.endpoint)
-            assert all([Observation.model_validate(obs) for obs in res.json()["items"]])
+            assert all(Observation.model_validate(obs) for obs in res.json()["items"])
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self) -> None:
@@ -117,7 +117,7 @@ class TestObservationRouterOverlapPoint:
         async def test_overlap_point_should_return_observations(self) -> None:
             """GET overlap-point should return list of observations when successful"""
             res = await self.client.get(self.endpoint + "?ra=123.456&dec=-87.65")
-            assert all([Observation.model_validate(obs) for obs in res.json()["items"]])
+            assert all(Observation.model_validate(obs) for obs in res.json()["items"])
 
         @pytest.mark.asyncio
         async def test_overlap_point_should_return_empty_items_with_pagination_metadata(

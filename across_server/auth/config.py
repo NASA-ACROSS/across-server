@@ -1,4 +1,5 @@
 import structlog
+from pydantic import Field
 
 from ..core.config import BaseConfig
 from ..core.config import config as core_config
@@ -14,12 +15,12 @@ class Config(BaseConfig):
     JWT_ALGORITHM: str = "HS256"
     REFRESH_EXPIRES_IN_DAYS: int = 30
     WEBSERVER_SECRET: str = "WEBSERVER_SECRET_KEY"
-    ALLOWED_IPS: list[str] = ["127.0.0.1"]
+    ALLOWED_IPS: list[str] = Field(default=["127.0.0.1"])
 
     def __init__(self) -> None:
         super().__init__()
 
-        if not core_config.is_local():
+        if not core_config.IS_LOCAL:
             self.JWT_SECRET_KEY = SSM.get_parameter(
                 f"{core_config.APP_ENV}/core-server/jwt-secret-key"
             )

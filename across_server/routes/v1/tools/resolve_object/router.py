@@ -17,7 +17,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Resolve an object name",
     description="Resolve an object name into coordinates",

@@ -38,7 +38,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     session = orm.Session(bind=bind, expire_on_commit=False)
 
-    if not config.is_local():
+    if not config.IS_LOCAL:
         # for non-local the generated ID will be stored in param store for added security
         SERVICE_ACCOUNT_DATA.id = uuid.uuid4()
         # use the default expiration duration (as of writing this, 30 days)
@@ -46,7 +46,7 @@ def upgrade() -> None:
 
     record, secret = service_account.build(SERVICE_ACCOUNT_DATA, models.ServiceAccount)
 
-    if not config.is_local():
+    if not config.IS_LOCAL:
         SSM.put_parameter(
             str(SERVICE_ACCOUNT_DATA.id),
             config.DATA_INGESTION_SERVICE_ACCOUNT_ID_PATH,
@@ -79,7 +79,7 @@ def downgrade() -> None:
 
     id = SERVICE_ACCOUNT_DATA.id
 
-    if not config.is_local():
+    if not config.IS_LOCAL:
         # pull the created ID from the param store
         id = uuid.UUID(
             SSM.get_parameter(
