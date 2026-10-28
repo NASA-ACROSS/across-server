@@ -4,7 +4,11 @@ indent-width = 4
 
 [lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-ignore = []
+ignore = [
+    # ignoring datetime w/o tzinfo since the server is set to UTC by default
+    "DTZ001",
+    "DTZ005",
+]
 
 [format]
 # Like Black, use double quotes for strings.

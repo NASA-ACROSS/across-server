@@ -63,13 +63,13 @@ def mock_observation_requests_result(
 @pytest.fixture(autouse=True)
 def mock_get_additional_records(
     mock_scalars: AsyncMock,
-    mock_instrument_data: models.Instrument,
+    fake_instrument_model: models.Instrument,
     fake_proposal: schemas.ObservingProposal,
     fake_versions: list[models.ObservationRequest],
 ) -> None:
     mock_scalars.all.side_effect = [
         fake_versions,  # _get_versions: versions query
-        [mock_instrument_data],  # _can_submit: instruments query
+        [fake_instrument_model],  # _can_submit: instruments query
         [fake_proposal],  # _get_proposals: proposals query
     ]
 
@@ -154,7 +154,7 @@ class TestObservationRequestService:
         def mock_get_additional_records(
             self,
             mock_scalars: AsyncMock,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_model: models.Instrument,
             fake_proposal: schemas.ObservingProposal,
         ) -> None:
             """
@@ -162,7 +162,7 @@ class TestObservationRequestService:
             Create does not require pulling existing versions.
             """
             mock_scalars.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
+                [fake_instrument_model],  # _can_submit: instruments query
                 [fake_proposal],  # _get_proposals: proposals query
             ]
 
@@ -186,7 +186,7 @@ class TestObservationRequestService:
         def mock_get_additional_records(
             self,
             mock_scalars: AsyncMock,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_model: models.Instrument,
             fake_proposal: schemas.ObservingProposal,
         ) -> None:
             """
@@ -194,7 +194,7 @@ class TestObservationRequestService:
             Create does not require pulling existing versions.
             """
             mock_scalars.all.side_effect = [
-                [mock_instrument_data],  # _can_submit: instruments query
+                [fake_instrument_model],  # _can_submit: instruments query
                 [fake_proposal],  # _get_proposals: proposals query
             ]
 
@@ -219,12 +219,12 @@ class TestObservationRequestService:
             self,
             mock_result: MagicMock,
             fake_observation_request_create_many: schemas.ObservationRequestCreateMany,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_model: models.Instrument,
             fake_auth_user: AuthUser,
         ) -> None:
             """Should raise an error if any instrument in the submitted requests does not have requests enabled"""
-            mock_instrument_data.is_observation_request_enabled = False
-            mock_result.scalars.return_value.all.return_value = [mock_instrument_data]
+            fake_instrument_model.is_observation_request_enabled = False
+            mock_result.scalars.return_value.all.return_value = [fake_instrument_model]
             with pytest.raises(HTTPException):
                 await self.service.create_many(
                     fake_observation_request_create_many, fake_auth_user.id
@@ -325,9 +325,9 @@ class TestObservationRequestService:
         async def test_should_raise_422_when_instrument_does_not_have_observation_request_enabled(
             self,
             fake_auth_user: AuthUser,
-            mock_instrument_data: models.Instrument,
+            fake_instrument_model: models.Instrument,
         ) -> None:
-            mock_instrument_data.is_observation_request_enabled = False
+            fake_instrument_model.is_observation_request_enabled = False
 
             with pytest.raises(InvalidObservationRequestCreateParametersException):
                 await self.service.modify(

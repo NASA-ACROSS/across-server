@@ -45,7 +45,7 @@ class AuthService:
         self, credentials: HTTPBasicCredentials
     ) -> schemas.AuthUser:
         query = select(models.ServiceAccount).where(
-            (models.ServiceAccount.id == credentials.username)
+            models.ServiceAccount.id == credentials.username
         )
 
         result = await self.db.execute(query)
@@ -182,7 +182,7 @@ class AuthService:
     ) -> schemas.AuthUser:
         query = (
             select(models.ServiceAccount)
-            .where((models.ServiceAccount.id == username))
+            .where(models.ServiceAccount.id == username)
             .options(
                 joinedload(models.ServiceAccount.group_roles).joinedload(
                     models.GroupRole.permissions
