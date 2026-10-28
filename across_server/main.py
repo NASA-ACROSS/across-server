@@ -100,7 +100,7 @@ async def get_favicon() -> FileResponse:
 
 @app.get("/", include_in_schema=False)
 async def redirect() -> RedirectResponse:
-    return RedirectResponse(url="/docs")
+    return RedirectResponse(url=f"{app.root_path}/docs")
 
 
 app.mount("/v1", v1.api)
