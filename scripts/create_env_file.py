@@ -22,8 +22,8 @@ def create_env_file() -> None:
         "HIDE_LOCAL_ROUTE": False,
         "AWS_SES_REGION": "us-east-1",
         "AWS_SES_CONFIGURATION_SET": "across-no-reply-config-set",
-        "RESTRICTED_TO_EMAIL_LIST": "",
-        "ALLOWED_TOP_LEVEL_DOMAINS": "",
+        "RESTRICTED_TO_EMAIL_LIST_CSV": "",
+        "ALLOWED_TOP_LEVEL_DOMAINS_CSV": "",
     }
 
     if not os.path.exists(env_file_path):
