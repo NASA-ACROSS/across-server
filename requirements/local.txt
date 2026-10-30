@@ -78,7 +78,9 @@ certifi==2025.11.12
     #   requests
     #   sentry-sdk
 cffi==2.0.0
-    # via argon2-cffi-bindings
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.4.4
@@ -90,6 +92,8 @@ click==8.3.1
     #   uvicorn
 coverage==7.13.0
     # via pytest-cov
+cryptography==50.0.2
+    # via secretstorage
 debugpy==1.8.22
     # via -r requirements/local.in
 diskcache==5.6.3
@@ -169,6 +173,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.3.0
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.6
     # via fastapi
 jmespath==1.0.1
@@ -363,6 +371,8 @@ rust-ephem==0.4.0
     # via across-tools
 s3transfer==0.14.0
     # via boto3
+secretstorage==3.5.0
+    # via keyring
 sentry-sdk==2.48.0
     # via fastapi-cloud-cli
 sgp4==2.25

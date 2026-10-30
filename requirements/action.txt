@@ -75,7 +75,9 @@ certifi==2025.11.12
     #   httpx
     #   requests
 cffi==2.0.0
-    # via argon2-cffi-bindings
+    # via
+    #   argon2-cffi-bindings
+    #   cryptography
 cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.4.4
@@ -84,6 +86,8 @@ click==8.3.1
     # via uvicorn
 coverage==7.13.0
     # via pytest-cov
+cryptography==50.0.2
+    # via secretstorage
 diskcache==5.6.3
     # via across-tools
 distlib==0.4.0
@@ -138,6 +142,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.3.0
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jmespath==1.0.1
     # via
     #   aiobotocore
@@ -272,6 +280,8 @@ rust-ephem==0.4.0
     # via across-tools
 s3transfer==0.14.0
     # via boto3
+secretstorage==3.5.0
+    # via keyring
 sgp4==2.25
     # via across-tools
 shapely==2.2.0
