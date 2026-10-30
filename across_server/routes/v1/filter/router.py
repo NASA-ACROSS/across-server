@@ -41,7 +41,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read filters(s)",
     description="Read many filters based on query params",

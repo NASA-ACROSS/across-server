@@ -12,7 +12,7 @@ def generate(email: EmailStr) -> str:
     encoded_token = token.encode(data=token.to_encode(email))
     magic_link = f"{core_config.FRONTEND_URL}/user/login-verify?token={encoded_token}"
 
-    if core_config.is_local():
+    if core_config.IS_LOCAL:
         print(f"Magic Link: {magic_link}")
     return magic_link
 

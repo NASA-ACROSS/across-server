@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     summary="Read service accounts",
     description="Read many service accounts",
     operation_id="get_service_accounts",
@@ -58,7 +58,7 @@ async def get(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create a service account",
     description="Create a new service account for an ACROSS user.",
     operation_id="create_user_service_account",

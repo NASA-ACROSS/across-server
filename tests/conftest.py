@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 from uuid import uuid4
 
 import httpx
@@ -245,8 +245,10 @@ def fake_filter_data(fake_instrument_model: Instrument) -> Filter:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def mock_config_runtime_env_is_local() -> Generator[AsyncMock]:
-    """`False` by default, override with `mock_config_runtime_env_is_local.return_value = True`"""
-    with patch("across_server.core.config.Config.is_local") as mock_is_local:
+def mock_core_config_is_local() -> Generator[PropertyMock]:
+    """`False` by default, override with `mock_core_config_is_local.return_value = True`"""
+    with patch(
+        "across_server.core.config.Config.IS_LOCAL", new_callable=PropertyMock
+    ) as mock_is_local:
         mock_is_local.return_value = False
         yield mock_is_local

@@ -100,7 +100,7 @@ async def login(
         content_html=login_email_body,
     )
 
-    if config.is_local():
+    if config.IS_LOCAL:
         return {"magic_link": link}
     return None
 

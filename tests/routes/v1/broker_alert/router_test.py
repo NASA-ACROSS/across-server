@@ -20,7 +20,7 @@ class Setup:
         async_client: AsyncClient,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/broker-alert/"
+        self.endpoint = "/broker-alert"
 
 
 class TestBrokerAlertRouter:
@@ -28,14 +28,14 @@ class TestBrokerAlertRouter:
         @pytest.mark.asyncio
         async def test_should_return_broker_alert(self) -> None:
             """GET Should return broker alert when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert BrokerAlert.model_validate(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -47,7 +47,7 @@ class TestBrokerAlertRouter:
             mock_broker_alert_service.get.side_effect = BrokerAlertNotFoundException(
                 uuid4()
             )
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_404_NOT_FOUND
 
@@ -62,9 +62,7 @@ class TestBrokerAlertRouter:
         async def test_many_should_return_many_broker_alerts(self) -> None:
             """GET many should return multiple broker alerts when successful"""
             res = await self.client.get(self.endpoint)
-            assert all(
-                [BrokerAlert.model_validate(json) for json in res.json()["items"]]
-            )
+            assert all(BrokerAlert.model_validate(json) for json in res.json()["items"])
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self) -> None:

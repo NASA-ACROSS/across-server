@@ -31,7 +31,7 @@ router = APIRouter(
 
 @local_only_route(
     router,
-    path="/",
+    path="",
     methods=["GET"],
     summary="Read users",
     description="Read many users",
@@ -70,7 +70,7 @@ async def get(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create a user",
     description="Create a new user for ACROSS.",
     operation_id="create_user",
@@ -109,7 +109,7 @@ async def create(
         except Exception as e:
             logger.error("Email service failed to send user registration email", e=e)
 
-        return {"magic_link": magic_link} if config.is_local() else None
+        return {"magic_link": magic_link} if config.IS_LOCAL else None
 
     magic_link = auth_service.generate_magic_link(user.email)
     verification_email_body = email_service.construct_verification_email(
@@ -125,7 +125,7 @@ async def create(
     except Exception as e:
         logger.error("Email service failed to send user registration email", e=e)
 
-    if config.is_local():
+    if config.IS_LOCAL:
         return {"magic_link": magic_link}
     return None
 

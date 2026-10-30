@@ -172,7 +172,7 @@ class EmailService:
             pass
 
         # only send emails in non-local envs
-        if core_config.is_local():
+        if core_config.IS_LOCAL:
             logger.warning(
                 "Skipping email send in local environment",
                 subject=subject,

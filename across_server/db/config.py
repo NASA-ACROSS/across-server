@@ -27,7 +27,7 @@ class Config(BaseSettings):
     def __init__(self) -> None:
         super().__init__()
 
-        if core_config.is_local():
+        if core_config.IS_LOCAL:
             self._uri = self._get_local_uri()
         else:
             self._cluster_name = f"{core_config.APP_ENV}-core-server-db"

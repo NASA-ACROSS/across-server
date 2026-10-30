@@ -24,6 +24,8 @@ jobs:
       enable-migration: true
       migration-env-overrides: |
         [{ "name": "ACROSS_DB_USER", "value": "ci" }]
+      build-args: |
+        ROOT_PATH=/across-sandbox/api
     secrets:
       github-private-actions-pat: "${{ secrets.PRIVATE_CONFIG_READ_ACCESS }}"
       registry: "${{ secrets.ECR_REGISTRY }}"

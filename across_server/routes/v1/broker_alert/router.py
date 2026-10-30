@@ -47,7 +47,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read broker alert(s)",
     description="Read many broker alerts based on query params",
@@ -84,7 +84,7 @@ async def get_many(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create a BrokerAlert",
     description="Create a new BrokerAlert and any new associated BrokerEvent or Localization records.",
     operation_id="create_broker_alert",
