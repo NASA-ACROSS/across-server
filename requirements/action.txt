@@ -246,7 +246,7 @@ pytest==9.1.1
     #   pytest-asyncio
     #   pytest-cov
     #   pytest-fastapi-deps
-pytest-asyncio==1.4.0
+pytest-asyncio==1.4.1
     # via -r requirements/test.in
 pytest-cov==7.1.0
     # via -r requirements/test.in
