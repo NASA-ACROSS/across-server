@@ -22,7 +22,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read schedule(s)",
     description="Read most recent schedules based on query params",
@@ -130,7 +130,7 @@ async def get(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create a Schedule",
     description="Create a new observing schedule for ACROSS.",
     operation_id="create_schedule",

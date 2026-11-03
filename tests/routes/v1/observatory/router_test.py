@@ -15,7 +15,7 @@ class Setup:
         self, async_client: AsyncClient, mock_observatory_data: ObservatoryModel
     ) -> None:
         self.client = async_client
-        self.endpoint = "/observatory/"
+        self.endpoint = "/observatory"
         self.get_data = mock_observatory_data
 
 
@@ -24,14 +24,14 @@ class TestObservatoryRouter:
         @pytest.mark.asyncio
         async def test_should_return_observatory(self) -> None:
             """GET Should return created observatory when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert Observatory.model_validate(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -45,7 +45,7 @@ class TestObservatoryRouter:
         async def test_many_should_return_many_telescopes(self) -> None:
             """GET many should return multiple observatories when successful"""
             res = await self.client.get(self.endpoint)
-            assert all([Observatory.model_validate(json) for json in res.json()])
+            assert all(Observatory.model_validate(json) for json in res.json())
 
         @pytest.mark.asyncio
         async def test_many_should_return_200(self) -> None:

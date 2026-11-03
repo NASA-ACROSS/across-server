@@ -34,7 +34,7 @@ def build(
 
     secret = ServiceAccountService.generate_secret_key(expiration_duration)
 
-    if config.is_local():
+    if config.IS_LOCAL:
         # override the generated key with the default "local" key
         secret.key = "local-service-account-key"
 

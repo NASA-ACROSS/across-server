@@ -25,7 +25,7 @@ class Config(BaseConfig):
     def __init__(self) -> None:
         super().__init__()
 
-        if core_config.is_local():
+        if core_config.IS_LOCAL:
             return
 
         self.AWS_SES_REGION = SSM.get_parameter(f"{SSM_PATH}/aws-ses-region")
@@ -36,14 +36,14 @@ class Config(BaseConfig):
 
     @property
     def RESTRICTED_TO_EMAIL_LIST(self) -> list[str]:
-        if core_config.is_local():
+        if core_config.IS_LOCAL:
             return split_list(self.RESTRICTED_TO_EMAIL_LIST_CSV)
 
         return split_list(SSM.get_parameter(f"{SSM_PATH}/restricted-to-email-list"))
 
     @property
     def ALLOWED_TOP_LEVEL_DOMAINS(self) -> list[str]:
-        if core_config.is_local():
+        if core_config.IS_LOCAL:
             return split_list(self.ALLOWED_TOP_LEVEL_DOMAINS_CSV)
 
         return split_list(SSM.get_parameter(f"{SSM_PATH}/allowed-top-level-domains"))

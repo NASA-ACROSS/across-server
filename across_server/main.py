@@ -8,7 +8,7 @@ from pathlib import Path
 import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 from astropy.utils import iers  # type: ignore
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.responses import FileResponse, RedirectResponse
 from ratelimit import RateLimitMiddleware
 from ratelimit.backends.simple import MemoryBackend
@@ -32,20 +32,20 @@ logger: structlog.stdlib.BoundLogger = structlog.get_logger()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     logging.setup(json_logs=config.LOG_JSON_FORMAT, log_level=config.LOG_LEVEL)
     db.init()
 
     yield
 
 
-tags_metadata = [
+openapi_tags = [
     {
         "name": "v1",
-        "description": "API version 1, click link on the right",
+        "description": "For API version 1, click the link.",
         "externalDocs": {
             "description": "V1 docs",
-            "url": f"{config.base_url()}/v1/docs",
+            "url": f"{config.BASE_DOCS_URL}/v1/docs",
         },
     },
 ]
@@ -54,10 +54,9 @@ app = FastAPI(
     title=config.APP_TITLE,
     summary=config.APP_SUMMARY,
     description=config.APP_DESCRIPTION,
-    root_path=config.ROOT_PATH,
     lifespan=lifespan,
-    openapi_tags=tags_metadata,
-    docs_url=config.swagger_docs_path(),
+    openapi_tags=openapi_tags,
+    docs_url=config.SWAGGER_DOCS_PATH,
     redoc_url="/docs",
     version=__version__,
 )
@@ -89,7 +88,6 @@ app.add_middleware(
     status_code=status.HTTP_200_OK,
 )
 async def get() -> str:
-    logger.debug("health check!")
     return "ok"
 
 
@@ -99,8 +97,9 @@ async def get_favicon() -> FileResponse:
 
 
 @app.get("/", include_in_schema=False)
-async def redirect() -> RedirectResponse:
-    return RedirectResponse(url=f"{app.root_path}/docs")
+async def redirect_root(request: Request) -> RedirectResponse:
+    root_path = request.scope.get("root_path", "")
+    return RedirectResponse(url=f"{root_path}/docs")
 
 
 app.mount("/v1", v1.api)

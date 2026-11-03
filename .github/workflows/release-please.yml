@@ -39,7 +39,9 @@ jobs:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
       image-name: core-server
-      build-args: "BUILD_ENV=deploy"
+      build-args: |
+        BUILD_ENV=deploy
+        ROOT_PATH=/across/api
     secrets:
       ecr-region: "${{ secrets.ECR_REGION }}"
       ecr-iam-role: "${{ secrets.ECR_IAM_ROLE }}"

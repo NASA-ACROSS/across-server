@@ -100,7 +100,7 @@ async def run_async_migrations() -> None:
     engine = create_async_engine(
         url=DATABASE_URL,
         pool_pre_ping=True,
-        connect_args={"ssl": "require" if not core_config.is_local() else "allow"},
+        connect_args={"ssl": "require" if not core_config.IS_LOCAL else "allow"},
     )
 
     async with engine.connect() as connection:

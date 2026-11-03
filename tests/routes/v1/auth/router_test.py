@@ -23,10 +23,10 @@ class TestLoginRoute:
 
     @pytest.mark.asyncio
     async def test_should_return_magic_link_dict_when_local(
-        self, mock_config_runtime_env_is_local: AsyncMock
+        self, mock_core_config_is_local: AsyncMock
     ) -> None:
         """Should return a dict containing magic_link when successful"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
         res = await self.client.post(self.endpoint)
         response_dict = res.json()
 
@@ -34,10 +34,10 @@ class TestLoginRoute:
 
     @pytest.mark.asyncio
     async def test_magic_link_dict_should_contain_string(
-        self, mock_config_runtime_env_is_local: AsyncMock
+        self, mock_core_config_is_local: AsyncMock
     ) -> None:
         """Should return a dict containing magic_link when successful"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
         res = await self.client.post(self.endpoint)
         response_dict = res.json()
 

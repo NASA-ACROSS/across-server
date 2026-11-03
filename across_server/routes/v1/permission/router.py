@@ -17,7 +17,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     summary="Read permissions",
     description="Read many permissions.",
     operation_id="get_permissions",

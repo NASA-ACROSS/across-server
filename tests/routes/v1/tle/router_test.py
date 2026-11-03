@@ -9,7 +9,7 @@ class TestTLE:
         @pytest_asyncio.fixture(autouse=True)
         async def setup(self, async_client: AsyncClient, mock_tle_data: dict) -> None:
             self.client = async_client
-            self.endpoint = "/tle/"
+            self.endpoint = "/tle"
             self.data = mock_tle_data
 
         @pytest.mark.asyncio

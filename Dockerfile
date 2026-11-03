@@ -64,9 +64,13 @@ COPY ./migrations/ ./migrations/
 
 EXPOSE 8000
 
+# Proxy prefix for uvicorn --root-path; persisted as ENV since ARG is not available to CMD
+ARG ROOT_PATH=""
+ENV ROOT_PATH=${ROOT_PATH}
+
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # Create a non-root user with a UID of 5678 and no password, then change ownership of /app
 RUN useradd -m -u 5678 appuser && chown -R appuser /app
 USER appuser
 
-CMD ["uvicorn", "across_server.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers" ]
+CMD ["sh", "-c", "exec uvicorn across_server.main:app --host 0.0.0.0 --port 8000 --proxy-headers --root-path \"$ROOT_PATH\""]

@@ -43,7 +43,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read broker event(s)",
     description="Read many broker events based on query params",

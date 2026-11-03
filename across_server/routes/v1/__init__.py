@@ -26,7 +26,7 @@ api = FastAPI(
     summary=config.APP_SUMMARY,
     description=config.APP_DESCRIPTION,
     redoc_url="/docs",
-    docs_url=config.swagger_docs_path(),
+    docs_url=config.SWAGGER_DOCS_PATH,
     version=__version__,
 )
 

@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/",
+    "",
     summary="Create a TLE",
     description="Create a new TLE for ACROSS.",
     operation_id="create_tle",

@@ -15,7 +15,7 @@ def local_only_route(router: APIRouter, path: str, **route_kwargs: Any) -> Calla
     """
 
     def decorator(func: Callable) -> Callable:
-        if not config.is_local() or config.HIDE_LOCAL_ROUTE:
+        if not config.IS_LOCAL or config.HIDE_LOCAL_ROUTE:
             # Don't register the route in non-local or if they're hidden
             return func
 

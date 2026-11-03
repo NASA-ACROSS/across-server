@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import fastapi
@@ -51,7 +51,7 @@ class TestUserPostRoute:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, async_client: AsyncClient, fake_user_json: dict) -> None:
         self.client = async_client
-        self.endpoint = "/user/"
+        self.endpoint = "/user"
         self.data = fake_user_json
 
     @pytest.mark.asyncio
@@ -119,10 +119,10 @@ class TestUserPostRoute:
 
     @pytest.mark.asyncio
     async def test_should_return_magic_link_dict_when_local(
-        self, mock_config_runtime_env_is_local: AsyncMock
+        self, mock_core_config_is_local: MagicMock
     ) -> None:
         """Should return a dict when local"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
         res = await self.client.post(self.endpoint, json=self.data)
         response_dict = res.json()
 
@@ -130,10 +130,10 @@ class TestUserPostRoute:
 
     @pytest.mark.asyncio
     async def test_should_contain_magic_link_string(
-        self, mock_config_runtime_env_is_local: AsyncMock
+        self, mock_core_config_is_local: MagicMock
     ) -> None:
         """Should return a dict containing magic_link string when local"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
         res = await self.client.post(self.endpoint, json=self.data)
         response_dict = res.json()
 

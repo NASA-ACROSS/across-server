@@ -13,7 +13,7 @@ class Setup:
     async def setup(self, async_client: AsyncClient) -> None:
         user_id = uuid.uuid4()
         self.client = async_client
-        self.endpoint = f"/user/{user_id}/service-account/"
+        self.endpoint = f"/user/{user_id}/service-account"
         self.post_data = {
             "name": "service account name",
             "description": "test service account description",
@@ -53,14 +53,14 @@ class TestServiceAccountRouter:
         @pytest.mark.asyncio
         async def test_should_return_service_account(self) -> None:
             """GET Should return created service_account when successful"""
-            endpoint = self.endpoint + f"{uuid.uuid4()}"
+            endpoint = self.endpoint + f"/{uuid.uuid4()}"
             res = await self.client.get(endpoint)
             assert res.json()["description"] == "test service account description"
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid.uuid4()}"
+            endpoint = self.endpoint + f"/{uuid.uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -85,7 +85,7 @@ class TestServiceAccountRouter:
             """Patch should return updated service account"""
             fake_service_account.name = "update_service_account_name"
 
-            endpoint = self.endpoint + f"{uuid.uuid4()}"
+            endpoint = self.endpoint + f"/{uuid.uuid4()}"
             res = await self.client.patch(
                 endpoint, json={"name": "update_service_account_name"}
             )
@@ -95,7 +95,7 @@ class TestServiceAccountRouter:
         @pytest.mark.asyncio
         async def test_should_return_200_on_valid_service_account_patch(self) -> None:
             """Patch should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid.uuid4()}"
+            endpoint = self.endpoint + f"/{uuid.uuid4()}"
             res = await self.client.patch(
                 endpoint, json={"name": "update_service_account_name"}
             )
@@ -105,6 +105,6 @@ class TestServiceAccountRouter:
         @pytest.mark.asyncio
         async def test_should_return_204_on_service_account_delete(self) -> None:
             """Delete should return 204 when successful"""
-            endpoint = self.endpoint + f"{uuid.uuid4()}"
+            endpoint = self.endpoint + f"/{uuid.uuid4()}"
             res = await self.client.delete(endpoint)
             assert res.status_code == fastapi.status.HTTP_204_NO_CONTENT

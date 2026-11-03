@@ -19,7 +19,7 @@ router = APIRouter(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read observations(s)",
     description="Read the observations based on query params",
@@ -81,7 +81,7 @@ async def get(
 
 
 @router.get(
-    "/search/contains-point/",
+    "/search/contains-point",
     summary="Read many observations whose footprints contains a given RA/DEC",
     description="Read many observations whose footprints contains a given RA/DEC",
     operation_id="contains_point",

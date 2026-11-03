@@ -42,7 +42,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read observatory(s)",
     description="Read many observatories based on query params",

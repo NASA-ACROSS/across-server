@@ -14,7 +14,7 @@ class Setup:
     @pytest_asyncio.fixture(autouse=True)
     async def setup(self, async_client: AsyncClient) -> None:
         self.client = async_client
-        self.endpoint = "/observation-request/"
+        self.endpoint = "/observation-request"
         _now = datetime.now(UTC)
         self.post_data = {
             "science_justification": "A clear science case",
@@ -67,14 +67,14 @@ class TestObservationRequestRouter:
         @pytest.mark.asyncio
         async def test_should_return_observation_request(self) -> None:
             """GET should return observation request when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert ObservationRequest.model_validate(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -113,7 +113,7 @@ class TestObservationRequestRouter:
         async def test_should_return_created_observation_request_id(self) -> None:
             """POST many should return created observation request id when successful"""
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
             assert all(UUID(id) for id in res.json())
 
@@ -121,7 +121,7 @@ class TestObservationRequestRouter:
         async def test_should_return_201(self) -> None:
             """POST many should return 201 when successful"""
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
             assert res.status_code == fastapi.status.HTTP_201_CREATED
 
@@ -130,21 +130,21 @@ class TestObservationRequestRouter:
             """POST many should return 422 when required fields are missing"""
             data = self.post_many_data.copy()
             data.pop("observation_requests")
-            res = await self.client.post(self.endpoint + "bulk", json=data)
+            res = await self.client.post(self.endpoint + "/bulk", json=data)
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
 
     class TestPatch(Setup):
         @pytest.mark.asyncio
         async def test_should_return_updated_observation_request_id(self) -> None:
             """PATCH should return updated observation request id when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.patch(endpoint, json=self.patch_data)
             assert UUID(res.json())
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """PATCH should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.patch(endpoint, json=self.patch_data)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -152,13 +152,13 @@ class TestObservationRequestRouter:
         @pytest.mark.asyncio
         async def test_should_return_200_on_delete(self) -> None:
             """DELETE should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.delete(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
         @pytest.mark.asyncio
         async def test_should_return_id_on_delete(self) -> None:
             """DELETE should return the archived observation request id when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.delete(endpoint)
             assert UUID(res.json())

@@ -6,3 +6,4 @@
 
 # includes the cli
 fastapi[standard] >=0.161.1
+debugpy

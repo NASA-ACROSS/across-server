@@ -17,8 +17,10 @@ class Config(BaseConfig):
     FRONTEND_HOST: str = "http://localhost:5173"
     FRONTEND_BASE_PATH: str = ""
     PORT: int = 8000
-    ROOT_PATH: str = ""
     ACROSS_SUPPORT_EMAIL: EmailStr = "gsfc-across-support@mail.nasa.gov"
+
+    PROXY_HOST: str = "http://localhost"
+    ROOT_PATH: str = ""
 
     SERVICE_ACCOUNT_EXPIRATION_DURATION: int = 30
 
@@ -66,22 +68,19 @@ class Config(BaseConfig):
     def FRONTEND_URL(self) -> str:
         return f"{self.FRONTEND_HOST}{self.FRONTEND_BASE_PATH}"
 
-    def is_local(self) -> bool:
+    @property
+    def IS_LOCAL(self) -> bool:
         return self.RUNTIME_ENV == Environments.LOCAL
 
-    def swagger_docs_path(self) -> str | None:
-        if self.is_local():
+    @property
+    def SWAGGER_DOCS_PATH(self) -> str | None:
+        if self.IS_LOCAL:
             return "/swagger-docs"
         return None
 
-    def base_url(self) -> str:
-        if self.is_local():
-            return f"{self.HOST}:{self.PORT}{self.ROOT_PATH}"
-        else:
-            if self.RUNTIME_ENV == Environments.PRODUCTION:
-                return f"https://api.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
-            else:
-                return f"https://api.{self.RUNTIME_ENV.value}.across.sciencecloud.nasa.gov{self.ROOT_PATH}"
+    @property
+    def BASE_DOCS_URL(self) -> str:
+        return f"{self.PROXY_HOST}{self.ROOT_PATH}"
 
 
 config = Config()

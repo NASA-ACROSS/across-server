@@ -42,7 +42,7 @@ class SSM:
         Raises:
             ValueError: If the parameter is not found, has no value, or AWS_REGION is not set in non-local environments
         """
-        if config.is_local():
+        if config.IS_LOCAL:
             return os.getenv(name, "")
 
         client = cls._get_client()

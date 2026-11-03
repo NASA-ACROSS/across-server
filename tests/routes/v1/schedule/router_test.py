@@ -19,7 +19,7 @@ class Setup:
         mock_schedule_post_many_data: dict,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/schedule/"
+        self.endpoint = "/schedule"
         self.post_data = mock_schedule_post_data
         self.get_data = fake_schedule_data
         self.post_many_data = mock_schedule_post_many_data
@@ -53,14 +53,14 @@ class TestScheduleRouter:
         @pytest.mark.asyncio
         async def test_should_return_schedule(self) -> None:
             """GET Should return schedule when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.json()["name"] == "Test Schedule"
 
         @pytest.mark.asyncio
         async def test_should_return_200(self) -> None:
             """GET should return 200 when successful"""
-            endpoint = self.endpoint + f"{uuid4()}"
+            endpoint = self.endpoint + f"/{uuid4()}"
             res = await self.client.get(endpoint)
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -80,14 +80,14 @@ class TestScheduleRouter:
         @pytest.mark.asyncio
         async def test_history_should_return_many(self) -> None:
             """GET history should return multiple schedules when successful"""
-            res = await self.client.get(self.endpoint + "history")
+            res = await self.client.get(self.endpoint + "/history")
             assert len(res.json()["items"])
             assert res.json()["items"][0]["name"] == "Test Schedule"
 
         @pytest.mark.asyncio
         async def test_history_should_return_200(self) -> None:
             """GET history should return 200 when successful"""
-            res = await self.client.get(self.endpoint + "history")
+            res = await self.client.get(self.endpoint + "/history")
             assert res.status_code == fastapi.status.HTTP_200_OK
 
         @pytest.mark.asyncio
@@ -131,7 +131,7 @@ class TestScheduleRouter:
             """GET history should accept include_observations_footprints parameter set to true"""
             res = await self.client.get(
                 self.endpoint
-                + "history?include_observations=true&include_observations_footprints=true"
+                + "/history?include_observations=true&include_observations_footprints=true"
             )
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -142,7 +142,7 @@ class TestScheduleRouter:
             """GET history should accept include_observations_footprints parameter set to false"""
             res = await self.client.get(
                 self.endpoint
-                + "history?include_observations=true&include_observations_footprints=false"
+                + "/history?include_observations=true&include_observations_footprints=false"
             )
             assert res.status_code == fastapi.status.HTTP_200_OK
 
@@ -151,7 +151,7 @@ class TestScheduleRouter:
         async def test_should_return_201_when_successful(self) -> None:
             """Post Many should return 201 when successful"""
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
             assert res.status_code == fastapi.status.HTTP_201_CREATED
 
@@ -159,7 +159,7 @@ class TestScheduleRouter:
         async def test_should_return_list_when_successful(self) -> None:
             """Post Many should return list when successful"""
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
             assert isinstance(res.json(), list)
 
@@ -167,7 +167,7 @@ class TestScheduleRouter:
         async def test_should_return_ids_when_successful(self) -> None:
             """Post Many should return list of IDs when successful"""
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
             assert all([UUID(element) for element in res.json()])
 
@@ -178,7 +178,7 @@ class TestScheduleRouter:
             """Should return a 422 when any input schedule is missing a required field"""
             self.post_many_data["schedules"][0].pop(required_fields)
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
 
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -193,7 +193,7 @@ class TestScheduleRouter:
             """
             self.post_many_data["schedules"][0]["telescope_id"] = str(uuid4())
             res = await self.client.post(
-                self.endpoint + "bulk", json=self.post_many_data
+                self.endpoint + "/bulk", json=self.post_many_data
             )
 
             assert res.status_code == fastapi.status.HTTP_422_UNPROCESSABLE_CONTENT

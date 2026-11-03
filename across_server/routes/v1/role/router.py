@@ -20,7 +20,7 @@ router = APIRouter(
 
 @local_only_route(
     router,
-    path="/",
+    path="",
     methods=["GET"],
     summary="Read roles",
     description="Read many roles",

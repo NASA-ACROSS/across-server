@@ -62,10 +62,10 @@ class TestEmailConfig:
         expected: list[str],
         env_var: str,
         config_attr: str,
-        mock_config_runtime_env_is_local: MagicMock,
+        mock_core_config_is_local: MagicMock,
     ) -> None:
         """Should parse CSV config correctly"""
-        mock_config_runtime_env_is_local.return_value = True
+        mock_core_config_is_local.return_value = True
 
         os.environ[env_var] = csv or ""
 

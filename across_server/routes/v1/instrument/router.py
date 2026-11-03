@@ -42,7 +42,7 @@ async def get(
 
 
 @router.get(
-    "/",
+    "",
     status_code=status.HTTP_200_OK,
     summary="Read instruments(s)",
     description="Read many instruments based on query params",

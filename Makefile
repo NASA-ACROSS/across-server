@@ -1,9 +1,18 @@
 # Define env variables
 ENV ?= local
-RUNTIME_ENVS = local dev staging prod
+RUNTIME_ENVS = local feat1 feat2 dev staging prod
 BUILD_ENV ?= local
 BUILD_ENVS = local action deploy
 IS_BUILD_ENV_VALID := $(filter $(BUILD_ENV), $(BUILD_ENVS))
+
+# Root path (proxy prefix) per runtime env, passed to uvicorn --root-path
+ROOT_PATH_local   :=
+ROOT_PATH_feat2   :=
+ROOT_PATH_dev     := /across-sandbox/api
+ROOT_PATH_feat1   := /across/api
+ROOT_PATH_staging := /across/api
+ROOT_PATH_prod    := /across/api
+ROOT_PATH = $(ROOT_PATH_$(RUNTIME_ENV))
 
 # Docker
 DOCKER_COMPOSE_FILE = docker/compose.$(BUILD_ENV).yml
@@ -156,7 +165,8 @@ mfa: ## Auth with AWS through MFA
 start: check_prod run migrate seed ## Start the application containers (includes migrating and seeding)
 
 dev: local_only ## Start the server in the terminal
-	@$(VENV_BIN)/fastapi dev across_server/main.py --proxy-headers
+	@$(DOCKER_COMPOSE) up -d --force-recreate --wait --wait-timeout 30 nginx
+	@$(DOCKER_COMPOSE) up app
 
 stop: local_only ## Stop the server container
 	@$(DOCKER_COMPOSE) down app
@@ -242,6 +252,8 @@ run: ## Run the containers
 	@$(DOCKER_COMPOSE) up -d --wait --wait-timeout 30
 run_db: ## Run the db
 	@$(DOCKER_COMPOSE) up db -d --wait --wait-timeout 30
+debug: local_only ## Start the full stack (app, db, nginx), app container paused waiting for a debugger to attach on :5678
+	@$(DOCKER_COMPOSE) -f docker/compose.debug.yml up -d --wait --wait-timeout 30
 
 # Group: Deployment
 push: ## Manually build, tag, and push an image to ECR
@@ -259,14 +271,19 @@ push: ## Manually build, tag, and push an image to ECR
 
 	@docker push 905418122838.dkr.ecr.us-east-2.amazonaws.com/core-server:$(TAG)
 
-build_deploy: ## Build the containers for deployment -- does not use docker-compose
+build_deploy: RUNTIME_ENV ?= prod
+build_deploy: ## Build the containers for deployment (RUNTIME_ENV=local|feat1|feat2|dev|staging|prod, default prod) -- does not use docker-compose
+	$(if $(filter $(RUNTIME_ENV),$(RUNTIME_ENVS)),,$(error Invalid RUNTIME_ENV '$(RUNTIME_ENV)'. Must be one of: $(RUNTIME_ENVS)))
+	@echo "Building core-server:$(TAG) for $(RUNTIME_ENV) with ROOT_PATH='$(ROOT_PATH)'"
 	@DOCKER_BUILDKIT=1 docker build \
 		-t core-server:$(TAG) \
 		--no-cache \
 		--platform linux/amd64 \
 		--ssh default \
 		--provenance false \
-		--build-arg BUILD_ENV=deploy .
+		--build-arg BUILD_ENV=deploy \
+		--build-arg ROOT_PATH="$(ROOT_PATH)" \
+		.
 
 # Group: Cleaning
 clean: ## Clean virtual env
