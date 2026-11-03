@@ -28,7 +28,7 @@ pydantic-core==2.46.5
     # via pydantic
 pygments==2.20.0
     # via pytest
-pytest==9.1.1
+pytest==9.2.0
     # via
     #   -r requirements/test.in
     #   pytest-asyncio
