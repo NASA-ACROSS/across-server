@@ -4,7 +4,7 @@ across-tools==1.6.1
     # via -r requirements/base.in
 aioboto3==15.5.0
     # via -r requirements/base.in
-aiobotocore==2.25.1
+aiobotocore[boto3]==2.25.1
     # via aioboto3
 aiofiles==25.1.0
     # via aioboto3
@@ -180,7 +180,7 @@ propcache==0.5.2
     #   yarl
 pycparser==2.23
     # via cffi
-pydantic==2.13.5
+pydantic[email]==2.13.5
     # via
     #   -r requirements/base.in
     #   across-tools
@@ -241,7 +241,7 @@ spacetrack==1.4.0
     # via across-tools
 spiceypy==8.0.0
     # via across-tools
-sqlalchemy==2.1.6
+sqlalchemy[asyncio]==2.1.8
     # via
     #   -r requirements/base.in
     #   alembic
