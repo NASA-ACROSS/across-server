@@ -35,6 +35,9 @@ class ObservationRequestBase(BaseSchema):
     is_too: bool  # placeholder field for the potential of general ToO request. Defaults to True right now
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
+    pm_ra: float
+    pm_dec: float
+    epoch: str
 
     def _checksum(
         self, proposal: ObservingProposal | ObservingProposalCreate | None = None
@@ -60,6 +63,7 @@ class ObservationRequestBase(BaseSchema):
             f"{self.anonymize}{self.is_too}{self.instrument_id}"
             f"{instrument_config_string}"
             f"{proposal_string}"
+            f"{self.pm_ra}{self.pm_dec}{self.epoch}"
         )
 
         return hashlib.sha512(data_string.encode()).hexdigest()
@@ -137,6 +141,9 @@ class ObservationRequestUpdate(BaseSchema):
     status: ObservationRequestStatus | None = None
     status_reason: str | None = None
     proposal: ObservingProposalCreate | None = None
+    pm_ra: float | None = None
+    pm_dec: float | None = None
+    epoch: str | None = None
 
     def get_schema_key(self, db_key: str) -> str:
         map = {
@@ -206,6 +213,9 @@ class ObservationRequest(ObservationRequestBase):
             )
             if observation_request.observing_proposal
             else None,
+            pm_ra=observation_request.pm_ra,
+            pm_dec=observation_request.pm_dec,
+            epoch=observation_request.epoch,
             created_on=observation_request.created_on,
             created_by_id=observation_request.created_by_id,
             modified_on=observation_request.modified_on,

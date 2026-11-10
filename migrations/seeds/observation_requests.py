@@ -28,6 +28,9 @@ krusty_too = ObservationRequest(
     is_too=True,
     exposure_time=3600.0,
     created_by_id=sandy.id,
+    pm_ra=0.0,
+    pm_dec=0.0,
+    epoch="J2000",
 )
 
 observation_requests = [krusty_too]
