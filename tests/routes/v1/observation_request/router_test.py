@@ -31,6 +31,9 @@ class Setup:
             "instrument_id": str(uuid4()),
             "proposal_name": "Transient Follow-up",
             "proposal_code": "TRN-001",
+            "pm_ra": 0.0,
+            "pm_dec": 0.0,
+            "epoch": "J2000",
         }
         self.post_many_data = {
             "observation_requests": [
