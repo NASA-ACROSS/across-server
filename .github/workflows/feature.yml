@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   do:
-    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-feature-branch.yml@main
+    uses: NASA-ACROSS/github-action-workflows/.github/workflows/ecspresso-feature-branch.yml@120-ecs-with-atmos
     with:
       organization: "${{ github.event.repository.owner.login }}"
       repository: "${{ github.event.repository.name }}"
