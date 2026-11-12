@@ -911,6 +911,9 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
     submitted_by: AssociationProxy[str] = association_proxy(
         target_collection="submitted_by_user", attr="full_name"
     )
+    proper_motion_ra: Mapped[float] = mapped_column(Float, nullable=False)
+    proper_motion_dec: Mapped[float] = mapped_column(Float, nullable=False)
+    proper_motion_epoch: Mapped[str] = mapped_column(String(16), nullable=False)
 
     __table_args__ = (
         Index(

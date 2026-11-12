@@ -44,6 +44,11 @@ def fake_observation_request_data(fake_instrument_model: models.Instrument) -> d
             "code": "12345",
             "id": uuid.uuid4(),
         },
+        "proper_motion": {
+            "ra": 0.0,
+            "dec": 0.0,
+            "epoch": "J2000",
+        },
     }
 
 
@@ -141,6 +146,9 @@ def fake_observation_request_model_factory(
             observing_proposal=models.ObservingProposal(
                 **fake_observation_request_data["proposal"]
             ),
+            proper_motion_ra=fake_observation_request_data["proper_motion"]["ra"],
+            proper_motion_dec=fake_observation_request_data["proper_motion"]["dec"],
+            proper_motion_epoch=fake_observation_request_data["proper_motion"]["epoch"],
             created_by_id=fake_user.id,
             modified_by_id=fake_user.id,
             submitted_by_user=fake_user,
