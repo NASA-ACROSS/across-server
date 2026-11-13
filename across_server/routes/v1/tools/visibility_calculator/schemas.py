@@ -6,6 +6,12 @@ from pydantic import ConfigDict, Field
 from .....core.date_utils import UTCDatetime
 from .....core.schemas.base import BaseSchema
 
+DATA_QUALITY_MESSAGE = (
+    "These visibility windows are calculated based on publicly available ephemerides and observatory constraints. "
+    "As a result, they are rough estimates and will not perfectly reflect the target visibility for each observatory. "
+    "For detailed visibility windows, we recommend visiting the observatory website or requesting information from the individual science teams."
+)
+
 
 class ConstrainedDate(BaseSchema):
     """
@@ -82,6 +88,7 @@ class VisibilityResult(BaseSchema):
 
     instrument_id: UUID
     visibility_windows: list[VisibilityWindow]
+    message: str = DATA_QUALITY_MESSAGE
 
 
 class JointVisibilityReadParams(VisibilityReadParams):
@@ -131,3 +138,4 @@ class JointVisibilityResult(BaseSchema):
     instrument_ids: list[UUID]
     visibility_windows: list[VisibilityWindow]
     observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]
+    message: str = DATA_QUALITY_MESSAGE
