@@ -1,6 +1,6 @@
 # Test dependencies
 
-pytest >=9.1.1
+pytest >=9.2.0
 pytest-asyncio >=1.4.0
 pytest-cov
 pytest-fastapi-deps >=0.2.3,<0.3
