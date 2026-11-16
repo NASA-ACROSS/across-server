@@ -10,6 +10,9 @@ class ProperMotion(BaseModel, PrefixMixin):
     indicating the reference time for the measurements.
     """
 
-    ra: float = Field()
-    dec: float = Field()
-    epoch: str = Field(max_length=16)
+    ra: float = Field(description="Component of proper motion in right ascension (RA).")
+    dec: float = Field(description="Component of proper motion in declination (dec).")
+    epoch: str = Field(
+        max_length=16,
+        description="Epoch of the proper motion measurement, e.g., 'J2000'.",
+    )
