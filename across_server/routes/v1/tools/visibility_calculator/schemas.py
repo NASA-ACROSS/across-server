@@ -89,10 +89,10 @@ class VisibilityResult(BaseSchema):
 
     instrument_id: UUID
     visibility_windows: list[VisibilityWindow]
-    message: Annotated[
+    warnings: Annotated[
         str,
         Field(
-            description="Optional message regarding the joint visibility calculation results"
+            description="Optional warnings regarding the visibility calculation results"
         ),
     ] = DATA_QUALITY_MESSAGE
 
@@ -139,14 +139,16 @@ class JointVisibilityResult(BaseSchema):
         List of joint visibility windows for all the instruments
     observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]
         Dictionary mapping instrument IDs to their respective visibility windows
+    warnings: str
+        Optional warnings regarding the joint visibility calculation results
     """
 
     instrument_ids: list[UUID]
     visibility_windows: list[VisibilityWindow]
     observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]
-    message: Annotated[
+    warnings: Annotated[
         str,
         Field(
-            description="Optional message regarding the joint visibility calculation results"
+            description="Optional warnings regarding the joint visibility calculation results"
         ),
     ] = DATA_QUALITY_MESSAGE
