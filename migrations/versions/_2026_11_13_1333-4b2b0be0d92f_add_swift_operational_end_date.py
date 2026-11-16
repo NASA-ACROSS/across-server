@@ -1,7 +1,7 @@
 """add Swift operational end date
 
 Revision ID: 4b2b0be0d92f
-Revises: 842f5166cdfb
+Revises: de59d8935dbb
 Create Date: 2026-11-13 13:33:05.809971
 
 """
@@ -16,7 +16,7 @@ import migrations.versions.model_snapshots.models_2026_05_26 as models
 
 # revision identifiers, used by Alembic.
 revision: str = "4b2b0be0d92f"
-down_revision: Union[str, None] = "842f5166cdfb"
+down_revision: Union[str, None] = "de59d8935dbb"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
