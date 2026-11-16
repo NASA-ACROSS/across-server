@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from across.tools.core.enums import ConstraintType
@@ -88,7 +89,12 @@ class VisibilityResult(BaseSchema):
 
     instrument_id: UUID
     visibility_windows: list[VisibilityWindow]
-    message: str = DATA_QUALITY_MESSAGE
+    message: Annotated[
+        str,
+        Field(
+            description="Optional message regarding the joint visibility calculation results"
+        ),
+    ] = DATA_QUALITY_MESSAGE
 
 
 class JointVisibilityReadParams(VisibilityReadParams):
@@ -138,4 +144,9 @@ class JointVisibilityResult(BaseSchema):
     instrument_ids: list[UUID]
     visibility_windows: list[VisibilityWindow]
     observatory_visibility_windows: dict[UUID, list[VisibilityWindow]]
-    message: str = DATA_QUALITY_MESSAGE
+    message: Annotated[
+        str,
+        Field(
+            description="Optional message regarding the joint visibility calculation results"
+        ),
+    ] = DATA_QUALITY_MESSAGE
