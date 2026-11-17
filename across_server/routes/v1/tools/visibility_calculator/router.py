@@ -50,6 +50,8 @@ async def calculate_windows(
     instrument_service: Annotated[InstrumentService, Depends(InstrumentService)],
     telescope_service: Annotated[TelescopeService, Depends(TelescopeService)],
 ) -> VisibilityResult:
+    await visibility_calculator.is_calculation_enabled([instrument_id])
+
     instrument_model = await instrument_service.get(instrument_id)
 
     # Convert the instrument model to a schema
@@ -100,6 +102,8 @@ async def calculate_joint_windows(
 ) -> JointVisibilityResult:
     visibility_tasks = []
     window_results = []
+    await visibility_calculator.is_calculation_enabled(parameters.instrument_ids)
+
     for instrument_id in parameters.instrument_ids:
         instrument_model = await instrument_service.get(instrument_id)
 

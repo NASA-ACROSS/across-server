@@ -4,12 +4,14 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import TypeAdapter
+from pydantic import Field, TypeAdapter
 
 from ....core.date_utils import UTCDatetime
 from ....core.enums.observation_strategy import ObservationStrategy
+from ....core.enums.setting_type import SettingType
 from ....core.enums.visibility_type import VisibilityType
 from ....core.schemas.base import BaseSchema, IDNameSchema
+from ....core.schemas.setting import Setting
 from ....db.models import Instrument as InstrumentModel
 from ..filter.schemas import Filter
 from ..footprint.schemas import Footprint, Point
@@ -57,6 +59,7 @@ class InstrumentBase(BaseSchema):
     visibility_type: VisibilityType | None = None
     observation_strategy: ObservationStrategy | None = None
     is_observation_request_enabled: bool
+    settings: list[Setting] | None = Field(default=[])
 
 
 class Instrument(InstrumentBase):
@@ -88,6 +91,16 @@ class Instrument(InstrumentBase):
         footprints = [Footprint.from_orm(footprint) for footprint in obj.footprints]
         filters = [Filter.model_validate(filter) for filter in obj.filters]
 
+        settings = [
+            Setting(
+                name=ins_setting.setting.name,
+                value=ins_setting.value,
+                display_name=ins_setting.setting.display_name,
+                type=SettingType(ins_setting.setting.type),
+            )
+            for ins_setting in obj.settings
+        ]
+
         return cls(
             id=obj.id,
             name=obj.name,
@@ -104,8 +117,9 @@ class Instrument(InstrumentBase):
                 [constraint.constraint_parameters for constraint in obj.constraints]
             ),
             visibility_type=obj.visibility_type,
-            observation_strategy=obj.observation_strategy,
+            observation_strategy=ObservationStrategy(obj.observation_strategy),
             is_observation_request_enabled=obj.is_observation_request_enabled,
+            settings=settings,
         )
 
 

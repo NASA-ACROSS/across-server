@@ -494,6 +494,9 @@ class Instrument(Base, CreatableMixin, ModifiableMixin):
     filters: Mapped[list["Filter"]] = relationship(
         back_populates="instrument", lazy="noload", cascade="all,delete"
     )
+    settings: Mapped[list["InstrumentSetting"]] = relationship(
+        back_populates="instrument", lazy="selectin", cascade="all,delete"
+    )
     visibility_type: Mapped[VisibilityType] = mapped_column(String(10), nullable=True)
     observation_requests: Mapped[list["ObservationRequest"]] = relationship(
         back_populates="instrument", lazy="noload", cascade="all,delete"
@@ -926,4 +929,36 @@ class ObservationRequest(Base, CreatableMixin, ModifiableMixin):
             "date_range_begin",
             "date_range_end",
         ),
+    )
+
+
+class Setting(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "setting"
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    instruments: Mapped[list["InstrumentSetting"]] = relationship(
+        back_populates="setting", lazy="selectin", cascade="all,delete"
+    )
+
+
+class InstrumentSetting(Base, CreatableMixin, ModifiableMixin):
+    __tablename__ = "instrument_setting"
+
+    instrument_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("instrument.id"), primary_key=True
+    )
+    setting_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("setting.id"), primary_key=True
+    )
+    value: Mapped[str] = mapped_column(String(100), nullable=False)
+
+    instrument: Mapped["Instrument"] = relationship(
+        back_populates="settings", lazy="selectin"
+    )
+    setting: Mapped["Setting"] = relationship(
+        back_populates="instruments", lazy="selectin"
     )

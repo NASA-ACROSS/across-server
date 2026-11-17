@@ -1,8 +1,9 @@
+import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID
 
 import astropy.units as u  # type: ignore
+import fastapi
 import pytest
 from across.tools.footprint.schemas import Pointing
 from across.tools.visibility.constraints import PointingConstraint
@@ -30,7 +31,7 @@ class TestVisibilityService:
             fake_date_range: tuple[datetime, datetime],
             mock_ephemeris_service: AsyncMock,
             fake_instrument_with_constraints: InstrumentSchema,
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             monkeypatch: pytest.MonkeyPatch,
         ) -> None:
             """Should calculate ephemeris visibility with minute resolution when hi_res is True"""
@@ -61,7 +62,7 @@ class TestVisibilityService:
             fake_date_range: tuple[datetime, datetime],
             mock_ephemeris_service: AsyncMock,
             fake_instrument_with_constraints: InstrumentSchema,
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             monkeypatch: pytest.MonkeyPatch,
         ) -> None:
             """Should calculate ephemeris visibility with hour resolution when hi_res is False"""
@@ -93,7 +94,7 @@ class TestVisibilityService:
             fake_date_range: tuple[datetime, datetime],
             mock_ephemeris_service: AsyncMock,
             fake_instrument_without_constraints: InstrumentSchema,
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
         ) -> None:
             """Should raise VisibilityConstraintsNotFoundException when instrument has no constraints"""
 
@@ -118,7 +119,7 @@ class TestVisibilityService:
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             mock_ephemeris_service: AsyncMock,
             fake_instrument_with_constraints: InstrumentSchema,
         ) -> None:
@@ -150,7 +151,7 @@ class TestVisibilityService:
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             mock_ephemeris_service: AsyncMock,
             fake_instrument_with_constraints: InstrumentSchema,
         ) -> None:
@@ -178,7 +179,7 @@ class TestVisibilityService:
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
             monkeypatch: pytest.MonkeyPatch,
@@ -215,7 +216,7 @@ class TestVisibilityService:
             self,
             mock_db: AsyncMock,
             fake_coordinates: tuple[float, float],
-            fake_observatory_id: UUID,
+            fake_observatory_id: uuid.UUID,
             mock_ephemeris_service: AsyncMock,
             fake_survey_instrument: InstrumentSchema,
             fake_pointing_constraint: PointingConstraint,
@@ -459,3 +460,18 @@ class TestVisibilityService:
                     pointing.end_time == fake_observation_data.date_range_end,
                 ]
             )
+
+    class TestIsCalculationEnabled:
+        @pytest.mark.asyncio
+        async def test_should_raise_forbidden_when_one_or_more_instruments_are_disabled(
+            self,
+            mock_result: AsyncMock,
+            mock_db: AsyncMock,
+            mock_ephemeris_service: AsyncMock,
+        ) -> None:
+            mock_result.scalars.return_value.all.return_value = ["disabled_instrument"]
+            service = VisibilityCalculatorService(mock_db, mock_ephemeris_service)
+            with pytest.raises(fastapi.HTTPException) as exc_info:
+                await service.is_calculation_enabled([uuid.uuid4(), uuid.uuid4()])
+
+            assert exc_info.value.status_code == 403

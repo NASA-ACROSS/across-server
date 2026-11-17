@@ -18,7 +18,7 @@ from across.tools.visibility import (
 from across.tools.visibility.constraints import Constraint, PointingConstraint
 from astropy.coordinates import SkyCoord  # type: ignore[import-untyped]
 from astropy.time import Time  # type: ignore[import-untyped]
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.shape import from_shape
 from pydantic import TypeAdapter
@@ -291,3 +291,24 @@ class VisibilityCalculatorService:
         )
         joint_visibility = await anyio.to_thread.run_sync(joint_vis_function)
         return joint_visibility
+
+    async def is_calculation_enabled(self, instrument_ids: list[UUID]) -> None:
+        q = (
+            select(models.InstrumentSetting)
+            .join(models.Setting)
+            .where(
+                models.InstrumentSetting.instrument_id.in_(instrument_ids),
+                models.Setting.name == "is_visibility_calculator_enabled",
+                models.InstrumentSetting.value == "false",
+            )
+        )
+
+        res = await self.db.execute(q)
+        disabled_instruments = res.scalars().all()
+
+        # All ids should be enabled otherwise forbidden
+        if len(disabled_instruments) > 0:
+            raise HTTPException(
+                status_code=403,
+                detail="Visibility calculation is disabled for one or more instruments in the request.",
+            )
