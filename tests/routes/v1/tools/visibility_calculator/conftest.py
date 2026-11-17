@@ -181,6 +181,8 @@ def mock_visibility_calculator_service(
 
     mock.calculate_windows = AsyncMock(return_value=fake_ephemeris_visibility_result)
     mock.find_joint_visibility = AsyncMock(return_value=fake_joint_visibility_result)
+    mock.is_calculation_enabled = AsyncMock(return_value=None)
+
     yield mock
 
 

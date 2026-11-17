@@ -49,6 +49,7 @@ class InstrumentService:
         options = [
             selectinload(models.Instrument.footprints),
             selectinload(models.Instrument.filters),
+            selectinload(models.Instrument.settings),
         ]
         query = (
             select(models.Instrument)
@@ -145,6 +146,7 @@ class InstrumentService:
         options = [
             selectinload(models.Instrument.footprints),
             selectinload(models.Instrument.filters),
+            selectinload(models.Instrument.settings),
         ]
         instrument_query = (
             select(models.Instrument).filter(*instrument_filter).options(*options)

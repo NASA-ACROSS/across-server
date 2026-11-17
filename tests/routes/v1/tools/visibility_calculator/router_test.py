@@ -40,6 +40,20 @@ class TestVisibilityCalculatorRouter:
         assert res.status_code == fastapi.status.HTTP_404_NOT_FOUND
 
     @pytest.mark.asyncio
+    async def test_should_return_403_when_instruments_are_not_enabled(
+        self,
+        mock_visibility_calculator_service: MagicMock,
+        fake_visibility_read_params: dict,
+    ) -> None:
+        # service raises when instruments are disabled
+        mock_visibility_calculator_service.is_calculation_enabled.side_effect = (
+            fastapi.HTTPException(status_code=fastapi.status.HTTP_403_FORBIDDEN)
+        )
+        endpoint = self.endpoint
+        res = await self.client.get(endpoint, params=fake_visibility_read_params)
+        assert res.status_code == fastapi.status.HTTP_403_FORBIDDEN
+
+    @pytest.mark.asyncio
     async def test_get_should_return_200_when_successful(
         self,
         fake_visibility_read_params: dict,
@@ -89,6 +103,20 @@ class TestJointVisibilityCalculatorRouter:
             params=fake_joint_visibility_read_params,
         )
         assert res.status_code == fastapi.status.HTTP_404_NOT_FOUND
+
+    @pytest.mark.asyncio
+    async def test_should_return_403_when_instruments_are_not_enabled(
+        self,
+        mock_visibility_calculator_service: MagicMock,
+        fake_joint_visibility_read_params: dict,
+    ) -> None:
+        # service raises when instruments are disabled
+        mock_visibility_calculator_service.is_calculation_enabled.side_effect = (
+            fastapi.HTTPException(status_code=fastapi.status.HTTP_403_FORBIDDEN)
+        )
+        endpoint = self.endpoint
+        res = await self.client.get(endpoint, params=fake_joint_visibility_read_params)
+        assert res.status_code == fastapi.status.HTTP_403_FORBIDDEN
 
     @pytest.mark.asyncio
     async def test_get_should_return_200_when_successful(

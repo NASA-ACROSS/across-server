@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from across_server import main
 from across_server.auth import strategies
 from across_server.auth.schemas import AuthUser
+from across_server.core.enums.observation_strategy import ObservationStrategy
 from across_server.db.models import (
     Filter,
     Group,
@@ -228,6 +229,7 @@ def fake_instrument_model(fake_telescope_data: Telescope) -> Instrument:
         created_on=datetime.now(),
         is_observation_request_enabled=True,
         telescope=fake_telescope_data,
+        observation_strategy=ObservationStrategy.POINTED,
     )
 
 
