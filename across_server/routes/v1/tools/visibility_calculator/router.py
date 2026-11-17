@@ -9,6 +9,7 @@ from ...instrument.service import InstrumentService
 from ...telescope.exceptions import TelescopeNotFoundException
 from ...telescope.service import TelescopeService
 from .schemas import (
+    DATA_QUALITY_MESSAGE,
     JointVisibilityReadParams,
     JointVisibilityResult,
     VisibilityReadParams,
@@ -33,7 +34,7 @@ router = APIRouter(
     "/windows/{instrument_id}",
     status_code=status.HTTP_200_OK,
     summary="Calculated Visibility Windows",
-    description="Calculate visibility windows of an instrument for a given observation coordinate \n\n Use GET /telescope/ to retrieve a list of telescopes and their associated instruments \n\n WARNING: This is a long running process and is liable to timeout after a strict 60 second execution limit \n\n If you experience issues retrieving results, please scope your date range to be a smaller window or set `hi_res` to `false`",
+    description=f"Calculate visibility windows of an instrument for a given observation coordinate \n\n Use GET /telescope/ to retrieve a list of telescopes and their associated instruments \n\n **NOTICE**: {DATA_QUALITY_MESSAGE} \n\n WARNING: This is a long running process and is liable to timeout after a strict 60 second execution limit \n\n If you experience issues retrieving results, please scope your date range to be a smaller window or set `hi_res` to `false`",
     responses={
         status.HTTP_200_OK: {
             "description": "Return visibility window calculation results.",
@@ -82,7 +83,7 @@ async def calculate_windows(
     "/windows/",
     status_code=status.HTTP_200_OK,
     summary="Calculated Joint Visibility Windows",
-    description="Calculate joint visibility windows between instruments for a given observation coordinate \n\n Use GET /telescope/ to retrieve a list of telescopes and their associated instruments \n\n WARNING: This is a long running process and is liable to timeout after a strict 60 second execution limit \n\n If you experience issues retrieving results, please scope your date range to be a smaller window or set `hi_res` to `false`",
+    description=f"Calculate joint visibility windows between instruments for a given observation coordinate \n\n Use GET /telescope/ to retrieve a list of telescopes and their associated instruments \n\n **NOTICE**: {DATA_QUALITY_MESSAGE} \n\n WARNING: This is a long running process and is liable to timeout after a strict 60 second execution limit \n\n If you experience issues retrieving results, please scope your date range to be a smaller window or set `hi_res` to `false`",
     responses={
         status.HTTP_200_OK: {
             "description": "Return joint visibility window calculation results.",
