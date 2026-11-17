@@ -13,6 +13,7 @@ from ....core.schemas import (
     Coordinate,
     NullableDateRange,
     PaginationParams,
+    ProperMotion,
     UnitValue,
 )
 from ....core.schemas.base import BaseSchema
@@ -35,6 +36,7 @@ class ObservationRequestBase(BaseSchema):
     is_too: bool  # placeholder field for the potential of general ToO request. Defaults to True right now
     instrument_id: uuid.UUID
     instrument_configuration: dict | None = None
+    proper_motion: ProperMotion
 
     def _checksum(
         self, proposal: ObservingProposal | ObservingProposalCreate | None = None
@@ -60,6 +62,7 @@ class ObservationRequestBase(BaseSchema):
             f"{self.anonymize}{self.is_too}{self.instrument_id}"
             f"{instrument_config_string}"
             f"{proposal_string}"
+            f"{self.proper_motion.ra}{self.proper_motion.dec}{self.proper_motion.epoch}"
         )
 
         return hashlib.sha512(data_string.encode()).hexdigest()
@@ -114,6 +117,14 @@ class ObservationRequestCreate(ObservationRequestBase):
         else:
             data["proposal_id"] = None
 
+        # proper motion
+        if self.proper_motion is not None:
+            proper_motion_data = self.proper_motion.model_dump_with_prefix(
+                prefix="proper_motion", data=self.proper_motion.model_dump()
+            )
+            del data["proper_motion"]
+            data.update(proper_motion_data)
+
         return ObservationRequestModel(**data)
 
     @property
@@ -137,6 +148,7 @@ class ObservationRequestUpdate(BaseSchema):
     status: ObservationRequestStatus | None = None
     status_reason: str | None = None
     proposal: ObservingProposalCreate | None = None
+    proper_motion: ProperMotion | None = None
 
     def get_schema_key(self, db_key: str) -> str:
         map = {
@@ -147,6 +159,9 @@ class ObservationRequestUpdate(BaseSchema):
             "object_brightness": "object_brightness.value",
             "object_brightness_unit": "object_brightness.unit",
             "proposal_id": "proposal.id",
+            "proper_motion_ra": "proper_motion.ra",
+            "proper_motion_dec": "proper_motion.dec",
+            "proper_motion_epoch": "proper_motion.epoch",
         }
 
         return map.get(db_key, db_key)
@@ -206,6 +221,11 @@ class ObservationRequest(ObservationRequestBase):
             )
             if observation_request.observing_proposal
             else None,
+            proper_motion=ProperMotion(
+                ra=observation_request.proper_motion_ra,
+                dec=observation_request.proper_motion_dec,
+                epoch=observation_request.proper_motion_epoch,
+            ),
             created_on=observation_request.created_on,
             created_by_id=observation_request.created_by_id,
             modified_on=observation_request.modified_on,

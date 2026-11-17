@@ -27,3 +27,15 @@ class TestObservationRequestCreateSchema:
         )
 
         assert isinstance(validated_schema, obs_req_schemas.ObservationRequestCreate)
+
+    @pytest.mark.asyncio
+    async def test_should_produce_valid_checksum(
+        self, fake_observation_request_data: dict
+    ) -> None:
+        """Should produce valid checksum"""
+        validated_schema = obs_req_schemas.ObservationRequestCreate.model_validate(
+            fake_observation_request_data
+        )
+
+        assert validated_schema.checksum is not None
+        assert isinstance(validated_schema.checksum, str)
