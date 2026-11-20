@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/NASA-ACROSS/across-server/compare/v2.0.0...v2.0.1) (2026-11-20)
+
+
+### Miscellaneous Chores
+
+* release 2.0.1 ([f5b06e7](https://github.com/NASA-ACROSS/across-server/commit/f5b06e7487600c229ed2b39a32d237b748272d11))
+
 ## [2.0.0](https://github.com/NASA-ACROSS/across-server/compare/v1.11.1...v2.0.0) (2026-11-17)
 
 
