@@ -5,5 +5,5 @@
 -r lint.in
 
 # includes the cli
-fastapi[standard] >=0.161.1
+fastapi[standard] >=0.165.0
 debugpy
