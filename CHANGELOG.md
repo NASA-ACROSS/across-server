@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/NASA-ACROSS/across-server/compare/v2.0.1...v2.0.2) (2026-11-23)
+
+
+### Bug Fixes
+
+* **vis-calc:** rm trailing '/' ([#894](https://github.com/NASA-ACROSS/across-server/issues/894)) ([0b5e88e](https://github.com/NASA-ACROSS/across-server/commit/0b5e88ef4f58b08958740dbd5c1cedf3509c4784))
+
 ## [2.0.1](https://github.com/NASA-ACROSS/across-server/compare/v2.0.0...v2.0.1) (2026-11-20)
 
 
