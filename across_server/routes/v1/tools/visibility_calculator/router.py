@@ -82,7 +82,7 @@ async def calculate_windows(
 
 
 @router.get(
-    "/windows/",
+    "/windows",
     status_code=status.HTTP_200_OK,
     summary="Calculated Joint Visibility Windows",
     description=f"Calculate joint visibility windows between instruments for a given observation coordinate \n\n Use GET /telescope/ to retrieve a list of telescopes and their associated instruments \n\n **NOTICE**: {DATA_QUALITY_MESSAGE} \n\n WARNING: This is a long running process and is liable to timeout after a strict 60 second execution limit \n\n If you experience issues retrieving results, please scope your date range to be a smaller window or set `hi_res` to `false`",

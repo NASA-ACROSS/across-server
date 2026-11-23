@@ -85,7 +85,7 @@ class TestJointVisibilityCalculatorRouter:
         async_client: AsyncClient,
     ) -> None:
         self.client = async_client
-        self.endpoint = "/tools/visibility-calculator/windows/"
+        self.endpoint = "/tools/visibility-calculator/windows"
 
     @pytest.mark.asyncio
     async def test_get_should_return_404_when_instrument_has_no_telescope(
