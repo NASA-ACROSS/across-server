@@ -1,8 +1,40 @@
-from ratelimit.auths.ip import client_ip
+from ipaddress import ip_address
+
+import structlog
 from ratelimit.auths.jwt import EmptyInformation
 from ratelimit.types import Scope
 
 from across_server.core.config import config
+
+logger = structlog.get_logger()
+
+
+async def client_ip(scope: Scope) -> tuple[str, str]:
+    """
+    parse ip
+    """
+    logger.debug(
+        "Parsing client IP", client=scope["client"], headers=scope.get("headers", [])
+    )
+
+    real_ip = ""
+    if scope["client"]:
+        ip, port = tuple(scope["client"])
+        if ip_address(ip).is_global:
+            real_ip = ip
+    else:
+        raise EmptyInformation(scope)
+
+    for name, value in scope["headers"]:  # type: bytes, bytes
+        if name == b"x-real-ip":
+            ip = value.decode("utf8")
+
+        if not real_ip and ip_address(ip).is_global:
+            real_ip = ip
+
+    if not real_ip:
+        raise EmptyInformation(scope)
+    return real_ip, "default"
 
 
 async def parse_client_ip(scope: Scope) -> str:
